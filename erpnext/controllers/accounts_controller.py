@@ -58,7 +58,7 @@ class AccountsController(TransactionBase):
 
 	def validate(self):
 
-		self.validate_qty_is_not_zero()
+		#self.validate_qty_is_not_zero()
 		if self.get("_action") and self._action != "update_after_submit":
 			self.set_missing_values(for_validate=True)
 

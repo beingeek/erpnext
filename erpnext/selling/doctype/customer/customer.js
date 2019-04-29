@@ -98,7 +98,7 @@ frappe.ui.form.on("Customer", {
 
 			// custom buttons
 			frm.add_custom_button(__('Accounting Ledger'), function() {
-				frappe.set_route('query-report', 'General Ledger',
+				frappe.set_route('query-report', 'General Ledger SD',
 					{party_type:'Customer', party:frm.doc.name});
 			});
 

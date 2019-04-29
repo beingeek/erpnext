@@ -232,13 +232,6 @@ frappe.ui.form.on('Payment Entry', {
 	},
 
 	party_type: function(frm) {
-
-		let party_types = Object.keys(frappe.boot.party_account_types);
-		if(frm.doc.party_type && !party_types.includes(frm.doc.party_type)){
-			frm.set_value("party_type", "");
-			frappe.throw(__("Party can only be one of "+ party_types.join(", ")));
-		}
-
 		if(frm.doc.party) {
 			$.each(["party", "party_balance", "paid_from", "paid_to",
 				"paid_from_account_currency", "paid_from_account_balance",
@@ -513,6 +506,29 @@ frappe.ui.form.on('Payment Entry', {
 			frm.set_value("base_received_amount", frm.doc.base_paid_amount);
 		}
 
+       /////////////////////Our Code
+	   
+	   if(frm.doc.payment_type == "Internal Transfer" || frm.doc.payment_type == "Pay")
+		{
+			if(frm.doc.paid_from_account_currency == "CAD" && frm.doc.paid_to_account_currency == "USD")
+			{
+				if(frm.doc.target_exchange_rate)
+				{
+					frm.set_value("received_amount", flt(frm.doc.base_paid_amount/frm.doc.target_exchange_rate));
+				}
+			}
+			if(frm.doc.paid_from_account_currency == "USD" && frm.doc.paid_to_account_currency == "CAD")
+			{
+				frm.set_value("received_amount", frm.doc.base_paid_amount);
+			}
+			if(frm.doc.paid_from_account_currency == frm.doc.paid_to_account_currency)
+			{
+				frm.set_value("received_amount", frm.doc.paid_amount);
+			}
+		}
+	   
+	   ///////////////////////Our Code
+
 		if(frm.doc.payment_type == "Receive")
 			frm.events.allocate_party_amount_against_ref_docs(frm, frm.doc.paid_amount);
 		else
@@ -544,34 +560,41 @@ frappe.ui.form.on('Payment Entry', {
 				if(r.message) {
 					var total_positive_outstanding = 0;
 					var total_negative_outstanding = 0;
-
+					
+					r.message.sort(function(a,b){return a.voucher_no < b.voucher_no ? -1 : 1});
+					//////Sorder Array/
+					
 					$.each(r.message, function(i, d) {
-						var c = frm.add_child("references");
-						c.reference_doctype = d.voucher_type;
-						c.reference_name = d.voucher_no;
-						c.due_date = d.due_date
-						c.total_amount = d.invoice_amount;
-						c.outstanding_amount = d.outstanding_amount;
-						c.bill_no = d.bill_no;
+						
+						if(d.voucher_type != "Purchase Order")    ///////// Condition to remove Purchase Order
+						{ 
+							var c = frm.add_child("references");
+							c.reference_doctype = d.voucher_type;
+							c.reference_name = d.voucher_no;
+							c.due_date = d.due_date
+							c.total_amount = d.invoice_amount;
+							c.outstanding_amount = d.outstanding_amount;
+							c.bill_no = d.bill_no;
 
-						if(!in_list(["Sales Order", "Purchase Order", "Expense Claim", "Fees"], d.voucher_type)) {
-							if(flt(d.outstanding_amount) > 0)
-								total_positive_outstanding += flt(d.outstanding_amount);
-							else
-								total_negative_outstanding += Math.abs(flt(d.outstanding_amount));
-						}
+							if(!in_list(["Sales Order", "Purchase Order", "Expense Claim", "Fees"], d.voucher_type)) {
+								if(flt(d.outstanding_amount) > 0)
+									total_positive_outstanding += flt(d.outstanding_amount);
+								else
+									total_negative_outstanding += Math.abs(flt(d.outstanding_amount));
+							}
 
-						var party_account_currency = frm.doc.payment_type=="Receive" ?
-							frm.doc.paid_from_account_currency : frm.doc.paid_to_account_currency;
+							var party_account_currency = frm.doc.payment_type=="Receive" ?
+								frm.doc.paid_from_account_currency : frm.doc.paid_to_account_currency;
 
-						if(party_account_currency != company_currency) {
-							c.exchange_rate = d.exchange_rate;
-						} else {
-							c.exchange_rate = 1;
-						}
-						if (in_list(['Sales Invoice', 'Purchase Invoice', "Expense Claim", "Fees"], d.reference_doctype)){
-							c.due_date = d.due_date;
-						}
+							if(party_account_currency != company_currency) {
+								c.exchange_rate = d.exchange_rate;
+							} else {
+								c.exchange_rate = 1;
+							}
+							if (in_list(['Sales Invoice', 'Purchase Invoice', "Expense Claim", "Fees"], d.reference_doctype)){
+								c.due_date = d.due_date;
+							}
+						}   ///////// Condition to remove Purchase Order
 					});
 
 					if(
@@ -594,6 +617,10 @@ frappe.ui.form.on('Payment Entry', {
 
 				frm.events.allocate_party_amount_against_ref_docs(frm,
 					(frm.doc.payment_type=="Receive" ? frm.doc.paid_amount : frm.doc.received_amount));
+			
+			///////////////////////// custom function to set reference and dates
+				frm.events.allocate_reference_and_dates(frm);
+			//////////////////////////////////////////////////////////////////////////
 			}
 		});
 	},
@@ -681,9 +708,144 @@ frappe.ui.form.on('Payment Entry', {
 				}
 			}
 		})
+		
+		/////// Our Code
+		var chkd = 0;
+		(frm.fields_dict.references.grid.grid_rows || []).forEach(function(row) { 
+				if(row.doc.__checked) 
+				{ 
+					chkd = chkd + 1;
+				} 
+				
+			})
+		$.each(frm.doc.references || [], function(i, row) {
+			row.allocated_amount = 0 //If allocate payment amount checkbox is unchecked, set zero to allocate amount
+			if(frm.doc.allocate_payment_amount){
+				
+				if(chkd > 0)
+				{
+					if(row.__checked) 
+					{ 
+						if(row.outstanding_amount > 0 && allocated_positive_outstanding > 0) {
+							if(row.outstanding_amount >= allocated_positive_outstanding) {
+								row.allocated_amount = allocated_positive_outstanding;
+							} else {
+								row.allocated_amount = row.outstanding_amount;
+							}
 
+						allocated_positive_outstanding -= flt(row.allocated_amount);
+						} else if (row.outstanding_amount < 0 && allocated_negative_outstanding) {
+							if(Math.abs(row.outstanding_amount) >= allocated_negative_outstanding)
+								row.allocated_amount = -1*allocated_negative_outstanding;
+							else row.allocated_amount = row.outstanding_amount;
+
+							allocated_negative_outstanding -= Math.abs(flt(row.allocated_amount));
+						}
+					}
+					else
+					{
+						row.allocated_amount = 0;
+					}
+				}
+				else 
+				{
+					if(row.outstanding_amount > 0 && allocated_positive_outstanding > 0) {
+						if(row.outstanding_amount >= allocated_positive_outstanding) {
+							row.allocated_amount = allocated_positive_outstanding;
+						} else {
+							row.allocated_amount = row.outstanding_amount;
+						}
+
+						allocated_positive_outstanding -= flt(row.allocated_amount);
+					} else if (row.outstanding_amount < 0 && allocated_negative_outstanding) {
+						if(Math.abs(row.outstanding_amount) >= allocated_negative_outstanding)
+							row.allocated_amount = -1*allocated_negative_outstanding;
+						else row.allocated_amount = row.outstanding_amount;
+
+						allocated_negative_outstanding -= Math.abs(flt(row.allocated_amount));
+					}
+				}
+			}
+			else
+			{
+				if(chkd > 0)
+				{
+					if(row.__checked) 
+					{ 
+						if(row.outstanding_amount > 0 && allocated_positive_outstanding > 0) {
+							if(row.outstanding_amount >= allocated_positive_outstanding) {
+								row.allocated_amount = allocated_positive_outstanding;
+							} else {
+								row.allocated_amount = row.outstanding_amount;
+							}
+
+						allocated_positive_outstanding -= flt(row.allocated_amount);
+						} else if (row.outstanding_amount < 0 && allocated_negative_outstanding) {
+							if(Math.abs(row.outstanding_amount) >= allocated_negative_outstanding)
+								row.allocated_amount = -1*allocated_negative_outstanding;
+							else row.allocated_amount = row.outstanding_amount;
+
+							allocated_negative_outstanding -= Math.abs(flt(row.allocated_amount));
+						}
+						
+						if(frm.doc.payment_type == "Pay"  && !frm.doc.is_reverse )
+						{
+							row.allocated_amount = row.outstanding_amount;
+						}
+					}
+					else
+					{
+						row.allocated_amount = 0;
+					}
+				}
+				else if(frm.doc.payment_type=="Pay"  && frm.doc.is_reverse && chkd < 1)
+				{
+						if(row.outstanding_amount > 0 && allocated_positive_outstanding > 0) {
+							if(row.outstanding_amount >= allocated_positive_outstanding) {
+								row.allocated_amount = allocated_positive_outstanding;
+							} else {
+								row.allocated_amount = row.outstanding_amount;
+							}
+
+							allocated_positive_outstanding -= flt(row.allocated_amount);
+							row.__checked = 1;
+						} else if (row.outstanding_amount < 0 && allocated_negative_outstanding) {
+							if(Math.abs(row.outstanding_amount) >= allocated_negative_outstanding)
+								row.allocated_amount = -1*allocated_negative_outstanding;
+							else row.allocated_amount = row.outstanding_amount;
+
+							allocated_negative_outstanding -= Math.abs(flt(row.allocated_amount));
+							row.__checked = 1;
+						}
+				}
+			}
+		})
+		///////Our Code
 		frm.refresh_fields()
 		frm.events.set_total_allocated_amount(frm);
+		
+		
+		////////////Our Code
+		
+		if(frm.doc.payment_type == "Receive")
+		{
+			for(var i=0; i<frm.doc.references.length;i++)
+			{
+				var child = frm.doc.references[i];
+				if((frm.doc.received_amount == frm.doc.total_allocated_amount) && !child.__checked)
+				{
+					frm.fields_dict.references.grid.grid_rows[i].row.find('.grid-row-check').attr('disabled',true);
+					$('div[data-fieldname="references"] .grid-heading-row .grid-row-check').attr('disabled',true);
+				}
+				else
+				{
+					frm.fields_dict.references.grid.grid_rows[i].row.find('.grid-row-check').removeAttr('disabled');
+					$('div[data-fieldname="references"] .grid-heading-row .grid-row-check').removeAttr('disabled');
+				}
+			}
+		}
+		
+		///////////Our Code
 	},
 
 	set_total_allocated_amount: function(frm) {
@@ -698,7 +860,25 @@ frappe.ui.form.on('Payment Entry', {
 		});
 		frm.set_value("total_allocated_amount", Math.abs(total_allocated_amount));
 		frm.set_value("base_total_allocated_amount", Math.abs(base_total_allocated_amount));
-
+		
+		////Our Code
+			if(frm.doc.payment_type == "Pay" &&  !frm.doc.is_reverse )
+			{
+				if(frm.doc.paid_from_account_currency == "CAD")
+				{
+					frm.set_value("paid_amount", Math.abs(base_total_allocated_amount));
+				}
+				if(frm.doc.paid_from_account_currency == "USD")
+				{
+					frm.set_value("paid_amount", Math.abs(total_allocated_amount));
+				}
+			
+			}
+		
+		//////Our Code End
+		
+		
+		
 		frm.events.set_unallocated_amount(frm);
 	},
 

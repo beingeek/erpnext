@@ -19,7 +19,7 @@ frappe.ui.form.on('Stock Entry', {
 				var filters = [
 							["Warehouse", 'company', '=', frm.doc.company],
 							["Warehouse", "is_group", "=",0],
-							['Warehouse', 'name', '!=', r.sample_retention_warehouse]
+						//	['Warehouse', 'name', '!=', r.sample_retention_warehouse]
 						]
 				frm.set_query("from_warehouse", function() {
 					return {

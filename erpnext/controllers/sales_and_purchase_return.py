@@ -218,6 +218,8 @@ def make_return_doc(doctype, source_name, target_doc=None):
 				doc.select_print_heading = frappe.db.get_value("Print Heading", _("Credit Note"))
 
 		elif doctype == "Purchase Invoice":
+			doc.from_pr=0
+			doc.update_stock=1
 			# look for Print Heading "Debit Note"
 			doc.select_print_heading = frappe.db.get_value("Print Heading", _("Debit Note"))
 
@@ -243,6 +245,8 @@ def make_return_doc(doctype, source_name, target_doc=None):
 			elif doc.doctype == 'Purchase Invoice':
 				doc.paid_amount = -1 * source.paid_amount
 				doc.base_paid_amount = -1 * source.base_paid_amount
+				if source.taxes:
+					doc.set('taxes', [])
 
 		doc.discount_amount = -1 * source.discount_amount
 		doc.run_method("calculate_taxes_and_totals")
@@ -258,6 +262,8 @@ def make_return_doc(doctype, source_name, target_doc=None):
 			target_doc.purchase_order_item = source_doc.purchase_order_item
 			target_doc.rejected_warehouse = source_doc.rejected_warehouse
 		elif doctype == "Purchase Invoice":
+			target_doc.update_inventory=1
+			target_doc.received_box=-1*flt(source_doc.received_box)
 			target_doc.received_qty = -1* source_doc.received_qty
 			target_doc.rejected_qty = -1* source_doc.rejected_qty
 			target_doc.qty = -1* source_doc.qty

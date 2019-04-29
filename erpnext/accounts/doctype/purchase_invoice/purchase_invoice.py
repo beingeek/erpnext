@@ -316,11 +316,12 @@ class PurchaseInvoice(BuyingController):
 		])
 
 	def validate_purchase_receipt_if_update_stock(self):
-		if self.update_stock:
-			for item in self.get("items"):
-				if item.purchase_receipt:
-					frappe.throw(_("Stock cannot be updated against Purchase Receipt {0}")
-						.format(item.purchase_receipt))
+		pass
+		#if self.update_stock:
+		#	for item in self.get("items"):
+		#		if item.purchase_receipt:
+		#			frappe.throw(_("Stock cannot be updated against Purchase Receipt {0}")
+		#				.format(item.purchase_receipt))
 
 	def on_submit(self):
 		super(PurchaseInvoice, self).on_submit()

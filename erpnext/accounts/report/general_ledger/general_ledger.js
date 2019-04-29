@@ -1,6 +1,6 @@
 // Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
-
+var d = new Date();
 frappe.query_reports["General Ledger"] = {
 	"filters": [
 		{
@@ -21,7 +21,7 @@ frappe.query_reports["General Ledger"] = {
 			"fieldname":"from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
-			"default": frappe.datetime.add_months(frappe.datetime.get_today(), -1),
+			"default": new Date(d.getFullYear(),d.getMonth(),1),
 			"reqd": 1,
 			"width": "60px"
 		},

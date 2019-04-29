@@ -111,13 +111,18 @@
 				<th style="width: 5%">{%= __("Age (Days)") %}</th>
 
 				{% if(report.report_name === "Accounts Receivable" && filters.show_sales_person_in_print) { %}
-					<th style="width: 16%">{%= __("Reference") %}</th>
+					<th style="width: 12%">{%= __("Reference") %}</th>
+					<th style="width: 10%">{%= __("Reference No") %}</th>
 					<th style="width: 10%">{%= __("Sales Person") %}</th>
 				{% } else { %}
-					<th style="width: 26%">{%= __("Reference") %}</th>
+					<th style="width: 20%">{%= __("Reference") %}</th>
+					<th style="width: 10%">{%= __("Reference No") %}</th>
+					
 				{% } %}
 				{% if(!filters.show_pdc_in_print) { %}
-					<th style="width: 20%">{%= (filters.customer || filters.supplier) ? __("Remarks"): __("Party") %}</th>
+					{% if(!(filters.customer || filters.supplier)) { %}
+						<th style="width: 20%">{%= __("Party") %}</th>
+					{% } %}
 				{% } %}
 				<th style="width: 10%; text-align: right">{%= __("Invoiced Amount") %}</th>
 				{% if(!filters.show_pdc_in_print) { %}
@@ -134,7 +139,9 @@
 					<th style="width: 10%">{%= __("Remaining Balance") %}</th>
 				{% } %}
 			{% } else { %}
-				<th style="width: 40%">{%= (filters.customer || filters.supplier) ? __("Remarks"): __("Party") %}</th>
+				{% if(!(filters.customer || filters.supplier)) { %}
+					<th style="width: 40%">{%= __("Party") %}</th>
+				{% } %}
 				<th style="width: 15%">{%= __("Total Invoiced Amount") %}</th>
 				<th style="width: 15%">{%= __("Total Paid Amount") %}</th>
 				<th style="width: 15%">{%= report.report_name === "Accounts Receivable Summary" ? __('Credit Note Amount') : __('Debit Note Amount') %}</th>
@@ -152,8 +159,9 @@
 					<td>
 						{% if(!filters.show_pdc_in_print) { %}
 							{%= data[i]["voucher_type"] %}
-							<br>
 						{% } %}
+					</td>
+					<td>
 						{%= data[i]["voucher_no"] %}
 					</td>
 
@@ -162,22 +170,17 @@
 					{% } %}
 
 					{% if(!filters.show_pdc_in_print) { %}
-					<td>
 						{% if(!(filters.customer || filters.supplier)) { %}
-							{%= data[i][__("Customer")] || data[i][__("Supplier")] %}
-							{% if(data[i][__("Customer Name")] && data[i][__("Customer Name")] != data[i][__("Customer")]) { %}
-								<br> {%= data[i][__("Customer Name")] %}
-							{% } else if(data[i][__("Supplier Name")] != data[i][__("Supplier")]) { %}
-								<br> {%= data[i][__("Supplier Name")] %}
-							{% } %}
+							<td>
+								{%= data[i][__("Customer")] || data[i][__("Supplier")] %}
+								{% if(data[i][__("Customer Name")] && data[i][__("Customer Name")] != data[i][__("Customer")]) { %}
+									<br> {%= data[i][__("Customer Name")] %}
+								{% } else if(data[i][__("Supplier Name")] != data[i][__("Supplier")]) { %}
+									<br> {%= data[i][__("Supplier Name")] %}
+								{% } %}
+							</td>	
 						{% } %}
-						<div>
-						{% if data[i][__("Remarks")] %}
-							{%= __("Remarks") %}:
-							{%= data[i][__("Remarks")] %}
-						{% } %}
-						</div>
-					</td>
+					
 					{% } %}
 
 					<td style="text-align: right">
@@ -209,7 +212,9 @@
 					{% if(report.report_name === "Accounts Receivable") { %}
 					<td></td>
 					{% } %}
+					{% if(!(filters.customer || filters.supplier)) { %}
 					<td></td>
+					{% } %}
 					<td style="text-align: right"><b>{%= __("Total") %}</b></td>
 					<td style="text-align: right">
 						{%= format_currency(data[i]["invoiced_amount"], data[i]["currency"] ) %}</td>
@@ -244,8 +249,6 @@
 									<br> {%= data[i][__("Supplier Name")] %}
 								{% } %}
 							{% } %}
-							<br>{%= __("Remarks") %}:
-							{%= data[i][__("Remarks")] %}
 						</td>
 					{% } else { %}
 						<td><b>{%= __("Total") %}</b></td>

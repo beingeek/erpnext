@@ -52,6 +52,11 @@ class JournalEntry(AccountsController):
 		self.update_loan()
 		self.update_inter_company_jv()
 
+	def before_print(self):
+		self.gl_entries = frappe.get_list("GL Entry",filters={"voucher_type": "Journal Entry",
+			"voucher_no": self.name} ,
+			fields=["account", "party_type", "party", "debit", "credit", "remarks"]
+		)
 
 	def get_title(self):
 		return self.pay_to_recd_from or self.accounts[0].account
@@ -386,11 +391,11 @@ class JournalEntry(AccountsController):
 		if self.user_remark:
 			r.append(_("Note: {0}").format(self.user_remark))
 
-		if self.cheque_no:
-			if self.cheque_date:
-				r.append(_('Reference #{0} dated {1}').format(self.cheque_no, formatdate(self.cheque_date)))
-			else:
-				msgprint(_("Please enter Reference date"), raise_exception=frappe.MandatoryError)
+		#if self.cheque_no:
+		#	if self.cheque_date:
+		#		r.append(_('Reference #{0} dated {1}').format(self.cheque_no, formatdate(self.cheque_date)))
+		#	else:
+		#		msgprint(_("Please enter Reference date"), raise_exception=frappe.MandatoryError)
 
 		for d in self.get('accounts'):
 			if d.reference_type=="Sales Invoice" and d.credit:

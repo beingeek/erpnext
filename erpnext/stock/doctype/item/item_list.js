@@ -14,7 +14,20 @@ frappe.listview_settings['Item'] = {
 			return [__("Variant"), "green", "variant_of,=," + doc.variant_of];
 		}
 	},
+	onload: function(listview) {
+		var method = "erpnext.item.enableDisableOrder";
 
+		listview.page.add_menu_item(__("Enabled"), function() {
+			listview.call_for_selected_items(method, {"disabled":"0"});
+		});
+
+		listview.page.add_menu_item(__("Disabled"), function() {
+			listview.call_for_selected_items(method, {"disabled":"1"});
+		});
+
+
+
+	},
 	reports: [
 		{
 			name: 'Stock Summary',

@@ -14,8 +14,8 @@ class LandedCostVoucher(Document):
 		self.set("items", [])
 		for pr in self.get("purchase_receipts"):
 			if pr.receipt_document_type and pr.receipt_document:
-				pr_items = frappe.db.sql("""select pr_item.item_code, pr_item.description,
-					pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.name, pr_item.cost_center
+				pr_items = frappe.db.sql("""select pr_item.item_code, pr_item.item_name, pr_item.description,
+					pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.name, pr_item.cost_center,pr_item.gross_weight_lbs
 					from `tab{doctype} Item` pr_item where parent = %s
 					and exists(select name from tabItem where name = pr_item.item_code and is_stock_item = 1)
 					""".format(doctype=pr.receipt_document_type), pr.receipt_document, as_dict=True)
@@ -23,7 +23,7 @@ class LandedCostVoucher(Document):
 				for d in pr_items:
 					item = self.append("items")
 					item.item_code = d.item_code
-					item.description = d.description
+					item.description = d.item_name
 					item.qty = d.qty
 					item.rate = d.base_rate
 					item.cost_center = d.cost_center or \
@@ -32,6 +32,11 @@ class LandedCostVoucher(Document):
 					item.receipt_document_type = pr.receipt_document_type
 					item.receipt_document = pr.receipt_document
 					item.purchase_receipt_item = d.name
+					sitem = frappe.get_doc("Item", d.item_code)
+					if not d.gross_weight_lbs:
+						item.gross_weight=float(d.qty)*float(sitem.gross_weight)
+					else:
+						item.gross_weight=float(d.qty)*float(d.gross_weight_lbs)
 
 	def validate(self):
 		self.check_mandatory()
@@ -72,8 +77,10 @@ class LandedCostVoucher(Document):
 
 	def validate_applicable_charges_for_item(self):
 		based_on = self.distribute_charges_based_on.lower()
-
-		total = sum([flt(d.get(based_on)) for d in self.get("items")])
+		if based_on=="gross weight" or based_on=="manual":
+			total = sum([flt(d.get('gross_weight')) for d in self.get("items")])
+		else:
+			total = sum([flt(d.get(based_on)) for d in self.get("items")])
 
 		if not total:
 			frappe.throw(_("Total {0} for all items is zero, may be you should change 'Distribute Charges Based On'").format(based_on))
@@ -124,7 +131,7 @@ class LandedCostVoucher(Document):
 
 			# update stock & gl entries for submit state of PR
 			doc.docstatus = 1
-			doc.update_stock_ledger(via_landed_cost_voucher=True)
+			doc.update_stock_ledger(allow_negative_stock=True, via_landed_cost_voucher=True)
 			doc.make_gl_entries()
 
 	def update_rate_in_serial_no(self, receipt_document):

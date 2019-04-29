@@ -339,7 +339,25 @@ def set_missing_values(source, target):
 @frappe.whitelist()
 def make_purchase_receipt(source_name, target_doc=None):
 	def update_item(obj, target, source_parent):
-		target.qty = flt(obj.qty) - flt(obj.received_qty)
+		if obj.boxes_pallet_for_purchase==None:
+			target.pallets_ordered = 0
+		elif obj.boxes_pallet_for_purchase==0:
+			target.pallets_ordered = 0
+		else:
+			boxes_pallet_for_purchase=obj.boxes_pallet_for_purchase
+			target.pallets_ordered = flt(obj.box)/flt(boxes_pallet_for_purchase)
+
+		target.boxes_ordered = flt(obj.box)
+		target.received_boxed=flt(obj.box)
+		if obj.uom=="Pallet":
+			target.received_qty = flt(obj.box)/flt(boxes_pallet_for_purchase)
+		else:
+			target.received_qty = flt(obj.box)
+		target.box_rate=flt(obj.box_unit_rate)
+		if obj.uom=="Pallet":
+			target.qty =flt(obj.box)/flt(obj.boxes_pallet_for_purchase)
+		else:
+			target.qty =flt(obj.box)
 		target.stock_qty = (flt(obj.qty) - flt(obj.received_qty)) * flt(obj.conversion_factor)
 		target.amount = (flt(obj.qty) - flt(obj.received_qty)) * flt(obj.rate)
 		target.base_amount = (flt(obj.qty) - flt(obj.received_qty)) * \
