@@ -108,6 +108,7 @@ erpnext.buying.BuyingController = erpnext.TransactionController.extend({
 
 	supplier_address: function() {
 		erpnext.utils.get_address_display(this.frm);
+		erpnext.utils.set_taxes_from_address(this.frm, "supplier_address", "supplier_address", "supplier_address");
 	},
 
 	buying_price_list: function() {
@@ -236,6 +237,20 @@ erpnext.buying.BuyingController = erpnext.TransactionController.extend({
 
 	tc_name: function() {
 		this.get_terms();
+	},
+
+	make_landed_cost_voucher: function() {
+		return frappe.call({
+			method: "erpnext.stock.doctype.landed_cost_voucher.landed_cost_voucher.get_landed_cost_voucher",
+			args: {
+				"dt": cur_frm.doc.doctype,
+				"dn": cur_frm.doc.name
+			},
+			callback: function(r) {
+				var doclist = frappe.model.sync(r.message);
+				frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
+			}
+		});
 	},
 
 	link_to_mrs: function() {
