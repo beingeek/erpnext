@@ -76,6 +76,7 @@ class LandedCostVoucher(AccountsController):
 				pr_items = frappe.db.sql("""
 					select
 						pr_item.item_code, pr_item.item_name, pr_item.total_weight,
+						pr_item.gross_weight_lbs, i.gross_weight
 						pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.amount, pr_item.name,
 						pr_item.{po_detail_field}, pr_item.purchase_order, pr_item.cost_center
 					from `tab{doctype} Item` pr_item
@@ -90,6 +91,7 @@ class LandedCostVoucher(AccountsController):
 					item.item_name = d.item_name
 					item.qty = d.qty
 					item.weight = d.total_weight
+					item.gross_weight = flt(d.qty) * flt(d.gross_weight_lbs or d.gross_weight)
 					item.rate = d.base_rate
 					item.cost_center = d.cost_center or erpnext.get_default_cost_center(self.company)
 					item.amount = d.base_amount
@@ -180,7 +182,7 @@ class LandedCostVoucher(AccountsController):
 				frappe.throw(_("Credit To account must be a Payable account"))
 
 	def calculates_taxes_and_totals(self, for_validate=False):
-		item_total_fields = ['qty', 'amount', 'weight']
+		item_total_fields = ['qty', 'amount', 'weight', 'gross_weight']
 		for f in item_total_fields:
 			self.set('total_' + f, flt(sum([flt(d.get(f)) for d in self.get("items")]), self.precision('total_' + f)))
 

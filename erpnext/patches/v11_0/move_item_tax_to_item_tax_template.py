@@ -7,7 +7,7 @@ item_tax_templates = {}
 rename_template_to_untitled = []
 
 def execute():
-	for d in frappe.db.sql("""select parent as item_code, tax_type, tax_rate from `tabItem Tax`""", as_dict=1):
+	for d in frappe.db.sql("""select parent as item_code, tax_type, tax_rate from `tabItem Tax` where parenttype='Item'""", as_dict=1):
 		old_item_taxes.setdefault(d.item_code, [])
 		old_item_taxes[d.item_code].append(d)
 
