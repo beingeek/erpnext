@@ -75,7 +75,8 @@ def execute():
 
 	# Landed Cost Voucher item totals
 	item_totals = frappe.db.sql("""
-		SELECT parent, SUM(qty) as total_qty, SUM(amount) as total_amount, SUM(weight) as total_weight
+		SELECT parent, SUM(qty) as total_qty, SUM(amount) as total_amount, SUM(weight) as total_weight,
+			SUM(gross_weight) as total_gross_weight
 		FROM `tabLanded Cost Item`
 		GROUP BY parent
 	""", as_dict=True)
@@ -86,10 +87,10 @@ def execute():
 		batch_transactions = item_totals[i:i + batch_size]
 		values = []
 		for d in batch_transactions:
-			values.append("('{}', {}, {}, {})".format(d.parent, d.total_qty, d.total_amount, d.total_weight))
+			values.append("('{}', {}, {}, {}, {})".format(d.parent, d.total_qty, d.total_amount, d.total_weight, d.total_gross_weight))
 		conditions = ",".join(values)
 		frappe.db.sql("""
-			INSERT INTO `tabLanded Cost Voucher` (name, total_qty, total_amount, total_weight) VALUES {}
+			INSERT INTO `tabLanded Cost Voucher` (name, total_qty, total_amount, total_weight, total_gross_weight) VALUES {}
 			ON DUPLICATE KEY UPDATE name = VALUES(name), total_qty = VALUES(total_qty), total_amount = VALUES(total_amount),
-				total_weight = VALUES(total_weight)
+				total_weight = VALUES(total_weight), total_gross_weight = VALUES(total_gross_weight)
 		""".format(conditions))
