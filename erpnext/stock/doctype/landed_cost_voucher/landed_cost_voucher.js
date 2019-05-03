@@ -207,6 +207,9 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 	weight: function(frm) {
 		this.calculate_taxes_and_totals();
 	},
+	gross_weight: function(frm) {
+		this.calculate_taxes_and_totals();
+	},
 
 	calculate_taxes_and_totals: function() {
 		var me = this;
