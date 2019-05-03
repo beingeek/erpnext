@@ -25,7 +25,7 @@ class LandedCostVoucher(AccountsController):
 		self.validate_purchase_receipts()
 		self.clear_advances_table_if_not_payable()
 		self.clear_unallocated_advances("Landed Cost Voucher Advance", "advances")
-		self.calculates_taxes_and_totals()
+		self.calculate_taxes_and_totals()
 		self.set_status()
 
 	def on_update(self):
@@ -36,7 +36,7 @@ class LandedCostVoucher(AccountsController):
 
 	def on_submit(self):
 		self.validate_no_purchase_order()
-		self.calculates_taxes_and_totals()
+		self.calculate_taxes_and_totals()
 		self.validate_applicable_charges_for_item()
 		self.update_against_document_in_jv()
 		self.update_landed_cost()
@@ -249,7 +249,7 @@ class LandedCostVoucher(AccountsController):
 			if account.account_type != "Payable":
 				frappe.throw(_("Credit To account must be a Payable account"))
 
-	def calculates_taxes_and_totals(self):
+	def calculate_taxes_and_totals(self):
 		item_total_fields = ['qty', 'amount', 'weight', 'gross_weight']
 		for f in item_total_fields:
 			self.set('total_' + f, flt(sum([flt(d.get(f)) for d in self.get("items")]), self.precision('total_' + f)))
