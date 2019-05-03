@@ -24,7 +24,14 @@ class LandedCostVoucher(AccountsController):
 		self.calculates_taxes_and_totals(for_validate=True)
 		self.set_status()
 
+	def on_update(self):
+		self.update_landed_cost_in_purchase_orders()
+
+	def on_trash(self):
+		self.update_landed_cost_in_purchase_orders(on_trash=True)
+
 	def on_submit(self):
+		self.validate_no_purchase_order()
 		self.calculates_taxes_and_totals()
 		self.validate_applicable_charges_for_item()
 		self.update_against_document_in_jv()
@@ -37,6 +44,25 @@ class LandedCostVoucher(AccountsController):
 			unlink_ref_doc_from_payment_entries(self)
 		self.update_landed_cost()
 		self.make_gl_entries(cancel=True)
+
+	def validate_no_purchase_order(self):
+		for d in self.purchase_receipts:
+			if d.receipt_document_type == "Purchase Order":
+				frappe.throw(_("Cannot submit when there are Purchase Order receipt document type selected"))
+		for d in self.items:
+			if (not d.purchase_receipt and not d.purchase_invoice) or (not d.purchase_receipt_item and not d.purchase_invoice_item):
+				frappe.throw(_("Item Row #{0}: No Purchase Receipt or Purchase Invoice found to update landed cost"))
+
+	def update_landed_cost_in_purchase_orders(self, on_trash=False):
+		for d in self.purchase_receipts:
+			if d.receipt_document_type == "Purchase Order":
+				po = frappe.get_doc("Purchase Order", d.receipt_document)
+				if po:
+					po.set_landed_cost_voucher_amount(exclude=self.name if on_trash else "")
+					for item in po.get("items"):
+						item.db_update()
+				else:
+					frappe.msgprint(_("Purchase Order {0} could not be found").format(d.receipt_document))
 
 	def get_referenced_taxes(self):
 		if self.credit_to and self.party:
@@ -68,22 +94,26 @@ class LandedCostVoucher(AccountsController):
 		self.set("items", [])
 		for pr in self.get("purchase_receipts"):
 			if pr.receipt_document_type and pr.receipt_document:
+				po_field = "purchase_order"
 				if pr.receipt_document_type == "Purchase Invoice":
 					po_detail_field = "po_detail"
-				else:
+				elif pr.receipt_document_type == "Purchase Receipt":
 					po_detail_field = "purchase_order_item"
+				else:
+					po_detail_field = "name"
+					po_field = "parent"
 
 				pr_items = frappe.db.sql("""
 					select
 						pr_item.item_code, pr_item.item_name, pr_item.total_weight,
-						pr_item.gross_weight_lbs, i.gross_weight
+						pr_item.gross_weight_lbs, i.gross_weight,
 						pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.amount, pr_item.name,
-						pr_item.{po_detail_field}, pr_item.purchase_order, pr_item.cost_center
+						pr_item.{po_detail_field}, pr_item.{po_field} as purchase_order, pr_item.cost_center
 					from `tab{doctype} Item` pr_item
 					inner join tabItem i on i.name = pr_item.item_code and i.is_stock_item = 1
 					where pr_item.parent = %s
-				""".format(doctype=pr.receipt_document_type, po_detail_field=po_detail_field),
-					pr.receipt_document, as_dict=True)
+				""".format(doctype=pr.receipt_document_type, po_detail_field=po_detail_field, po_field=po_field),
+					pr.receipt_document, as_dict=True, debug=1)
 
 				for d in pr_items:
 					item = self.append("items")
@@ -127,15 +157,15 @@ class LandedCostVoucher(AccountsController):
 			docstatus = frappe.db.get_value(d.receipt_document_type, d.receipt_document, "docstatus")
 			if docstatus is None:
 				frappe.throw(_("Row #{0}: {1} {2} does not exist").format(d.idx, d.receipt_document_type, d.receipt_document))
-			if docstatus != 1:
+			if docstatus != 1 and d.receipt_document_type != "Purchase Order":
 				frappe.throw(_("Row #{0}: {1} {2} must be submitted").format(d.idx, d.receipt_document_type, d.receipt_document))
 
 			receipt_documents.append(d.receipt_document)
 
 		for item in self.get("items"):
-			if (not item.purchase_receipt and not item.purchase_invoice) \
+			if (not item.purchase_receipt and not item.purchase_invoice and not item.purchase_order) \
 					or (item.purchase_receipt and item.purchase_invoice) \
-					or (not item.purchase_receipt_item and not item.purchase_invoice_item) \
+					or (not item.purchase_receipt_item and not item.purchase_invoice_item and not item.purchase_order_item) \
 					or (item.purchase_receipt_item and item.purchase_invoice_item):
 				frappe.throw(_("Item must be added using 'Get Items from Purchase Receipts' button"))
 

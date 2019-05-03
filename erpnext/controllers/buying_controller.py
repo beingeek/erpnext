@@ -106,18 +106,27 @@ class BuyingController(StockController):
 
 		return [d.item_code for d in self.items if d.is_fixed_asset]
 
-	def set_landed_cost_voucher_amount(self):
+	def set_landed_cost_voucher_amount(self, exclude=None):
 		if self.doctype == "Purchase Receipt":
 			purchase_item_field = "purchase_receipt_item"
 		elif self.doctype == "Purchase Invoice":
 			purchase_item_field = "purchase_invoice_item"
+		elif self.doctype == "Purchase Order":
+			purchase_item_field = "purchase_order_item"
 		else:
-			frappe.throw(_("Can only set Landed Cost Voucher Amount for Purchase Receipt or Purchase Invoice"))
+			frappe.throw(_("Can only set Landed Cost Voucher Amount for Purchase Receipt or Purchase Invoice or Purchase Order"))
 
+		docstatus_condition = "docstatus = 1 and" if self.doctype != "Purchase Order" else "docstatus < 2 and"
+		exclude_condition = "and parent != '{0}'".format(frappe.db.escape(exclude)) if exclude else ""
 		for d in self.get("items"):
 			lc_voucher_data = frappe.db.sql("""select sum(applicable_charges), cost_center
 				from `tabLanded Cost Item`
-				where docstatus = 1 and {purchase_item_field} = %s""".format(purchase_item_field=purchase_item_field), d.name)
+				where {docstatus_condition} {purchase_item_field} = %s {exclude_condition}
+			""".format(
+				purchase_item_field=purchase_item_field,
+				docstatus_condition=docstatus_condition,
+				exclude_condition=exclude_condition),
+				d.name)
 			d.landed_cost_voucher_amount = lc_voucher_data[0][0] if lc_voucher_data else 0.0
 			if not d.cost_center and lc_voucher_data and lc_voucher_data[0][1]:
 				d.db_set('cost_center', lc_voucher_data[0][1])

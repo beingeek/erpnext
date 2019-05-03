@@ -15,9 +15,14 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 				var d = locals[cdt][cdn];
 
 				var filters = [
-					[d.receipt_document_type, 'docstatus', '=', '1'],
 					[d.receipt_document_type, 'company', '=', me.frm.doc.company],
 				];
+
+				if (d.receipt_document_type == "Purchase Order") {
+					filters.push([d.receipt_document_type, 'status', 'in', ['To Receive and Bill', 'Draft']])
+				} else {
+					filters.push([d.receipt_document_type, 'docstatus', '=', '1']);
+				}
 
 				if (d.receipt_document_type == "Purchase Invoice") {
 					filters.push(["Purchase Invoice", "update_stock", "=", "1"])
@@ -61,7 +66,6 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 		});
 
 		this.frm.add_fetch("receipt_document", "supplier", "supplier");
-		this.frm.add_fetch("receipt_document", "posting_date", "posting_date");
 		this.frm.add_fetch("receipt_document", "base_grand_total", "grand_total");
 	},
 
