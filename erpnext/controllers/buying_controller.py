@@ -131,6 +131,9 @@ class BuyingController(StockController):
 			if not d.cost_center and lc_voucher_data and lc_voucher_data[0][1]:
 				d.db_set('cost_center', lc_voucher_data[0][1])
 
+			if d.meta.has_field("landed_rate"):
+				d.landed_rate = (flt(d.base_net_amount) + flt(d.landed_cost_voucher_amount)) / flt(d.qty) if d.qty else 0
+
 	def set_supplier_address(self):
 		address_dict = {
 			'supplier_address': 'address_display',
