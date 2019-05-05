@@ -195,7 +195,17 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 		}
 	},
 
-	amount: function(frm) {
+	amount: function() {
+		this.calculate_taxes_and_totals();
+	},
+
+	total_amount: function(frm, cdt, cdn) {
+		var row = frappe.get_doc(cdt, cdn);
+		row.tax_amount = flt(flt(row.total_amount) - flt(row.total_amount)/1.13, precision("tax_amount", row));
+		this.calculate_taxes_and_totals();
+	},
+
+	tax_amount: function() {
 		this.calculate_taxes_and_totals();
 	},
 
@@ -220,20 +230,33 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 		});
 
 		me.frm.doc.total_taxes_and_charges = 0;
+		me.frm.doc.taxes_not_in_valuation = 0;
 		$.each(me.frm.doc.taxes || [], function(i, d) {
-			d.amount = flt(d.amount, precision("amount", d));
+			d.total_amount = flt(d.total_amount, precision("total_amount", d));
+			d.tax_amount = flt(d.tax_amount, precision("tax_amount", d));
+			d.base_tax_amount = flt(d.tax_amount * me.frm.doc.conversion_rate, precision("base_tax_amount", d));
+			d.amount = flt(d.total_amount - d.tax_amount, precision("amount", d));
 			d.base_amount = flt(d.amount * me.frm.doc.conversion_rate, precision("base_amount", d));
 			me.frm.doc.total_taxes_and_charges += d.amount;
+
+			if (me.frm.doc.party) {
+				me.frm.doc.taxes_not_in_valuation += d.tax_amount;
+			}
 		});
+
 		me.frm.doc.total_taxes_and_charges = flt(me.frm.doc.total_taxes_and_charges, precision("total_taxes_and_charges"));
 		me.frm.doc.base_total_taxes_and_charges = flt(me.frm.doc.total_taxes_and_charges * me.frm.doc.conversion_rate, precision("base_total_taxes_and_charges"));
+
+		me.frm.doc.taxes_not_in_valuation = flt(me.frm.doc.taxes_not_in_valuation, precision("taxes_not_in_valuation"));
+		me.frm.doc.base_taxes_not_in_valuation = flt(me.frm.doc.taxes_not_in_valuation * me.frm.doc.conversion_rate, precision("base_taxes_not_in_valuation"));
 
 		var total_allocated_amount = frappe.utils.sum($.map(me.frm.doc["advances"] || [], function(adv) {
 			return flt(adv.allocated_amount, precision("allocated_amount", adv));
 		}));
 
 		if (me.frm.doc.party) {
-			me.frm.doc.grand_total = flt(me.frm.doc.total_taxes_and_charges, precision("grand_total"));
+			me.frm.doc.grand_total = flt(me.frm.doc.total_taxes_and_charges + me.frm.doc.taxes_not_in_valuation,
+				precision("grand_total"));
 			me.frm.doc.base_grand_total = flt(me.frm.doc.grand_total * me.frm.doc.conversion_rate, precision("base_grand_total"));
 			me.frm.doc.total_advance = flt(total_allocated_amount, precision("total_advance"));
 		} else {
@@ -511,7 +534,8 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 					me.frm.set_value("currency", me.get_company_currency());
 					me.set_dynamic_labels();
 				}
-			}
+			},
+			() => me.calculate_taxes_and_totals()
 		]);
 	},
 
@@ -520,20 +544,25 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 	},
 
 	set_dynamic_labels: function() {
+		var me = this;
 		var company_currency = this.get_company_currency();
 
-		this.frm.set_currency_labels(["base_total_taxes_and_charges", "base_grand_total"], company_currency);
-		this.frm.set_currency_labels(["total_taxes_and_charges", "grand_total"], this.frm.doc.currency);
+		this.frm.set_currency_labels(["base_total_taxes_and_charges", "base_grand_total", "base_taxes_not_in_valuation"], company_currency);
+		this.frm.set_currency_labels(["total_taxes_and_charges", "grand_total", "taxes_not_in_valuation"], this.frm.doc.currency);
 		this.frm.set_currency_labels(["outstanding_amount", "total_advance"], this.frm.doc.party_account_currency);
-		this.frm.set_currency_labels(["base_amount"], company_currency, "taxes");
-		this.frm.set_currency_labels(["amount"], this.frm.doc.currency, "taxes");
+		this.frm.set_currency_labels(["base_amount", "base_total_amount", "base_tax_amount"], company_currency, "taxes");
+		this.frm.set_currency_labels(["amount", "total_amount", "tax_amount"], this.frm.doc.currency, "taxes");
 		this.frm.set_currency_labels(["advance_amount", "allocated_amount"], this.frm.doc.party_account_currency, "advances");
 
 		cur_frm.set_df_property("conversion_rate", "description", "1 " + this.frm.doc.currency
 			+ " = [?] " + company_currency);
 
-		this.frm.toggle_display(["conversion_rate", "base_total_taxes_and_charges"], this.frm.doc.currency != company_currency);
-		this.frm.fields_dict["taxes"].grid.set_column_disp("base_amount", this.frm.doc.currency != company_currency);
+		this.frm.toggle_display(["conversion_rate", "base_total_taxes_and_charges", "base_grand_total", "base_taxes_not_in_valuation"],
+			this.frm.doc.currency != company_currency);
+		$.each(["base_amount", "base_tax_amount"], function(i, f) {
+			me.frm.fields_dict["taxes"].grid.set_column_disp(f, me.frm.doc.currency != company_currency);
+		});
+
 
 		this.frm.refresh_fields();
 	},

@@ -117,7 +117,7 @@ class LandedCostVoucher(AccountsController):
 					inner join tabItem i on i.name = pr_item.item_code and i.is_stock_item = 1
 					where pr_item.parent = %s
 				""".format(doctype=pr.receipt_document_type, po_detail_field=po_detail_field, po_field=po_field),
-					pr.receipt_document, as_dict=True, debug=1)
+					pr.receipt_document, as_dict=True)
 
 				for d in pr_items:
 					item = self.append("items")
@@ -252,17 +252,29 @@ class LandedCostVoucher(AccountsController):
 			self.set('total_' + f, flt(sum([flt(d.get(f)) for d in self.get("items")]), self.precision('total_' + f)))
 
 		self.total_taxes_and_charges = 0
+		self.taxes_not_in_valuation = 0
 		for d in self.taxes:
-			d.amount = flt(d.amount, d.precision("amount"))
+			d.total_amount = flt(d.total_amount, d.precision("total_amount"))
+			d.tax_amount = flt(d.tax_amount, d.precision("tax_amount"))
+			d.base_tax_amount = flt(d.tax_amount * self.conversion_rate, d.precision("base_tax_amount"))
+			d.amount = flt(d.total_amount - d.tax_amount, d.precision("amount"))
 			d.base_amount = flt(d.amount * self.conversion_rate, d.precision("base_amount"))
 			self.total_taxes_and_charges += d.amount
+
+			if self.party:
+				self.taxes_not_in_valuation += d.tax_amount
+
 		self.total_taxes_and_charges = flt(self.total_taxes_and_charges, self.precision("total_taxes_and_charges"))
 		self.base_total_taxes_and_charges = flt(self.total_taxes_and_charges * self.conversion_rate, self.precision("base_total_taxes_and_charges"))
+
+		self.taxes_not_in_valuation = flt(self.taxes_not_in_valuation, self.precision("taxes_not_in_valuation"))
+		self.base_taxes_not_in_valuation = flt(self.taxes_not_in_valuation * self.conversion_rate, self.precision("base_taxes_not_in_valuation"))
 
 		total_allocated = sum([flt(d.allocated_amount, d.precision("allocated_amount")) for d in self.get("advances")])
 
 		if self.party:
-			self.grand_total = flt(self.total_taxes_and_charges, self.precision("grand_total"))
+			self.grand_total = flt(self.total_taxes_and_charges + self.taxes_not_in_valuation,
+				self.precision("grand_total"))
 			self.base_grand_total = flt(self.grand_total * self.conversion_rate, self.precision("base_grand_total"))
 			self.total_advance = flt(total_allocated, self.precision("total_advance"))
 		else:
@@ -378,6 +390,8 @@ class LandedCostVoucher(AccountsController):
 				}, self.party_account_currency)
 			)
 
+		tax_account_currency = get_account_currency(self.tax_account) if self.tax_account else None
+
 		# expense entries
 		for tax in self.taxes:
 			r = []
@@ -400,6 +414,22 @@ class LandedCostVoucher(AccountsController):
 					"remarks": remarks
 				}, account_currency)
 			)
+
+			if tax.tax_amount:
+				if not self.tax_account:
+					frappe.throw(_("Tax Account is mandatory when tax amount has been set"))
+
+				gl_entry.append(
+					self.get_gl_dict({
+						"account": self.tax_account,
+						"debit": tax.base_tax_amount,
+						"debit_in_account_currency": tax.base_tax_amount \
+							if tax_account_currency == self.company_currency else tax.tax_amount,
+						"against": self.party,
+						"cost_center": tax.cost_center,
+						"remarks": remarks
+					}, tax_account_currency)
+				)
 
 		return gl_entry
 
