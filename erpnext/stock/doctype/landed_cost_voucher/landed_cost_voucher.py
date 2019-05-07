@@ -247,6 +247,11 @@ class LandedCostVoucher(AccountsController):
 				frappe.throw(_("Credit To account must be a Payable account"))
 
 	def calculate_taxes_and_totals(self):
+		if self.currency == self.company_currency:
+			self.conversion_rate = 1.0
+		if not self.conversion_rate:
+			frappe.throw(_("Exchange Rate cannot be 0"))
+
 		item_total_fields = ['qty', 'amount', 'weight', 'gross_weight']
 		for f in item_total_fields:
 			self.set('total_' + f, flt(sum([flt(d.get(f)) for d in self.get("items")]), self.precision('total_' + f)))
