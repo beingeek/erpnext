@@ -84,7 +84,7 @@ class PurchaseOrder(BuyingController):
 					lcv_item.rate = d.base_rate
 					lcv_item.weight = d.total_weight
 					if d.get("gross_weight_lbs"):
-						lcv_item.gross_weight = d.get("gross_weight_lbs")
+						lcv_item.gross_weight = flt(d.get("gross_weight_lbs")) * d.qty
 
 			doc.calculate_taxes_and_totals()
 			doc.save()
