@@ -33,15 +33,15 @@ frappe.ui.form.on("Sales Order", {
 		})
 	},
 	refresh: function(frm) {
-		if(frm.doc.docstatus == 1 && frm.doc.status == 'To Deliver and Bill') {
-			frm.add_custom_button(__('Update Items'), () => {
-				erpnext.utils.update_child_items({
-					frm: frm,
-					child_docname: "items",
-					child_doctype: "Sales Order Detail",
-				})
-			});
-		}
+		// if(frm.doc.docstatus == 1 && frm.doc.status == 'To Deliver and Bill') {
+		//	frm.add_custom_button(__('Update Items'), () => {
+		//		erpnext.utils.update_child_items({
+		//			frm: frm,
+		//			child_docname: "items",
+		//			child_doctype: "Sales Order Detail",
+		//		})
+		//	});
+		// }
 	},
 	onload: function(frm) {
 		if (!frm.doc.transaction_date){
@@ -157,6 +157,9 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 				if(flt(doc.per_billed, 6) < 100) {
 					this.frm.add_custom_button(__('Invoice'),
 						function() { me.make_sales_invoice() }, __("Make"));
+
+					this.frm.add_custom_button(__('Make Invoice'),
+						function() { me.make_sales_invoice() });
 				}
 
 				// material request

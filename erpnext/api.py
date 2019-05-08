@@ -105,7 +105,7 @@ def paymentReferenceDate(row,reference_doctype,reference_name):
 	elif reference_doctype == "Sales Invoice":
 		d["due_date"] = doc.posting_date
 	else:
-		d["due_date"] = doc.get("due_date")
+		d["due_date"] = doc.get("due_date") or doc.get("posting_date")
 	
 	result_list2.append(d)
 	return result_list2

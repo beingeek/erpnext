@@ -10,7 +10,8 @@ frappe.ui.form.on("Purchase Order", {
 		frm.custom_make_buttons = {
 			'Purchase Receipt': 'Receipt',
 			'Purchase Invoice': 'Invoice',
-			'Stock Entry': 'Material to Supplier'
+			'Stock Entry': 'Material to Supplier',
+			'Landed Cost Voucher': 'Landed Cost Voucher'
 		}
 
 		frm.set_query("reserve_warehouse", "supplied_items", function() {
@@ -145,6 +146,8 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 				this.frm.add_custom_button(__('Payment Request'),
 					function() { me.make_payment_request() }, __("Make"));
 			}
+
+			cur_frm.add_custom_button(__('Landed Cost Voucher'), this.make_landed_cost_voucher, __("Make"));
 
 			cur_frm.page.set_inner_btn_group_as_primary(__("Make"));
 		}

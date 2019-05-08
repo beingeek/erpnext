@@ -201,7 +201,9 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 
 	total_amount: function(frm, cdt, cdn) {
 		var row = frappe.get_doc(cdt, cdn);
-		row.tax_amount = flt(flt(row.total_amount) - flt(row.total_amount)/1.13, precision("tax_amount", row));
+		if (this.frm.doc.hst == "Yes") {
+			row.tax_amount = flt(flt(row.total_amount) - flt(row.total_amount) / 1.13, precision("tax_amount", row));
+		}
 		this.calculate_taxes_and_totals();
 	},
 
@@ -520,7 +522,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 						method: "frappe.client.get_value",
 						args: {
 							doctype: "Supplier",
-							fieldname: "default_currency",
+							fieldname: ["default_currency", "hst"],
 							filters: {name: me.frm.doc.party},
 						},
 						callback: function(r, rt) {
@@ -532,6 +534,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 					});
 				} else {
 					me.frm.set_value("currency", me.get_company_currency());
+					me.frm.set_value("hst", "No");
 					me.set_dynamic_labels();
 				}
 			},

@@ -456,7 +456,7 @@ def get_landed_cost_voucher(dt, dn):
 		"receipt_document_type": dt,
 		"receipt_document": dn,
 		"supplier": doc.supplier,
-		"posting_date": doc.posting_date,
+		"posting_date": doc.get("posting_date") or doc.get("transaction_date"),
 		"grand_total": doc.base_grand_total
 	})
 
