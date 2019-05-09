@@ -522,13 +522,19 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 						method: "frappe.client.get_value",
 						args: {
 							doctype: "Supplier",
-							fieldname: ["default_currency", "hst"],
+							fieldname: ["default_currency", "hst", "expense_account"],
 							filters: {name: me.frm.doc.party},
 						},
 						callback: function(r, rt) {
 							if(r.message) {
 								me.frm.set_value("currency", r.message.default_currency);
 								me.set_dynamic_labels();
+
+								if (me.frm.doc.taxes.length) {
+									frappe.model.set_value(me.frm.doc.taxes[0].doctype, me.frm.doc.taxes[0].name, "account_head", r.message.expense_account);
+								} else {
+									me.frm.add_child('taxes').account_head = r.message.expense_account;
+								}
 							}
 						}
 					});

@@ -106,7 +106,8 @@ def paymentReferenceDate(row,reference_doctype,reference_name):
 	elif reference_doctype == "Sales Invoice":
 		d["due_date"] = doc.posting_date
 	elif reference_doctype == "Landed Cost Voucher":
-		d["cheque_no"] = ", ".join([tax.remarks for tax in doc.taxes if tax.remarks])
+		d["cheque_no"] = doc.bill_no
+		d["cheque_no"] = doc.bill_no
 	
 	result_list2.append(d)
 	return result_list2
