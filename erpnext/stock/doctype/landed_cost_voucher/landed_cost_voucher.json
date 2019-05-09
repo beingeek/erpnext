@@ -1540,7 +1540,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_in_quick_entry": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -1781,7 +1781,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2019-05-08 17:56:31.527874", 
+ "modified": "2019-05-08 22:05:56.007797", 
  "modified_by": "Administrator", 
  "module": "Stock", 
  "name": "Landed Cost Voucher", 

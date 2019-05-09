@@ -40,6 +40,7 @@ class LandedCostVoucher(AccountsController):
 		self.validate_applicable_charges_for_item()
 		self.update_landed_cost()
 		self.make_gl_entries()
+		self.outstanding_amount = self.db_get('outstanding_amount')
 
 	def on_submit(self):
 		self.validate_no_purchase_order()
