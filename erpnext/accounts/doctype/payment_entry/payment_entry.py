@@ -935,6 +935,14 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
 	if party_account and bank:
 		pe.set_exchange_rate()
 		pe.set_amounts()
+
+	for d in pe.references:
+		from erpnext.api import paymentReferenceDate
+		ref_data = paymentReferenceDate(d.idx, dt, dn)
+		if ref_data:
+			d.due_date = ref_data[0].get("due_date")
+			d.cheque_no = ref_data[0].get("cheque_no")
+
 	return pe
 
 

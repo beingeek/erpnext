@@ -549,6 +549,10 @@ frappe.ui.form.on('Payment Entry', {
 			frm.events.set_unallocated_amount(frm);
 	},
 
+	get_outstanding_invoices: function(frm) {
+		frm.events.get_outstanding_documents(frm);
+	},
+
 	get_outstanding_documents: function(frm) {
 		frm.clear_table("references");
 
