@@ -70,6 +70,15 @@ frappe.ui.form.on("Sales Order", {
 		});
 
 		erpnext.queries.setup_warehouse_query(frm);
+
+		$(frm.wrapper).on("grid-row-render", function(e, grid_row) {
+			if(grid_row.doc && grid_row.doc.doctype=="Sales Order Item") {
+				$(grid_row.wrapper).on('focus', 'input', frappe.utils.debounce(function() {
+					frm.set_value("current_actual_qty", grid_row.doc.actual_qty);
+					frm.set_value("current_projected_qty", grid_row.doc.projected_qty);
+				}, 300));
+			}
+		});
 	},
 
 	delivery_date: function(frm) {
