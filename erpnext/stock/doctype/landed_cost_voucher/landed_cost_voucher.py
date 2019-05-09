@@ -34,6 +34,13 @@ class LandedCostVoucher(AccountsController):
 	def on_trash(self):
 		self.update_landed_cost_in_purchase_orders(on_trash=True)
 
+	def on_update_after_submit(self):
+		self.make_gl_entries(cancel=True)
+		self.calculate_taxes_and_totals()
+		self.validate_applicable_charges_for_item()
+		self.update_landed_cost()
+		self.make_gl_entries()
+
 	def on_submit(self):
 		self.validate_no_purchase_order()
 		self.calculate_taxes_and_totals()

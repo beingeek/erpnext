@@ -16,7 +16,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_in_quick_entry": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 3, 
@@ -85,7 +85,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_in_quick_entry": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 1, 
@@ -152,7 +152,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_in_quick_entry": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 3, 
@@ -216,7 +216,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_in_quick_entry": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 1, 
@@ -250,7 +250,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_in_quick_entry": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 1, 
@@ -285,7 +285,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_in_quick_entry": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 1, 
@@ -350,7 +350,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_in_quick_entry": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -384,7 +384,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_in_quick_entry": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -427,7 +427,7 @@
  "issingle": 0, 
  "istable": 1, 
  "max_attachments": 0, 
- "modified": "2019-05-04 06:39:47.939575", 
+ "modified": "2019-05-08 17:57:40.566140", 
  "modified_by": "Administrator", 
  "module": "Stock", 
  "name": "Landed Cost Taxes and Charges", 
