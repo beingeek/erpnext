@@ -201,6 +201,7 @@ class TestSalesInvoice(unittest.TestCase):
 
 		# with inclusive tax
 		self.assertEqual(si.net_total, 4385.96)
+		self.assertEqual(si.tax_exclusive_total, 4385.96)
 		self.assertEqual(si.grand_total, 5000)
 
 		si.reload()
@@ -214,6 +215,7 @@ class TestSalesInvoice(unittest.TestCase):
 
 		# with inclusive tax and additional discount
 		self.assertEqual(si.net_total, 4285.96)
+		self.assertEqual(si.tax_exclusive_total, 4385.96)
 		self.assertEqual(si.grand_total, 4885.99)
 
 		si.reload()
@@ -227,6 +229,7 @@ class TestSalesInvoice(unittest.TestCase):
 
 		# with inclusive tax and additional discount
 		self.assertEqual(si.net_total, 4298.25)
+		self.assertEqual(si.tax_exclusive_total, 4385.96)
 		self.assertEqual(si.grand_total, 4900.00)
 
 	def test_sales_invoice_discount_amount(self):
@@ -382,6 +385,63 @@ class TestSalesInvoice(unittest.TestCase):
 
 		self.assertEqual(si.grand_total, 5474.0)
 
+	def test_tax_calculation_with_item_tax_template(self):
+		si = create_sales_invoice(qty=84, rate=4.6, do_not_save=True)
+		item_row = si.get("items")[0]
+
+		add_items = [
+			(54, '_Test Account Excise Duty @ 12'),
+			(288, '_Test Account Excise Duty @ 15'),
+			(144, '_Test Account Excise Duty @ 20'),
+			(430, '_Test Item Tax Template 1')
+		]
+		for qty, item_tax_template in add_items:
+			item_row_copy = copy.deepcopy(item_row)
+			item_row_copy.qty = qty
+			item_row_copy.item_tax_template = item_tax_template
+			si.append("items", item_row_copy)
+
+		si.append("taxes", {
+			"account_head": "_Test Account Excise Duty - _TC",
+			"charge_type": "On Net Total",
+			"cost_center": "_Test Cost Center - _TC",
+			"description": "Excise Duty",
+			"doctype": "Sales Taxes and Charges",
+			"rate": 11
+		})
+		si.append("taxes", {
+			"account_head": "_Test Account Education Cess - _TC",
+			"charge_type": "On Net Total",
+			"cost_center": "_Test Cost Center - _TC",
+			"description": "Education Cess",
+			"doctype": "Sales Taxes and Charges",
+			"rate": 0
+		})
+		si.append("taxes", {
+			"account_head": "_Test Account S&H Education Cess - _TC",
+			"charge_type": "On Net Total",
+			"cost_center": "_Test Cost Center - _TC",
+			"description": "S&H Education Cess",
+			"doctype": "Sales Taxes and Charges",
+			"rate": 3
+		})
+		si.insert()
+
+		self.assertEqual(si.net_total, 4600)
+
+		self.assertEqual(si.get("taxes")[0].tax_amount, 502.41)
+		self.assertEqual(si.get("taxes")[0].total, 5102.41)
+
+		self.assertEqual(si.get("taxes")[1].tax_amount, 197.80)
+		self.assertEqual(si.get("taxes")[1].total, 5300.21)
+
+		self.assertEqual(si.get("taxes")[2].tax_amount, 375.36)
+		self.assertEqual(si.get("taxes")[2].total, 5675.57)
+
+		self.assertEqual(si.grand_total, 5675.57)
+		self.assertEqual(si.rounding_adjustment, 0.43)
+		self.assertEqual(si.rounded_total, 5676.0)
+
 	def test_tax_calculation_with_multiple_items_and_discount(self):
 		si = create_sales_invoice(qty=1, rate=75, do_not_save=True)
 		item_row = si.get("items")[0]
@@ -435,22 +495,53 @@ class TestSalesInvoice(unittest.TestCase):
 		si.insert()
 
 		expected_values = {
-			"keys": ["price_list_rate", "discount_percentage", "rate", "amount",
-				"base_price_list_rate", "base_rate", "base_amount", "net_rate", "net_amount"],
-			"_Test Item Home Desktop 100": [62.5, 0, 62.5, 625.0, 62.5, 62.5, 625.0, 50, 499.97600115194473],
-			"_Test Item Home Desktop 200": [190.66, 0, 190.66, 953.3, 190.66, 190.66, 953.3, 150, 749.9968530500239],
+			"_Test Item Home Desktop 100": {
+				"price_list_rate": 62.5,
+				"discount_percentage": 0,
+				"rate": 62.5,
+				"amount": 625.0,
+				"base_price_list_rate": 62.5,
+				"base_rate": 62.5,
+				"base_amount": 625.0,
+				"net_rate": 50,
+				"net_amount": 499.97600115194473,
+				"tax_exclusive_price_list_rate": 49.99760011519447,
+				"tax_exclusive_rate": 49.99760011519447,
+				"tax_exclusive_amount": 499.97600115194473,
+				"base_tax_exclusive_price_list_rate": 50,
+				"base_tax_exclusive_rate": 50,
+				"base_tax_exclusive_amount": 499.98
+			},
+			"_Test Item Home Desktop 200": {
+				"price_list_rate": 190.66,
+				"discount_percentage": 0,
+				"rate": 190.66,
+				"amount": 953.3,
+				"base_price_list_rate": 190.66,
+				"base_rate": 190.66,
+				"base_amount": 953.3,
+				"net_rate": 150,
+				"net_amount": 749.9968530500239,
+				"tax_exclusive_price_list_rate": 149.99937061000477,
+				"tax_exclusive_rate": 149.99937061000477,
+				"tax_exclusive_amount": 749.9968530500239,
+				"base_tax_exclusive_price_list_rate": 150,
+				"base_tax_exclusive_rate": 150,
+				"base_tax_exclusive_amount": 750
+			}
 		}
 
 		# check if children are saved
-		self.assertEqual(len(si.get("items")), len(expected_values)-1)
+		self.assertEqual(len(si.get("items")), len(expected_values))
 
 		# check if item values are calculated
 		for d in si.get("items"):
-			for i, k in enumerate(expected_values["keys"]):
-				self.assertEqual(d.get(k), expected_values[d.item_code][i])
+			for k, v in iteritems(expected_values[d.item_code]):
+				self.assertEqual(d.get(k), v)
 
 		# check net total
 		self.assertEqual(si.net_total, 1249.97)
+		self.assertEqual(si.tax_exclusive_total, 1249.97)
 		self.assertEqual(si.total, 1578.3)
 
 		# check tax calculation
@@ -492,30 +583,58 @@ class TestSalesInvoice(unittest.TestCase):
 			{
 				"item_code": "_Test Item Home Desktop 100",
 				"price_list_rate": 55.56,
+				"tax_exclusive_price_list_rate": 44.44586659840328,
 				"discount_percentage": 10,
 				"rate": 50,
+				"tax_exclusive_rate": 39.998080092155575,
 				"amount": 500,
+				"tax_exclusive_amount": 399.9808009215558,
 				"base_price_list_rate": 2778,
+				"base_tax_exclusive_price_list_rate": 2222.5,
 				"base_rate": 2500,
+				"base_tax_exclusive_rate": 2000,
 				"base_amount": 25000,
+				"base_tax_exclusive_amount": 19999,
 				"net_rate": 40,
 				"net_amount": 399.9808009215558,
 				"base_net_rate": 2000,
-				"base_net_amount": 19999
+				"base_net_amount": 19999,
+				"amount_before_discount": 555.6,
+				"tax_exclusive_amount_before_discount": 444.46,
+				"total_discount": 55.6,
+				"tax_exclusive_total_discount": 44.48,
+				"base_amount_before_discount": 27780,
+				"base_tax_exclusive_amount_before_discount": 22223,
+				"base_total_discount": 2780,
+				"base_tax_exclusive_total_discount": 2224,
 			},
 			{
 				"item_code": "_Test Item Home Desktop 200",
 				"price_list_rate": 187.5,
+				"tax_exclusive_price_list_rate": 147.51328012889908,
 				"discount_percentage": 20,
 				"rate": 150,
+				"tax_exclusive_rate": 118.01062410311927,
 				"amount": 750,
+				"tax_exclusive_amount": 590.0531205155963,
 				"base_price_list_rate": 9375,
+				"base_tax_exclusive_price_list_rate": 7375.5,
 				"base_rate": 7500,
+				"base_tax_exclusive_rate": 5900.5,
 				"base_amount": 37500,
+				"base_tax_exclusive_amount": 29502.5,
 				"net_rate": 118.01,
 				"net_amount": 590.0531205155963,
 				"base_net_rate": 5900.5,
-				"base_net_amount": 29502.5
+				"base_net_amount": 29502.5,
+				"amount_before_discount": 937.5,
+				"tax_exclusive_amount_before_discount": 737.57,
+				"total_discount": 187.5,
+				"tax_exclusive_total_discount": 147.52,
+				"base_amount_before_discount": 46875,
+				"base_tax_exclusive_amount_before_discount": 36878.5,
+				"base_total_discount": 9375,
+				"base_tax_exclusive_total_discount": 7376,
 			}
 		]
 
@@ -527,9 +646,22 @@ class TestSalesInvoice(unittest.TestCase):
 			for key, val in iteritems(expected_values[i]):
 				self.assertEqual(d.get(key), val)
 
+		# check amounts before discount
+		self.assertEqual(si.total_before_discount, 1493.1)
+		self.assertEqual(si.tax_exclusive_total_before_discount, 1182.03)
+		self.assertEqual(si.total_discount, 243.1)
+		self.assertEqual(si.tax_exclusive_total_discount, 192)
+		self.assertEqual(si.base_total_before_discount, 74655)
+		self.assertEqual(si.base_tax_exclusive_total_before_discount, 59101.5)
+		self.assertEqual(si.base_total_discount, 12155)
+		self.assertEqual(si.base_tax_exclusive_total_discount, 9600)
+
 		# check net total
 		self.assertEqual(si.base_net_total, 49501.5)
 		self.assertEqual(si.net_total, 990.03)
+		self.assertEqual(si.base_tax_exclusive_total, 49501.5)
+		self.assertEqual(si.tax_exclusive_total, 990.03)
+		self.assertEqual(si.base_total, 62500)
 		self.assertEqual(si.total, 1250)
 
 		# check tax calculation
@@ -849,6 +981,7 @@ class TestSalesInvoice(unittest.TestCase):
 	def test_sales_invoice_with_advance(self):
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry \
 			import test_records as jv_test_records
+		from erpnext.accounts.utils import get_balance_on_voucher
 
 		jv = frappe.copy_doc(jv_test_records[0])
 		jv.insert()
@@ -859,7 +992,6 @@ class TestSalesInvoice(unittest.TestCase):
 			"doctype": "Sales Invoice Advance",
 			"reference_type": "Journal Entry",
 			"reference_name": jv.name,
-			"reference_row": jv.get("accounts")[0].name,
 			"advance_amount": 400,
 			"allocated_amount": 300,
 			"remarks": jv.remark
@@ -874,12 +1006,20 @@ class TestSalesInvoice(unittest.TestCase):
 		self.assertTrue(frappe.db.sql("""select name from `tabJournal Entry Account`
 			where reference_name=%s and credit_in_account_currency=300""", si.name))
 
-		self.assertEqual(si.outstanding_amount, 262.0)
+		self.assertEqual(si.outstanding_amount,
+			262.0)
+		self.assertEqual(get_balance_on_voucher(si.doctype, si.name, "Customer", si.customer, si.debit_to),
+			262.0)
+		self.assertEqual(get_balance_on_voucher(jv.doctype, jv.name, "Customer", si.customer, si.debit_to),
+			-100.0)
 
 		si.cancel()
 
-		self.assertTrue(not frappe.db.sql("""select name from `tabJournal Entry Account`
+		self.assertFalse(frappe.db.sql("""select name from `tabJournal Entry Account`
 			where reference_name=%s""", si.name))
+
+		self.assertEqual(get_balance_on_voucher(jv.doctype, jv.name, "Customer", si.customer, si.debit_to),
+			-400.0)
 
 	def test_serialized(self):
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
@@ -1145,7 +1285,6 @@ class TestSalesInvoice(unittest.TestCase):
 			import test_records as jv_test_records
 
 		jv = frappe.copy_doc(jv_test_records[0])
-		jv.accounts[0].is_advance = 'Yes'
 		jv.insert()
 		jv.submit()
 
@@ -1154,7 +1293,6 @@ class TestSalesInvoice(unittest.TestCase):
 			"doctype": "Sales Invoice Advance",
 			"reference_type": "Journal Entry",
 			"reference_name": jv.name,
-			"reference_row": jv.get("accounts")[0].name,
 			"advance_amount": 400,
 			"allocated_amount": 300,
 			"remarks": jv.remark
@@ -1432,10 +1570,10 @@ class TestSalesInvoice(unittest.TestCase):
 
 	def test_credit_note(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
+		from erpnext.accounts.utils import get_balance_on_voucher
 		si = create_sales_invoice(item_code = "_Test Item", qty = (5 * -1), rate=500, is_return = 1)
 
-		outstanding_amount = get_outstanding_amount(si.doctype,
-			si.name, "Debtors - _TC", si.customer, "Customer")
+		outstanding_amount = get_balance_on_voucher(si.doctype, si.name, "Customer", si.customer, "Debtors - _TC")
 
 		self.assertEqual(si.outstanding_amount, outstanding_amount)
 
@@ -1650,16 +1788,3 @@ def create_sales_invoice_against_cost_center(**args):
 
 test_dependencies = ["Journal Entry", "Contact", "Address"]
 test_records = frappe.get_test_records('Sales Invoice')
-
-def get_outstanding_amount(against_voucher_type, against_voucher, account, party, party_type):
-	bal = flt(frappe.db.sql("""
-		select sum(debit_in_account_currency) - sum(credit_in_account_currency)
-		from `tabGL Entry`
-		where against_voucher_type=%s and against_voucher=%s
-		and account = %s and party = %s and party_type = %s""",
-		(against_voucher_type, against_voucher, account, party, party_type))[0][0] or 0.0)
-
-	if against_voucher_type == 'Purchase Invoice':
-		bal = bal * -1
-
-	return bal

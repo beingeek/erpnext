@@ -337,6 +337,7 @@ class TestPurchaseInvoice(unittest.TestCase):
 	def test_purchase_invoice_with_advance(self):
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry \
 			import test_records as jv_test_records
+		from erpnext.accounts.utils import get_balance_on_voucher
 
 		jv = frappe.copy_doc(jv_test_records[1])
 		jv.insert()
@@ -347,7 +348,6 @@ class TestPurchaseInvoice(unittest.TestCase):
 		pi.append("advances", {
 			"reference_type": "Journal Entry",
 			"reference_name": jv.name,
-			"reference_row": jv.get("accounts")[0].name,
 			"advance_amount": 400,
 			"allocated_amount": 300,
 			"remarks": jv.remark
@@ -359,10 +359,15 @@ class TestPurchaseInvoice(unittest.TestCase):
 		pi.disable_rounded_total = 0
 		pi.get("payment_schedule")[0].payment_amount = 1512.0
 		pi.save()
-		self.assertEqual(pi.outstanding_amount, 1212.0)
-
 		pi.submit()
 		pi.load_from_db()
+
+		self.assertEqual(pi.outstanding_amount,
+			1212.0)
+		self.assertEqual(get_balance_on_voucher(pi.doctype, pi.name, "Supplier", pi.supplier, pi.credit_to),
+			1212.0)
+		self.assertEqual(get_balance_on_voucher(jv.doctype, jv.name, "Supplier", pi.supplier, pi.credit_to),
+			-100.0)
 
 		self.assertTrue(frappe.db.sql("""select name from `tabJournal Entry Account`
 			where reference_type='Purchase Invoice'
@@ -372,6 +377,9 @@ class TestPurchaseInvoice(unittest.TestCase):
 
 		self.assertFalse(frappe.db.sql("""select name from `tabJournal Entry Account`
 			where reference_type='Purchase Invoice' and reference_name=%s""", pi.name))
+
+		self.assertEqual(get_balance_on_voucher(jv.doctype, jv.name, "Supplier", pi.supplier, pi.credit_to),
+			-400.0)
 
 	def test_invoice_with_advance_and_multi_payment_terms(self):
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry \
@@ -386,7 +394,6 @@ class TestPurchaseInvoice(unittest.TestCase):
 		pi.append("advances", {
 			"reference_type": "Journal Entry",
 			"reference_name": jv.name,
-			"reference_row": jv.get("accounts")[0].name,
 			"advance_amount": 400,
 			"allocated_amount": 300,
 			"remarks": jv.remark
@@ -640,7 +647,6 @@ class TestPurchaseInvoice(unittest.TestCase):
 			import test_records as jv_test_records
 
 		jv = frappe.copy_doc(jv_test_records[1])
-		jv.accounts[0].is_advance = 'Yes'
 		jv.insert()
 		jv.submit()
 
@@ -648,7 +654,6 @@ class TestPurchaseInvoice(unittest.TestCase):
 		pi.append("advances", {
 			"reference_type": "Journal Entry",
 			"reference_name": jv.name,
-			"reference_row": jv.get("accounts")[0].name,
 			"advance_amount": 400,
 			"allocated_amount": 300,
 			"remarks": jv.remark
@@ -767,12 +772,11 @@ class TestPurchaseInvoice(unittest.TestCase):
 
 	def test_debit_note(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import get_outstanding_amount
+		from erpnext.accounts.utils import get_balance_on_voucher
 
 		pi = make_purchase_invoice(item_code = "_Test Item", qty = (5 * -1), rate=500, is_return = 1)
 
-		outstanding_amount = get_outstanding_amount(pi.doctype,
-			pi.name, "Creditors - _TC", pi.supplier, "Supplier")
+		outstanding_amount = get_balance_on_voucher(pi.doctype, pi.name, "Supplier", pi.supplier, "Creditors - _TC")
 
 		self.assertEqual(pi.outstanding_amount, outstanding_amount)
 
@@ -848,6 +852,72 @@ class TestPurchaseInvoice(unittest.TestCase):
 
 		for gle in gl_entries:
 			self.assertEqual(expected_values[gle.account]["cost_center"], gle.cost_center)
+
+	def test_purchase_invoice_revalue_purchase_receipt(self):
+		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+		from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import ConfirmRevaluePurchaseReceipt
+
+		old_setting = frappe.get_value("Buying Settings", "Buying Settings", "maintain_same_rate")
+		frappe.set_value("Buying Settings", "Buying Settings", "maintain_same_rate", 0)
+
+		pr = make_purchase_receipt(item_code='_Test Item Overbillable', rate=100, qty=10)
+		pi = make_purchase_invoice(pr.name)
+		pi.items[0].rate = 200
+		pi.items[0].qty = 5
+		pi.append("taxes", {
+			"category": "Valuation and Total",
+			"charge_type": "Actual",
+			"account_head": "_Test Account Excise Duty - _TC",
+			"cost_center": "_Test Cost Center - _TC",
+			"description": "Excise Duty",
+			"tax_amount": 500
+		})
+		pi.save()
+
+		self.assertRaises(ConfirmRevaluePurchaseReceipt, frappe.copy_doc(pi).submit)
+
+		pi.revalue_purchase_receipt = 1
+		pi.save()
+		pi.submit()
+
+		sle = frappe.db.sql("""select stock_value_difference, incoming_rate
+			from `tabStock Ledger Entry` where voucher_type='Purchase Receipt' and voucher_no=%s
+			and item_code='_Test Item Overbillable'""", pr.name, as_dict=1)
+		self.assertEqual(len(sle), 1)
+		self.assertEqual([sle[0].stock_value_difference, sle[0].incoming_rate], [2000, 200])  # 5*100 + 5*(200+500/5)
+
+		pi2 = make_purchase_invoice(pr.name)
+		pi2.items[0].rate = 50
+		pi2.items[0].qty = 5
+		pi2.append("taxes", {
+			"category": "Valuation and Total",
+			"charge_type": "Actual",
+			"account_head": "_Test Account Excise Duty - _TC",
+			"cost_center": "_Test Cost Center - _TC",
+			"description": "Excise Duty",
+			"tax_amount": 50
+		})
+		pi2.revalue_purchase_receipt = 1
+		pi2.save()
+		pi2.submit()
+
+		sle2 = frappe.db.sql("""select stock_value_difference, incoming_rate
+			from `tabStock Ledger Entry` where voucher_type='Purchase Receipt' and voucher_no=%s
+			and item_code='_Test Item Overbillable'""", pr.name, as_dict=1)
+		self.assertEqual(len(sle2), 1)
+		self.assertEqual([sle2[0].stock_value_difference, sle2[0].incoming_rate],
+			[1800, 180])  # 5*(200+500/5) + 5*(50+50/5)
+
+		pi.cancel()
+		sle3 = frappe.db.sql("""select stock_value_difference, incoming_rate
+			from `tabStock Ledger Entry` where voucher_type='Purchase Receipt' and voucher_no=%s
+			and item_code='_Test Item Overbillable'""", pr.name, as_dict=1)
+		self.assertEqual(len(sle3), 1)
+		self.assertEqual([sle3[0].stock_value_difference, sle3[0].incoming_rate],
+			[800, 80])  # 5*(100) + 5*(50+50/5)
+
+		frappe.set_value("Buying Settings", "Buying Settings", "maintain_same_rate", old_setting)
 
 
 def unlink_payment_on_cancel_of_invoice(enable=1):

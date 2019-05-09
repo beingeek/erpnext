@@ -7,7 +7,8 @@ def get_data():
 		'non_standard_fieldnames': {
 			'Journal Entry': 'reference_name',
 			'Payment Entry': 'reference_name',
-			'Auto Repeat': 'reference_document'
+			'Auto Repeat': 'reference_document',
+			'Landed Cost Voucher': 'receipt_document',
 		},
 		'internal_links': {
 			'Material Request': ['items', 'material_request'],
@@ -17,7 +18,7 @@ def get_data():
 		'transactions': [
 			{
 				'label': _('Related'),
-				'items': ['Purchase Receipt', 'Purchase Invoice']
+				'items': ['Purchase Receipt', 'Purchase Invoice', 'Landed Cost Voucher']
 			},
 			{
 				'label': _('Payment'),

@@ -18,9 +18,11 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 		item.rate = flt(item.rate_with_margin , precision("rate", item));
 
-		if(item.discount_percentage){
+		if(item.discount_percentage) {
 			item.discount_amount = flt(item.rate_with_margin) * flt(item.discount_percentage) / 100;
 			item.rate = flt((item.rate_with_margin) - (item.discount_amount), precision('rate', item));
+		} else {
+			item.discount_amount = 0;
 		}
 	},
 
@@ -87,25 +89,57 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 	calculate_item_values: function() {
 		var me = this;
+
 		if (!this.discount_amount_applied) {
 			$.each(this.frm.doc["items"] || [], function(i, item) {
 				frappe.model.round_floats_in(item);
+
+				var has_margin_field = frappe.meta.has_field(item.doctype, 'margin_type');
+				if(has_margin_field && flt(item.rate_with_margin) > 0) {
+					item.amount_before_discount = flt(item.rate_with_margin * item.qty, precision("amount_before_discount", item));
+				} else if(flt(item.price_list_rate) > 0) {
+					item.amount_before_discount = flt(item.price_list_rate * item.qty, precision("amount_before_discount", item));
+				} else {
+					item.amount_before_discount = flt(item.rate * item.qty, precision("amount_before_discount", item));
+				}
+
 				item.net_rate = item.rate;
 				item.amount = flt(item.rate * item.qty, precision("amount", item));
 				item.net_amount = item.amount;
+				item.total_discount = flt(item.amount_before_discount - item.amount, precision("total_discount", item));
+
+				item.tax_exclusive_price_list_rate = item.price_list_rate;
+				item.tax_exclusive_rate = item.rate;
+				item.tax_exclusive_amount = item.amount;
+				item.tax_exclusive_discount_amount = item.discount_amount;
+				item.tax_exclusive_amount_before_discount = item.amount_before_discount;
+				item.tax_exclusive_total_discount = item.total_discount;
+				if(has_margin_field) {
+					item.tax_exclusive_rate_with_margin = item.rate_with_margin;
+					item.base_tax_exclusive_rate_with_margin = item.base_rate_with_margin;
+				}
+
 				item.item_tax_amount = 0.0;
 				item.total_weight = flt(item.weight_per_unit * item.stock_qty);
 
-				me.set_in_company_currency(item, ["price_list_rate", "rate", "amount", "net_rate", "net_amount"]);
+				me.set_in_company_currency(item, ["price_list_rate", "rate", "amount", "net_rate", "net_amount",
+					"tax_exclusive_price_list_rate", "tax_exclusive_rate", "tax_exclusive_amount",
+					"amount_before_discount", "total_discount", "tax_exclusive_amount_before_discount", "tax_exclusive_total_discount"]);
 			});
 		}
 	},
 
-	set_in_company_currency: function(doc, fields) {
+	set_in_company_currency: function(doc, fields, do_not_round_before_conversion) {
 		var me = this;
 		$.each(fields, function(i, f) {
-			doc["base_"+f] = flt(flt(doc[f], precision(f, doc)) * me.frm.doc.conversion_rate, precision("base_" + f, doc));
+			var v = do_not_round_before_conversion ? flt(doc[f]) : flt(doc[f], precision(f, doc));
+			doc["base_"+f] = flt(v * me.frm.doc.conversion_rate, precision("base_" + f, doc));
 		});
+	},
+
+	should_round_transaction_currency: function() {
+		return !cint(this.frm.doc.calculate_tax_on_company_currency)
+			|| !this.frm.doc.currency || this.frm.doc.currency == this.get_company_currency();
 	},
 
 	initialize_taxes: function() {
@@ -117,7 +151,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 				"tax_amount_for_current_item", "grand_total_for_current_item",
 				"tax_fraction_for_current_item", "grand_total_fraction_for_current_item"];
 
-			if (cstr(tax.charge_type) != "Actual" &&
+			if (cstr(tax.charge_type) != "Actual" && cstr(tax.charge_type) != "Weighted Distribution" &&
 				!(me.discount_amount_applied && me.frm.doc.apply_discount_on=="Grand Total")) {
 				tax_fields.push("tax_amount");
 			}
@@ -128,7 +162,12 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 				cur_frm.cscript.validate_taxes_and_charges(tax.doctype, tax.name);
 				me.validate_inclusive_tax(tax);
 			}
-			frappe.model.round_floats_in(tax);
+
+			if (me.should_round_transaction_currency()) {
+				frappe.model.round_floats_in(tax);
+			} else {
+				frappe.model.round_floats_in(tax, ["rate"]);
+			}
 		});
 	},
 
@@ -139,11 +178,15 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 		$.each(me.frm.doc["taxes"] || [], function(i, row) {
 			if(cint(row.included_in_print_rate)) has_inclusive_tax = true;
 		});
-		if(has_inclusive_tax==false) return;
+
+		$.each(me.frm.doc["items"] || [], function(i, item) {
+			item.cumulated_tax_fraction = 0.0;
+		});
+
+		if(!has_inclusive_tax) return;
 
 		$.each(me.frm.doc["items"] || [], function(n, item) {
 			var item_tax_map = me._load_item_tax_rate(item.item_tax_rate);
-			var cumulated_tax_fraction = 0.0;
 
 			$.each(me.frm.doc["taxes"] || [], function(i, tax) {
 				tax.tax_fraction_for_current_item = me.get_current_tax_fraction(tax, item_tax_map);
@@ -156,14 +199,38 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 						tax.tax_fraction_for_current_item;
 				}
 
-				cumulated_tax_fraction += tax.tax_fraction_for_current_item;
+				item.cumulated_tax_fraction += tax.tax_fraction_for_current_item;
 			});
 
-			if(cumulated_tax_fraction && !me.discount_amount_applied) {
-				item.net_amount = flt(item.amount / (1 + cumulated_tax_fraction));
+			if(item.cumulated_tax_fraction && !me.discount_amount_applied) {
+				var rate_before_discount = flt(item.tax_exclusive_price_list_rate / (1 + item.cumulated_tax_fraction));
+				item.tax_exclusive_price_list_rate = flt(rate_before_discount);
+
+				item.tax_exclusive_amount = flt(item.amount / (1 + item.cumulated_tax_fraction));
+				item.tax_exclusive_rate = item.qty ? (item.tax_exclusive_amount / item.qty)
+					: (item.rate / (1 + item.cumulated_tax_fraction));
+
+				var has_margin_field = frappe.meta.has_field(item.doctype, 'margin_type');
+				if(has_margin_field && flt(item.tax_exclusive_rate_with_margin) > 0) {
+					rate_before_discount = item.tax_exclusive_rate_with_margin / (1 + item.cumulated_tax_fraction);
+					item.tax_exclusive_rate_with_margin = flt(rate_before_discount);
+					item.base_tax_exclusive_rate_with_margin = flt(item.tax_exclusive_rate_with_margin * me.frm.doc.conversion_rate);
+					item.tax_exclusive_discount_amount = flt(item.tax_exclusive_rate_with_margin - item.tax_exclusive_rate);
+				} else if(flt(item.tax_exclusive_price_list_rate) > 0) {
+					item.tax_exclusive_discount_amount = flt(item.tax_exclusive_price_list_rate - item.tax_exclusive_rate);
+				}
+
+				item.tax_exclusive_amount_before_discount = flt(rate_before_discount * item.qty,
+					precision("tax_exclusive_amount_before_discount", item));
+				item.tax_exclusive_total_discount = flt(item.tax_exclusive_amount_before_discount - item.tax_exclusive_amount,
+					precision("tax_exclusive_total_discount", item));
+
+				item.net_amount = flt(item.amount / (1 + item.cumulated_tax_fraction));
 				item.net_rate = item.qty ? flt(item.net_amount / item.qty, precision("net_rate", item)) : 0;
 
-				me.set_in_company_currency(item, ["net_rate", "net_amount"]);
+				me.set_in_company_currency(item, ["net_rate", "net_amount",
+					"tax_exclusive_price_list_rate", "tax_exclusive_rate", "tax_exclusive_amount",
+					"tax_exclusive_amount_before_discount", "tax_exclusive_total_discount"]);
 			}
 		});
 	},
@@ -203,38 +270,82 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 	calculate_net_total: function() {
 		var me = this;
 		this.frm.doc.total_qty = this.frm.doc.total = this.frm.doc.base_total = this.frm.doc.net_total = this.frm.doc.base_net_total = 0.0;
+		this.frm.doc.base_tax_exclusive_total = this.frm.doc.tax_exclusive_total = 0.0;
+		this.frm.doc.base_total_discount = this.frm.doc.total_discount = 0.0;
+		this.frm.doc.base_total_before_discount = this.frm.doc.total_before_discount = 0.0;
+		this.frm.doc.base_tax_exclusive_total_before_discount = this.frm.doc.tax_exclusive_total_before_discount = 0.0;
+		this.frm.doc.base_tax_exclusive_total_discount = this.frm.doc.tax_exclusive_total_discount = 0.0;
 
 		$.each(this.frm.doc["items"] || [], function(i, item) {
-			me.frm.doc.total += item.amount;
 			me.frm.doc.total_qty += item.qty;
+
+			me.frm.doc.total += item.amount;
 			me.frm.doc.base_total += item.base_amount;
+
+			me.frm.doc.tax_exclusive_total += item.tax_exclusive_amount;
+			me.frm.doc.base_tax_exclusive_total += item.base_tax_exclusive_amount;
+
+			me.frm.doc.total_before_discount += item.amount_before_discount;
+			me.frm.doc.base_total_before_discount += item.base_amount_before_discount;
+			me.frm.doc.tax_exclusive_total_before_discount += item.tax_exclusive_amount_before_discount;
+			me.frm.doc.base_tax_exclusive_total_before_discount += item.base_tax_exclusive_amount_before_discount;
+
+			me.frm.doc.total_discount += item.total_discount;
+			me.frm.doc.base_total_discount += item.base_total_discount;
+			me.frm.doc.tax_exclusive_total_discount += item.tax_exclusive_total_discount;
+			me.frm.doc.base_tax_exclusive_total_discount += item.base_tax_exclusive_total_discount;
+
 			me.frm.doc.net_total += item.net_amount;
 			me.frm.doc.base_net_total += item.base_net_amount;
-			});
+		});
 
-		frappe.model.round_floats_in(this.frm.doc, ["total", "base_total", "net_total", "base_net_total"]);
+		frappe.model.round_floats_in(this.frm.doc, ["total", "base_total", "net_total", "base_net_total",
+			"tax_exclusive_total", "base_tax_exclusive_total",
+			"total_before_discount", "total_discount", "base_total_before_discount", "base_total_discount",
+			"tax_exclusive_total_before_discount", "tax_exclusive_total_discount",
+			"base_tax_exclusive_total_before_discount", "base_tax_exclusive_total_discount"]);
 	},
 
 	calculate_taxes: function() {
 		var me = this;
 		this.frm.doc.rounding_adjustment = 0;
 		var actual_tax_dict = {};
+		var weighted_distrubution_tax_on_net_total = {};
 
 		// maintain actual tax rate based on idx
 		$.each(this.frm.doc["taxes"] || [], function(i, tax) {
-			if (tax.charge_type == "Actual") {
-				actual_tax_dict[tax.idx] = flt(tax.tax_amount, precision("tax_amount", tax));
+			if (tax.charge_type == "Actual" || tax.charge_type == "Weighted Distribution") {
+				if (me.should_round_transaction_currency()) {
+					actual_tax_dict[tax.idx] = flt(tax.tax_amount, precision("tax_amount", tax));
+				} else {
+					actual_tax_dict[tax.idx] = tax.tax_amount;
+				}
 			}
+		});
+
+		// Tax on Net Total for Weighted Distribution
+		$.each(this.frm.doc["items"] || [], function(n, item) {
+			var item_tax_map = me._load_item_tax_rate(item.item_tax_rate);
+
+			$.each(me.frm.doc["taxes"] || [], function (i, tax) {
+				if (tax.charge_type == "Weighted Distribution") {
+					if (!weighted_distrubution_tax_on_net_total[tax.idx]) {
+						weighted_distrubution_tax_on_net_total[tax.idx] = 0.0;
+					}
+					var tax_rate = me._get_tax_rate(tax, item_tax_map);
+					weighted_distrubution_tax_on_net_total[tax.idx] += (tax_rate / 100) * item.net_amount;
+				}
+			});
 		});
 
 		$.each(this.frm.doc["items"] || [], function(n, item) {
 			var item_tax_map = me._load_item_tax_rate(item.item_tax_rate);
 			$.each(me.frm.doc["taxes"] || [], function(i, tax) {
 				// tax_amount represents the amount of tax for the current step
-				var current_tax_amount = me.get_current_tax_amount(item, tax, item_tax_map);
+				var current_tax_amount = me.get_current_tax_amount(item, tax, item_tax_map, weighted_distrubution_tax_on_net_total);
 
 				// Adjust divisional loss to the last item
-				if (tax.charge_type == "Actual") {
+				if (tax.charge_type == "Actual" || tax.charge_type == "Weighted Distribution") {
 					actual_tax_dict[tax.idx] -= current_tax_amount;
 					if (n == me.frm.doc["items"].length - 1) {
 						current_tax_amount += actual_tax_dict[tax.idx];
@@ -242,7 +353,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 				}
 
 				// accumulate tax amount into tax.tax_amount
-				if (tax.charge_type != "Actual" &&
+				if (tax.charge_type != "Actual" && tax.charge_type != "Weighted Distribution" &&
 					!(me.discount_amount_applied && me.frm.doc.apply_discount_on=="Grand Total")) {
 					tax.tax_amount += current_tax_amount;
 				}
@@ -280,7 +391,8 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 					me.set_cumulative_total(i, tax);
 
 					me.set_in_company_currency(tax,
-						["total", "tax_amount", "tax_amount_after_discount_amount"]);
+						["total", "displayed_total", "tax_amount", "tax_amount_after_discount_amount"],
+						!me.should_round_transaction_currency());
 
 					// adjust Discount Amount loss in last tax iteration
 					if ((i == me.frm.doc["taxes"].length - 1) && me.discount_amount_applied
@@ -295,16 +407,38 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 	set_cumulative_total: function(row_idx, tax) {
 		var tax_amount = tax.tax_amount_after_discount_amount;
+		var tax_amount_before_discount = tax.tax_amount;
 		if (tax.category == 'Valuation') {
 			tax_amount = 0;
+			tax_amount_before_discount = 0;
+		}
+		if (tax.add_deduct_tax == "Deduct")
+		{
+			tax_amount = -1*tax_amount;
+			tax_amount_before_discount = -1*tax_amount_before_discount;
 		}
 
-		if (tax.add_deduct_tax == "Deduct") { tax_amount = -1*tax_amount; }
-
 		if(row_idx==0) {
-			tax.total = flt(this.frm.doc.net_total + tax_amount, precision("total", tax));
+			tax.total = this.frm.doc.net_total + tax_amount;
+
+			if (this.frm.doc.apply_discount_on == "Grand Total") {
+				tax.displayed_total = this.frm.doc.tax_exclusive_total + tax_amount_before_discount;
+			} else {
+				tax.displayed_total = tax.total;
+			}
 		} else {
-			tax.total = flt(this.frm.doc["taxes"][row_idx-1].total + tax_amount, precision("total", tax));
+			tax.total = this.frm.doc["taxes"][row_idx-1].total + tax_amount;
+
+			if (this.frm.doc.apply_discount_on == "Grand Total") {
+				tax.displayed_total = this.frm.doc["taxes"][row_idx - 1].displayed_total + tax_amount_before_discount;
+			} else {
+				tax.displayed_total = tax.total;
+			}
+		}
+
+		if (this.should_round_transaction_currency()) {
+			tax.total = flt(tax.total, precision("total", tax));
+			tax.displayed_total = flt(tax.displayed_total, precision("displayed_total", tax));
 		}
 	},
 
@@ -312,15 +446,23 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 		return item_tax_rate ? JSON.parse(item_tax_rate) : {};
 	},
 
-	get_current_tax_amount: function(item, tax, item_tax_map) {
+	get_current_tax_amount: function(item, tax, item_tax_map, weighted_distrubution_tax_on_net_total) {
 		var tax_rate = this._get_tax_rate(tax, item_tax_map);
 		var current_tax_amount = 0.0;
 
-		if(tax.charge_type == "Actual") {
+		if(tax.charge_type == "Actual" || tax.charge_type == "Weighted Distribution") {
 			// distribute the tax amount proportionally to each item row
-			var actual = flt(tax.tax_amount, precision("tax_amount", tax));
-			current_tax_amount = this.frm.doc.net_total ?
-				((item.net_amount / this.frm.doc.net_total) * actual) : 0.0;
+			var actual = this.should_round_transaction_currency() ?
+				flt(tax.tax_amount, precision("tax_amount", tax)) : flt(tax.tax_amount);
+
+			if (tax.charge_type == "Actual" || !weighted_distrubution_tax_on_net_total[tax.idx]) {
+				current_tax_amount = this.frm.doc.net_total ?
+					((item.net_amount / this.frm.doc.net_total) * actual) : 0.0;
+			} else {
+				var tax_on_net_amount = (tax_rate / 100.0) * item.net_amount;
+				var tax_on_net_total = weighted_distrubution_tax_on_net_total[tax.idx];
+				current_tax_amount = actual * (tax_on_net_amount / tax_on_net_total);
+			}
 
 		} else if(tax.charge_type == "On Net Total") {
 			current_tax_amount = (tax_rate / 100.0) * item.net_amount;
@@ -351,8 +493,10 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 	},
 
 	round_off_totals: function(tax) {
-		tax.tax_amount = flt(tax.tax_amount, precision("tax_amount", tax));
-		tax.tax_amount_after_discount_amount = flt(tax.tax_amount_after_discount_amount, precision("tax_amount", tax));
+		if (this.should_round_transaction_currency()) {
+			tax.tax_amount = flt(tax.tax_amount, precision("tax_amount", tax));
+			tax.tax_amount_after_discount_amount = flt(tax.tax_amount_after_discount_amount, precision("tax_amount", tax));
+		}
 	},
 
 	manipulate_grand_total_for_inclusive_tax: function() {
@@ -408,24 +552,33 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 					}
 				});
 
-				frappe.model.round_floats_in(this.frm.doc,
-					["taxes_and_charges_added", "taxes_and_charges_deducted"]);
+				if (this.should_round_transaction_currency()) {
+					frappe.model.round_floats_in(this.frm.doc,
+						["taxes_and_charges_added", "taxes_and_charges_deducted"]);
+				}
 			}
 
 			this.frm.doc.base_grand_total = flt((this.frm.doc.taxes_and_charges_added || this.frm.doc.taxes_and_charges_deducted) ?
 				flt(this.frm.doc.grand_total * this.frm.doc.conversion_rate) : this.frm.doc.base_net_total);
 
 			this.set_in_company_currency(this.frm.doc,
-				["taxes_and_charges_added", "taxes_and_charges_deducted"]);
+				["taxes_and_charges_added", "taxes_and_charges_deducted"],
+				!this.should_round_transaction_currency());
 		}
 
-		this.frm.doc.total_taxes_and_charges = flt(this.frm.doc.grand_total - this.frm.doc.net_total
-			- flt(this.frm.doc.rounding_adjustment), precision("total_taxes_and_charges"));
+		this.frm.doc.total_taxes_and_charges = this.frm.doc.grand_total - this.frm.doc.net_total - flt(this.frm.doc.rounding_adjustment);
+		if (this.should_round_transaction_currency()) {
+			this.frm.doc.total_taxes_and_charges = flt(this.frm.doc.total_taxes_and_charges, precision("total_taxes_and_charges"));
+		}
 
-		this.set_in_company_currency(this.frm.doc, ["total_taxes_and_charges", "rounding_adjustment"]);
+		this.set_in_company_currency(this.frm.doc, ["total_taxes_and_charges", "rounding_adjustment"],
+			!this.should_round_transaction_currency());
 
 		// Round grand total as per precision
-		frappe.model.round_floats_in(this.frm.doc, ["grand_total", "base_grand_total"]);
+		if (this.should_round_transaction_currency()) {
+			frappe.model.round_floats_in(this.frm.doc, ["grand_total"]);
+		}
+		frappe.model.round_floats_in(this.frm.doc, ["base_grand_total"]);
 
 		// rounded totals
 		this.set_rounded_total();
@@ -439,7 +592,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			disable_rounded_total = frappe.sys_defaults.disable_rounded_total;
 		}
 
-		if (cint(disable_rounded_total)) {
+		if (cint(disable_rounded_total) || !this.should_round_transaction_currency()) {
 			this.frm.doc.rounded_total = 0;
 			this.frm.doc.base_rounded_total = 0;
 			return;
@@ -539,7 +692,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			var actual_taxes_dict = {};
 
 			$.each(this.frm.doc["taxes"] || [], function(i, tax) {
-				if (tax.charge_type == "Actual") {
+				if (tax.charge_type == "Actual" || tax.charge_type == "Weighted Distribution") {
 					var tax_amount = (tax.category == "Valuation") ? 0.0 : tax.tax_amount;
 					tax_amount *= (tax.add_deduct_tax == "Deduct") ? -1.0 : 1.0;
 					actual_taxes_dict[tax.idx] = tax_amount;
@@ -576,7 +729,9 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 		if(this.frm.doc.is_return || this.frm.doc.docstatus > 0) return;
 
-		frappe.model.round_floats_in(this.frm.doc, ["grand_total", "total_advance", "write_off_amount"]);
+		if (this.should_round_transaction_currency()) {
+			frappe.model.round_floats_in(this.frm.doc, ["grand_total", "total_advance", "write_off_amount"]);
+		}
 
 		if(in_list(["Sales Invoice", "Purchase Invoice"], this.frm.doc.doctype)) {
 			var grand_total = this.frm.doc.rounded_total || this.frm.doc.grand_total;

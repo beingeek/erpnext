@@ -70,7 +70,7 @@ class BuyingController(StockController):
 
 		# set contact and address details for supplier, if they are not mentioned
 		if getattr(self, "supplier", None):
-			self.update_if_missing(get_party_details(self.supplier, party_type="Supplier", ignore_permissions=self.flags.ignore_permissions,
+			self.update_if_missing(get_party_details(self.supplier, party_type="Supplier", ignore_permissions=self.flags.ignore_permissions, letter_of_credit=self.get("letter_of_credit"),
 			doctype=self.doctype, company=self.company, party_address=self.supplier_address, shipping_address=self.get('shipping_address')))
 
 		self.set_missing_item_details(for_validate)
@@ -106,14 +106,33 @@ class BuyingController(StockController):
 
 		return [d.item_code for d in self.items if d.is_fixed_asset]
 
-	def set_landed_cost_voucher_amount(self):
+	def set_landed_cost_voucher_amount(self, exclude=None):
+		if self.doctype == "Purchase Receipt":
+			purchase_item_field = "purchase_receipt_item"
+		elif self.doctype == "Purchase Invoice":
+			purchase_item_field = "purchase_invoice_item"
+		elif self.doctype == "Purchase Order":
+			purchase_item_field = "purchase_order_item"
+		else:
+			frappe.throw(_("Can only set Landed Cost Voucher Amount for Purchase Receipt or Purchase Invoice or Purchase Order"))
+
+		docstatus_condition = "docstatus = 1 and" if self.doctype != "Purchase Order" else "docstatus < 2 and"
+		exclude_condition = "and parent != '{0}'".format(frappe.db.escape(exclude)) if exclude else ""
 		for d in self.get("items"):
 			lc_voucher_data = frappe.db.sql("""select sum(applicable_charges), cost_center
 				from `tabLanded Cost Item`
-				where docstatus = 1 and purchase_receipt_item = %s""", d.name)
+				where {docstatus_condition} {purchase_item_field} = %s {exclude_condition}
+			""".format(
+				purchase_item_field=purchase_item_field,
+				docstatus_condition=docstatus_condition,
+				exclude_condition=exclude_condition),
+				d.name)
 			d.landed_cost_voucher_amount = lc_voucher_data[0][0] if lc_voucher_data else 0.0
 			if not d.cost_center and lc_voucher_data and lc_voucher_data[0][1]:
 				d.db_set('cost_center', lc_voucher_data[0][1])
+
+			if d.meta.has_field("landed_rate"):
+				d.landed_rate = (flt(d.base_net_amount) + flt(d.landed_cost_voucher_amount)) / flt(d.qty) if d.qty else 0
 
 	def set_supplier_address(self):
 		address_dict = {
@@ -165,6 +184,8 @@ class BuyingController(StockController):
 
 		valuation_amount_adjustment = total_valuation_amount
 		for i, item in enumerate(self.get(parentfield)):
+			item.valuation_rate = 0.0
+
 			if item.item_code and item.qty and item.item_code in stock_items:
 				item_proportion = flt(item.base_net_amount) / stock_items_amount if stock_items_amount \
 					else flt(item.qty) / stock_items_qty
@@ -186,10 +207,33 @@ class BuyingController(StockController):
 				landed_cost_voucher_amount = flt(item.landed_cost_voucher_amount) \
 					if self.doctype in ["Purchase Receipt", "Purchase Invoice"] else 0.0
 
-				item.valuation_rate = ((item.base_net_amount + item.item_tax_amount + rm_supp_cost
+				valuation_item_tax_amount = self.get_item_valuation_tax_amount(item)
+				valuation_net_amount = self.get_item_valuation_net_amount(item)
+
+				item.valuation_rate = ((valuation_net_amount + valuation_item_tax_amount + rm_supp_cost
 					 + landed_cost_voucher_amount) / qty_in_stock_uom)
-			else:
-				item.valuation_rate = 0.0
+
+	def get_item_valuation_tax_amount(self, item):
+		amt = item.item_tax_amount
+		if self.doctype == "Purchase Receipt":
+			# If item has been billed/overbilled, use the amount from invoices
+			# If item is partially billed, then use the amounts from both with the ratio billed_qty:unbilled_qty
+			if item.billed_qty:
+				unbilled_qty = max(0, item.qty - item.billed_qty)
+				amt = item.billed_item_tax_amount
+				amt += item.item_tax_amount * unbilled_qty / item.qty
+		return flt(amt, self.precision("item_tax_amount", "items"))
+
+	def get_item_valuation_net_amount(self, item):
+		amt = item.base_net_amount
+		if self.doctype == "Purchase Receipt":
+			# If item has been billed/overbilled, use the amount from invoices
+			# If item is partially billed, then use the amounts from both with the ratio billed_qty:unbilled_qty
+			if item.billed_qty:
+				unbilled_qty = max(0, item.qty - item.billed_qty)
+				amt = item.billed_net_amount
+				amt += item.base_net_amount * unbilled_qty / item.qty
+		return flt(amt, self.precision("base_net_amount", "items"))
 
 	def validate_for_subcontracting(self):
 		if not self.is_subcontracted and self.sub_contracted_items:
