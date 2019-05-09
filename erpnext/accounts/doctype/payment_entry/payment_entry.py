@@ -908,7 +908,7 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
 	pe.paid_to_account_currency = party_account_currency if payment_type=="Pay" else bank.account_currency
 	pe.paid_amount = paid_amount
 	pe.received_amount = received_amount
-	pe.allocate_payment_amount = 1
+	# pe.allocate_payment_amount = 1
 	pe.letter_head = doc.get("letter_head")
 
 	if pe.party_type in ["Customer", "Supplier"]:
