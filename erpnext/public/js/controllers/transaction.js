@@ -498,7 +498,12 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 										});
 									}
 								},
-								() => me.conversion_factor(doc, cdt, cdn, true)
+								() => me.conversion_factor(doc, cdt, cdn, true),
+								() => {
+									if (me.frm.doc.doctype == "Sales Order") {
+										me.get_item_po_ordered_qty();
+									}
+								}
 							]);
 						}
 					}
