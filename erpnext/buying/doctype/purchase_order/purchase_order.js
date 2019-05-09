@@ -147,9 +147,11 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 					function() { me.make_payment_request() }, __("Make"));
 			}
 
-			cur_frm.add_custom_button(__('Landed Cost Voucher'), this.make_landed_cost_voucher, __("Make"));
-
 			cur_frm.page.set_inner_btn_group_as_primary(__("Make"));
+		}
+
+		if(doc.docstatus < 2) {
+			cur_frm.add_custom_button(__('Landed Cost Voucher'), this.make_landed_cost_voucher, __("Make"));
 		}
 	},
 
