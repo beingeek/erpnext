@@ -73,10 +73,12 @@ frappe.ui.form.on("Sales Order", {
 
 		$(frm.wrapper).on("grid-row-render", function(e, grid_row) {
 			if(grid_row.doc && grid_row.doc.doctype=="Sales Order Item") {
-				$(grid_row.wrapper).on('focus', 'input', frappe.utils.debounce(function() {
+				$(grid_row.wrapper).on('focus', 'input', function() {
 					frm.set_value("current_actual_qty", grid_row.doc.actual_qty);
-					frm.set_value("current_projected_qty", grid_row.doc.projected_qty);
-				}, 300));
+					for(var i = 1; i<=5; ++i) {
+						frm.set_value("po_day_"+i, grid_row.doc["po_day_"+i]);
+					}
+				});
 			}
 		});
 	},
@@ -113,6 +115,8 @@ frappe.ui.form.on("Sales Order Item", {
 erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend({
 	onload: function(doc, dt, dn) {
 		this._super();
+
+		this.get_item_po_ordered_qty();
 	},
 
 	refresh: function(doc, dt, dn) {
@@ -245,6 +249,52 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		}
 
 		this.order_type(doc);
+	},
+
+	transaction_date: function() {
+		this.get_item_po_ordered_qty()
+	},
+
+	get_item_po_ordered_qty: function() {
+		var me = this;
+
+		var item_codes = [];
+		$.each(this.frm.doc.items || [], function(i, item) {
+			if(item.item_code) {
+				item_codes.push(item.item_code);
+			}
+		});
+
+		if(item_codes.length) {
+			return this.frm.call({
+				method: "erpnext.api.get_item_po_ordered_qty",
+				args: {
+					date: me.frm.doc.transaction_date,
+					company: me.frm.doc.company,
+					item_codes: item_codes
+				},
+				callback: function(r) {
+					if(!r.exc) {
+						$.each(me.frm.doc.items || [], function(i, item) {
+							if(item.item_code && r.message.hasOwnProperty(item.item_code)) {
+								for (var i = 0; i < 5; ++i) {
+									item['po_day_'+ (i+1)] = r.message[item.item_code]['po_day_'+ (i+1)];
+								}
+							} else {
+								for (var i = 0; i < 5; ++i) {
+									item['po_day_'+ (i+1)] = 0;
+								}
+							}
+						});
+
+						me.frm.set_value("current_actual_qty", 0);
+						for(var i = 1; i<=5; ++i) {
+							me.frm.set_value("po_day_"+i, 0);
+						}
+					}
+				}
+			});
+		}
 	},
 
 	make_work_order() {
