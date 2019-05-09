@@ -3,6 +3,7 @@ import json
 from six import iteritems
 
 old_item_taxes = {}
+old_supplier_taxes = {}
 item_tax_templates = {}
 rename_template_to_untitled = []
 
@@ -10,6 +11,10 @@ def execute():
 	for d in frappe.db.sql("""select parent as item_code, tax_type, tax_rate from `tabItem Tax` where parenttype='Item'""", as_dict=1):
 		old_item_taxes.setdefault(d.item_code, [])
 		old_item_taxes[d.item_code].append(d)
+
+	for d in frappe.db.sql("""select parent as supplier, tax_type, tax_rate from `tabItem Tax` where parenttype='Supplier'""", as_dict=1):
+		old_supplier_taxes.setdefault(d.supplier, [])
+		old_supplier_taxes[d.supplier].append(d)
 
 	frappe.reload_doc("accounts", "doctype", "item_tax_template_detail")
 	frappe.reload_doc("accounts", "doctype", "item_tax_template")
@@ -24,6 +29,17 @@ def execute():
 	frappe.reload_doc("stock", "doctype", "purchase_receipt_item")
 	frappe.reload_doc("accounts", "doctype", "purchase_invoice_item")
 	frappe.reload_doc("accounts", "doctype", "accounts_settings")
+	frappe.reload_doc("buying", "doctype", "supplier")
+
+	# for each item that have item tax rates
+	for supplier in old_supplier_taxes.keys():
+		doc = frappe.get_doc("Supplier", supplier)
+		doc.set("taxes", [])
+
+		for d in old_supplier_taxes[supplier]:
+			doc.append("taxes", {"tax_type": d.tax_type, "tax_rate": d.tax_rate})
+
+		doc.save()
 
 	# for each item that have item tax rates
 	for item_code in old_item_taxes.keys():
