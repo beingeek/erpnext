@@ -96,6 +96,7 @@ def paymentReferenceDate(row,reference_doctype,reference_name):
 	d["row"]=row
 	doc = frappe.get_doc(reference_doctype, reference_name)
 	d["cheque_no"] = ""
+	d["due_date"] = doc.get("due_date") or doc.get("posting_date")
 	if reference_doctype == "Journal Entry":
 		d["cheque_no"] = doc.cheque_no
 		d["due_date"] = doc.posting_date
@@ -104,8 +105,40 @@ def paymentReferenceDate(row,reference_doctype,reference_name):
 		d["due_date"] = doc.received_date
 	elif reference_doctype == "Sales Invoice":
 		d["due_date"] = doc.posting_date
-	else:
-		d["due_date"] = doc.get("due_date")
+	elif reference_doctype == "Landed Cost Voucher":
+		d["cheque_no"] = doc.bill_no
+		d["cheque_no"] = doc.bill_no
 	
 	result_list2.append(d)
 	return result_list2
+
+@frappe.whitelist()
+def get_item_po_ordered_qty(date, item_codes):
+	import json
+	from six import string_types
+
+	from_date = frappe.utils.getdate(date)
+	to_date = frappe.utils.add_days(from_date, 4)
+
+	if isinstance(item_codes, string_types):
+		item_codes = json.loads(item_codes)
+
+	data = frappe.db.sql("""
+		select i.item_code, po.schedule_date as date, sum(i.qty) as qty
+		from `tabPurchase Order Item` i, `tabPurchase Order` po
+		where i.parent = po.name and po.docstatus < 2 and po.schedule_date between %s and %s and i.item_code in ({0})
+		group by i.item_code, po.schedule_date
+	""".format(", ".join(['%s']*len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
+
+	out = {}
+	for d in data:
+		out.setdefault(d.item_code, {"po_day_1": 0, "po_day_2": 0, "po_day_3": 0, "po_day_4": 0, "po_day_5": 0})
+
+		i = frappe.utils.date_diff(d.date, from_date)
+		if i >= 5 or i < 0:
+			frappe.msgprint(str(i))
+			raise Exception
+
+		out[d.item_code]['po_day_' + str(i+1)] = d.qty
+
+	return out

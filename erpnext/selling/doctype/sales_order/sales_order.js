@@ -33,15 +33,15 @@ frappe.ui.form.on("Sales Order", {
 		})
 	},
 	refresh: function(frm) {
-		if(frm.doc.docstatus == 1 && frm.doc.status == 'To Deliver and Bill') {
-			frm.add_custom_button(__('Update Items'), () => {
-				erpnext.utils.update_child_items({
-					frm: frm,
-					child_docname: "items",
-					child_doctype: "Sales Order Detail",
-				})
-			});
-		}
+		// if(frm.doc.docstatus == 1 && frm.doc.status == 'To Deliver and Bill') {
+		//	frm.add_custom_button(__('Update Items'), () => {
+		//		erpnext.utils.update_child_items({
+		//			frm: frm,
+		//			child_docname: "items",
+		//			child_doctype: "Sales Order Detail",
+		//		})
+		//	});
+		// }
 	},
 	onload: function(frm) {
 		if (!frm.doc.transaction_date){
@@ -74,7 +74,7 @@ frappe.ui.form.on("Sales Order", {
 
 	delivery_date: function(frm) {
 		$.each(frm.doc.items || [], function(i, d) {
-			if(!d.delivery_date) d.delivery_date = frm.doc.delivery_date;
+			if(!d.delivery_date && d.item_code) d.delivery_date = frm.doc.delivery_date;
 		});
 		refresh_field("items");
 	},
@@ -101,9 +101,98 @@ frappe.ui.form.on("Sales Order Item", {
 	}
 });
 
+frappe.ui.form.on("Sales Order", {
+	onload: function(frm) {
+		var me = frm.cscript;
+
+		frm.cscript.set_po_qty_labels();
+		$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
+			if(grid_row.doc && grid_row.doc.doctype=="Sales Order Item") {
+				$(grid_row.wrapper).on('focus', 'input', function() {
+					me.selected_item_dn = grid_row.doc.name;
+					me.update_selected_item_fields();
+				});
+			}
+		});
+	},
+	refresh: function(frm) {
+		frm.cscript.get_item_po_ordered_qty();
+	},
+	transaction_date: function(frm) {
+		frm.cscript.set_po_qty_labels();
+		frm.cscript.get_item_po_ordered_qty();
+	},
+});
+
 erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend({
 	onload: function(doc, dt, dn) {
 		this._super();
+	},
+
+	update_selected_item_fields: function() {
+		var me = this;
+		if (this.selected_item_dn) {
+			var grid_row = this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn];
+			if (grid_row) {
+				me.frm.set_value("current_actual_qty", grid_row.doc.actual_qty);
+				for(var i = 1; i<=5; ++i) {
+					me.frm.set_value("po_day_"+i, grid_row.doc["po_day_"+i]);
+				}
+			}
+		} else {
+			me.frm.set_value("current_actual_qty", 0);
+			for(var i = 1; i<=5; ++i) {
+				me.frm.set_value("po_day_"+i, 0);
+			}
+		}
+	},
+
+	set_po_qty_labels: function() {
+		var days = [];
+		for (var i = 0; i < 5; ++i) {
+			var date = new frappe.datetime.datetime(frappe.datetime.add_days(this.frm.doc.transaction_date, i));
+			var day = date.format("dddd");
+			this.frm.fields_dict["po_day_"+(i+1)].set_label("Arriving on " + day);
+		}
+	},
+
+	get_item_po_ordered_qty: function() {
+		var me = this;
+
+		var item_codes = [];
+		$.each(this.frm.doc.items || [], function(i, item) {
+			if(item.item_code) {
+				item_codes.push(item.item_code);
+			}
+		});
+
+		if(item_codes.length) {
+			return this.frm.call({
+				method: "erpnext.api.get_item_po_ordered_qty",
+				args: {
+					date: me.frm.doc.transaction_date,
+					company: me.frm.doc.company,
+					item_codes: item_codes
+				},
+				callback: function(r) {
+					if(!r.exc) {
+						$.each(me.frm.doc.items || [], function(i, item) {
+							if(item.item_code && r.message.hasOwnProperty(item.item_code)) {
+								for (var i = 0; i < 5; ++i) {
+									item['po_day_'+ (i+1)] = r.message[item.item_code]['po_day_'+ (i+1)];
+								}
+							} else {
+								for (var i = 0; i < 5; ++i) {
+									item['po_day_'+ (i+1)] = 0;
+								}
+							}
+						});
+
+						me.update_selected_item_fields();
+					}
+				}
+			});
+		}
 	},
 
 	refresh: function(doc, dt, dn) {
@@ -157,6 +246,9 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 				if(flt(doc.per_billed, 6) < 100) {
 					this.frm.add_custom_button(__('Invoice'),
 						function() { me.make_sales_invoice() }, __("Make"));
+
+					this.frm.add_custom_button(__('Make Invoice'),
+						function() { me.make_sales_invoice() });
 				}
 
 				// material request
