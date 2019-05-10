@@ -123,16 +123,28 @@ def get_item_po_ordered_qty(date, item_codes):
 	if isinstance(item_codes, string_types):
 		item_codes = json.loads(item_codes)
 
-	data = frappe.db.sql("""
-		select i.item_code, po.schedule_date as date, sum(i.qty) as qty
-		from `tabPurchase Order Item` i, `tabPurchase Order` po
-		where i.parent = po.name and po.docstatus < 2 and po.schedule_date between %s and %s and i.item_code in ({0})
+	po_data = frappe.db.sql("""
+		select
+			i.item_code, po.schedule_date as date,
+			sum(if(i.qty - i.received_qty < 0, 0, i.qty - i.received_qty)) as qty
+		from `tabPurchase Order Item` i
+		inner join `tabPurchase Order` po on po.name = i.parent
+		where po.docstatus < 2 and po.schedule_date between %s and %s and i.item_code in ({0})
 		group by i.item_code, po.schedule_date
 	""".format(", ".join(['%s']*len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
 
+	bin_data = frappe.db.sql("""
+		select item_code, sum(actual_qty) as actual_qty, sum(projected_qty) as projected_qty
+		from tabBin
+		where item_code in ({0})
+		group by item_code
+	""".format(", ".join(['%s']*len(item_codes))), item_codes, as_dict=1)
+
 	out = {}
-	for d in data:
-		out.setdefault(d.item_code, {"po_day_1": 0, "po_day_2": 0, "po_day_3": 0, "po_day_4": 0, "po_day_5": 0})
+
+	for d in po_data:
+		out.setdefault(d.item_code, {"po_day_1": 0, "po_day_2": 0, "po_day_3": 0, "po_day_4": 0, "po_day_5": 0,
+			"actual_qty": 0, "projected_qty": 0})
 
 		i = frappe.utils.date_diff(d.date, from_date)
 		if i >= 5 or i < 0:
@@ -140,5 +152,12 @@ def get_item_po_ordered_qty(date, item_codes):
 			raise Exception
 
 		out[d.item_code]['po_day_' + str(i+1)] = d.qty
+
+	for d in bin_data:
+		out.setdefault(d.item_code, {"po_day_1": 0, "po_day_2": 0, "po_day_3": 0, "po_day_4": 0, "po_day_5": 0,
+			"actual_qty": 0, "projected_qty": 0})
+
+		out[d.item_code]['actual_qty'] = d.actual_qty
+		out[d.item_code]['projected_qty'] = d.projected_qty
 
 	return out

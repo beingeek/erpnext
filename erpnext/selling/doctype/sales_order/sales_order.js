@@ -135,12 +135,14 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 			var grid_row = this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn];
 			if (grid_row) {
 				me.frm.set_value("current_actual_qty", grid_row.doc.actual_qty);
+				me.frm.set_value("current_projected_qty", grid_row.doc.projected_qty);
 				for(var i = 1; i<=5; ++i) {
 					me.frm.set_value("po_day_"+i, grid_row.doc["po_day_"+i]);
 				}
 			}
 		} else {
 			me.frm.set_value("current_actual_qty", 0);
+			me.frm.set_value("current_projected_qty", 0);
 			for(var i = 1; i<=5; ++i) {
 				me.frm.set_value("po_day_"+i, 0);
 			}
@@ -171,17 +173,20 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 				method: "erpnext.api.get_item_po_ordered_qty",
 				args: {
 					date: me.frm.doc.transaction_date,
-					company: me.frm.doc.company,
 					item_codes: item_codes
 				},
 				callback: function(r) {
 					if(!r.exc) {
 						$.each(me.frm.doc.items || [], function(i, item) {
 							if(item.item_code && r.message.hasOwnProperty(item.item_code)) {
+								item['actual_qty'] = r.message[item.item_code]['actual_qty'];
+								item['projected_qty'] = r.message[item.item_code]['projected_qty'];
 								for (var i = 0; i < 5; ++i) {
 									item['po_day_'+ (i+1)] = r.message[item.item_code]['po_day_'+ (i+1)];
 								}
 							} else {
+								item['actual_qty'] = 0;
+								item['projected_qty'] = 0;
 								for (var i = 0; i < 5; ++i) {
 									item['po_day_'+ (i+1)] = 0;
 								}
