@@ -293,13 +293,13 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 				if(based_on == "manual") {
 					manual_account_heads.add(cstr(tax.account_head));
 				} else {
-					if(!totals[based_on]) {
-						frappe.throw(__("Cannot distribute by {0} because total {0} is 0", [tax.distribution_criteria]));
-					}
-
 					charges_map[idx] = [];
 					$.each(me.frm.doc.items || [], function(item_idx, item) {
-						charges_map[idx][item_idx] = flt(tax.base_amount) * flt(item[based_on]) / flt(totals[based_on]);
+						if(!totals[based_on]) {
+							charges_map[idx][item_idx] = 0;
+						} else {
+							charges_map[idx][item_idx] = flt(tax.base_amount) * flt(item[based_on]) / flt(totals[based_on]);
+						}
 					});
 					++idx;
 				}
@@ -327,7 +327,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 
 		if (accumulated_taxes != me.frm.doc.base_total_taxes_and_charges) {
 			var diff = me.frm.doc.base_total_taxes_and_charges - accumulated_taxes;
-			me.frm.doc.items.slice(-1)[0].applicable_charges += diff;
+			me.frm.doc.items.slice(-1)[0].applicable_charges = flt(me.frm.doc.items.slice(-1)[0].applicable_charges) + diff;
 		}
 
 		refresh_field("items");

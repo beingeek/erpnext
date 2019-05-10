@@ -23,7 +23,7 @@ def execute():
 	frappe.db.sql("""
 		update `tabLanded Cost Taxes and Charges` t
 		inner join `tabLanded Cost Voucher` v on v.name = t.parent
-		set t.distribution_criteria = v.distribute_charges_based_on, t.base_amount = t.amount
+		set t.distribution_criteria = v.distribute_charges_based_on, t.base_amount = t.amount, t.total_amount = t.amount
 	""")
 
 	# Landed Cost Voucher status and empty values
