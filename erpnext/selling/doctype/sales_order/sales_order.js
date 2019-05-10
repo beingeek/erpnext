@@ -106,14 +106,16 @@ frappe.ui.form.on("Sales Order", {
 		var me = frm.cscript;
 
 		frm.cscript.set_po_qty_labels();
-		$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
-			if(grid_row.doc && grid_row.doc.doctype=="Sales Order Item") {
-				$(grid_row.wrapper).on('focus', 'input', function() {
-					me.selected_item_dn = grid_row.doc.name;
-					me.update_selected_item_fields();
-				});
-			}
-		});
+		if (me.frm.doc.docstatus == 0) {
+			$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
+				if(grid_row.doc && grid_row.doc.doctype == "Sales Order Item") {
+					$(grid_row.wrapper).on('focus', 'input', function() {
+						me.selected_item_dn = grid_row.doc.name;
+						me.update_selected_item_fields();
+					});
+				}
+			});
+		}
 	},
 	refresh: function(frm) {
 		frm.cscript.get_item_po_ordered_qty();
@@ -130,21 +132,29 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 	},
 
 	update_selected_item_fields: function() {
-		var me = this;
-		if (this.selected_item_dn) {
-			var grid_row = this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn];
-			if (grid_row) {
-				me.frm.set_value("current_actual_qty", grid_row.doc.actual_qty);
-				me.frm.set_value("current_projected_qty", grid_row.doc.projected_qty);
-				for(var i = 1; i<=5; ++i) {
-					me.frm.set_value("po_day_"+i, grid_row.doc["po_day_"+i]);
+		if (this.frm.doc.docstatus == 0) {
+			var me = this;
+			if(this.selected_item_dn) {
+				var grid_row = this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn];
+				if(grid_row) {
+					me.frm.doc.current_actual_qty = grid_row.doc.current_actual_qty;
+					me.frm.refresh_field("current_actual_qty");
+					me.frm.doc.current_projected_qty = grid_row.doc.current_projected_qty;
+					me.frm.refresh_field("current_projected_qty");
+					for(var i = 1; i <= 5; ++i) {
+						me.frm.doc["po_day_" + i] = grid_row.doc["po_day_" + i];
+						me.frm.refresh_field("po_day_" + i);
+					}
 				}
-			}
-		} else {
-			me.frm.set_value("current_actual_qty", 0);
-			me.frm.set_value("current_projected_qty", 0);
-			for(var i = 1; i<=5; ++i) {
-				me.frm.set_value("po_day_"+i, 0);
+			} else {
+				me.frm.doc.current_actual_qty = 0;
+				me.frm.refresh_field("current_actual_qty");
+				me.frm.doc.current_projected_qty = 0;
+				me.frm.refresh_field("current_projected_qty");
+				for(var i = 1; i <= 5; ++i) {
+					me.frm.doc["po_day_" + i] = 0;
+					me.frm.refresh_field("po_day_" + i);
+				}
 			}
 		}
 	},
@@ -160,43 +170,44 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 
 	get_item_po_ordered_qty: function() {
 		var me = this;
-
-		var item_codes = [];
-		$.each(this.frm.doc.items || [], function(i, item) {
-			if(item.item_code) {
-				item_codes.push(item.item_code);
-			}
-		});
-
-		if(item_codes.length) {
-			return this.frm.call({
-				method: "erpnext.api.get_item_po_ordered_qty",
-				args: {
-					date: me.frm.doc.transaction_date,
-					item_codes: item_codes
-				},
-				callback: function(r) {
-					if(!r.exc) {
-						$.each(me.frm.doc.items || [], function(i, item) {
-							if(item.item_code && r.message.hasOwnProperty(item.item_code)) {
-								item['actual_qty'] = r.message[item.item_code]['actual_qty'];
-								item['projected_qty'] = r.message[item.item_code]['projected_qty'];
-								for (var i = 0; i < 5; ++i) {
-									item['po_day_'+ (i+1)] = r.message[item.item_code]['po_day_'+ (i+1)];
-								}
-							} else {
-								item['actual_qty'] = 0;
-								item['projected_qty'] = 0;
-								for (var i = 0; i < 5; ++i) {
-									item['po_day_'+ (i+1)] = 0;
-								}
-							}
-						});
-
-						me.update_selected_item_fields();
-					}
+		if (me.frm.doc.docstatus == 0) {
+			var item_codes = [];
+			$.each(this.frm.doc.items || [], function(i, item) {
+				if(item.item_code) {
+					item_codes.push(item.item_code);
 				}
 			});
+
+			if(item_codes.length) {
+				return this.frm.call({
+					method: "erpnext.api.get_item_po_ordered_qty",
+					args: {
+						date: me.frm.doc.transaction_date,
+						item_codes: item_codes
+					},
+					callback: function(r) {
+						if(!r.exc) {
+							$.each(me.frm.doc.items || [], function(i, item) {
+								if(item.item_code && r.message.hasOwnProperty(item.item_code)) {
+									item['current_actual_qty'] = r.message[item.item_code]['actual_qty'];
+									item['current_projected_qty'] = r.message[item.item_code]['projected_qty'];
+									for(var i = 0; i < 5; ++i) {
+										item['po_day_' + (i + 1)] = r.message[item.item_code]['po_day_' + (i + 1)];
+									}
+								} else {
+									item['current_actual_qty'] = 0;
+									item['current_projected_qty'] = 0;
+									for(var i = 0; i < 5; ++i) {
+										item['po_day_' + (i + 1)] = 0;
+									}
+								}
+							});
+
+							me.update_selected_item_fields();
+						}
+					}
+				});
+			}
 		}
 	},
 
