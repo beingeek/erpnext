@@ -43,7 +43,7 @@ class GLEntry(Document):
 		if self.party and not self.party_type:
 			frappe.throw(_("Party is set but Party Type is not provided"))
 		if self.party_type and not self.party:
-			frappe.throw(_("Party Type is set but Party is not provided"))
+			self.party_type = ""
 		if self.against_voucher and not self.against_voucher_type:
 			frappe.throw(_("Against Voucher is set but Against Voucher Type is not provided"))
 		if self.against_voucher_type and not self.against_voucher:
