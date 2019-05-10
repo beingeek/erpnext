@@ -109,7 +109,7 @@ frappe.ui.form.on("Sales Order", {
 		if (me.frm.doc.docstatus == 0) {
 			$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
 				if(grid_row.doc && grid_row.doc.doctype == "Sales Order Item") {
-					$(grid_row.wrapper).on('focus', 'input', function() {
+					$(grid_row.wrapper).off('focus', 'input').on('focus', 'input', function() {
 						me.selected_item_dn = grid_row.doc.name;
 						me.update_selected_item_fields();
 					});
