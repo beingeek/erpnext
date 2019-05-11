@@ -431,7 +431,7 @@ class PurchaseInvoice(BuyingController):
 
 			# update stock & gl entries for submit state of PR
 			pr_doc.docstatus = 1
-			pr_doc.update_stock_ledger(via_landed_cost_voucher=True)
+			pr_doc.update_stock_ledger(allow_negative_stock=True, via_landed_cost_voucher=True)
 			pr_doc.make_gl_entries()
 
 	def make_gl_entries(self, gl_entries=None, repost_future_gle=True, from_repost=False):
