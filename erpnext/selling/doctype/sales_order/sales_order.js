@@ -141,6 +141,37 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		this._super();
 	},
 
+	get_customer_default_items: function() {
+		var me = this;
+		if (this.frm.doc.docstatus===0 && me.frm.doc.customer) {
+			return frappe.call({
+				method: "erpnext.api.get_customer_default_items",
+				args: {
+					customer: me.frm.doc.customer
+				},
+				callback: function(r) {
+					if (r.message && !r.exc) {
+						var rows_added = [];
+						var existing_item_codes = me.frm.doc.items.map(d => d.item_code).filter(d => d);
+						$.each(r.message || [], function(i, item_code) {
+							if (!existing_item_codes.includes(item_code)) {
+								var row = frappe.model.add_child(me.frm.doc, "Sales Order Item", "items", 1);
+								row._item_code = item_code;
+								row.qty = 0;
+								rows_added.push(row);
+							}
+						});
+						me.frm.refresh_field("items");
+
+						$.each(rows_added, function(i, row) {
+							frappe.model.set_value(row.doctype, row.name, "item_code", row._item_code);
+						});
+					}
+				}
+			});
+		}
+	},
+
 	update_selected_item_fields: function() {
 		if (this.frm.doc.docstatus == 0) {
 			var me = this;
@@ -356,38 +387,6 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 						}
 					})
 				}, __("Get items from"));
-		}
-
-		if (this.frm.doc.docstatus===0) {
-			this.frm.add_custom_button(__('Customer Default Items'), function() {
-				if (me.frm.doc.customer) {
-					return frappe.call({
-						method: "erpnext.api.get_customer_default_items",
-						args: {
-							customer: me.frm.doc.customer
-						},
-						callback: function(r) {
-							if (r.message && !r.exc) {
-								var rows_added = [];
-								var existing_item_codes = me.frm.doc.items.map(d => d.item_code).filter(d => d);
-								$.each(r.message || [], function(i, item_code) {
-									if (!existing_item_codes.includes(item_code)) {
-										var row = frappe.model.add_child(me.frm.doc, "Sales Order Item", "items", 1);
-										row._item_code = item_code;
-										row.qty = 0;
-										rows_added.push(row);
-									}
-								});
-								me.frm.refresh_field("items");
-
-								$.each(rows_added, function(i, row) {
-									frappe.model.set_value(row.doctype, row.name, "item_code", row._item_code);
-								});
-							}
-						}
-					});
-				}
-			}, __("Get items from"));
 		}
 
 		this.order_type(doc);
