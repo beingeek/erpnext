@@ -118,11 +118,11 @@ frappe.ui.form.on("Sales Order", {
 		}
 	},
 	refresh: function(frm) {
-		frm.cscript.get_item_po_ordered_qty();
+		frm.cscript.get_item_custom_projected_qty();
 	},
 	transaction_date: function(frm) {
 		frm.cscript.set_po_qty_labels();
-		frm.cscript.get_item_po_ordered_qty();
+		frm.cscript.get_item_custom_projected_qty();
 	},
 });
 
@@ -144,6 +144,8 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 					for(var i = 1; i <= 5; ++i) {
 						me.frm.doc["po_day_" + i] = grid_row.doc["po_day_" + i];
 						me.frm.refresh_field("po_day_" + i);
+						me.frm.doc["so_day_" + i] = grid_row.doc["so_day_" + i];
+						me.frm.refresh_field("so_day_" + i);
 					}
 				}
 			} else {
@@ -154,6 +156,8 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 				for(var i = 1; i <= 5; ++i) {
 					me.frm.doc["po_day_" + i] = 0;
 					me.frm.refresh_field("po_day_" + i);
+					me.frm.doc["so_day_" + i] = 0;
+					me.frm.refresh_field("so_day_" + i);
 				}
 			}
 		}
@@ -163,12 +167,13 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		var days = [];
 		for (var i = 0; i < 5; ++i) {
 			var date = new frappe.datetime.datetime(frappe.datetime.add_days(this.frm.doc.transaction_date, i));
-			var day = date.format("dddd");
-			this.frm.fields_dict["po_day_"+(i+1)].set_label("Arriving on " + day);
+			var day = date.format("ddd");
+			this.frm.fields_dict["po_day_"+(i+1)].set_label("PO " + day);
+			this.frm.fields_dict["so_day_"+(i+1)].set_label("SO " + day);
 		}
 	},
 
-	get_item_po_ordered_qty: function() {
+	get_item_custom_projected_qty: function() {
 		var me = this;
 		if (me.frm.doc.docstatus == 0) {
 			var item_codes = [];
@@ -180,10 +185,11 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 
 			if(item_codes.length) {
 				return this.frm.call({
-					method: "erpnext.api.get_item_po_ordered_qty",
+					method: "erpnext.api.get_item_custom_projected_qty",
 					args: {
 						date: me.frm.doc.transaction_date,
-						item_codes: item_codes
+						item_codes: item_codes,
+						exclude_so: me.frm.doc.name
 					},
 					callback: function(r) {
 						if(!r.exc) {
@@ -193,12 +199,14 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 									item['current_projected_qty'] = r.message[item.item_code]['projected_qty'];
 									for(var i = 0; i < 5; ++i) {
 										item['po_day_' + (i + 1)] = r.message[item.item_code]['po_day_' + (i + 1)];
+										item['so_day_' + (i + 1)] = r.message[item.item_code]['so_day_' + (i + 1)];
 									}
 								} else {
 									item['current_actual_qty'] = 0;
 									item['current_projected_qty'] = 0;
 									for(var i = 0; i < 5; ++i) {
 										item['po_day_' + (i + 1)] = 0;
+										item['so_day_' + (i + 1)] = 0;
 									}
 								}
 							});
@@ -338,6 +346,38 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 						}
 					})
 				}, __("Get items from"));
+		}
+
+		if (this.frm.doc.docstatus===0) {
+			this.frm.add_custom_button(__('Customer Default Items'), function() {
+				if (me.frm.doc.customer) {
+					return frappe.call({
+						method: "erpnext.api.get_customer_default_items",
+						args: {
+							customer: me.frm.doc.customer
+						},
+						callback: function(r) {
+							if (r.message && !r.exc) {
+								var rows_added = [];
+								var existing_item_codes = me.frm.doc.items.map(d => d.item_code).filter(d => d);
+								$.each(r.message || [], function(i, item_code) {
+									if (!existing_item_codes.includes(item_code)) {
+										var row = me.frm.add_child('items');
+										row._item_code = item_code;
+										row.qty = 0;
+										rows_added.push(row);
+									}
+								});
+								me.frm.refresh_field("items");
+
+								$.each(rows_added, function(i, row) {
+									frappe.model.set_value(row.doctype, row.name, "item_code", row._item_code);
+								});
+							}
+						}
+					});
+				}
+			}, __("Get items from"));
 		}
 
 		this.order_type(doc);

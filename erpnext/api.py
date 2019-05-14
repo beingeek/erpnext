@@ -14,6 +14,9 @@ from erpnext.controllers.sales_and_purchase_return import make_return_doc
 # import urllib
 # import urllib2
 
+import json
+from six import string_types, iteritems
+
 @frappe.whitelist()
 def test():
 	return "test"
@@ -113,9 +116,7 @@ def paymentReferenceDate(row,reference_doctype,reference_name):
 	return result_list2
 
 @frappe.whitelist()
-def get_item_po_ordered_qty(date, item_codes):
-	import json
-	from six import string_types
+def get_item_custom_projected_qty(date, item_codes, exclude_so):
 
 	from_date = frappe.utils.getdate(date)
 	to_date = frappe.utils.add_days(from_date, 4)
@@ -133,6 +134,16 @@ def get_item_po_ordered_qty(date, item_codes):
 		group by i.item_code, po.schedule_date
 	""".format(", ".join(['%s']*len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
 
+	so_data = frappe.db.sql("""
+		select
+			i.item_code, so.delivery_date as date,
+			sum(if(i.qty - i.delivered_qty < 0, 0, i.qty - i.delivered_qty)) as qty
+		from `tabSales Order Item` i
+		inner join `tabSales Order` so on so.name = i.parent
+		where so.docstatus < 2 and so.name != %s and so.delivery_date between %s and %s and i.item_code in ({0})
+		group by i.item_code, so.delivery_date
+	""".format(", ".join(['%s'] * len(item_codes))), [exclude_so, from_date, to_date] + item_codes, as_dict=1)
+
 	bin_data = frappe.db.sql("""
 		select item_code, sum(actual_qty) as actual_qty, sum(projected_qty) as projected_qty
 		from tabBin
@@ -142,22 +153,39 @@ def get_item_po_ordered_qty(date, item_codes):
 
 	out = {}
 
+	template = {
+		"po_day_1": 0, "po_day_2": 0, "po_day_3": 0, "po_day_4": 0, "po_day_5": 0,
+		"so_day_1": 0, "so_day_2": 0, "so_day_3": 0, "so_day_4": 0, "so_day_5": 0,
+		"actual_qty": 0, "projected_qty": 0
+	}
+
 	for d in po_data:
-		out.setdefault(d.item_code, {"po_day_1": 0, "po_day_2": 0, "po_day_3": 0, "po_day_4": 0, "po_day_5": 0,
-			"actual_qty": 0, "projected_qty": 0})
-
+		out.setdefault(d.item_code, template.copy())
 		i = frappe.utils.date_diff(d.date, from_date)
-		if i >= 5 or i < 0:
-			frappe.msgprint(str(i))
-			raise Exception
-
 		out[d.item_code]['po_day_' + str(i+1)] = d.qty
 
-	for d in bin_data:
-		out.setdefault(d.item_code, {"po_day_1": 0, "po_day_2": 0, "po_day_3": 0, "po_day_4": 0, "po_day_5": 0,
-			"actual_qty": 0, "projected_qty": 0})
+	for d in so_data:
+		out.setdefault(d.item_code, template.copy())
+		i = frappe.utils.date_diff(d.date, from_date)
+		out[d.item_code]['so_day_' + str(i+1)] = d.qty
 
+	for d in bin_data:
+		out.setdefault(d.item_code, template.copy())
 		out[d.item_code]['actual_qty'] = d.actual_qty
-		out[d.item_code]['projected_qty'] = d.projected_qty
+
+	for item_code, d in iteritems(out):
+		d['projected_qty'] = d['actual_qty']
+		for i in range(5):
+			d['projected_qty'] -= d['so_day_' + str(i+1)]
 
 	return out
+
+@frappe.whitelist()
+def get_customer_default_items(customer):
+	if not customer:
+		return []
+
+	default_items = frappe.get_all("Customer Default Item", fields=['item_code'], filters={"parent": customer})
+	default_item_codes = map(lambda d: d.item_code, default_items)
+
+	return default_item_codes

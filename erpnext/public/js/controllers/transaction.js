@@ -463,7 +463,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 							doctype: me.frm.doc.doctype,
 							name: me.frm.doc.name,
 							project: item.project || me.frm.doc.project,
-							qty: item.qty || 1,
+							qty: item.qty || 0,
 							stock_qty: item.stock_qty,
 							conversion_factor: item.conversion_factor,
 							weight_per_unit: item.weight_per_unit,
@@ -501,7 +501,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 								() => me.conversion_factor(doc, cdt, cdn, true),
 								() => {
 									if (me.frm.doc.doctype == "Sales Order") {
-										me.get_item_po_ordered_qty();
+										me.get_item_custom_projected_qty();
 									}
 								}
 							]);
