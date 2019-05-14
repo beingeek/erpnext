@@ -362,7 +362,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 								var existing_item_codes = me.frm.doc.items.map(d => d.item_code).filter(d => d);
 								$.each(r.message || [], function(i, item_code) {
 									if (!existing_item_codes.includes(item_code)) {
-										var row = me.frm.add_child('items');
+										var row = frappe.model.add_child(me.frm.doc, "Sales Order Item", "items", 1);
 										row._item_code = item_code;
 										row.qty = 0;
 										rows_added.push(row);
