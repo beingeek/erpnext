@@ -91,6 +91,14 @@ frappe.ui.form.on("Sales Order", {
 
 	onload_post_render: function(frm) {
 		frm.get_field("items").grid.set_multiple_add("item_code", "qty");
+
+		frm.fields_dict.items.grid.wrapper.on('click', '.grid-row-check', function(e) {
+			frm.cscript.show_hide_add_remove_default_items(frm);
+		});
+
+		frm.fields_dict.items.grid.add_custom_button("Remove Customer Default", frm.cscript.remove_selected_from_customer_default_items);
+		frm.fields_dict.items.grid.add_custom_button("Add Customer Default", frm.cscript.add_selected_to_customer_default_items);
+		frm.fields_dict.items.grid.clear_custom_buttons();
 	}
 });
 
@@ -139,6 +147,47 @@ frappe.ui.form.on("Sales Order", {
 erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend({
 	onload: function(doc, dt, dn) {
 		this._super();
+	},
+
+	show_hide_add_remove_default_items: function() {
+		var has_checked = this.frm.fields_dict.items.grid.grid_rows.some(row => row.doc.__checked);
+		if (has_checked) {
+			$(".btn-custom", this.frm.fields_dict.items.grid.grid_buttons).removeClass("hidden");
+		} else {
+			$(".btn-custom", this.frm.fields_dict.items.grid.grid_buttons).addClass("hidden");
+		}
+	},
+	add_selected_to_customer_default_items: function() {
+		var frm = cur_frm;
+		var item_codes = frm.fields_dict.items.grid.grid_rows
+			.filter(row => row.doc.__checked && row.doc.item_code)
+			.map(row => row.doc.item_code);
+
+		if (frm.doc.customer && item_codes.length) {
+			return frappe.call({
+				method: "erpnext.api.add_item_codes_to_customer_default_items",
+				args: {
+					customer: frm.doc.customer,
+					item_codes: item_codes
+				}
+			});
+		}
+	},
+	remove_selected_from_customer_default_items: function() {
+		var frm = cur_frm;
+		var item_codes = frm.fields_dict.items.grid.grid_rows
+			.filter(row => row.doc.__checked && row.doc.item_code)
+			.map(row => row.doc.item_code);
+
+		if (frm.doc.customer && item_codes.length) {
+			return frappe.call({
+				method: "erpnext.api.remove_item_codes_from_customer_default_items",
+				args: {
+					customer: frm.doc.customer,
+					item_codes: item_codes
+				}
+			});
+		}
 	},
 
 	get_customer_default_items: function() {

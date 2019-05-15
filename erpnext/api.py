@@ -117,7 +117,6 @@ def paymentReferenceDate(row,reference_doctype,reference_name):
 
 @frappe.whitelist()
 def get_item_custom_projected_qty(date, item_codes, exclude_so):
-
 	from_date = frappe.utils.getdate(date)
 	to_date = frappe.utils.add_days(from_date, 4)
 
@@ -175,7 +174,8 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so):
 
 	for item_code, d in iteritems(out):
 		d['projected_qty'] = d['actual_qty']
-		for i in range(5):
+		for i in range(2):
+			d['projected_qty'] += d['po_day_' + str(i+1)]
 			d['projected_qty'] -= d['so_day_' + str(i+1)]
 
 	return out
@@ -189,3 +189,41 @@ def get_customer_default_items(customer):
 	default_item_codes = map(lambda d: d.item_code, default_items)
 
 	return default_item_codes
+
+@frappe.whitelist()
+def add_item_codes_to_customer_default_items(customer, item_codes):
+	if isinstance(item_codes, string_types):
+		item_codes = json.loads(item_codes)
+
+	doc = frappe.get_doc("Customer", customer)
+
+	existing_item_codes = map(lambda d: d.item_code, doc.default_items_tbl)
+	item_codes = filter(lambda item_code: item_code not in existing_item_codes, item_codes)
+
+	if not item_codes:
+		frappe.msgprint(_("Selected items already exists in Customer Default Items"))
+		return
+
+	for item_code in item_codes:
+		doc.append("default_items_tbl", {
+			"item_code": item_code,
+			"item_name": frappe.get_cached_value("Item", item_code, "item_name")
+		})
+
+	doc.save()
+
+	frappe.msgprint(_("Selected items added to Customer Default Items"))
+
+@frappe.whitelist()
+def remove_item_codes_from_customer_default_items(customer, item_codes):
+	if isinstance(item_codes, string_types):
+		item_codes = json.loads(item_codes)
+
+	doc = frappe.get_doc("Customer", customer)
+	doc.default_items_tbl = filter(lambda d: d.item_code not in item_codes, doc.default_items_tbl)
+	for i, d in enumerate(doc.default_items_tbl):
+		d.idx = i + 1
+
+	doc.save()
+
+	frappe.msgprint(_("Selected items removed from Customer Default Items"))
