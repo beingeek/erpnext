@@ -136,10 +136,10 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so):
 	so_data = frappe.db.sql("""
 		select
 			i.item_code, so.delivery_date as date,
-			sum(if(i.qty - i.delivered_qty < 0, 0, i.qty - i.delivered_qty)) as qty
+			sum(i.qty) as qty
 		from `tabSales Order Item` i
 		inner join `tabSales Order` so on so.name = i.parent
-		where so.docstatus < 2 and so.name != %s and so.delivery_date between %s and %s and i.item_code in ({0})
+		where so.docstatus = 0 and so.name != %s and so.delivery_date between %s and %s and i.item_code in ({0})
 		group by i.item_code, so.delivery_date
 	""".format(", ".join(['%s'] * len(item_codes))), [exclude_so, from_date, to_date] + item_codes, as_dict=1)
 
