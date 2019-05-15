@@ -158,19 +158,19 @@ def get_items(date1,item_group=None,qty_order=None,item_code=None):
 				week_p_qty=0
 
 			dayname=getdate(date1).strftime("%A")
-			first1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus=0""",(row[0],date1))
-			second1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus=0""",(row[0],add_days(date1,1)))
-			third1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus=0""",(row[0],add_days(date1,2)))
-			four1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus=0""",(row[0],add_days(date1,3)))
-			five1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus=0""",(row[0],add_days(date1,4)))
+			first1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus<2""",(row[0],date1))
+			second1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus<2""",(row[0],add_days(date1,1)))
+			third1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus<2""",(row[0],add_days(date1,2)))
+			four1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus<2""",(row[0],add_days(date1,3)))
+			five1=frappe.db.sql("""select sum(si.qty) from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus<2""",(row[0],add_days(date1,4)))
 
 
 
-			first2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus=1""",(row[0],date1))
-			second2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus=1""",(row[0],add_days(date1,1)))
-			third2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus=1""",(row[0],add_days(date1,2)))
-			four2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus=1""",(row[0],add_days(date1,3)))
-			five2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus=1""",(row[0],add_days(date1,4)))
+			first2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus<2""",(row[0],date1))
+			second2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus<2""",(row[0],add_days(date1,1)))
+			third2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus<2""",(row[0],add_days(date1,2)))
+			four2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus<2""",(row[0],add_days(date1,3)))
+			five2=frappe.db.sql("""select sum(pi.box) from `tabPurchase Order` as po inner join `tabPurchase Order Item` as pi on po.name=pi.parent where not po.status='Completed' and not po.status='Closed' and not po.status='To Bill' and not po.status='Cancelled' and  pi.item_code=%s and po.schedule_date=%s and pi.received_qty<=0 and po.docstatus<2""",(row[0],add_days(date1,4)))
 
 		
 			if not first1[0][0]==None:
@@ -275,7 +275,7 @@ def get_items(date1,item_group=None,qty_order=None,item_code=None):
 @frappe.whitelist(allow_guest=True)
 def get_order_details_infinity(item,date1):
 	try:
-		data=frappe.db.sql("""select so.name,so.customer,si.item_code,si.item_name,si.qty from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and si.delivery_date>=%s and so.docstatus=0""",(item,add_days(date1,1)),as_dict=True)
+		data=frappe.db.sql("""select so.name,so.customer,si.item_code,si.item_name,si.qty from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and si.delivery_date>=%s and so.docstatus<2""",(item,add_days(date1,1)),as_dict=True)
 		if len(data):
 			return data
 		else:
@@ -287,7 +287,7 @@ def get_order_details_infinity(item,date1):
 @frappe.whitelist(allow_guest=True)
 def get_order_details_week(item,date1):
 	try:
-		data=frappe.db.sql("""select so.name,so.customer,si.item_code,si.item_name,si.qty from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.docstatus=0 and si.delivery_date between %s and %s""",(item,date1,add_days(date1,4)),as_dict=True)
+		data=frappe.db.sql("""select so.name,so.customer,si.item_code,si.item_name,si.qty from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.docstatus<2 and si.delivery_date between %s and %s""",(item,date1,add_days(date1,4)),as_dict=True)
 		if len(data):
 			return data
 		else:
@@ -298,7 +298,7 @@ def get_order_details_week(item,date1):
 @frappe.whitelist(allow_guest=True)
 def get_order_details_weekday(item,date1):
 	try:
-		data=frappe.db.sql("""select so.name,so.customer,si.item_code,si.item_name,si.qty from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus=0""",(item,date1),as_dict=True)
+		data=frappe.db.sql("""select so.name,so.customer,si.item_code,si.item_name,si.qty from `tabSales Order` as so inner join `tabSales Order Item` as si on so.name=si.parent where si.item_code=%s and so.delivery_date=%s and so.docstatus<2""",(item,date1),as_dict=True)
 		#frappe.msgprint(str(len(data)))
 		if len(data):
 			return data
