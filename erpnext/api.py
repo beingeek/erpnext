@@ -181,27 +181,28 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so):
 	return out
 
 @frappe.whitelist()
-def get_customer_default_items(customer):
-	if not customer:
+def get_party_default_items(party_type, party):
+	if not party_type or not party:
 		return []
 
-	default_items = frappe.get_all("Customer Default Item", fields=['item_code'], filters={"parent": customer})
+	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
+		filters={"parenttype": party_type, "parent": party})
 	default_item_codes = map(lambda d: d.item_code, default_items)
 
 	return default_item_codes
 
 @frappe.whitelist()
-def add_item_codes_to_customer_default_items(customer, item_codes):
+def add_item_codes_to_party_default_items(party_type, party, item_codes):
 	if isinstance(item_codes, string_types):
 		item_codes = json.loads(item_codes)
 
-	doc = frappe.get_doc("Customer", customer)
+	doc = frappe.get_doc(party_type, party)
 
 	existing_item_codes = map(lambda d: d.item_code, doc.default_items_tbl)
 	item_codes = filter(lambda item_code: item_code not in existing_item_codes, item_codes)
 
 	if not item_codes:
-		frappe.msgprint(_("Selected items already exists in Customer Default Items"))
+		frappe.msgprint(_("Selected items already exists in {0} Default Items").format(party_type))
 		return
 
 	for item_code in item_codes:
@@ -212,18 +213,18 @@ def add_item_codes_to_customer_default_items(customer, item_codes):
 
 	doc.save()
 
-	frappe.msgprint(_("Selected items added to Customer Default Items"))
+	frappe.msgprint(_("Selected items added to {0} Default Items").format(party_type))
 
 @frappe.whitelist()
-def remove_item_codes_from_customer_default_items(customer, item_codes):
+def remove_item_codes_from_party_default_items(party_type, party, item_codes):
 	if isinstance(item_codes, string_types):
 		item_codes = json.loads(item_codes)
 
-	doc = frappe.get_doc("Customer", customer)
+	doc = frappe.get_doc(party_type, party)
 	doc.default_items_tbl = filter(lambda d: d.item_code not in item_codes, doc.default_items_tbl)
 	for i, d in enumerate(doc.default_items_tbl):
 		d.idx = i + 1
 
 	doc.save()
 
-	frappe.msgprint(_("Selected items removed from Customer Default Items"))
+	frappe.msgprint(_("Selected items removed from {0} Default Items").format(party_type))

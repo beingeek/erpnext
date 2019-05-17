@@ -96,8 +96,8 @@ frappe.ui.form.on("Sales Order", {
 			frm.cscript.show_hide_add_remove_default_items(frm);
 		});
 
-		frm.fields_dict.items.grid.add_custom_button("Remove Customer Default", frm.cscript.remove_selected_from_customer_default_items);
-		frm.fields_dict.items.grid.add_custom_button("Add Customer Default", frm.cscript.add_selected_to_customer_default_items);
+		frm.fields_dict.items.grid.add_custom_button("Remove Customer Default", frm.cscript.remove_selected_from_default_items);
+		frm.fields_dict.items.grid.add_custom_button("Add Customer Default", frm.cscript.add_selected_to_default_items);
 		frm.fields_dict.items.grid.clear_custom_buttons();
 	}
 });
@@ -157,7 +157,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 			$(".btn-custom", this.frm.fields_dict.items.grid.grid_buttons).addClass("hidden");
 		}
 	},
-	add_selected_to_customer_default_items: function() {
+	add_selected_to_default_items: function() {
 		var frm = cur_frm;
 		var item_codes = frm.fields_dict.items.grid.grid_rows
 			.filter(row => row.doc.__checked && row.doc.item_code)
@@ -165,15 +165,16 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 
 		if (frm.doc.customer && item_codes.length) {
 			return frappe.call({
-				method: "erpnext.api.add_item_codes_to_customer_default_items",
+				method: "erpnext.api.add_item_codes_to_party_default_items",
 				args: {
-					customer: frm.doc.customer,
+					party_type: "Customer",
+					party: frm.doc.customer,
 					item_codes: item_codes
 				}
 			});
 		}
 	},
-	remove_selected_from_customer_default_items: function() {
+	remove_selected_from_default_items: function() {
 		var frm = cur_frm;
 		var item_codes = frm.fields_dict.items.grid.grid_rows
 			.filter(row => row.doc.__checked && row.doc.item_code)
@@ -181,9 +182,10 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 
 		if (frm.doc.customer && item_codes.length) {
 			return frappe.call({
-				method: "erpnext.api.remove_item_codes_from_customer_default_items",
+				method: "erpnext.api.remove_item_codes_from_party_default_items",
 				args: {
-					customer: frm.doc.customer,
+					party_type: "Customer",
+					party: frm.doc.customer,
 					item_codes: item_codes
 				}
 			});
@@ -194,9 +196,10 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		var me = this;
 		if (this.frm.doc.docstatus===0 && me.frm.doc.customer) {
 			return frappe.call({
-				method: "erpnext.api.get_customer_default_items",
+				method: "erpnext.api.get_party_default_items",
 				args: {
-					customer: me.frm.doc.customer
+					party_type: "Customer",
+					party: me.frm.doc.customer
 				},
 				callback: function(r) {
 					if (r.message && !r.exc) {

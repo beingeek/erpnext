@@ -57,6 +57,16 @@ frappe.ui.form.on("Purchase Order", {
 		erpnext.queries.setup_queries(frm, "Warehouse", function() {
 			return erpnext.queries.warehouse(frm.doc);
 		});
+	},
+
+	onload_post_render: function(frm) {
+		frm.fields_dict.items.grid.wrapper.on('click', '.grid-row-check', function(e) {
+			frm.cscript.show_hide_add_remove_default_items(frm);
+		});
+
+		frm.fields_dict.items.grid.add_custom_button("Remove Supplier Default", frm.cscript.remove_selected_from_default_items);
+		frm.fields_dict.items.grid.add_custom_button("Add Supplier Default", frm.cscript.add_selected_to_default_items);
+		frm.fields_dict.items.grid.clear_custom_buttons();
 	}
 });
 
@@ -152,6 +162,83 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 
 		if(doc.docstatus < 2) {
 			cur_frm.add_custom_button(__('Landed Cost Voucher'), this.make_landed_cost_voucher, __("Make"));
+		}
+	},
+
+
+
+	show_hide_add_remove_default_items: function() {
+		var has_checked = this.frm.fields_dict.items.grid.grid_rows.some(row => row.doc.__checked);
+		if (has_checked) {
+			$(".btn-custom", this.frm.fields_dict.items.grid.grid_buttons).removeClass("hidden");
+		} else {
+			$(".btn-custom", this.frm.fields_dict.items.grid.grid_buttons).addClass("hidden");
+		}
+	},
+	add_selected_to_default_items: function() {
+		var frm = cur_frm;
+		var item_codes = frm.fields_dict.items.grid.grid_rows
+			.filter(row => row.doc.__checked && row.doc.item_code)
+			.map(row => row.doc.item_code);
+
+		if (frm.doc.supplier && item_codes.length) {
+			return frappe.call({
+				method: "erpnext.api.add_item_codes_to_party_default_items",
+				args: {
+					party_type: "Supplier",
+					party: frm.doc.supplier,
+					item_codes: item_codes
+				}
+			});
+		}
+	},
+	remove_selected_from_default_items: function() {
+		var frm = cur_frm;
+		var item_codes = frm.fields_dict.items.grid.grid_rows
+			.filter(row => row.doc.__checked && row.doc.item_code)
+			.map(row => row.doc.item_code);
+
+		if (frm.doc.supplier && item_codes.length) {
+			return frappe.call({
+				method: "erpnext.api.remove_item_codes_from_party_default_items",
+				args: {
+					party_type: "Supplier",
+					party: frm.doc.supplier,
+					item_codes: item_codes
+				}
+			});
+		}
+	},
+
+	get_supplier_default_items: function() {
+		var me = this;
+		if (this.frm.doc.docstatus===0 && me.frm.doc.supplier) {
+			return frappe.call({
+				method: "erpnext.api.get_party_default_items",
+				args: {
+					party_type: "Supplier",
+					party: me.frm.doc.supplier
+				},
+				callback: function(r) {
+					if (r.message && !r.exc) {
+						var rows_added = [];
+						var existing_item_codes = me.frm.doc.items.map(d => d.item_code).filter(d => d);
+						$.each(r.message || [], function(i, item_code) {
+							if (!existing_item_codes.includes(item_code)) {
+								var row = frappe.model.add_child(me.frm.doc, "Purchase Order Item", "items", 1);
+								row._item_code = item_code;
+								row.qty = 0;
+								rows_added.push(row);
+							}
+						});
+						me.frm.refresh_field("items");
+
+						$.each(rows_added, function(i, row) {
+							frappe.model.set_value(row.doctype, row.name, "item_code", row._item_code);
+						});
+					}
+				}
+			});
 		}
 	},
 
