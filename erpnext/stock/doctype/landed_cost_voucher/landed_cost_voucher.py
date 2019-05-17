@@ -146,6 +146,42 @@ class LandedCostVoucher(AccountsController):
 						item.purchase_invoice = pr.receipt_document
 						item.purchase_invoice_item = d.name
 
+	def purchase_order_to_purchase_receipt(self):
+		to_remove = []
+		to_add = []
+		for d in self.get("purchase_receipts"):
+			if d.receipt_document_type == "Purchase Order":
+				po = frappe.db.get_value("Purchase Order", d.receipt_document, ["per_received", "status"], as_dict=1)
+				if po.per_received >= 100 or po.status == "Closed":
+					precs = frappe.db.sql("""
+						select name, supplier, base_grand_total as grand_total
+						from `tabPurchase Receipt` prec
+						where docstatus=1 and exists(select i.name from `tabPurchase Receipt Item` i
+							where i.parent = prec.name and i.purchase_order=%s)
+					""", d.receipt_document, as_dict=1)
+
+					pinvs = frappe.db.sql("""
+						select name, supplier, base_grand_total as grand_total
+						from `tabPurchase Invoice` pinv
+						where docstatus=1 and update_stock=1 and exists(select i.name from `tabPurchase Invoice Item` i
+							where i.parent = pinv.name and i.purchase_order=%s)
+					""", d.receipt_document, as_dict=1)
+
+					if precs or pinvs:
+						to_remove.append(d)
+						for p in precs:
+							to_add.append({"receipt_document_type": "Purchase Receipt", "receipt_document": p.name,
+								"supplier": p.supplier, "grand_total": p.grand_total})
+						for p in pinvs:
+							to_add.append({"receipt_document_type": "Purchase Invoice", "receipt_document": p.name,
+								"supplier": p.supplier, "grand_total": p.grand_total})
+				else:
+					frappe.msgprint(_("Purchase Order {0} is still open and not completely received").format(d.receipt_document))
+
+		[self.remove(row) for row in to_remove]
+		[self.append("purchase_receipts", row) for row in to_add]
+		self.get_items_from_purchase_receipts()
+
 	def check_mandatory(self):
 		if self.party:
 			if not self.credit_to:

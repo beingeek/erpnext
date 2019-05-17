@@ -195,6 +195,23 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 		}
 	},
 
+	purchase_order_to_purchase_receipt: function() {
+		var me = this;
+		if(!me.frm.doc.purchase_receipts.length) {
+			frappe.msgprint(__("Please enter Purchase Order first"));
+		} else {
+			return me.frm.call({
+				doc: me.frm.doc,
+				method: "purchase_order_to_purchase_receipt",
+				callback: function() {
+					me.update_manual_distribution();
+					me.calculate_taxes_and_totals();
+					me.frm.dirty();
+				}
+			});
+		}
+	},
+
 	amount: function() {
 		this.calculate_taxes_and_totals();
 	},
