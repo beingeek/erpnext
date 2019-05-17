@@ -8,7 +8,7 @@ def get_data():
 			'Journal Entry': 'reference_name',
 			'Payment Entry': 'reference_name',
 			'Auto Repeat': 'reference_document',
-			'Landed Cost Voucher': 'receipt_document',
+			'Landed Cost Voucher': 'purchase_order',
 		},
 		'internal_links': {
 			'Material Request': ['items', 'material_request'],
