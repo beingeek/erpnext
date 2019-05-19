@@ -67,6 +67,15 @@ frappe.ui.form.on("Purchase Order", {
 		frm.fields_dict.items.grid.add_custom_button("Remove Supplier Default", frm.cscript.remove_selected_from_default_items);
 		frm.fields_dict.items.grid.add_custom_button("Add Supplier Default", frm.cscript.add_selected_to_default_items);
 		frm.fields_dict.items.grid.clear_custom_buttons();
+	},
+
+	validate: function(frm) {
+		for (var i = frm.fields_dict['items'].grid.grid_rows.length - 1; i >= 0; --i) {
+			var grid_row = frm.fields_dict['items'].grid.grid_rows[i];
+			if (!grid_row.doc.qty) {
+				grid_row.remove();
+			}
+		}
 	}
 });
 
