@@ -182,12 +182,14 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so):
 
 @frappe.whitelist()
 def get_party_default_items(party_type, party):
+	from frappe.utils import cint
+
 	if not party_type or not party:
 		return []
 
 	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
 		filters={"parenttype": party_type, "parent": party})
-	default_item_codes = map(lambda d: d.item_code, default_items)
+	default_item_codes = [d.item_code for d in default_items if not cint(frappe.get_cached_value("Item", d.item_code, "disabled"))]
 
 	return default_item_codes
 
