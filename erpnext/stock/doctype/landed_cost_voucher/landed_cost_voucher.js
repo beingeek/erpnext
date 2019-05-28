@@ -219,7 +219,20 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 	total_amount: function(frm, cdt, cdn) {
 		var row = frappe.get_doc(cdt, cdn);
 		if (this.frm.doc.hst == "Yes") {
-			row.tax_amount = flt(flt(row.total_amount) - flt(row.total_amount) / 1.13, precision("tax_amount", row));
+			row.tax_amount = flt(flt(row.total_amount) - flt(row.total_amount) / 1.13, precision("tax_amount", d));
+		}
+		this.calculate_taxes_and_totals();
+	},
+
+	hst: function() {
+		if (this.frm.doc.hst == "Yes") {
+			$.each(this.frm.doc.taxes || [], function(i, d) {
+				d.tax_amount = flt(flt(d.total_amount) - flt(d.total_amount) / 1.13, precision("tax_amount", d));
+			});
+		} else {
+			$.each(this.frm.doc.taxes || [], function(i, d) {
+				d.tax_amount = 0;
+			});
 		}
 		this.calculate_taxes_and_totals();
 	},
@@ -285,7 +298,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 		}
 
 		var grand_total = me.frm.doc.party_account_currency == me.frm.doc.currency ? me.frm.doc.grand_total : me.frm.doc.base_grand_total;
-		me.frm.doc.outstanding_amount = flt(grand_total - me.frm.doc.total_advance, "outstanding_amount");
+		me.frm.doc.outstanding_amount = flt(grand_total - me.frm.doc.total_advance, precision("outstanding_amount"));
 
 		me.distribute_applicable_charges_for_item();
 
