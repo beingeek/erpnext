@@ -45,6 +45,15 @@ frappe.ui.form.on("Purchase Receipt", {
 		var enabled = erpnext.is_perpetual_inventory_enabled(frm.doc.company)
 		frm.fields_dict["items"].grid.set_column_disp(["cost_center"], enabled);
 	},
+
+	validate: function(frm) {
+		for (var i = frm.fields_dict['items'].grid.grid_rows.length - 1; i >= 0; --i) {
+			var grid_row = frm.fields_dict['items'].grid.grid_rows[i];
+			if (!grid_row.doc.qty) {
+				grid_row.remove();
+			}
+		}
+	}
 });
 
 erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend({
