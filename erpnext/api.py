@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import frappe
 
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
-from frappe.utils import getdate, validate_email_add, today, add_years,add_days,format_datetime
+from frappe.utils import getdate, validate_email_add, today, add_years,add_days,format_datetime, flt
 from datetime import datetime
 from frappe.model.naming import make_autoname
 from frappe import throw, _, scrub
@@ -116,7 +116,7 @@ def paymentReferenceDate(row,reference_doctype,reference_name):
 	return result_list2
 
 @frappe.whitelist()
-def get_item_custom_projected_qty(date, item_codes, exclude_so):
+def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 	from_date = frappe.utils.getdate(date)
 	to_date = frappe.utils.add_days(from_date, 4)
 
@@ -133,15 +133,17 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so):
 		group by i.item_code, po.schedule_date
 	""".format(", ".join(['%s']*len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
 
+	exclude_so_cond = " and so.name != '{0}'".format(frappe.db.escape(exclude_so)) if exclude_so else ""
+
 	so_data = frappe.db.sql("""
 		select
 			i.item_code, so.delivery_date as date,
 			sum(i.qty) as qty
 		from `tabSales Order Item` i
 		inner join `tabSales Order` so on so.name = i.parent
-		where so.docstatus = 0 and so.name != %s and so.delivery_date between %s and %s and i.item_code in ({0})
+		where so.docstatus = 0 and so.delivery_date between %s and %s and i.item_code in ({0}) {1}
 		group by i.item_code, so.delivery_date
-	""".format(", ".join(['%s'] * len(item_codes))), [exclude_so, from_date, to_date] + item_codes, as_dict=1)
+	""".format(", ".join(['%s'] * len(item_codes)), exclude_so_cond), [from_date, to_date] + item_codes, as_dict=1)
 
 	bin_data = frappe.db.sql("""
 		select item_code, sum(actual_qty) as actual_qty, sum(projected_qty) as projected_qty
@@ -179,6 +181,21 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so):
 			d['projected_qty'] -= d['so_day_' + str(i+1)]
 
 	return out
+
+@frappe.whitelist()
+def get_sales_orders_for_qty_adjust(date, item_code):
+	from_date = frappe.utils.getdate(date)
+	to_date = frappe.utils.add_days(from_date, 4)
+
+	so_data = frappe.db.sql("""
+		select so.name as sales_order, so.customer, i.qty as ordered_qty, so.delivery_date as date, i.name as so_detail
+		from `tabSales Order Item` i
+		inner join `tabSales Order` so on so.name = i.parent
+		where so.docstatus = 0 and so.delivery_date between %s and %s and i.item_code = %s
+		order by so.delivery_date, so.name
+	""", [from_date, to_date, item_code], as_dict=1)
+
+	return so_data
 
 @frappe.whitelist()
 def get_party_default_items(party_type, party):
