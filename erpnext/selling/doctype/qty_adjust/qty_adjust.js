@@ -32,6 +32,7 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 	},
 
 	item_code: function() {
+		this.get_item_name();
 		this.get_item_custom_projected_qty();
 		this.get_sales_orders_for_qty_adjust();
 	},
@@ -46,6 +47,28 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 
 	sales_orders_remove: function() {
 		this.calculate_totals();
+	},
+
+	get_item_name: function() {
+		var me = this;
+
+		if (me.frm.doc.item_code) {
+			frappe.call({
+				method: "frappe.client.get_value",
+				args: {
+					doctype: "Item",
+					filters: {name: me.frm.doc.item_code},
+					fieldname: "item_name"
+				},
+				callback: function(r) {
+					if(r.message) {
+						me.frm.set_value("item_name", r.message.item_name);
+					}
+				}
+			});
+		} else {
+			me.frm.set_value("item_name", "");
+		}
 	},
 
 	set_po_qty_labels: function() {
