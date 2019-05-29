@@ -257,7 +257,6 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 	},
 
 	set_po_qty_labels: function() {
-		var days = [];
 		for (var i = 0; i < 5; ++i) {
 			var date = new frappe.datetime.datetime(frappe.datetime.add_days(this.frm.doc.transaction_date, i));
 			var day = date.format("ddd");
