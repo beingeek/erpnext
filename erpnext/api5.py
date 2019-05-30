@@ -476,6 +476,8 @@ def save_sales_order_item(sid,item_id,item_qty,rate,itemdoc_id,backorder_date):
 							"uom": datasalesorder_item.uom,
 							"weight_lbs": datasalesorder_item.weight_lbs,
 							"weight_kgs":datasalesorder_item.weight_kgs,
+							"weight_per_unit":datasalesorder_item.weight_per_unit,
+							"weight_uom":datasalesorder_item.weight_uom,
 							"gross_weight_lbs":datasalesorder_item.gross_weight_lbs,
 							"sale_pallets":datasalesorder_item.sale_pallets,
 							"cost_center":getCostCenter(item_id)
