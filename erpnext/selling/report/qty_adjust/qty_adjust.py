@@ -54,11 +54,7 @@ def get_data(filters):
 	""".format(", ".join(['%s']*len(item_codes))), item_codes, as_dict=1) if item_codes else []
 
 	item_map = {}
-	template = frappe._dict({
-		"po_day_1": 0, "po_day_2": 0, "po_day_3": 0, "po_day_4": 0, "po_day_5": 0,
-		"so_day_1": 0, "so_day_2": 0, "so_day_3": 0, "so_day_4": 0, "so_day_5": 0,
-		"actual_qty": 0, "total_so_qty": 0, "total_po_qty": 0
-	})
+	template = frappe._dict({"actual_qty": 0, "total_so_qty": 0, "total_po_qty": 0})
 
 	for d in so_data:
 		item_map.setdefault(d.item_code, template.copy())
