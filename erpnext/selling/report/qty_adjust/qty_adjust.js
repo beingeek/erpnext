@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Ordered Items Balance Qty"] = {
+frappe.query_reports["Qty Adjust"] = {
 	"filters": [
 		{
 			fieldname: "date",

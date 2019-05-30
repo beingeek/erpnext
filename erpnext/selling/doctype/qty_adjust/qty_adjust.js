@@ -13,8 +13,8 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 
 	refresh: function() {
 		this.frm.disable_save();
-		this.frm.add_custom_button(__('Ordered Items Balance Qty Report'), function() {
-			frappe.set_route('query-report', 'Ordered Items Balance Qty');
+		this.frm.add_custom_button(__('Qty Adjust Report'), function() {
+			frappe.set_route('query-report', 'Qty Adjust');
 		});
 	},
 
