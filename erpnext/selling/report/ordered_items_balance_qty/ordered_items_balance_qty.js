@@ -39,8 +39,8 @@ frappe.query_reports["Ordered Items Balance Qty"] = {
 		}
 
 		if (column.is_so_qty) {
-			var date = frappe.query_report.get_filter_value("date");
-			var link = encodeURI("desk#Form/Qty Adjust/Qty Adjust?date=" + date + "&item_code=" + data.item_code);
+			var link = encodeURI("desk#Form/Qty Adjust/Qty Adjust" +
+				"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
 
 			value = $(`<span>${value}</span>`);
 			var $value = $(value).css("color", "#0a0157");

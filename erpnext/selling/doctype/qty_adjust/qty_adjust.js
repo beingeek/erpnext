@@ -5,7 +5,8 @@ frappe.provide("erpnext.selling");
 
 erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 	setup: function() {
-		this.frm.doc.date = get_url_arg("date");
+		this.frm.doc.from_date = get_url_arg("from_date");
+		this.frm.doc.to_date = get_url_arg("to_date");
 		this.frm.doc.item_code = get_url_arg("item_code");
 		this.frm.trigger("item_code");
 	},
@@ -25,9 +26,13 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 		this.frm.fields_dict.qty_adjust_sales_orders.$input.addClass("btn-primary");
 	},
 
-	date: function() {
+	from_date: function() {
 		this.set_po_qty_labels();
 		this.get_item_custom_projected_qty();
+		this.get_sales_orders_for_qty_adjust();
+	},
+
+	to_date: function() {
 		this.get_sales_orders_for_qty_adjust();
 	},
 
@@ -72,10 +77,10 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 	},
 
 	set_po_qty_labels: function() {
-		var date = this.frm.doc.date || frappe.datetime.now_date();
+		var from_date = this.frm.doc.from_date || frappe.datetime.now_date();
 		for (var i = 0; i < 5; ++i) {
-			var date = new frappe.datetime.datetime(frappe.datetime.add_days(date, i));
-			var day = date.format("ddd");
+			var from_date = new frappe.datetime.datetime(frappe.datetime.add_days(from_date, i));
+			var day = from_date.format("ddd");
 			this.frm.fields_dict["po_day_"+(i+1)].set_label("PO " + day);
 			// this.frm.fields_dict["so_day_"+(i+1)].set_label("SO " + day);
 		}
@@ -84,12 +89,12 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 	get_item_custom_projected_qty: function() {
 		var me = this;
 
-		if (me.frm.doc.date && me.frm.doc.item_code) {
+		if (me.frm.doc.from_date && me.frm.doc.item_code) {
 			return this.frm.call({
 				method: "erpnext.api.get_item_custom_projected_qty",
 				freeze: true,
 				args: {
-					date: me.frm.doc.date,
+					date: me.frm.doc.from_date,
 					item_codes: [me.frm.doc.item_code]
 				},
 				callback: function(r) {
@@ -121,12 +126,13 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 	get_sales_orders_for_qty_adjust: function() {
 		var me = this;
 
-		if (me.frm.doc.date && me.frm.doc.item_code) {
+		if (me.frm.doc.from_date && me.frm.doc.item_code) {
 			return this.frm.call({
 				method: "erpnext.api.get_sales_orders_for_qty_adjust",
 				freeze: true,
 				args: {
-					date: me.frm.doc.date,
+					from_date: me.frm.doc.from_date,
+					to_date: me.frm.doc.to_date,
 					item_code: me.frm.doc.item_code
 				},
 				callback: function(r) {

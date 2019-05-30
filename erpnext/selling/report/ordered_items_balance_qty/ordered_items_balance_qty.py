@@ -103,14 +103,18 @@ def get_columns(filters):
 		{"fieldname": "item_code", "label": _("Item Code"), "fieldtype": "Link", "options": "Item", "width": 80},
 		{"fieldname": "item_name", "label": _("Item Name"), "fieldtype": "Data", "width": 150},
 		{"fieldname": "actual_qty", "label": _("In Stock"), "fieldtype": "Float", "width": 70},
-		{"fieldname": "total_so_qty", "label": _("Total SO"), "fieldtype": "Float", "width": 70, "is_so_qty": 1}
+		{"fieldname": "total_so_qty", "label": _("Total SO"), "fieldtype": "Float", "width": 70,
+			"is_so_qty": 1, "from_date": filters.date, "to_date": add_days(filters.date, 4)}
 	]
 	for i in range(5):
+		date = add_days(filters.date, i)
 		columns.append({
 			"fieldname": "so_day_{0}".format(i+1),
-			"label": _("SO {0}").format(frappe.utils.formatdate(add_days(filters.date, i), "EEE")),
+			"label": _("SO {0}").format(frappe.utils.formatdate(date, "EEE")),
 			"fieldtype": "Float",
 			"is_so_qty": 1,
+			"from_date": date,
+			"to_date": date,
 			"width": 65
 		})
 

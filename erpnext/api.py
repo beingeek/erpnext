@@ -183,17 +183,18 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 	return out
 
 @frappe.whitelist()
-def get_sales_orders_for_qty_adjust(date, item_code):
-	from_date = frappe.utils.getdate(date)
-	to_date = frappe.utils.add_days(from_date, 4)
+def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
+	date_condition = "and so.delivery_date >= %(from_date)s"
+	if to_date:
+		date_condition += "and so.delivery_date <= %(to_date)s"
 
 	so_data = frappe.db.sql("""
 		select so.name as sales_order, so.customer, i.qty as ordered_qty, so.delivery_date as date, i.name as so_detail
 		from `tabSales Order Item` i
 		inner join `tabSales Order` so on so.name = i.parent
-		where so.docstatus = 0 and so.delivery_date between %s and %s and i.item_code = %s
+		where so.docstatus = 0 and i.item_code = %(item_code)s {0}
 		order by so.delivery_date, so.name
-	""", [from_date, to_date, item_code], as_dict=1)
+	""".format(date_condition), {"from_date": from_date, "to_date": to_date, "item_code": item_code}, as_dict=1)
 
 	return so_data
 
