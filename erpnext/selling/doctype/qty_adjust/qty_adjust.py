@@ -62,8 +62,9 @@ def change_item_code(sales_order, so_detail, new_item_code, old_item_code):
 	doc.total_gross_weight_lbs = 0
 	for d in doc.items:
 		doc.total_boxes += flt(d.qty)
-		doc.total_pallets += flt(d.qty)/flt(d.sale_pallets)
 		doc.total_gross_weight_lbs += flt(d.qty) * flt(d.gross_weight_lbs)
+		if flt(d.sale_pallets) > 0:
+			doc.total_pallets += flt(d.qty)/flt(d.sale_pallets)
 
 	doc.total_weight_kg = flt(doc.total_gross_weight_lbs * 0.45359237, 2)
 	doc.save()
