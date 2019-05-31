@@ -54,11 +54,25 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 		this.calculate_totals();
 	},
 
+	new_item_code: function(frm, cdt, cdn) {
+		var grid_row = this.frm.fields_dict['sales_orders'].grid.grid_rows_by_docname[cdn];
+		if (grid_row && grid_row.doc.__checked) {
+			var checked_rows = this.frm.fields_dict['sales_orders'].grid.grid_rows
+				.filter(row => row.doc.__checked && row.doc.name != cdn);
+
+			$.each(checked_rows || [], function(i, d) {
+				d.doc.new_item_code = grid_row.doc.new_item_code;
+			});
+
+			this.frm.refresh_field("sales_orders");
+		}
+	},
+
 	get_item_name: function() {
 		var me = this;
 
 		if (me.frm.doc.item_code) {
-			frappe.call({
+			return frappe.call({
 				method: "frappe.client.get_value",
 				args: {
 					doctype: "Item",
