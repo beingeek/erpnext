@@ -75,6 +75,8 @@ class LandedCostVoucher(AccountsController):
 						item.db_update()
 				else:
 					frappe.msgprint(_("Purchase Order {0} could not be found").format(d.receipt_document))
+					
+				po.notify_update()
 
 	def get_referenced_taxes(self):
 		if self.credit_to and self.party:
