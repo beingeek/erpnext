@@ -119,11 +119,13 @@ class LandedCostVoucher(AccountsController):
 					select
 						pr_item.item_code, pr_item.item_name, pr_item.total_weight,
 						pr_item.gross_weight_lbs, i.gross_weight,
+						i.purchase_pallets,
 						pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.amount, pr_item.name,
 						pr_item.{po_detail_field}, pr_item.{po_field} as purchase_order, pr_item.cost_center
 					from `tab{doctype} Item` pr_item
 					inner join tabItem i on i.name = pr_item.item_code and i.is_stock_item = 1
 					where pr_item.parent = %s
+					order by pr_item.idx
 				""".format(doctype=pr.receipt_document_type, po_detail_field=po_detail_field, po_field=po_field),
 					pr.receipt_document, as_dict=True)
 
@@ -134,6 +136,7 @@ class LandedCostVoucher(AccountsController):
 					item.qty = d.qty
 					item.weight = d.total_weight
 					item.gross_weight = flt(d.qty) * flt(d.gross_weight_lbs or d.gross_weight)
+					item.pallets = flt(d.qty) / flt(d.purchase_pallets) if d.purchase_pallets else 0
 					item.rate = d.base_rate
 					item.cost_center = d.cost_center or erpnext.get_default_cost_center(self.company)
 					item.amount = d.base_amount
@@ -296,7 +299,7 @@ class LandedCostVoucher(AccountsController):
 		if not self.conversion_rate:
 			frappe.throw(_("Exchange Rate cannot be 0"))
 
-		item_total_fields = ['qty', 'amount', 'weight', 'gross_weight']
+		item_total_fields = ['qty', 'amount', 'weight', 'gross_weight', 'pallets']
 		for f in item_total_fields:
 			self.set('total_' + f, flt(sum([flt(d.get(f)) for d in self.get("items")]), self.precision('total_' + f)))
 
@@ -341,7 +344,7 @@ class LandedCostVoucher(AccountsController):
 
 	def distribute_applicable_charges_for_item(self):
 		totals = {}
-		item_total_fields = ['qty', 'amount', 'weight', 'gross_weight']
+		item_total_fields = ['qty', 'amount', 'weight', 'gross_weight', 'pallets']
 		for f in item_total_fields:
 			totals[f] = flt(sum([flt(d.get(f)) for d in self.items]))
 

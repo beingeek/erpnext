@@ -56,36 +56,21 @@ class PurchaseOrder(BuyingController):
 		self.validate_bom_for_subcontracting_items()
 		self.create_raw_materials_supplied("supplied_items")
 		self.set_received_qty_for_drop_ship_items()
+
+	def on_change(self):
 		self.update_lcv_values()
 		self.set_landed_cost_voucher_amount()
 
 	def update_lcv_values(self):
-		from six import iteritems
-		lcvs_to_update = {}
+		lcvs_to_update = frappe.db.sql_list("""
+			select distinct parent
+			from `tabLanded Cost Purchase Receipt`
+			where receipt_document_type='Purchase Order' and receipt_document=%s and docstatus=0
+		""", [self.name])
 
-		for d in self.items:
-			lcv_item = frappe.db.sql("""
-				select parent, name
-				from `tabLanded Cost Item`
-				where purchase_order=%s and purchase_order_item=%s and ifnull(purchase_receipt, '')='' and ifnull(purchase_invoice, '')='' and docstatus=0
-			""", [self.name, d.name], as_dict=1)
-			if lcv_item:
-				lcv_item = lcv_item[0]
-				lcvs_to_update.setdefault(lcv_item.parent, []).append((lcv_item.name, d))
-
-		for lcv_name, lcv_items in iteritems(lcvs_to_update):
-			doc = frappe.get_doc("Landed Cost Voucher", lcv_name)
-			for row_name, d in lcv_items:
-				lcv_item = list(filter(lambda d: d.name == row_name, doc.items))
-				if lcv_item:
-					lcv_item = lcv_item[0]
-					lcv_item.qty = d.qty
-					lcv_item.amount = d.base_amount
-					lcv_item.rate = d.base_rate
-					lcv_item.weight = d.total_weight
-					if d.get("gross_weight_lbs"):
-						lcv_item.gross_weight = flt(d.get("gross_weight_lbs")) * d.qty
-
+		for name in lcvs_to_update:
+			doc = frappe.get_doc("Landed Cost Voucher", name)
+			doc.get_items_from_purchase_receipts()
 			doc.calculate_taxes_and_totals()
 			doc.save()
 
