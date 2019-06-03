@@ -29,11 +29,24 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 		$(".grid-footer", me.frm.fields_dict.sales_orders.$wrapper).hide().addClass("hidden");
 
 		me.frm.fields_dict.sales_orders.grid.wrapper.on('click', '.grid-row-check', function(e) {
+			var checked = me.frm.fields_dict.sales_orders.grid.grid_rows.filter(row => row.doc.__checked);
+			var checked_new_item = me.frm.fields_dict.sales_orders.grid.grid_rows.filter(row => row.doc.__checked && row.doc.new_item_code);
 			var unchecked = me.frm.fields_dict.sales_orders.grid.grid_rows.filter(row => !row.doc.__checked);
+
+			if (checked_new_item && checked_new_item.length) {
+				var new_item_code = checked_new_item[0].doc.new_item_code;
+				$.each(checked || [], function(i, row) {
+					row.doc.new_item_code = new_item_code;
+					row.refresh_field("new_item_code");
+				});
+			}
+
 			$.each(unchecked || [], function(i, row) {
 				row.doc.new_item_code = "";
 				row.refresh_field("new_item_code");
 			});
+
+			me.calculate_totals();
 		});
 	},
 
@@ -181,19 +194,27 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 
 		var totals = {
 			total_ordered_qty: 0, total_allocated_qty: 0, total_back_order_qty: 0, total_difference: 0,
+			selected_ordered_qty: 0, selected_allocated_qty: 0, selected_back_order_qty: 0, selected_difference: 0,
 		};
 
-		$.each(me.frm.doc.sales_orders || [], function(i, d) {
-			d.difference = flt(d.allocated_qty) - flt(d.ordered_qty);
+		var has_checked = false;
+		me.frm.refresh_field("sales_orders");
+		$.each(me.frm.fields_dict.sales_orders.grid.grid_rows || [], function(i, d) {
+			d.doc.difference = flt(d.doc.allocated_qty) - flt(d.doc.ordered_qty);
 			$.each(['ordered_qty', 'allocated_qty', 'back_order_qty', 'difference'], function(j, f) {
-				d[f] = flt(d[f], precision(f, d));
-				totals['total_' + f] += flt(d[f]);
+				d.doc[f] = flt(d.doc[f], precision(f, d.doc));
+				totals['total_' + f] += flt(d.doc[f]);
+
+				if (d.doc.__checked) {
+					has_checked = true;
+					totals['selected_' + f] += flt(d.doc[f]);
+				}
 			});
 		});
 
 		Object.assign(me.frm.doc, totals);
 
-		this.frm.refresh_fields();
+		me.frm.refresh_fields();
 	},
 
 	qty_adjust_sales_orders: function() {
