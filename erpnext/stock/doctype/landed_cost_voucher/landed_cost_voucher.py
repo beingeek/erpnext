@@ -71,7 +71,9 @@ class LandedCostVoucher(AccountsController):
 				po = frappe.get_doc("Purchase Order", d.receipt_document)
 				if po:
 					po.set_landed_cost_voucher_amount(exclude=self.name if on_trash else "")
-					po.save()
+					for item in po.get("items"):
+						item.db_set("landed_cost_voucher_amount", item.landed_cost_voucher_amount, notify=True)
+						item.db_set("landed_rate", item.landed_rate, notify=True)
 				else:
 					frappe.msgprint(_("Purchase Order {0} could not be found").format(d.receipt_document))
 
