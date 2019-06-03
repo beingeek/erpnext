@@ -23,7 +23,18 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 	},
 
 	onload_post_render: function() {
-		this.frm.fields_dict.qty_adjust_sales_orders.$input.addClass("btn-primary");
+		var me = this;
+
+		me.frm.fields_dict.qty_adjust_sales_orders.$input.addClass("btn-primary");
+		$(".grid-footer", me.frm.fields_dict.sales_orders.$wrapper).hide().addClass("hidden");
+
+		me.frm.fields_dict.sales_orders.grid.wrapper.on('click', '.grid-row-check', function(e) {
+			var unchecked = me.frm.fields_dict.sales_orders.grid.grid_rows.filter(row => !row.doc.__checked);
+			$.each(unchecked || [], function(i, row) {
+				row.doc.new_item_code = "";
+				row.refresh_field("new_item_code");
+			});
+		});
 	},
 
 	from_date: function() {
