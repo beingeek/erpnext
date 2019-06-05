@@ -44,14 +44,13 @@ def get_data(filters):
 		group by item.item_code, so.delivery_date
 	""".format(conditions), filters, as_dict=1)
 
-	item_codes = list(set([d.item_code for d in po_data] + [d.item_code for d in so_data]))
-
 	bin_data = frappe.db.sql("""
-		select item_code, sum(actual_qty) as actual_qty
-		from tabBin
-		where item_code in ({0})
-		group by item_code
-	""".format(", ".join(['%s']*len(item_codes))), item_codes, as_dict=1) if item_codes else []
+		select bin.item_code, sum(bin.actual_qty) as actual_qty, item.item_name
+		from tabBin bin, tabItem item
+		where item.name = bin.item_code {0}
+		group by bin.item_code
+		having actual_qty != 0
+	""".format(conditions), as_dict=1)
 
 	item_map = {}
 	template = frappe._dict({"actual_qty": 0, "total_so_qty": 0, "total_po_qty": 0})
@@ -73,9 +72,12 @@ def get_data(filters):
 		item_map[d.item_code]['total_po_qty'] += d.qty
 
 	for d in bin_data:
+		item_map.setdefault(d.item_code, template.copy())
 		item_map[d.item_code]['actual_qty'] = d.actual_qty
+		item_map[d.item_code]['item_code'] = d.item_code
+		item_map[d.item_code]['item_name'] = d.item_name
 
-	data = sorted(item_map.values(), key=lambda d: d.total_so_qty, reverse=True)
+	data = sorted(item_map.values(), key=lambda d: (d.total_so_qty, d.actual_qty), reverse=True)
 	return data
 
 
