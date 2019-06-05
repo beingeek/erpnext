@@ -47,7 +47,7 @@ def get_data(filters):
 	bin_data = frappe.db.sql("""
 		select bin.item_code, sum(bin.actual_qty) as actual_qty, item.item_name
 		from tabBin bin, tabItem item
-		where item.name = bin.item_code {0}
+		where item.name = bin.item_code and item.is_sales_item=1 {0}
 		group by bin.item_code
 		having actual_qty != 0
 	""".format(conditions), filters, as_dict=1)
