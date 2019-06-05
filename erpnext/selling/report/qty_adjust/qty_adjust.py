@@ -50,7 +50,7 @@ def get_data(filters):
 		where item.name = bin.item_code {0}
 		group by bin.item_code
 		having actual_qty != 0
-	""".format(conditions), as_dict=1)
+	""".format(conditions), filters, as_dict=1)
 
 	item_map = {}
 	template = frappe._dict({"actual_qty": 0, "total_so_qty": 0, "total_po_qty": 0})
