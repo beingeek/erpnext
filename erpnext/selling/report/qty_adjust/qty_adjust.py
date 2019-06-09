@@ -30,7 +30,7 @@ def get_data(filters):
 			sum(if(item.qty - item.received_qty < 0, 0, item.qty - item.received_qty)) as qty
 		from `tabPurchase Order Item` item
 		inner join `tabPurchase Order` po on po.name = item.parent
-		where po.docstatus < 2 and po.schedule_date between %(from_date)s and %(to_date)s {0}
+		where po.docstatus < 2 and po.status != 'Closed' and po.schedule_date between %(from_date)s and %(to_date)s {0}
 		group by item.item_code, po.schedule_date
 	""".format(conditions), filters, as_dict=1)
 

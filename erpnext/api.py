@@ -129,7 +129,7 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 			sum(if(i.qty - i.received_qty < 0, 0, i.qty - i.received_qty)) as qty
 		from `tabPurchase Order Item` i
 		inner join `tabPurchase Order` po on po.name = i.parent
-		where po.docstatus < 2 and po.schedule_date between %s and %s and i.item_code in ({0})
+		where po.docstatus < 2 and po.status != 'Closed' and po.schedule_date between %s and %s and i.item_code in ({0})
 		group by i.item_code, po.schedule_date
 	""".format(", ".join(['%s']*len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
 
