@@ -6,9 +6,8 @@ frappe.query_reports["LC Based Prices"] = {
 	filters: [
 		{
 			fieldname: "date",
-			label: __("Price List Effective Date"),
+			label: __("Price Effective Date"),
 			fieldtype: "Date",
-			default: frappe.datetime.get_today(),
 			reqd: 1
 		},
 		{
