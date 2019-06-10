@@ -56,7 +56,7 @@ frappe.query_reports["LC Based Prices"] = {
 				item_code: data['item_code'],
 				price_list: column.price_list,
 				price_list_rate: new_value,
-				is_diff: Boolean(column.is_diff)
+				is_diff: cint(column.is_diff)
 			},
 			callback: function(r) {
 				frappe.query_report.refresh();
