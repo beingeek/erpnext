@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _, scrub
-from frappe.utils import flt, nowdate, getdate, add_days
+from frappe.utils import flt, nowdate, getdate, add_days, cint
 from erpnext.stock.report.stock_ledger.stock_ledger import get_item_group_condition
 from six import iteritems
 
@@ -188,14 +188,14 @@ def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_
 		limit 1
 	""", [standard_price_list, item_code, effective_date, effective_date])
 
-	if is_diff:
+	if cint(is_diff):
 		if not old_standard_rate:
 			frappe.throw(_("Could not find Base Price for item {0}").format(item_code))
 		else:
 			price_list_rate = flt(old_standard_rate[0]) + flt(price_list_rate)
 
 	dependent_item_prices = []
-	if price_list == standard_price_list:
+	if price_list == standard_price_list and old_standard_rate:
 		dependent_item_prices = frappe.db.sql("""
 			select p.price_list, p.price_list_rate - %s as diff
 			from `tabItem Price` p
