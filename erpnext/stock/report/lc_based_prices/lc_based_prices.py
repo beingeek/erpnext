@@ -23,8 +23,8 @@ def execute(filters=None):
 
 
 def get_data(filters):
-	conditions = get_item_conditions(filters, for_item_doc=False)
-	item_conditions = get_item_conditions(filters, for_item_doc=True)
+	conditions = get_item_conditions(filters, use_doc_name=False)
+	item_conditions = get_item_conditions(filters, use_doc_name=True)
 
 	item_data = frappe.db.sql("""
 		select name as item_code, item_name
@@ -51,14 +51,25 @@ def get_data(filters):
 		from tabBin bin, tabItem item
 		where item.name = bin.item_code {0}
 		group by bin.item_code
-	""".format(conditions), filters, as_dict=1)
+	""".format(item_conditions), filters, as_dict=1)
 
 	item_price_data = frappe.db.sql("""
-		select p.price_list, p.item_code, p.price_list_rate
+		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
 		from `tabItem Price` p
-		inner join `tabPrice List` pl on pl.name = p.price_list and pl.enabled = 1
-		where pl.selling = 1 and %s between ifnull(p.valid_from, '2000-01-01') and ifnull(p.valid_upto, '2500-12-31')
-	""", filters.date, as_dict=1)
+		inner join `tabPrice List` pl on pl.name = p.price_list and pl.enabled = 1 and pl.selling = 1
+		inner join `tabItem` item on item.name = p.item_code
+		where %(date)s between ifnull(p.valid_from, '2000-01-01') and ifnull(p.valid_upto, '2500-12-31')
+			{0}
+	""".format(item_conditions), filters, as_dict=1)
+
+	previous_item_prices = frappe.db.sql("""
+		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
+		from `tabItem Price` as p
+		inner join `tabPrice List` pl on pl.name = p.price_list and pl.enabled = 1 and pl.selling = 1
+		inner join `tabItem` item on item.name = p.item_code
+		where ifnull(p.valid_from, '2000-01-01') < %(date)s {0}
+		order by ifnull(p.valid_from, '2000-01-01') desc
+	""".format(item_conditions), filters, as_dict=1)
 
 	items_map = {}
 	for d in item_data:
@@ -78,10 +89,17 @@ def get_data(filters):
 		if d.item_code in items_map:
 			if d.price_list == filters.standard_price_list:
 				items_map[d.item_code].standard_rate = d.price_list_rate
-			else:
-				item_price = item_price_map.setdefault(d.item_code, {})
-				item_price[d.price_list] = d.price_list_rate
-				price_lists.add(d.price_list)
+
+			price = item_price_map.setdefault(d.item_code, {}).setdefault(d.price_list, frappe._dict())
+			price.current_price = d.price_list_rate
+			price.valid_from = d.valid_from
+			price_lists.add(d.price_list)
+
+	for d in previous_item_prices:
+		if d.item_code in items_map and d.price_list in price_lists:
+			price = item_price_map[d.item_code][d.price_list]
+			if 'previous_price' not in price and d.valid_from < price.valid_from:
+				price.previous_price = d.price_list_rate
 
 	for item_code, d in iteritems(items_map):
 		d.actual_qty = flt(d.actual_qty)
@@ -94,19 +112,21 @@ def get_data(filters):
 		d.avg_lc_rate = (flt(d.stock_value) + flt(d.po_lc_amount)) / d.balance_qty if d.balance_qty else 0
 		d.margin_rate = (d.standard_rate - d.avg_lc_rate) * 100 / d.standard_rate if d.standard_rate else None
 
-		for price_list, price_list_rate in iteritems(item_price_map.get(item_code, {})):
-			d["rate_" + scrub(price_list)] = price_list_rate
+		for price_list, price in iteritems(item_price_map.get(item_code, {})):
+			d["rate_" + scrub(price_list)] = price.current_price
 			if d.standard_rate is not None:
-				d["rate_diff_" + scrub(price_list)] = flt(price_list_rate) - flt(d.standard_rate)
+				d["rate_diff_" + scrub(price_list)] = flt(price.current_price) - flt(d.standard_rate)
+			if price.previous_price is not None:
+				d["rate_old_" + scrub(price_list)] = price.previous_price
 
 	return sorted(items_map.values(), key=lambda d: d.item_code), price_lists
 
 
-def get_item_conditions(filters, for_item_doc):
+def get_item_conditions(filters, use_doc_name):
 	conditions = []
 
 	if filters.get("item_code"):
-		conditions.append("item.{} = %(item_code)s".format("name" if for_item_doc else "item_code"))
+		conditions.append("item.{} = %(item_code)s".format("name" if use_doc_name else "item_code"))
 	else:
 		if filters.get("brand"):
 			conditions.append("item.brand=%(brand)s")
@@ -131,25 +151,26 @@ def get_columns(filters, price_lists):
 	]
 
 	for price_list in sorted(price_lists):
-		columns.append({
-			"fieldname": "rate_diff_" + scrub(price_list),
-			"label": "+/-",
-			"fieldtype": "Currency",
-			"options": "Company:company:default_currency",
-			"width": 40,
-			"editable": True,
-			"price_list": price_list,
-			"is_diff": True
-		})
-		columns.append({
-			"fieldname": "rate_" + scrub(price_list),
-			"label": price_list,
-			"fieldtype": "Currency",
-			"options": "Company:company:default_currency",
-			"width": 70,
-			"editable": True,
-			"price_list": price_list
-		})
+		if price_list != filters.standard_price_list:
+			columns.append({
+				"fieldname": "rate_diff_" + scrub(price_list),
+				"label": "+/-",
+				"fieldtype": "Currency",
+				"options": "Company:company:default_currency",
+				"width": 40,
+				"editable": True,
+				"price_list": price_list,
+				"is_diff": True
+			})
+			columns.append({
+				"fieldname": "rate_" + scrub(price_list),
+				"label": price_list,
+				"fieldtype": "Currency",
+				"options": "Company:company:default_currency",
+				"width": 70,
+				"editable": True,
+				"price_list": price_list,
+			})
 
 	return columns
 
@@ -178,8 +199,8 @@ def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_
 		dependent_item_prices = frappe.db.sql("""
 			select p.price_list, p.price_list_rate - %s as diff
 			from `tabItem Price` p
-			inner join `tabPrice List` pl on pl.name = p.price_list and pl.enabled = 1
-			where pl.selling = 1 and p.item_code = %s and p.price_list != %s
+			inner join `tabPrice List` pl on pl.name = p.price_list and pl.enabled = 1 and pl.selling = 1
+			where p.item_code = %s and p.price_list != %s
 				and %s between ifnull(valid_from, '2000-01-01') and ifnull(valid_upto, '2500-12-31')
 		""", [old_standard_rate[0], item_code, price_list, effective_date], as_dict=1)
 
