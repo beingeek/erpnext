@@ -6,7 +6,8 @@ import frappe
 from frappe import _, scrub
 from frappe.utils import flt, nowdate, getdate, add_days, cint
 from erpnext.stock.report.stock_ledger.stock_ledger import get_item_group_condition
-from six import iteritems
+from six import iteritems, string_types
+import json
 
 
 def execute(filters=None):
@@ -53,23 +54,32 @@ def get_data(filters):
 		group by bin.item_code
 	""".format(item_conditions), filters, as_dict=1)
 
+	if filters.filter_price_list_by == "Both":
+		price_list_filter_cond = ""
+	elif filters.filter_price_list_by == "Disabled":
+		price_list_filter_cond = " and enabled = 0"
+	else:
+		price_list_filter_cond = " and enabled = 1"
+
+	price_lists = frappe.db.sql_list("select name from `tabPrice List` where (selling = 1 {0}) or name = %s"
+		.format(price_list_filter_cond), filters.standard_price_list)
+	price_lists_cond = " and p.price_list in ('{0}')".format("', '".join([frappe.db.escape(d) for d in price_lists]))
+
 	item_price_data = frappe.db.sql("""
 		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
 		from `tabItem Price` p
-		inner join `tabPrice List` pl on pl.name = p.price_list and pl.enabled = 1 and pl.selling = 1
 		inner join `tabItem` item on item.name = p.item_code
 		where %(date)s between ifnull(p.valid_from, '2000-01-01') and ifnull(p.valid_upto, '2500-12-31')
-			{0}
-	""".format(item_conditions), filters, as_dict=1)
+			{0} {1}
+	""".format(item_conditions, price_lists_cond), filters, as_dict=1)
 
 	previous_item_prices = frappe.db.sql("""
 		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
 		from `tabItem Price` as p
-		inner join `tabPrice List` pl on pl.name = p.price_list and pl.enabled = 1 and pl.selling = 1
 		inner join `tabItem` item on item.name = p.item_code
-		where ifnull(p.valid_from, '2000-01-01') < %(date)s {0}
+		where ifnull(p.valid_from, '2000-01-01') < %(date)s {0} {1}
 		order by ifnull(p.valid_from, '2000-01-01') desc
-	""".format(item_conditions), filters, as_dict=1)
+	""".format(item_conditions, price_lists_cond), filters, as_dict=1)
 
 	items_map = {}
 	for d in item_data:
@@ -84,7 +94,6 @@ def get_data(filters):
 			items_map[d.item_code].update(d)
 
 	item_price_map = {}
-	price_lists = set()
 	for d in item_price_data:
 		if d.item_code in items_map:
 			if d.price_list == filters.standard_price_list:
@@ -93,7 +102,6 @@ def get_data(filters):
 			price = item_price_map.setdefault(d.item_code, {}).setdefault(d.price_list, frappe._dict())
 			price.current_price = d.price_list_rate
 			price.valid_from = d.valid_from
-			price_lists.add(d.price_list)
 
 	for d in previous_item_prices:
 		if d.item_code in items_map and d.price_list in price_lists:
@@ -175,7 +183,7 @@ def get_columns(filters, price_lists):
 	return columns
 
 @frappe.whitelist()
-def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_diff=False):
+def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_diff=False, filters={}):
 	effective_date = frappe.utils.getdate(effective_date)
 	standard_price_list = frappe.db.get_single_value("Selling Settings", "selling_price_list")
 
@@ -211,6 +219,11 @@ def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_
 		if d.price_list not in dependent_price_list_visited:
 			dependent_price_list_visited.add(d.price_list)
 			_set_item_pl_rate(effective_date, item_code, d.price_list, flt(price_list_rate) + flt(d.diff))
+
+	if isinstance(filters, string_types):
+		filters = json.loads(filters)
+	filters['item_code'] = item_code
+	return execute(filters)
 
 
 def _set_item_pl_rate(effective_date, item_code, price_list, price_list_rate):

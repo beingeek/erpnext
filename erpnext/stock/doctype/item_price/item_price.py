@@ -33,7 +33,7 @@ class ItemPrice(Document):
 	def update_price_list_details(self):
 		self.buying, self.selling, self.currency = \
 			frappe.db.get_value("Price List",
-								{"name": self.price_list, "enabled": 1},
+								{"name": self.price_list},
 								["buying", "selling", "currency"])
 
 	def update_item_details(self):
