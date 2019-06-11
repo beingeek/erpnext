@@ -60,6 +60,11 @@ class PurchaseOrder(BuyingController):
 	def on_change(self):
 		self.update_lcv_values()
 		self.set_landed_cost_voucher_amount()
+		for d in self.items:
+			d.db_set({
+				"landed_cost_voucher_amount": d.landed_cost_voucher_amount,
+				"landed_rate": d.landed_rate,
+			}, update_modified=False)
 
 	def update_lcv_values(self):
 		lcvs_to_update = frappe.db.sql_list("""
