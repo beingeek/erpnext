@@ -274,6 +274,9 @@ class AccountsController(TransactionBase):
 							elif fieldname in ['cost_center', 'conversion_factor'] and not item.get(fieldname):
 								item.set(fieldname, value)
 
+							elif fieldname in ['price_list_rate', 'rate', 'discount_percentage'] and not cint(self.get('override_price_list_rate')):
+								item.set(fieldname, value)
+
 							elif fieldname == "serial_no":
 								# Ensure that serial numbers are matched against Stock UOM
 								item_conversion_factor = item.get("conversion_factor") or 1.0

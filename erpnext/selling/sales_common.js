@@ -228,10 +228,18 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 
 	toggle_editable_price_list_rate: function() {
 		var df = frappe.meta.get_docfield(this.frm.doc.doctype + " Item", "price_list_rate", this.frm.doc.name);
-		var editable_price_list_rate = cint(frappe.defaults.get_default("editable_price_list_rate"));
+		var editable_price_list_rate = cint(this.frm.doc.override_price_list_rate);
 
-		if(df && editable_price_list_rate) {
-			df.read_only = 0;
+		if(df) {
+			df.read_only = editable_price_list_rate;
+			this.frm.fields_dict.items.grid.toggle_enable("rate", editable_price_list_rate);
+		}
+	},
+
+	override_price_list_rate: function() {
+		this.toggle_editable_price_list_rate();
+		if (!cint(this.frm.doc.override_price_list_rate)) {
+			frappe.ui.form.trigger(this.frm.doc.doctype, "currency");
 		}
 	},
 

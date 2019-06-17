@@ -459,6 +459,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 							is_pos: cint(me.frm.doc.is_pos),
 							is_subcontracted: me.frm.doc.is_subcontracted,
 							transaction_date: me.frm.doc.transaction_date || me.frm.doc.posting_date,
+							delivery_date: me.frm.doc.delivery_date || me.frm.doc.transaction_date || me.frm.doc.posting_date,
 							ignore_pricing_rule: me.frm.doc.ignore_pricing_rule,
 							doctype: me.frm.doc.doctype,
 							name: me.frm.doc.name,
@@ -664,6 +665,10 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			this.frm.transaction_date = this.frm.doc.transaction_date;
 			frappe.ui.form.trigger(this.frm.doc.doctype, "currency");
 		}
+	},
+
+	delivery_date: function() {
+		frappe.ui.form.trigger(this.frm.doc.doctype, "transaction_date");
 	},
 
 	posting_date: function() {
@@ -1253,6 +1258,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			"plc_conversion_rate": me.frm.doc.plc_conversion_rate,
 			"company": me.frm.doc.company,
 			"transaction_date": me.frm.doc.transaction_date || me.frm.doc.posting_date,
+			"delivery_date": me.frm.doc.delivery_date || me.frm.doc.transaction_date || me.frm.doc.posting_date,
 			"campaign": me.frm.doc.campaign,
 			"sales_partner": me.frm.doc.sales_partner,
 			"ignore_pricing_rule": me.frm.doc.ignore_pricing_rule,
