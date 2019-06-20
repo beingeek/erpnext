@@ -317,7 +317,7 @@ def qtyAdjust(customer,sales_order_id,item_code,qty,adjustqty,backqty,backorder_
 			if not flt(backqty)==0.0:
 				flag=findBackOrder(backorder_date)
 			#return flag
-				so_flag=frappe.db.sql("""select name from `tabSales Order` where transaction_date=%s and customer=%s""",(str(backorder_date),customer))
+				so_flag=frappe.db.sql("""select name from `tabSales Order` where delivery_date=%s and customer=%s""",(str(backorder_date),customer))
 				if len(so_flag):
 					newqty=flt(qty)-flt(adjustqty)
 					sodata=frappe.get_doc("Sales Order",sales_order_id)
@@ -445,6 +445,8 @@ def save_sales_order(sales_order_id,item_code,qty,backorder_date):
 	sales_order_data.payment_schedule=""
 	sales_order_data.docstatus=0
 	sales_order_data.selling_price_list=d.selling_price_list
+	sales_order_data.is_back_order = 1
+	sales_order_data.qty_adjust = 1
 	sales_order_data.total_boxes=flt(qty)
 	sales_order_data.total_gross_weight_lbs=flt(qty)*flt(data_soi.gross_weight_lbs)
 	#sales_order_data.total_pallets=flt(qty)/flt(data_soi.sale_pallets)
