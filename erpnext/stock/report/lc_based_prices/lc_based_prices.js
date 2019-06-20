@@ -11,6 +11,16 @@ frappe.query_reports["LC Based Prices"] = {
 			reqd: 1
 		},
 		{
+			fieldname: "po_from_date",
+			label: __("PO From Date"),
+			fieldtype: "Date"
+		},
+		{
+			fieldname: "po_to_date",
+			label: __("PO To Date"),
+			fieldtype: "Date"
+		},
+		{
 			fieldname: "item_code",
 			label: __("Item"),
 			fieldtype: "Link",
@@ -55,7 +65,15 @@ frappe.query_reports["LC Based Prices"] = {
 		}
 
 		if (column.fieldname == "po_qty") {
+			var po_from_date = frappe.query_report.get_filter_value("po_from_date");
+			var po_to_date = frappe.query_report.get_filter_value("po_to_date");
 			var link = "desk#query-report/Purchase Order Items To Be Received?item_code=" + data.item_code;
+			if(po_from_date) {
+				link += "&from_date=" + po_from_date
+			}
+			if(po_to_date) {
+				link += "&to_date=" + po_to_date
+			}
 			value = $(`<span>${value}</span>`);
 			var $value = $(value).wrap("<a href='" + link + "' target='_blank'></a>").parent();
 			value = $value.wrap("<p></p>").parent().html();

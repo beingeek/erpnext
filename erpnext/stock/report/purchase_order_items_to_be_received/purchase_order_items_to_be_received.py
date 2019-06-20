@@ -25,14 +25,14 @@ def get_data(filters):
 	data = frappe.db.sql("""
 		select
 			`tabPurchase Order`.`name` as "Purchase Order:Link/Purchase Order:120",
-			`tabPurchase Order`.`transaction_date` as "Order Date:Date:100",
 			`tabPurchase Order Item`.`schedule_date` as "Arrival Date:Date:110",
 			`tabPurchase Order`.`supplier` as "Supplier:Link/Supplier:120",
 			`tabPurchase Order Item`.item_code as "Item Code:Link/Item:80",
-			`tabPurchase Order Item`.item_name as "Item Name::150",
 			`tabPurchase Order Item`.qty as "Ordered Qty:Float:70",
-			`tabPurchase Order Item`.received_qty as "Received Qty:Float:70",
-			(`tabPurchase Order Item`.qty - ifnull(`tabPurchase Order Item`.received_qty, 0)) as "Qty to Receive:Float:70"
+			(`tabPurchase Order Item`.qty - ifnull(`tabPurchase Order Item`.received_qty, 0)) as "Qty to Receive:Float:70",
+			`tabPurchase Order Item`.landed_rate,
+			`tabPurchase Order Item`.landed_rate - `tabPurchase Order Item`.base_net_rate,
+			`tabPurchase Order`.order_type
 		from
 			`tabPurchase Order`, `tabPurchase Order Item`
 		where
@@ -48,15 +48,15 @@ def get_data(filters):
 
 def get_columns():
 	columns = [
-		"Purchase Order:Link/Purchase Order:120",
-		"Order Date:Date:100",
-		"Arrival Date:Date:110",
+		"Purchase Order:Link/Purchase Order:100",
+		"Arrival Date:Date:80",
 		"Supplier:Link/Supplier:120",
 		"Item Code:Link/Item:80",
-		"Item Name::150",
 		"Ordered Qty:Float:70",
-		"Received Qty:Float:70",
-		"Qty to Receive:Float:70"
+		"Balance Qty:Float:70",
+		"LC/Box:Currency:70",
+		"Expenses/Box:Currency:70",
+		"Shipping Mode:Link/Master Purchase Order Type:80",
 	]
 
 	return columns

@@ -33,6 +33,13 @@ def get_data(filters):
 		where disabled != 1 and is_sales_item = 1 {0}
 	""".format(item_conditions), filters, as_dict=1)
 
+	po_conditions = []
+	if filters.get('po_from_date'):
+		po_conditions.append("po.schedule_date >= %(po_from_date)s")
+	if filters.get('po_to_date'):
+		po_conditions.append("po.schedule_date <= %(po_to_date)s")
+	po_conditions_sql = "and {0}".format(" and ".join(po_conditions)) if po_conditions else ""
+
 	po_data = frappe.db.sql("""
 		select
 			item.item_code,
@@ -40,9 +47,9 @@ def get_data(filters):
 			sum(if(item.qty - item.received_qty < 0, 0, item.qty - item.received_qty) * item.landed_rate) as po_lc_amount
 		from `tabPurchase Order Item` item
 		inner join `tabPurchase Order` po on po.name = item.parent
-		where item.docstatus < 2 and po.status != 'Closed' {0}
+		where item.docstatus < 2 and po.status != 'Closed' {0} {1}
 		group by item.item_code
-	""".format(conditions), filters, as_dict=1)
+	""".format(conditions, po_conditions_sql), filters, as_dict=1)
 
 	bin_data = frappe.db.sql("""
 		select

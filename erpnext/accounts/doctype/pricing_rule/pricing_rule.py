@@ -282,10 +282,10 @@ def get_pricing_rules(args):
 	conditions += " and ifnull(for_price_list, '') in (%(price_list)s, '')"
 	values["price_list"] = args.get("price_list")
 
-	if args.get("transaction_date"):
+	if args.get("delivery_date") or args.get("transaction_date"):
 		conditions += """ and %(transaction_date)s between ifnull(valid_from, '2000-01-01')
 			and ifnull(valid_upto, '2500-12-31')"""
-		values['transaction_date'] = args.get('transaction_date')
+		values['transaction_date'] = args.get("delivery_date") or args.get("transaction_date")
 
 	item_group_condition = _get_tree_conditions("Item Group", False)
 	if item_group_condition:
