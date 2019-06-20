@@ -32,7 +32,7 @@ frappe.query_reports["Qty Adjust"] = {
 	],
 	formatter: function(value, row, column, data, default_formatter) {
 		value = default_formatter(value, row, column, data);
-		if (['total_so_qty', 'total_po_qty', 'actual_qty'].includes(column.fieldname)) {
+		if (['draft_so_qty', 'total_po_qty', 'actual_qty'].includes(column.fieldname)) {
 			value = $(`<span>${value}</span>`);
 			var $value = $(value).css("font-weight", "bold");
 			value = $value.wrap("<p></p>").parent().html();
@@ -47,6 +47,16 @@ frappe.query_reports["Qty Adjust"] = {
 			$value = $value.wrap("<a href='" + link + "' target='_blank'></a>").parent();
 			value = $value.wrap("<p></p>").parent().html();
 		}
+
+		if (column.is_po_qty) {
+			var link = encodeURI("desk#query-report/Purchase Order Items To Be Received" +
+				"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
+
+			value = $(`<span>${value}</span>`);
+			var $value = $(value).wrap("<a href='" + link + "' target='_blank'></a>").parent();
+			value = $value.wrap("<p></p>").parent().html();
+		}
+
 		return value;
 	}
 };

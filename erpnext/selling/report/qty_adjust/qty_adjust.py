@@ -36,12 +36,12 @@ def get_data(filters):
 
 	so_data = frappe.db.sql("""
 		select
-			item.item_code, item.item_name, so.delivery_date as date,
-			sum(item.qty) as qty
+			item.item_code, item.item_name, so.delivery_date as date, so.docstatus,
+			sum(if(item.qty - item.delivered_qty < 0, 0, item.qty - item.delivered_qty)) as qty
 		from `tabSales Order Item` item
 		inner join `tabSales Order` so on so.name = item.parent
-		where so.docstatus = 0 and so.delivery_date between %(from_date)s and %(to_date)s {0}
-		group by item.item_code, so.delivery_date
+		where so.docstatus < 2 and so.delivery_date between %(from_date)s and %(to_date)s {0}
+		group by item.item_code, so.delivery_date, so.docstatus
 	""".format(conditions), filters, as_dict=1)
 
 	bin_data = frappe.db.sql("""
@@ -53,15 +53,17 @@ def get_data(filters):
 	""".format(conditions), filters, as_dict=1)
 
 	item_map = {}
-	template = frappe._dict({"actual_qty": 0, "total_so_qty": 0, "total_po_qty": 0})
+	template = frappe._dict({"actual_qty": 0, "total_so_qty": 0, "total_po_qty": 0, "draft_so_qty": 0})
 
 	for d in so_data:
 		item_map.setdefault(d.item_code, template.copy())
 		i = frappe.utils.date_diff(d.date, filters.from_date)
 		item_map[d.item_code]['item_code'] = d.item_code
 		item_map[d.item_code]['item_name'] = d.item_name
-		item_map[d.item_code]['so_day_' + str(i+1)] = d.qty
 		item_map[d.item_code]['total_so_qty'] += d.qty
+		if d.docstatus == 0:
+			item_map[d.item_code]['so_day_' + str(i+1)] = d.qty
+			item_map[d.item_code]['draft_so_qty'] += d.qty
 
 	for d in po_data:
 		item_map.setdefault(d.item_code, template.copy())
@@ -101,7 +103,8 @@ def get_columns(filters):
 		{"fieldname": "item_code", "label": _("Item Code"), "fieldtype": "Link", "options": "Item", "width": 80},
 		{"fieldname": "item_name", "label": _("Item Name"), "fieldtype": "Data", "width": 150},
 		{"fieldname": "actual_qty", "label": _("In Stock"), "fieldtype": "Float", "width": 70},
-		{"fieldname": "total_so_qty", "label": _("Total SO"), "fieldtype": "Float", "width": 70,
+		{"fieldname": "total_so_qty", "label": _("Total SO"), "fieldtype": "Float", "width": 70},
+		{"fieldname": "draft_so_qty", "label": _("Draft SO"), "fieldtype": "Float", "width": 70,
 			"is_so_qty": 1, "from_date": filters.date, "to_date": add_days(filters.date, 4)}
 	]
 	for i in range(5):
@@ -113,16 +116,21 @@ def get_columns(filters):
 			"is_so_qty": 1,
 			"from_date": date,
 			"to_date": date,
-			"width": 65
+			"width": 64
 		})
 
-	columns.append({"fieldname": "total_po_qty", "label": _("Total PO"), "fieldtype": "Float", "width": 70})
+	columns.append({"fieldname": "total_po_qty", "label": _("Total PO"), "fieldtype": "Float", "width": 70,
+		"is_po_qty": 1, "from_date": filters.date, "to_date": add_days(filters.date, 4)})
 	for i in range(5):
+		date = add_days(filters.date, i)
 		columns.append({
 			"fieldname": "po_day_{0}".format(i+1),
 			"label": _("PO {0}").format(frappe.utils.formatdate(add_days(filters.date, i), "EEE")),
 			"fieldtype": "Float",
-			"width": 65
+			"is_po_qty": 1,
+			"from_date": date,
+			"to_date": date,
+			"width": 64
 		})
 
 	return columns

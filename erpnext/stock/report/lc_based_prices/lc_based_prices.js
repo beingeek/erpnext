@@ -53,6 +53,13 @@ frappe.query_reports["LC Based Prices"] = {
 				}
 			}
 		}
+
+		if (column.fieldname == "po_qty") {
+			var link = "desk#query-report/Purchase Order Items To Be Received?item_code=" + data.item_code;
+			value = $(`<span>${value}</span>`);
+			var $value = $(value).wrap("<a href='" + link + "' target='_blank'></a>").parent();
+			value = $value.wrap("<p></p>").parent().html();
+		}
 		return value;
 	},
 	onChange: function(new_value, column, data, rowIndex) {
@@ -84,5 +91,11 @@ frappe.query_reports["LC Based Prices"] = {
 				}
 			}
 		});
+	},
+	open_po_list: function(item_code) {
+		frappe.route_options = {
+			"item_code": item_code
+		};
+		frappe.set_route("query-report", "Purchase Order Items To Be Received");
 	}
 };
