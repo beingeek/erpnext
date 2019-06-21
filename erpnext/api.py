@@ -6,6 +6,7 @@ from frappe.utils import getdate, validate_email_add, today, add_years,add_days,
 from datetime import datetime
 from frappe.model.naming import make_autoname
 from frappe import throw, _, scrub
+from frappe.utils import cint
 import frappe.permissions
 from frappe.model.document import Document
 import json
@@ -200,8 +201,6 @@ def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
 
 @frappe.whitelist()
 def get_party_default_items(party_type, party):
-	from frappe.utils import cint
-
 	if not party_type or not party:
 		return []
 
@@ -248,3 +247,34 @@ def remove_item_codes_from_party_default_items(party_type, party, item_codes):
 	doc.save()
 
 	frappe.msgprint(_("Selected items removed from {0} Default Items").format(party_type))
+
+@frappe.whitelist()
+def update_special_price(price_list, customer, item_code, rate, valid_from, valid_upto, reason, pricing_rule=None, create_new=True):
+	create_new = cint(create_new)
+
+	if not pricing_rule or create_new:
+		doc = frappe.new_doc("Pricing Rule")
+		doc.update({
+			"for_price_list": price_list,
+			"applicable_for": "Customer",
+			"customer": customer,
+			"apply_on": "Item Code",
+			"item_code": item_code,
+			"title": frappe.model.naming.make_autoname("{}/{}/{}".format(customer, price_list, item_code) + "-.#####", "Pricing Rule"),
+			"selling": 1
+		})
+
+		if pricing_rule:
+			priority = cint(frappe.db.get_value("Pricing Rule", pricing_rule, "priority")) + 1
+			doc.priority = priority
+	else:
+		doc = frappe.get_doc("Pricing Rule", pricing_rule)
+
+	doc.rate_or_discount = "Rate"
+	doc.rate = rate
+	doc.valid_from = valid_from
+	doc.valid_upto = valid_upto
+	doc.reason = reason
+
+	doc.margin_type = ""
+	doc.save()

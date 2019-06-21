@@ -449,8 +449,8 @@ def get_price_list_rate(args, item_doc, out):
 
 		out.price_list_rate = flt(price_list_rate) * flt(args.plc_conversion_rate) \
 			/ flt(args.conversion_rate)
-		out.rate = out.price_list_rate
 		out.discount_percentage = 0
+		out.margin_type = ""
 
 		if not out.price_list_rate and args.transaction_type=="buying":
 			from erpnext.stock.doctype.item.item import get_last_purchase_details

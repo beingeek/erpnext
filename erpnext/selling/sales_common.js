@@ -16,6 +16,80 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 		this.frm.add_fetch("sales_person", "commission_rate", "commission_rate");
 	},
 
+	show_edit_pricing_rule_dialog: function(item) {
+		var me = this;
+
+		if (!item || !item.item_code || !me.frm.doc.customer || !me.frm.doc.selling_price_list) {
+			return;
+		}
+
+		var dialog = new frappe.ui.Dialog({
+			title: __("Set Special Price"),
+			fields: [
+				{"fieldtype": "Link", "label": __("Item Code"), "fieldname": "item_code", "options": "Item", "read_only":true, "default": item.item_code},
+				{"fieldtype": "Column Break", "fieldname": "col_break1"},
+				{"fieldtype": "Link", "label": __("Item Name"), "fieldname": "item_name", "read_only":true, "default": item.item_name},
+				{"fieldtype": "Section Break", "fieldname": "sec_break1"},
+				{"fieldtype": "Date", "label": __("From Date"), "fieldname": "valid_from", "reqd":true, "default": me.frm.doc.pricing_rule ? "" : me.frm.doc.delivery_date},
+				{"fieldtype": "Column Break", "fieldname": "col_break1"},
+				{"fieldtype": "Date", "label": __("To Date"), "fieldname": "valid_upto", "reqd":true, "default": me.frm.doc.pricing_rule ? "" : me.frm.doc.delivery_date},
+				{"fieldtype": "Section Break", "fieldname": "sec_break1"},
+				{"fieldtype": "Link", "label": __("Existing Pricing Rule"), "fieldname": "pricing_rule", "options": "Pricing Rule", "read_only":true, "default": item.pricing_rule},
+				{"fieldtype": "Check", "label": __("Create New Pricing Rule"), "fieldname": "create_new", "depends_on":"pricing_rule"},
+				{"fieldtype": "Column Break", "fieldname": "col_break1"},
+				{"fieldtype": "Currency", "label": __("New Rate"), "fieldname": "new_rate", "reqd":true, "default": item.rate},
+				{"fieldtype": "Section Break", "fieldname": "sec_break1"},
+				{"fieldtype": "Small Text", "label": __("Reason"), "fieldname": "reason", "reqd":true},
+			]
+		});
+
+		if (item.pricing_rule) {
+			frappe.call({
+				method: 'frappe.client.get_value',
+				args: {
+					doctype: 'Pricing Rule',
+					filters: { name: item.pricing_rule },
+					fieldname:['valid_from','valid_upto', 'reason']
+				},
+				callback: function(res) {
+					if (!res.exc) {
+						$.each(res.message, function(k, v) {
+							dialog.set_value(k, v);
+						});
+					}
+				}
+
+			});
+		}
+
+		dialog.set_primary_action(__('Update Special Price'), () => {
+			var args = dialog.get_values();
+			dialog.hide();
+			return frappe.call({
+				method: "erpnext.api.update_special_price",
+				args: {
+					"price_list": me.frm.doc.selling_price_list,
+					"customer": me.frm.doc.customer,
+					"item_code": item.item_code,
+					"rate": args.new_rate,
+					"valid_from": args.valid_from,
+					"valid_upto": args.valid_upto,
+					"reason": args.reason,
+					"pricing_rule": item.pricing_rule,
+					"create_new": cint(args.create_new)
+				},
+				freeze: true,
+				callback: function(r) {
+					me.apply_price_list(item, true);
+				}
+			})
+		});
+
+		dialog.set_secondary_action(() => me.apply_price_list(item, true));
+
+		dialog.show();
+	},
+
 	onload: function() {
 		this._super();
 		this.setup_queries();
@@ -25,6 +99,15 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 					"shipping_rule_type": "Selling"
 				}
 			};
+		});
+
+		var me = this;
+		me.frm.fields_dict.items.grid.wrapper.off('change', 'input[data-fieldname="rate"]').on('change', 'input[data-fieldname="rate"]', function(e) {
+			var cdn = $(e.target).parent().parent().parent().parent().parent().attr("data-name");
+			if (cdn) {
+				var item = frappe.get_doc("Sales Order Item", cdn);
+				me.show_edit_pricing_rule_dialog(item);
+			}
 		});
 	},
 
@@ -91,7 +174,6 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 			var packing_list_exists = (this.frm.doc.packed_items || []).length;
 			this.frm.toggle_display("packing_list", packing_list_exists ? true : false);
 		}
-		this.toggle_editable_price_list_rate();
 	},
 
 	customer: function() {
@@ -224,23 +306,6 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 				});
 			}
 		})
-	},
-
-	toggle_editable_price_list_rate: function() {
-		var df = frappe.meta.get_docfield(this.frm.doc.doctype + " Item", "price_list_rate", this.frm.doc.name);
-		var editable_price_list_rate = cint(this.frm.doc.override_price_list_rate);
-
-		if(df) {
-			df.read_only = editable_price_list_rate;
-			this.frm.fields_dict.items.grid.toggle_enable("rate", editable_price_list_rate);
-		}
-	},
-
-	override_price_list_rate: function() {
-		this.toggle_editable_price_list_rate();
-		if (!cint(this.frm.doc.override_price_list_rate)) {
-			frappe.ui.form.trigger(this.frm.doc.doctype, "currency");
-		}
 	},
 
 	calculate_commission: function() {
