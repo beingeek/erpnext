@@ -19,5 +19,15 @@ frappe.query_reports["Purchase Order Items To Be Received"] = {
 			"fieldtype": "Link",
 			"options": "Item"
 		}
-	]
+	],
+	formatter: function(value, row, column, data, default_formatter) {
+		value = default_formatter(value, row, column, data);
+		if (data && data["Status"] == "Draft") {
+			value = $(`<span>${value}</span>`);
+			var $value = $(value).css("color", "#940000");
+			value = $value.wrap("<p></p>").parent().html();
+		}
+
+		return value;
+	}
 }
