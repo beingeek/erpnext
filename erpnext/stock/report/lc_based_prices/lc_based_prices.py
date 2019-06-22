@@ -156,13 +156,13 @@ def get_columns(filters, price_lists):
 		{"fieldname": "item_code", "label": _("Item Code"), "fieldtype": "Link", "options": "Item", "width": 80},
 		{"fieldname": "item_name", "label": _("Item Name"), "fieldtype": "Data", "width": 150},
 		{"fieldname": "po_qty", "label": _("PO Qty"), "fieldtype": "Float", "width": 70},
-		{"fieldname": "po_lc_rate", "label": _("PO LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70},
+		{"fieldname": "po_lc_rate", "label": _("PO LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
 		{"fieldname": "actual_qty", "label": _("Stock Qty"), "fieldtype": "Float", "width": 70},
-		{"fieldname": "valuation_rate", "label": _("Stock LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70},
-		{"fieldname": "avg_lc_rate", "label": _("Avg LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70},
+		{"fieldname": "valuation_rate", "label": _("Stock LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
+		{"fieldname": "avg_lc_rate", "label": _("Avg LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
 		{"fieldname": "standard_rate", "label": _("Base Price"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70,
 			"editable": True, "price_list": filters.standard_price_list, "is_base_price": True},
-		{"fieldname": "margin_rate", "label": _("% Margin"), "fieldtype": "Percent", "width": 70},
+		{"fieldname": "margin_rate", "label": _("% Margin"), "fieldtype": "Percent", "width": 70, "restricted": True},
 	]
 
 	for price_list in sorted(price_lists):
@@ -175,7 +175,8 @@ def get_columns(filters, price_lists):
 				"width": 40,
 				"editable": True,
 				"price_list": price_list,
-				"is_diff": True
+				"is_diff": True,
+				"restricted": True
 			})
 			columns.append({
 				"fieldname": "rate_" + scrub(price_list),
@@ -186,6 +187,14 @@ def get_columns(filters, price_lists):
 				"editable": True,
 				"price_list": price_list,
 			})
+
+	show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
+	show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
+	if not show_amounts:
+		columns = filter(lambda d: not d.get('restricted'), columns)
+		for c in columns:
+			if c.get('editable'):
+				del c['editable']
 
 	return columns
 

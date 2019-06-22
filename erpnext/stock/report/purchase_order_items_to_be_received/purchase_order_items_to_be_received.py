@@ -59,8 +59,17 @@ def get_columns():
 		"Item Code:Link/Item:80",
 		"Ordered Qty:Float:70",
 		"Balance Qty:Float:90",
-		"LC/Unit:Currency:70",
-		"Expenses/Unit:Currency:70",
+	]
+
+	show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
+	show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
+	if show_amounts:
+		columns += [
+			"LC/Unit:Currency:70",
+			"Expenses/Unit:Currency:70",
+		]
+
+	columns += [
 		"Shipping Mode:Link/Master Purchase Order Type:110",
 		"Status::120",
 	]
