@@ -249,18 +249,17 @@ def remove_item_codes_from_party_default_items(party_type, party, item_codes):
 	frappe.msgprint(_("Selected items removed from {0} Default Items").format(party_type))
 
 @frappe.whitelist()
-def update_special_price(price_list, customer, item_code, rate, valid_from, valid_upto, reason, pricing_rule=None, create_new=True):
+def update_special_price(customer, item_code, rate, valid_from, valid_upto, reason, pricing_rule=None, create_new=True):
 	create_new = cint(create_new)
 
 	if not pricing_rule or create_new:
 		doc = frappe.new_doc("Pricing Rule")
 		doc.update({
-			"for_price_list": price_list,
 			"applicable_for": "Customer",
 			"customer": customer,
 			"apply_on": "Item Code",
 			"item_code": item_code,
-			"title": frappe.model.naming.make_autoname("{}/{}/{}".format(customer, price_list, item_code) + "-.#####", "Pricing Rule"),
+			"title": frappe.model.naming.make_autoname("{}/{}".format(customer, item_code) + "-.#####", "Pricing Rule"),
 			"selling": 1
 		})
 

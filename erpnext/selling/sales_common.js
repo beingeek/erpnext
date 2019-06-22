@@ -16,6 +16,27 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 		this.frm.add_fetch("sales_person", "commission_rate", "commission_rate");
 	},
 
+	onload: function() {
+		this._super();
+		this.setup_queries();
+		this.frm.set_query('shipping_rule', function() {
+			return {
+				filters: {
+					"shipping_rule_type": "Selling"
+				}
+			};
+		});
+
+		var me = this;
+		me.frm.fields_dict.items.grid.wrapper.off('change', 'input[data-fieldname="rate"]').on('change', 'input[data-fieldname="rate"]', function(e) {
+			var cdn = $(e.target).parent().parent().parent().parent().parent().attr("data-name");
+			if (cdn) {
+				var item = frappe.get_doc("Sales Order Item", cdn);
+				me.show_edit_pricing_rule_dialog(item);
+			}
+		});
+	},
+
 	show_edit_pricing_rule_dialog: function(item) {
 		var me = this;
 
@@ -39,9 +60,11 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 				{"fieldtype": "Column Break", "fieldname": "col_break1"},
 				{"fieldtype": "Currency", "label": __("New Rate"), "fieldname": "new_rate", "reqd":true, "default": item.rate},
 				{"fieldtype": "Section Break", "fieldname": "sec_break1"},
-				{"fieldtype": "Small Text", "label": __("Reason"), "fieldname": "reason", "reqd":true},
-			]
+				{"fieldtype": "Small Text", "label": __("Reason"), "fieldname": "reason"},
+			],
+			static: true
 		});
+		dialog.get_close_btn().show();
 
 		if (item.pricing_rule) {
 			frappe.call({
@@ -68,7 +91,6 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 			return frappe.call({
 				method: "erpnext.api.update_special_price",
 				args: {
-					"price_list": me.frm.doc.selling_price_list,
 					"customer": me.frm.doc.customer,
 					"item_code": item.item_code,
 					"rate": args.new_rate,
@@ -88,27 +110,6 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 		dialog.set_secondary_action(() => me.apply_price_list(item, true));
 
 		dialog.show();
-	},
-
-	onload: function() {
-		this._super();
-		this.setup_queries();
-		this.frm.set_query('shipping_rule', function() {
-			return {
-				filters: {
-					"shipping_rule_type": "Selling"
-				}
-			};
-		});
-
-		var me = this;
-		me.frm.fields_dict.items.grid.wrapper.off('change', 'input[data-fieldname="rate"]').on('change', 'input[data-fieldname="rate"]', function(e) {
-			var cdn = $(e.target).parent().parent().parent().parent().parent().attr("data-name");
-			if (cdn) {
-				var item = frappe.get_doc("Sales Order Item", cdn);
-				me.show_edit_pricing_rule_dialog(item);
-			}
-		});
 	},
 
 	setup_queries: function() {
