@@ -59,8 +59,9 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 				{"fieldtype": "Check", "label": __("Create New Pricing Rule"), "fieldname": "create_new", "depends_on":"pricing_rule"},
 				{"fieldtype": "Column Break", "fieldname": "col_break1"},
 				{"fieldtype": "Currency", "label": __("New Rate"), "fieldname": "new_rate", "reqd":true, "default": item.rate},
-				{"fieldtype": "Section Break", "fieldname": "sec_break1"},
-				{"fieldtype": "Small Text", "label": __("Reason"), "fieldname": "reason"},
+				{"fieldtype": "Select", "label": __("Reason"), "fieldname": "reason", "options": `In-Store Promo
+Bad Quality
+Customer Request`}
 			],
 			static: true
 		});
