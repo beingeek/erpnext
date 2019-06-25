@@ -127,7 +127,8 @@ class BuyingController(StockController):
 				docstatus_condition=docstatus_condition,
 				exclude_condition=exclude_condition),
 				d.name)
-			d.landed_cost_voucher_amount = lc_voucher_data[0][0] if lc_voucher_data else 0.0
+			d.landed_cost_voucher_amount = flt(lc_voucher_data[0][0]) if lc_voucher_data else 0.0
+			frappe.msgprint(str(d.landed_cost_voucher_amount))
 			if not d.cost_center and lc_voucher_data and lc_voucher_data[0][1]:
 				d.db_set('cost_center', lc_voucher_data[0][1])
 
