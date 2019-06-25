@@ -224,7 +224,7 @@ def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_
 			select p.price_list, p.price_list_rate - %s as diff
 			from `tabItem Price` p
 			inner join `tabPrice List` pl on pl.name = p.price_list and pl.enabled = 1 and pl.selling = 1
-			where p.item_code = %s and p.price_list != %s
+			where p.item_code = %s and p.price_list != %s and pl.prices_independent_of_base_price != 1
 				and %s between ifnull(valid_from, '2000-01-01') and ifnull(valid_upto, '2500-12-31')
 		""", [old_standard_rate[0], item_code, price_list, effective_date], as_dict=1)
 

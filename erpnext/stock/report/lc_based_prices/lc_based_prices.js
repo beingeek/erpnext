@@ -8,11 +8,13 @@ frappe.query_reports["LC Based Prices"] = {
 			fieldname: "date",
 			label: __("Price Effective Date"),
 			fieldtype: "Date",
+			default: frappe.datetime.nowdate(),
 			reqd: 1
 		},
 		{
 			fieldname: "po_from_date",
 			label: __("PO From Date"),
+			default: frappe.datetime.nowdate(),
 			fieldtype: "Date"
 		},
 		{
