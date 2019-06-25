@@ -26,28 +26,41 @@ def get_data(filters):
 
 	po_data = frappe.db.sql("""
 		select
-			item.item_code, item.item_name, po.schedule_date as date,
-			sum(if(item.qty - item.received_qty < 0, 0, item.qty - item.received_qty)) as qty
-		from `tabPurchase Order Item` item
-		inner join `tabPurchase Order` po on po.name = item.parent
-		where po.docstatus < 2 and po.status != 'Closed' and po.schedule_date between %(from_date)s and %(to_date)s {0}
-		group by item.item_code, po.schedule_date
+			i.item_code, i.item_name, po.schedule_date as date,
+			sum(i.qty - ifnull(i.received_qty, 0)) as qty
+		from `tabPurchase Order Item` i
+		inner join `tabPurchase Order` po on po.name = i.parent
+		where po.docstatus < 2 and po.status != 'Closed' and ifnull(i.received_qty, 0) < ifnull(i.qty, 0)
+			and po.schedule_date between %(from_date)s and %(to_date)s {0}
+		group by i.item_code, po.schedule_date
 	""".format(conditions), filters, as_dict=1)
 
 	so_data = frappe.db.sql("""
 		select
-			item.item_code, item.item_name, so.delivery_date as date, so.docstatus,
-			sum(if(item.qty - item.delivered_qty < 0, 0, item.qty - item.delivered_qty)) as qty
-		from `tabSales Order Item` item
-		inner join `tabSales Order` so on so.name = item.parent
-		where so.docstatus < 2 and so.delivery_date between %(from_date)s and %(to_date)s {0}
-		group by item.item_code, so.delivery_date, so.docstatus
+			i.item_code, i.item_name, so.delivery_date as date, so.docstatus,
+			sum(i.qty - ifnull(i.delivered_qty, 0)) as qty
+		from `tabSales Order Item` i
+		inner join `tabSales Order` so on so.name = i.parent
+		where so.docstatus < 2 and ifnull(i.delivered_qty, 0) < ifnull(i.qty, 0) and so.status != 'Closed'
+			and so.delivery_date between %(from_date)s and %(to_date)s {0}
+		group by i.item_code, so.delivery_date, so.docstatus
+	""".format(conditions), filters, as_dict=1)
+
+	sinv_data = frappe.db.sql("""
+		select
+			i.item_code, i.item_name, sinv.delivery_date as date,
+			sum(i.qty) as qty
+		from `tabSales Invoice Item` i
+		inner join `tabSales Invoice` sinv on sinv.name = i.parent
+		where sinv.docstatus = 0 and ifnull(i.sales_order, '') = ''
+			and sinv.delivery_date between %(from_date)s and %(to_date)s {0}
+		group by i.item_code, sinv.delivery_date
 	""".format(conditions), filters, as_dict=1)
 
 	bin_data = frappe.db.sql("""
-		select bin.item_code, sum(bin.actual_qty) as actual_qty, item.item_name
-		from tabBin bin, tabItem item
-		where item.name = bin.item_code and item.is_sales_item=1 {0}
+		select bin.item_code, sum(bin.actual_qty) as actual_qty, i.item_name
+		from tabBin bin, tabItem i
+		where i.name = bin.item_code and i.is_sales_item=1 {0}
 		group by bin.item_code
 		having actual_qty != 0
 	""".format(conditions), filters, as_dict=1)
@@ -62,8 +75,19 @@ def get_data(filters):
 		item_map[d.item_code]['item_name'] = d.item_name
 		item_map[d.item_code]['total_so_qty'] += d.qty
 		if d.docstatus == 0:
-			item_map[d.item_code]['so_day_' + str(i+1)] = d.qty
+			item_map[d.item_code].setdefault('so_day_' + str(i+1), 0)
+			item_map[d.item_code]['so_day_' + str(i+1)] += d.qty
 			item_map[d.item_code]['draft_so_qty'] += d.qty
+
+	for d in sinv_data:
+		item_map.setdefault(d.item_code, template.copy())
+		i = frappe.utils.date_diff(d.date, filters.from_date)
+		item_map[d.item_code]['item_code'] = d.item_code
+		item_map[d.item_code]['item_name'] = d.item_name
+		item_map[d.item_code]['total_so_qty'] += d.qty
+		item_map[d.item_code].setdefault('so_day_' + str(i+1), 0)
+		item_map[d.item_code]['so_day_' + str(i+1)] += d.qty
+		item_map[d.item_code]['draft_so_qty'] += d.qty
 
 	for d in po_data:
 		item_map.setdefault(d.item_code, template.copy())
@@ -87,12 +111,12 @@ def get_item_conditions(filters):
 	conditions = []
 
 	if filters.get("item_code"):
-		conditions.append("item.item_code = %(item_code)s")
+		conditions.append("i.item_code = %(item_code)s")
 	else:
 		if filters.get("brand"):
-			conditions.append("item.brand=%(brand)s")
+			conditions.append("i.brand=%(brand)s")
 		if filters.get("item_group"):
-			conditions.append(get_item_group_condition(filters.get("item_group")))
+			conditions.append(get_item_group_condition(filters.get("item_group")).replace("item.", "i."))
 
 	conditions = " and ".join(conditions)
 	return "and {0}".format(conditions) if conditions else ""

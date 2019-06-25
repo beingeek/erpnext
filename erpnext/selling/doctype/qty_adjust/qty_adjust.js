@@ -5,6 +5,22 @@ frappe.provide("erpnext.selling");
 
 erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 	setup: function() {
+		var me = this;
+		$(this.frm.wrapper).on('grid-row-render', function(e, grid_row) {
+			me.set_row_editable(grid_row);
+
+
+			$(grid_row.wrapper).off('click').on('click', function() {
+				me.set_row_editable(grid_row);
+			});
+			$(grid_row.wrapper).off('keydown', 'input').on('keydown', 'input', function(e) {
+				me.set_row_editable(grid_row, e);
+			});
+			$(grid_row.wrapper).off('mouseover', 'input').on('mouseover', 'input', function(e) {
+				me.set_row_editable(grid_row, e);
+			});
+		});
+
 		this.frm.doc.from_date = get_url_arg("from_date");
 		this.frm.doc.to_date = get_url_arg("to_date");
 		this.frm.doc.item_code = get_url_arg("item_code");
@@ -20,6 +36,10 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 
 	onload: function() {
 		this.set_po_qty_labels();
+	},
+
+	sales_orders_on_form_rendered: function() {
+		this.set_row_editable(this.frm.open_grid_row());
 	},
 
 	onload_post_render: function() {
@@ -48,6 +68,25 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 
 			me.calculate_totals();
 		});
+	},
+
+	set_row_editable: function(grid_row, e) {
+		if(grid_row) {
+			var editable = Boolean(grid_row.doc.docstatus === 0 && grid_row.doc.dt === "Sales Order");
+
+			if (!editable) {
+				$("input", grid_row.wrapper).prop('disabled', !editable);
+
+				if (this.frm.open_grid_row()) {
+					$("input", this.frm.open_grid_row().grid_form.wrapper).prop('disabled', !editable);
+				}
+			}
+			$("[data-fieldname]:not([data-fieldname='']), input", grid_row.wrapper).css("background", editable ? "inherit" : "#FFADB6");
+
+			if (e && !editable) {
+				e.preventDefault();
+			}
+		}
 	},
 
 	from_date: function() {
@@ -166,7 +205,7 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 
 		if (me.frm.doc.from_date && me.frm.doc.item_code) {
 			return this.frm.call({
-				method: "erpnext.api.get_sales_orders_for_qty_adjust",
+				method: "erpnext.selling.doctype.qty_adjust.qty_adjust.get_sales_orders_for_qty_adjust",
 				freeze: true,
 				args: {
 					from_date: me.frm.doc.from_date,
@@ -179,7 +218,7 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 						$.each(r.message || [], function(i, d) {
 							var row = me.frm.add_child("sales_orders");
 							Object.assign(row, d);
-							row.allocated_qty = row.ordered_qty;
+							row.allocated_qty = row.qty;
 						});
 
 						me.calculate_totals();
@@ -193,15 +232,15 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 		var me = this;
 
 		var totals = {
-			total_ordered_qty: 0, total_allocated_qty: 0, total_back_order_qty: 0, total_difference: 0,
-			selected_ordered_qty: 0, selected_allocated_qty: 0, selected_back_order_qty: 0, selected_difference: 0,
+			total_qty: 0, total_allocated_qty: 0, total_back_order_qty: 0, total_difference: 0,
+			selected_qty: 0, selected_allocated_qty: 0, selected_back_order_qty: 0, selected_difference: 0,
 		};
 
 		var has_checked = false;
 		me.frm.refresh_field("sales_orders");
 		$.each(me.frm.fields_dict.sales_orders.grid.grid_rows || [], function(i, d) {
-			d.doc.difference = flt(d.doc.allocated_qty) - flt(d.doc.ordered_qty);
-			$.each(['ordered_qty', 'allocated_qty', 'back_order_qty', 'difference'], function(j, f) {
+			d.doc.difference = flt(d.doc.allocated_qty) - flt(d.doc.qty);
+			$.each(['qty', 'allocated_qty', 'back_order_qty', 'difference'], function(j, f) {
 				d.doc[f] = flt(d.doc[f], precision(f, d.doc));
 				totals['total_' + f] += flt(d.doc[f]);
 

@@ -127,10 +127,11 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 	po_data = frappe.db.sql("""
 		select
 			i.item_code, po.schedule_date as date,
-			sum(if(i.qty - i.received_qty < 0, 0, i.qty - i.received_qty)) as qty
+			sum(i.qty - ifnull(i.received_qty, 0)) as qty
 		from `tabPurchase Order Item` i
 		inner join `tabPurchase Order` po on po.name = i.parent
-		where po.docstatus < 2 and po.status != 'Closed' and po.schedule_date between %s and %s and i.item_code in ({0})
+		where po.docstatus < 2 and po.status != 'Closed' and ifnull(i.received_qty, 0) < ifnull(i.qty, 0)
+			and po.schedule_date between %s and %s and i.item_code in ({0})
 		group by i.item_code, po.schedule_date
 	""".format(", ".join(['%s']*len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
 
@@ -139,12 +140,24 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 	so_data = frappe.db.sql("""
 		select
 			i.item_code, so.delivery_date as date,
-			sum(i.qty) as qty
+			sum(i.qty - ifnull(i.delivered_qty, 0)) as qty
 		from `tabSales Order Item` i
 		inner join `tabSales Order` so on so.name = i.parent
-		where so.docstatus = 0 and so.delivery_date between %s and %s and i.item_code in ({0}) {1}
+		where so.docstatus < 2 and so.status != 'Closed' and ifnull(i.delivered_qty, 0) < ifnull(i.qty, 0)
+			and so.delivery_date between %s and %s and i.item_code in ({0}) {1}
 		group by i.item_code, so.delivery_date
 	""".format(", ".join(['%s'] * len(item_codes)), exclude_so_cond), [from_date, to_date] + item_codes, as_dict=1)
+
+	sinv_data = frappe.db.sql("""
+		select
+			i.item_code, sinv.delivery_date as date,
+			sum(i.qty) as qty
+		from `tabSales Invoice Item` i
+		inner join `tabSales Invoice` sinv on sinv.name = i.parent
+		where sinv.docstatus = 0 and ifnull(i.sales_order, '') = ''
+			and sinv.delivery_date between %s and %s and i.item_code in ({0})
+		group by i.item_code, sinv.delivery_date
+	""".format(", ".join(['%s'] * len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
 
 	bin_data = frappe.db.sql("""
 		select item_code, sum(actual_qty) as actual_qty, sum(projected_qty) as projected_qty
@@ -169,7 +182,14 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 	for d in so_data:
 		out.setdefault(d.item_code, template.copy())
 		i = frappe.utils.date_diff(d.date, from_date)
-		out[d.item_code]['so_day_' + str(i+1)] = d.qty
+		out[d.item_code].setdefault('so_day_' + str(i+1), 0)
+		out[d.item_code]['so_day_' + str(i+1)] += d.qty
+
+	for d in sinv_data:
+		out.setdefault(d.item_code, template.copy())
+		i = frappe.utils.date_diff(d.date, from_date)
+		out[d.item_code].setdefault('so_day_' + str(i+1), 0)
+		out[d.item_code]['so_day_' + str(i+1)] += d.qty
 
 	for d in bin_data:
 		out.setdefault(d.item_code, template.copy())
@@ -182,22 +202,6 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 			d['projected_qty'] -= d['so_day_' + str(i+1)]
 
 	return out
-
-@frappe.whitelist()
-def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
-	date_condition = "and so.delivery_date >= %(from_date)s"
-	if to_date:
-		date_condition += "and so.delivery_date <= %(to_date)s"
-
-	so_data = frappe.db.sql("""
-		select so.name as sales_order, so.customer, i.qty as ordered_qty, so.delivery_date as date, i.name as so_detail
-		from `tabSales Order Item` i
-		inner join `tabSales Order` so on so.name = i.parent
-		where so.docstatus = 0 and i.item_code = %(item_code)s {0}
-		order by so.delivery_date, so.name
-	""".format(date_condition), {"from_date": from_date, "to_date": to_date, "item_code": item_code}, as_dict=1)
-
-	return so_data
 
 @frappe.whitelist()
 def get_party_default_items(party_type, party):
