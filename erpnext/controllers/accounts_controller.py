@@ -274,7 +274,8 @@ class AccountsController(TransactionBase):
 							elif fieldname in ['cost_center', 'conversion_factor'] and not item.get(fieldname):
 								item.set(fieldname, value)
 
-							elif fieldname in ['price_list_rate', 'rate', 'discount_percentage', 'margin_type'] and not cint(self.get('ignore_pricing_rule')):
+							elif fieldname in ['price_list_rate', 'rate', 'discount_percentage', 'margin_type'] and not cint(self.get('ignore_pricing_rule'))\
+									and self.doctype in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"]:
 								item.set(fieldname, value)
 
 							elif fieldname == "serial_no":
