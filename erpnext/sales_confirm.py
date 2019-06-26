@@ -105,6 +105,7 @@ def makeSalesOrder(name,item_obj,total_box,total_lbs_box,total_pallet):
 	doc=frappe.get_doc("Sales Order",name)
 	so_data=frappe.get_doc(dict(
 		doctype="Sales Order",
+		company=frappe.defaults.get_defaults().company,
 		customer=str(doc.customer),
 		delivery_date=add_days(doc.delivery_date,2),
 		transaction_date=str(today()),
@@ -126,7 +127,7 @@ def getCostCenter(item):
 	if data:
 		return data[0][0]
 	else:
-		company=frappe.get_doc("Company","Sundine Produce")
+		company=frappe.get_doc("Company",frappe.defaults.get_defaults().company)
 		if company.cost_center:
 			return company.cost_center
 		else:
