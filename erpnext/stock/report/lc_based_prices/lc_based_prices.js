@@ -47,6 +47,12 @@ frappe.query_reports["LC Based Prices"] = {
 			options:"Enabled\nDisabled\nBoth",
 			default:"Enabled"
 		},
+		{
+			fieldname: "customer",
+			label: __("For Customer"),
+			fieldtype: "Link",
+			options:"Customer"
+		},
 	],
 	formatter: function(value, row, column, data, default_formatter) {
 		var original_value = value;

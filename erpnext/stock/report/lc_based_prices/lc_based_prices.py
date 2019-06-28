@@ -28,7 +28,7 @@ def get_data(filters):
 	item_conditions = get_item_conditions(filters, use_doc_name=True)
 
 	item_data = frappe.db.sql("""
-		select name as item_code, item_name
+		select name as item_code, item_name, country_of_origin as origin, gross_weight as weight, item_group
 		from tabItem item
 		where disabled != 1 and is_sales_item = 1 {0}
 	""".format(item_conditions), filters, as_dict=1)
@@ -68,8 +68,16 @@ def get_data(filters):
 	else:
 		price_list_filter_cond = " and enabled = 1"
 
-	price_lists = frappe.db.sql_list("select name from `tabPrice List` where (selling = 1 {0}) or name = %s"
-		.format(price_list_filter_cond), filters.standard_price_list)
+	customer_price_list = None
+	price_lists = [filters.standard_price_list]
+
+	if filters.customer:
+		customer_price_list = frappe.db.get_value("Customer", filters.customer, 'default_price_list')
+		if customer_price_list:
+			price_lists.append(customer_price_list)
+	else:
+		price_lists += frappe.db.sql_list("select name from `tabPrice List` where selling = 1 {0}".format(price_list_filter_cond))
+
 	price_lists_cond = " and p.price_list in ('{0}')".format("', '".join([frappe.db.escape(d) for d in price_lists]))
 
 	item_price_data = frappe.db.sql("""
@@ -133,6 +141,8 @@ def get_data(filters):
 				d["rate_diff_" + scrub(price_list)] = flt(price.current_price) - flt(d.standard_rate)
 			if price.previous_price is not None:
 				d["rate_old_" + scrub(price_list)] = price.previous_price
+
+		d['print_rate'] = d.get("rate_" + scrub(customer_price_list)) if customer_price_list else d.standard_rate
 
 	return sorted(items_map.values(), key=lambda d: d.item_code), price_lists
 
