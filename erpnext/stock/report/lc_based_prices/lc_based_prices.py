@@ -26,19 +26,18 @@ def execute(filters=None):
 def get_data(filters):
 	conditions = get_item_conditions(filters, use_doc_name=False)
 	item_conditions = get_item_conditions(filters, use_doc_name=True)
+	po_conditions = get_po_conditions(filters)
+
+	price_lists, customer_price_list = get_price_lists(filters)
+	price_lists_cond = " and p.price_list in ('{0}')".format("', '".join([frappe.db.escape(d) for d in price_lists]))
 
 	item_data = frappe.db.sql("""
-		select name as item_code, item_name, country_of_origin as origin, gross_weight as weight, item_group
+		select item.name as item_code, item.item_name, upper(c.code) as origin, item.gross_weight as weight,
+			item.item_group, item.stock_uom
 		from tabItem item
+		left join tabCountry c on c.name = item.country_of_origin
 		where disabled != 1 and is_sales_item = 1 {0}
 	""".format(item_conditions), filters, as_dict=1)
-
-	po_conditions = []
-	if filters.get('po_from_date'):
-		po_conditions.append("po.schedule_date >= %(po_from_date)s")
-	if filters.get('po_to_date'):
-		po_conditions.append("po.schedule_date <= %(po_to_date)s")
-	po_conditions_sql = "and {0}".format(" and ".join(po_conditions)) if po_conditions else ""
 
 	po_data = frappe.db.sql("""
 		select
@@ -49,7 +48,7 @@ def get_data(filters):
 		inner join `tabPurchase Order` po on po.name = item.parent
 		where item.docstatus < 2 and po.status != 'Closed' {0} {1}
 		group by item.item_code
-	""".format(conditions, po_conditions_sql), filters, as_dict=1)
+	""".format(conditions, po_conditions), filters, as_dict=1)
 
 	bin_data = frappe.db.sql("""
 		select
@@ -60,25 +59,6 @@ def get_data(filters):
 		where item.name = bin.item_code {0}
 		group by bin.item_code
 	""".format(item_conditions), filters, as_dict=1)
-
-	if filters.filter_price_list_by == "Both":
-		price_list_filter_cond = ""
-	elif filters.filter_price_list_by == "Disabled":
-		price_list_filter_cond = " and enabled = 0"
-	else:
-		price_list_filter_cond = " and enabled = 1"
-
-	customer_price_list = None
-	price_lists = [filters.standard_price_list]
-
-	if filters.customer:
-		customer_price_list = frappe.db.get_value("Customer", filters.customer, 'default_price_list')
-		if customer_price_list:
-			price_lists.append(customer_price_list)
-	else:
-		price_lists += frappe.db.sql_list("select name from `tabPrice List` where selling = 1 {0}".format(price_list_filter_cond))
-
-	price_lists_cond = " and p.price_list in ('{0}')".format("', '".join([frappe.db.escape(d) for d in price_lists]))
 
 	item_price_data = frappe.db.sql("""
 		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
@@ -144,7 +124,50 @@ def get_data(filters):
 
 		d['print_rate'] = d.get("rate_" + scrub(customer_price_list)) if customer_price_list else d.standard_rate
 
+	if filters.filter_items_without_price:
+		to_remove = []
+		for item_code, d in iteritems(items_map):
+			if not d.get('print_rate'):
+				to_remove.append(item_code)
+		for item_code in to_remove:
+			del items_map[item_code]
+
 	return sorted(items_map.values(), key=lambda d: d.item_code), price_lists
+
+
+def get_price_lists(filters):
+	def get_selected_price_lists():
+		res = []
+		for i in range(3):
+			if filters.get('price_list_' + str(i)):
+				res.append(filters.get('price_list_' + str(i)))
+		return res
+
+	if filters.filter_price_list_by == "All Price Lists":
+		price_list_filter_cond = ""
+	elif filters.filter_price_list_by == "Disabled":
+		price_list_filter_cond = " and enabled = 0"
+	else:
+		price_list_filter_cond = " and enabled = 1"
+
+	customer_price_list = None
+	price_lists = [filters.standard_price_list]
+
+	if filters.customer:
+		customer_price_list = frappe.db.get_value("Customer", filters.customer, 'default_price_list')
+		if customer_price_list:
+			price_lists.append(customer_price_list)
+
+		price_lists += get_selected_price_lists()
+
+	else:
+		selected_price_lists = get_selected_price_lists()
+		if selected_price_lists:
+			price_lists += selected_price_lists
+		else:
+			price_lists += frappe.db.sql_list("select name from `tabPrice List` where selling = 1 {0}".format(price_list_filter_cond))
+
+	return price_lists, customer_price_list
 
 
 def get_item_conditions(filters, use_doc_name):
@@ -159,6 +182,15 @@ def get_item_conditions(filters, use_doc_name):
 			conditions.append(get_item_group_condition(filters.get("item_group")))
 
 	return " and " + " and ".join(conditions) if conditions else ""
+
+
+def get_po_conditions(filters):
+	po_conditions = []
+	if filters.get('po_from_date'):
+		po_conditions.append("po.schedule_date >= %(po_from_date)s")
+	if filters.get('po_to_date'):
+		po_conditions.append("po.schedule_date <= %(po_to_date)s")
+	return "and {0}".format(" and ".join(po_conditions)) if po_conditions else ""
 
 
 def get_columns(filters, price_lists):

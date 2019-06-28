@@ -41,17 +41,40 @@ frappe.query_reports["LC Based Prices"] = {
 			options:"Brand",
 		},
 		{
-			fieldname: "filter_price_list_by",
-			label: __("Filter Price List By"),
-			fieldtype: "Select",
-			options:"Enabled\nDisabled\nBoth",
-			default:"Enabled"
-		},
-		{
 			fieldname: "customer",
 			label: __("For Customer"),
 			fieldtype: "Link",
 			options:"Customer"
+		},
+		{
+			fieldname: "filter_items_without_price",
+			label: __("Filter Items Without Price"),
+			fieldtype: "Check"
+		},
+		{
+			fieldname: "filter_price_list_by",
+			label: __("Filter Price List By"),
+			fieldtype: "Select",
+			options:"Enabled\nDisabled\nAll",
+			default:"Enabled"
+		},
+		{
+			fieldname: "price_list_1",
+			label: __("Show Price List Column 1"),
+			fieldtype: "Link",
+			options:"Price List"
+		},
+		{
+			fieldname: "price_list_2",
+			label: __("Show Price List Column 2"),
+			fieldtype: "Link",
+			options:"Price List"
+		},
+		{
+			fieldname: "price_list_3",
+			label: __("Show Price List Column 3"),
+			fieldtype: "Link",
+			options:"Price List"
 		},
 	],
 	formatter: function(value, row, column, data, default_formatter) {
