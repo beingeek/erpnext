@@ -17,10 +17,27 @@ def execute(filters=None):
 	filters.to_date = frappe.utils.add_days(filters.from_date, 4)
 	filters.standard_price_list = frappe.db.get_single_value("Selling Settings", "selling_price_list")
 
+	stock_settings = frappe.get_single("Stock Settings")
+	filters.item_groups_excluded = [d.item_group for d in stock_settings.price_list_excluded or []]
+
 	data, price_lists = get_data(filters)
 	columns = get_columns(filters, price_lists)
 
-	return columns, data
+	item_group_wise_data = {}
+	for d in data:
+		item_group_wise_data.setdefault(d.item_group, []).append(d)
+
+	res = []
+
+	for item_group in stock_settings.price_list_order or []:
+		if item_group.item_group in item_group_wise_data:
+			res += sorted(item_group_wise_data[item_group.item_group], key=lambda d: d.item_code)
+			del item_group_wise_data[item_group.item_group]
+
+	for items in item_group_wise_data.values():
+		res += sorted(items, key=lambda d: d.item_code)
+
+	return columns, res
 
 
 def get_data(filters):
@@ -32,7 +49,7 @@ def get_data(filters):
 	price_lists_cond = " and p.price_list in ('{0}')".format("', '".join([frappe.db.escape(d) for d in price_lists]))
 
 	item_data = frappe.db.sql("""
-		select item.name as item_code, item.item_name, upper(c.code) as origin, item.gross_weight as weight,
+		select item.name as item_code, item.item_name, upper(c.code) as origin, item.weight_per_unit as weight,
 			item.item_group, item.stock_uom
 		from tabItem item
 		left join tabCountry c on c.name = item.country_of_origin
@@ -61,7 +78,7 @@ def get_data(filters):
 	""".format(item_conditions), filters, as_dict=1)
 
 	item_price_data = frappe.db.sql("""
-		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
+		select p.name, p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
 		from `tabItem Price` p
 		inner join `tabItem` item on item.name = p.item_code
 		where %(date)s between ifnull(p.valid_from, '2000-01-01') and ifnull(p.valid_upto, '2500-12-31')
@@ -97,6 +114,7 @@ def get_data(filters):
 			price = item_price_map.setdefault(d.item_code, {}).setdefault(d.price_list, frappe._dict())
 			price.current_price = d.price_list_rate
 			price.valid_from = d.valid_from
+			price.item_price = d.name
 
 	for d in previous_item_prices:
 		if d.item_code in items_map and d.price_list in price_lists:
@@ -121,6 +139,8 @@ def get_data(filters):
 				d["rate_diff_" + scrub(price_list)] = flt(price.current_price) - flt(d.standard_rate)
 			if price.previous_price is not None:
 				d["rate_old_" + scrub(price_list)] = price.previous_price
+			if price.item_price:
+				d["item_price_" + scrub(price_list)] = price.item_price
 
 		d['print_rate'] = d.get("rate_" + scrub(selected_price_list)) if selected_price_list else d.standard_rate
 
@@ -132,7 +152,7 @@ def get_data(filters):
 		for item_code in to_remove:
 			del items_map[item_code]
 
-	return sorted(items_map.values(), key=lambda d: d.item_code), price_lists
+	return items_map.values(), price_lists
 
 
 def get_price_lists(filters):
@@ -179,6 +199,9 @@ def get_item_conditions(filters, use_doc_name):
 		if filters.get("item_group"):
 			conditions.append(get_item_group_condition(filters.get("item_group")))
 
+	if filters.get("item_groups_excluded"):
+		conditions.append("item.item_group not in ('{}')".format("', '".join([frappe.db.escape(d) for d in filters.get("item_groups_excluded")])))
+
 	return " and " + " and ".join(conditions) if conditions else ""
 
 
@@ -195,6 +218,7 @@ def get_columns(filters, price_lists):
 	columns = [
 		{"fieldname": "item_code", "label": _("Item Code"), "fieldtype": "Link", "options": "Item", "width": 80},
 		{"fieldname": "item_name", "label": _("Item Name"), "fieldtype": "Data", "width": 150},
+		{"fieldname": "item_group", "label": _("Item Group"), "fieldtype": "Link", "options": "Item Group", "width": 120},
 		{"fieldname": "po_qty", "label": _("PO Qty"), "fieldtype": "Float", "width": 70},
 		{"fieldname": "po_lc_rate", "label": _("PO LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
 		{"fieldname": "actual_qty", "label": _("Stock Qty"), "fieldtype": "Float", "width": 80},

@@ -1,12 +1,13 @@
 <style>
 .print-format {
-	font-size: 10pt !important;
-}
-.print-format td {
-	vertical-align:middle !important;
+	font-size: 9pt !important;
 }
 .right-border {
-    border-right: 1px #000 solid !important;
+    border-right: 1px #808588 solid !important;
+}
+.print-format td, .print-format th {
+    padding: 5px !important;
+	vertical-align:middle !important;
 }
 </style>
 
@@ -44,10 +45,10 @@ $.each(item_groups || {}, function(item_group, items) {
     item_groups[item_group] = items.sort((a, b) => a.item_name.localeCompare(b.item_name));
 });
 
-var ordered = {};
-Object.keys(item_groups).sort().forEach(function(key) {
-  ordered[key] = item_groups[key];
-});
+//var ordered = {};
+//Object.keys(item_groups).sort().forEach(function(key) {
+//  ordered[key] = item_groups[key];
+//});
 item_groups = ordered;
 
 %}
@@ -56,37 +57,46 @@ item_groups = ordered;
 	<thead>
 		<tr>
             <th style="width: 38%">{%= __("Product") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Per Box") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Lbs") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("UOM") %}</th>
-            <th style="width: 3%" class="right-border text-right">{%= __("Price") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
+            <th style="width: 3%" class="right-border text-right">{%= __("Order") %}</th>
 
             <th style="width: 38%">{%= __("Product") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Per Box") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Lbs") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("UOM") %}</th>
-            <th style="width: 3%" class="text-right">{%= __("Price") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
+            <th style="width: 3%" class="right-border text-right">{%= __("Order") %}</th>
+
+            <th style="width: 38%">{%= __("Product") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Per Box") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
+            <th style="width: 3%" class="text-right">{%= __("Order") %}</th>
 		</tr>
 	</thead>
 	<tbody>
     {% $.each(item_groups || {}, function(item_group, items) { %}
         <tr>
-            <td colspan="10" class="text-center" style="font-size: 12pt"><strong>{%= item_group %}</strong></td>
+            <td colspan="15" class="text-center" style="font-size: 12pt"><strong>{%= item_group %}</strong></td>
         </tr>
 
         {% $.each(items || [], function(i, d) { %}
-            {% if (i % 2 == 0) { %}
+            {% if (i % 3 == 0) { %}
             <tr>
             {% } %}
                 <td>{%= d.item_name %}</td>
-                <td class="text-center">{%= d.origin %}</td>
                 <td class="text-center">{%= d.weight %}</td>
-                <td class="text-center">{%= d.stock_uom %}</td>
-                <td class="text-right{% if (i % 2 == 0) { %} right-border{% } %}">{%= d.print_rate ? format_currency(d.print_rate) : '' %}</td>
-                {% if (i % 2 == 0 && i == items.length - 1) { %}
+                <td class="text-center">{%= d.origin %}</td>
+                <td class="text-center">{%= d.print_rate ? format_currency(d.print_rate) : '' %}</td>
+                <td class="text-right{% if (i % 3 != 2) { %} right-border{% } %}"></td>
+                {% if (i % 3 == 0 && i == items.length - 1) { %}
+                    <td></td><td></td><td></td><td></td><td class="right-border"></td><td></td><td></td><td></td><td></td><td></td>
+                {% } %}
+                {% if (i % 3 == 1 && i == items.length - 1) { %}
                     <td></td><td></td><td></td><td></td><td></td>
                 {% } %}
-            {% if (i % 2 != 0 || i == items.length - 1) { %}
+            {% if (i % 3 == 2 || i == items.length - 1) { %}
             </tr>
             {% } %}
         {% }); %}

@@ -109,6 +109,14 @@ frappe.query_reports["LC Based Prices"] = {
 					value = $value.wrap("<p></p>").parent().html();
 				}
 			}
+
+			var item_price_field = "item_price_" + frappe.scrub(column.price_list);
+			if (data.hasOwnProperty(item_price_field) && data[item_price_field]) {
+				value = $(`<span>${value}</span>`);
+				var link = "desk#Form/Item Price/" + data[item_price_field];
+				var $value = $(value).wrap("<a href='" + link + "' target='_blank'></a>").parent();
+				value = $value.wrap("<p></p>").parent().html();
+			}
 		}
 
 		if (column.fieldname == "po_qty") {
