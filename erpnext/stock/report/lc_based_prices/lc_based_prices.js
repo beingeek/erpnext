@@ -44,7 +44,23 @@ frappe.query_reports["LC Based Prices"] = {
 			fieldname: "customer",
 			label: __("For Customer"),
 			fieldtype: "Link",
-			options:"Customer"
+			options:"Customer",
+			on_change: function () {
+				var customer = frappe.query_report.get_filter_value('customer');
+				if(customer) {
+					frappe.db.get_value("Customer", customer, "default_price_list", function(value) {
+						frappe.query_report.set_filter_value('selected_price_list', value["default_price_list"]);
+					});
+				} else {
+					frappe.query_report.set_filter_value('selected_price_list', '');
+				}
+			}
+		},
+		{
+			fieldname: "selected_price_list",
+			label: __("Selected Price List"),
+			fieldtype: "Link",
+			options:"Price List"
 		},
 		{
 			fieldname: "filter_items_without_price",
@@ -60,19 +76,19 @@ frappe.query_reports["LC Based Prices"] = {
 		},
 		{
 			fieldname: "price_list_1",
-			label: __("Show Price List Column 1"),
+			label: __("Additional Price List 1"),
 			fieldtype: "Link",
 			options:"Price List"
 		},
 		{
 			fieldname: "price_list_2",
-			label: __("Show Price List Column 2"),
+			label: __("Additional Price List 2"),
 			fieldtype: "Link",
 			options:"Price List"
 		},
 		{
 			fieldname: "price_list_3",
-			label: __("Show Price List Column 3"),
+			label: __("Additional Price List 3"),
 			fieldtype: "Link",
 			options:"Price List"
 		},
@@ -109,6 +125,15 @@ frappe.query_reports["LC Based Prices"] = {
 			var $value = $(value).wrap("<a href='" + link + "' target='_blank'></a>").parent();
 			value = $value.wrap("<p></p>").parent().html();
 		}
+
+
+
+		if (['po_qty', 'actual_qty', 'standard_rate', 'avg_lc_rate'].includes(column.fieldname)) {
+			value = $(`<span>${value}</span>`);
+			var $value = $(value).css("font-weight", "bold");
+			value = $value.wrap("<p></p>").parent().html();
+		}
+
 		return value;
 	},
 	onChange: function(new_value, column, data, rowIndex) {

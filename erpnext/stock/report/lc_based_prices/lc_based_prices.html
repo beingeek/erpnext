@@ -56,16 +56,16 @@ item_groups = ordered;
 	<thead>
 		<tr>
             <th style="width: 38%">{%= __("Product") %}</th>
-            <th style="width: 3%">{%= __("Origin") %}</th>
-            <th style="width: 3%">{%= __("Lbs") %}</th>
-            <th style="width: 3%">{%= __("UOM") %}</th>
-            <th style="width: 3%" class="right-border">{%= __("Price") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Lbs") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("UOM") %}</th>
+            <th style="width: 3%" class="right-border text-right">{%= __("Price") %}</th>
 
             <th style="width: 38%">{%= __("Product") %}</th>
-            <th style="width: 3%">{%= __("Origin") %}</th>
-            <th style="width: 3%">{%= __("Lbs") %}</th>
-            <th style="width: 3%">{%= __("UOM") %}</th>
-            <th style="width: 3%">{%= __("Price") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Lbs") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("UOM") %}</th>
+            <th style="width: 3%" class="text-right">{%= __("Price") %}</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -79,9 +79,9 @@ item_groups = ordered;
             <tr>
             {% } %}
                 <td>{%= d.item_name %}</td>
-                <td>{%= d.origin %}</td>
-                <td class="text-right">{%= d.weight %}</td>
-                <td>{%= d.stock_uom %}</td>
+                <td class="text-center">{%= d.origin %}</td>
+                <td class="text-center">{%= d.weight %}</td>
+                <td class="text-center">{%= d.stock_uom %}</td>
                 <td class="text-right{% if (i % 2 == 0) { %} right-border{% } %}">{%= d.print_rate ? format_currency(d.print_rate) : '' %}</td>
                 {% if (i % 2 == 0 && i == items.length - 1) { %}
                     <td></td><td></td><td></td><td></td><td></td>

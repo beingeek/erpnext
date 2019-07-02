@@ -28,7 +28,7 @@ def get_data(filters):
 	item_conditions = get_item_conditions(filters, use_doc_name=True)
 	po_conditions = get_po_conditions(filters)
 
-	price_lists, customer_price_list = get_price_lists(filters)
+	price_lists, selected_price_list = get_price_lists(filters)
 	price_lists_cond = " and p.price_list in ('{0}')".format("', '".join([frappe.db.escape(d) for d in price_lists]))
 
 	item_data = frappe.db.sql("""
@@ -122,7 +122,7 @@ def get_data(filters):
 			if price.previous_price is not None:
 				d["rate_old_" + scrub(price_list)] = price.previous_price
 
-		d['print_rate'] = d.get("rate_" + scrub(customer_price_list)) if customer_price_list else d.standard_rate
+		d['print_rate'] = d.get("rate_" + scrub(selected_price_list)) if selected_price_list else d.standard_rate
 
 	if filters.filter_items_without_price:
 		to_remove = []
@@ -136,7 +136,7 @@ def get_data(filters):
 
 
 def get_price_lists(filters):
-	def get_selected_price_lists():
+	def get_additional_price_lists():
 		res = []
 		for i in range(3):
 			if filters.get('price_list_' + str(i)):
@@ -150,24 +150,22 @@ def get_price_lists(filters):
 	else:
 		price_list_filter_cond = " and enabled = 1"
 
-	customer_price_list = None
 	price_lists = [filters.standard_price_list]
 
 	if filters.customer:
-		customer_price_list = frappe.db.get_value("Customer", filters.customer, 'default_price_list')
-		if customer_price_list:
-			price_lists.append(customer_price_list)
+		filters.selected_price_list = frappe.db.get_value("Customer", filters.customer, 'default_price_list')
 
-		price_lists += get_selected_price_lists()
+	if filters.selected_price_list:
+		price_lists.append(filters.selected_price_list)
 
-	else:
-		selected_price_lists = get_selected_price_lists()
-		if selected_price_lists:
-			price_lists += selected_price_lists
-		else:
-			price_lists += frappe.db.sql_list("select name from `tabPrice List` where selling = 1 {0}".format(price_list_filter_cond))
+	additional_price_lists = get_additional_price_lists()
+	if additional_price_lists:
+		price_lists += additional_price_lists
 
-	return price_lists, customer_price_list
+	if not additional_price_lists and not filters.selected_price_list:
+		price_lists += frappe.db.sql_list("select name from `tabPrice List` where selling = 1 {0}".format(price_list_filter_cond))
+
+	return price_lists, filters.selected_price_list
 
 
 def get_item_conditions(filters, use_doc_name):
@@ -199,12 +197,12 @@ def get_columns(filters, price_lists):
 		{"fieldname": "item_name", "label": _("Item Name"), "fieldtype": "Data", "width": 150},
 		{"fieldname": "po_qty", "label": _("PO Qty"), "fieldtype": "Float", "width": 70},
 		{"fieldname": "po_lc_rate", "label": _("PO LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
-		{"fieldname": "actual_qty", "label": _("Stock Qty"), "fieldtype": "Float", "width": 70},
+		{"fieldname": "actual_qty", "label": _("Stock Qty"), "fieldtype": "Float", "width": 80},
 		{"fieldname": "valuation_rate", "label": _("Stock LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
 		{"fieldname": "avg_lc_rate", "label": _("Avg LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
-		{"fieldname": "standard_rate", "label": _("Base Price"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70,
+		{"fieldname": "standard_rate", "label": _("Base Price"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 80,
 			"editable": True, "price_list": filters.standard_price_list, "is_base_price": True},
-		{"fieldname": "margin_rate", "label": _("% Margin"), "fieldtype": "Percent", "width": 70, "restricted": True},
+		{"fieldname": "margin_rate", "label": _("% Margin"), "fieldtype": "Percent", "width": 80, "restricted": True},
 	]
 
 	for price_list in sorted(price_lists):
