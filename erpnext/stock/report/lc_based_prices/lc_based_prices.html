@@ -61,12 +61,6 @@ $.each(item_groups || {}, function(item_group, items) {
             <th style="width: 3%" class="text-center">{%= __("Box") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
-            <th style="width: 3%" class="right-border text-right">{%= __("Order") %}</th>
-
-            <th style="width: 38%">{%= __("Product") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Box") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
             <th style="width: 3%" class="text-right">{%= __("Order") %}</th>
 		</tr>
 	</thead>
@@ -77,21 +71,18 @@ $.each(item_groups || {}, function(item_group, items) {
         </tr>
 
         {% $.each(items || [], function(i, d) { %}
-            {% if (i % 3 == 0) { %}
+            {% if (i % 2 == 0) { %}
             <tr>
             {% } %}
                 <td>{%= d.item_name %}</td>
                 <td class="text-center">{%= d.weight %}</td>
                 <td class="text-center">{%= d.origin %}</td>
                 <td class="text-center">{%= d.print_rate ? format_currency(d.print_rate) : '' %}</td>
-                <td class="text-right{% if (i % 3 != 2) { %} right-border{% } %}"></td>
-                {% if (i % 3 == 0 && i == items.length - 1) { %}
-                    <td></td><td></td><td></td><td></td><td class="right-border"></td><td></td><td></td><td></td><td></td><td></td>
+                <td class="text-right{% if (i % 2 != 1) { %} right-border{% } %}"></td>
+                {% if (i % 2 == 0 && i == items.length - 1) { %}
+                    <td></td><td></td><td></td><td></td><td class="right-border"></td>
                 {% } %}
-                {% if (i % 3 == 1 && i == items.length - 1) { %}
-                    <td></td><td></td><td></td><td></td><td></td>
-                {% } %}
-            {% if (i % 3 == 2 || i == items.length - 1) { %}
+            {% if (i % 2 == 1 || i == items.length - 1) { %}
             </tr>
             {% } %}
         {% }); %}
