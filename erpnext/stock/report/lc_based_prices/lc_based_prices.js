@@ -95,54 +95,42 @@ frappe.query_reports["LC Based Prices"] = {
 	],
 	formatter: function(value, row, column, data, default_formatter) {
 		var original_value = value;
-		value = default_formatter(value, row, column, data);
+		var style = {};
+		var link;
+
 		if (column.price_list && !column.is_diff) {
 			var old_rate_field = "rate_old_" + frappe.scrub(column.price_list);
 			if (data.hasOwnProperty(old_rate_field)) {
 				if (flt(original_value) < flt(data[old_rate_field])) {
-					value = $(`<span>${value}</span>`);
-					var $value = $(value).css("color", "green");
-					value = $value.wrap("<p></p>").parent().html();
+					style['color'] = 'green';
 				} else if (flt(original_value) > flt(data[old_rate_field])) {
-					value = $(`<span>${value}</span>`);
-					var $value = $(value).css("color", "red");
-					value = $value.wrap("<p></p>").parent().html();
+					style['color'] = 'red';
 				}
 			}
 
 			var item_price_field = "item_price_" + frappe.scrub(column.price_list);
 			if (data.hasOwnProperty(item_price_field) && data[item_price_field]) {
-				value = $(`<span>${value}</span>`);
-				var link = "desk#Form/Item Price/" + data[item_price_field];
-				var $value = $(value).wrap("<a href='" + link + "' target='_blank'></a>").parent();
-				value = $value.wrap("<p></p>").parent().html();
+				link = "desk#Form/Item Price/" + data[item_price_field];
 			}
 		}
 
 		if (column.fieldname == "po_qty") {
 			var po_from_date = frappe.query_report.get_filter_value("po_from_date");
 			var po_to_date = frappe.query_report.get_filter_value("po_to_date");
-			var link = "desk#query-report/Purchase Order Items To Be Received?item_code=" + data.item_code;
+			link = "desk#query-report/Purchase Order Items To Be Received?item_code=" + data.item_code;
 			if(po_from_date) {
 				link += "&from_date=" + po_from_date
 			}
 			if(po_to_date) {
 				link += "&to_date=" + po_to_date
 			}
-			value = $(`<span>${value}</span>`);
-			var $value = $(value).wrap("<a href='" + link + "' target='_blank'></a>").parent();
-			value = $value.wrap("<p></p>").parent().html();
 		}
-
-
 
 		if (['po_qty', 'actual_qty', 'standard_rate', 'avg_lc_rate'].includes(column.fieldname)) {
-			value = $(`<span>${value}</span>`);
-			var $value = $(value).css("font-weight", "bold");
-			value = $value.wrap("<p></p>").parent().html();
+			style['font-weight'] = 'bold';
 		}
 
-		return value;
+		return default_formatter(value, row, column, data, {css: style, link_href: link, link_target: "_blank"});
 	},
 	onChange: function(new_value, column, data, rowIndex) {
 		return frappe.call({
