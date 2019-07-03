@@ -50,7 +50,7 @@ def get_data(filters):
 
 	item_data = frappe.db.sql("""
 		select item.name as item_code, item.item_name, upper(c.code) as origin, item.weight_per_unit as weight,
-			item.item_group, item.stock_uom
+			item.item_group, item.stock_uom, item.hide_item_from_price_list_print as hide_from_print
 		from tabItem item
 		left join tabCountry c on c.name = item.country_of_origin
 		where disabled != 1 and is_sales_item = 1 {0}
@@ -117,7 +117,7 @@ def get_data(filters):
 			price.item_price = d.name
 
 	for d in previous_item_prices:
-		if d.item_code in items_map and d.price_list in price_lists:
+		if d.item_code in item_price_map and d.price_list in item_price_map[d.item_code]:
 			price = item_price_map[d.item_code][d.price_list]
 			if 'previous_price' not in price and d.valid_from < price.valid_from:
 				price.previous_price = d.price_list_rate

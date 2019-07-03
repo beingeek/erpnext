@@ -3,7 +3,7 @@
 	font-size: 9pt !important;
 }
 .right-border {
-    border-right: 1px #808588 solid !important;
+    border-right: 1px #a1a8ab solid !important;
 }
 .print-format td, .print-format th {
     padding: 5px !important;
@@ -11,22 +11,23 @@
 }
 </style>
 
-<h2 class="text-center" style="margin-top:0">Price List</h2>
-<h4 class="text-center">
-	{% if (filters.customer_name) { %}
-		{%= filters.customer_name %}
+<h2 class="text-center" style="margin-top:0">
+    Price List
+
+    {% if (filters.customer_name) { %}
+        — {%= filters.customer_name %}
 	{% } else if(filters.customer) { %}
-		{%= filters.customer %}
+        — {%= filters.customer %}
 	{% } %}
-</h4>
-<h5 class="text-center">
-	{%= __("From") %}
-	{%= frappe.datetime.str_to_user(filters.date) %}
-</h5>
+
+    — {%= __("From") %} {%= frappe.datetime.str_to_user(filters.date) %}
+</h2>
 
 {%
 
 var item_groups = {};
+
+data = data.filter(d => !d.hide_from_print);
 
 for(var i = 0; i < data.length; i++) {
     if (!data[i].item_code) {
@@ -45,31 +46,25 @@ $.each(item_groups || {}, function(item_group, items) {
     item_groups[item_group] = items.sort((a, b) => a.item_name.localeCompare(b.item_name));
 });
 
-//var ordered = {};
-//Object.keys(item_groups).sort().forEach(function(key) {
-//  ordered[key] = item_groups[key];
-//});
-item_groups = ordered;
-
 %}
 
 <table class="table table-bordered">
 	<thead>
 		<tr>
             <th style="width: 38%">{%= __("Product") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Per Box") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Box") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
             <th style="width: 3%" class="right-border text-right">{%= __("Order") %}</th>
 
             <th style="width: 38%">{%= __("Product") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Per Box") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Box") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
             <th style="width: 3%" class="right-border text-right">{%= __("Order") %}</th>
 
             <th style="width: 38%">{%= __("Product") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Per Box") %}</th>
+            <th style="width: 3%" class="text-center">{%= __("Box") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
             <th style="width: 3%" class="text-right">{%= __("Order") %}</th>
