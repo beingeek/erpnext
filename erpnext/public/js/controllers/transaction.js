@@ -1330,7 +1330,10 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 			// if pricing rule set as blank from an existing value, apply price_list
 			if(!me.frm.doc.ignore_pricing_rule && existing_pricing_rule && !d.pricing_rule) {
-				me.apply_price_list(frappe.get_doc(d.doctype, d.name));
+				var item_doc = frappe.get_doc(d.doctype, d.name);
+				if (!item_doc.override_price_list_rate) {
+					me.apply_price_list();
+				}
 			}
 		}
 

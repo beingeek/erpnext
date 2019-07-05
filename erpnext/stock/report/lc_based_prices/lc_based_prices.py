@@ -50,7 +50,7 @@ def get_data(filters):
 
 	item_data = frappe.db.sql("""
 		select item.name as item_code, item.item_name, upper(c.code) as origin, item.weight_per_unit as weight,
-			item.item_group, item.stock_uom, item.hide_item_from_price_list_print as hide_from_print
+			item.item_group, item.stock_uom, item.print_in_price_list
 		from tabItem item
 		left join tabCountry c on c.name = item.country_of_origin
 		where disabled != 1 and is_sales_item = 1 {0}

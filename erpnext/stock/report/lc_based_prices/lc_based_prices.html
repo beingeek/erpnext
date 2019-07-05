@@ -12,22 +12,19 @@
 </style>
 
 <h2 class="text-center" style="margin-top:0">
-    Price List
-
     {% if (filters.customer_name) { %}
-        — {%= filters.customer_name %}
+        {%= filters.customer_name %} —
 	{% } else if(filters.customer) { %}
-        — {%= filters.customer %}
+        {%= filters.customer %} —
 	{% } %}
-
-    — {%= __("From") %} {%= frappe.datetime.str_to_user(filters.date) %}
+    Price List: {%= __("From") %} {%= frappe.datetime.str_to_user(filters.date) %}
 </h2>
 
 {%
 
 var item_groups = {};
 
-data = data.filter(d => !d.hide_from_print);
+data = data.filter(d => d.print_in_price_list);
 
 for(var i = 0; i < data.length; i++) {
     if (!data[i].item_code) {
@@ -67,7 +64,7 @@ $.each(item_groups || {}, function(item_group, items) {
 	<tbody>
     {% $.each(item_groups || {}, function(item_group, items) { %}
         <tr>
-            <td colspan="15" class="text-center" style="font-size: 12pt"><strong>{%= item_group %}</strong></td>
+            <td colspan="10" class="text-center" style="font-size: 11pt"><strong>{%= item_group %}</strong></td>
         </tr>
 
         {% $.each(items || [], function(i, d) { %}
@@ -80,7 +77,7 @@ $.each(item_groups || {}, function(item_group, items) {
                 <td class="text-center">{%= d.print_rate ? format_currency(d.print_rate) : '' %}</td>
                 <td class="text-right{% if (i % 2 != 1) { %} right-border{% } %}"></td>
                 {% if (i % 2 == 0 && i == items.length - 1) { %}
-                    <td></td><td></td><td></td><td></td><td class="right-border"></td>
+                    <td></td><td></td><td></td><td></td><td></td>
                 {% } %}
             {% if (i % 2 == 1 || i == items.length - 1) { %}
             </tr>

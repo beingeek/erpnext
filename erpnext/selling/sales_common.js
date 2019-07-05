@@ -40,7 +40,7 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 	show_edit_pricing_rule_dialog: function(item) {
 		var me = this;
 
-		if (!item || !item.item_code || !me.frm.doc.customer || !me.frm.doc.selling_price_list) {
+		if (!item || !item.item_code || !me.frm.doc.customer || !me.frm.doc.selling_price_list || me.frm.doc.ignore_pricing_rule || item.override_price_list_rate) {
 			return;
 		}
 
@@ -55,6 +55,7 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 				{"fieldtype": "Column Break", "fieldname": "col_break1"},
 				{"fieldtype": "Date", "label": __("To Date"), "fieldname": "valid_upto", "reqd":true, "default": me.frm.doc.pricing_rule ? "" : me.frm.doc.delivery_date},
 				{"fieldtype": "Section Break", "fieldname": "sec_break1"},
+				{"fieldtype": "Button", "label": __("Ignore Pricing Rule"), "fieldname": "ignore_pricing_rule"},
 				{"fieldtype": "Link", "label": __("Existing Pricing Rule"), "fieldname": "pricing_rule", "options": "Pricing Rule", "read_only":true, "default": item.pricing_rule},
 				{"fieldtype": "Check", "label": __("Create New Pricing Rule"), "fieldname": "create_new", "depends_on":"pricing_rule"},
 				{"fieldtype": "Column Break", "fieldname": "col_break1"},
@@ -66,6 +67,11 @@ Customer Request`}
 			static: true
 		});
 		dialog.get_close_btn().show();
+
+		dialog.fields_dict.ignore_pricing_rule.input.onclick = function() {
+			frappe.model.set_value(item.doctype, item.name, "override_price_list_rate", 1);
+			dialog.cancel();
+		};
 
 		if (item.pricing_rule) {
 			frappe.call({
@@ -108,9 +114,18 @@ Customer Request`}
 			})
 		});
 
-		dialog.set_secondary_action(() => me.apply_price_list(item, true));
+		dialog.set_secondary_action(() => {
+			if (!item.override_price_list_rate) me.apply_price_list(item, true)
+		});
 
 		dialog.show();
+	},
+
+	override_price_list_rate: function(doc, cdt, cdn) {
+		var item = frappe.get_doc(cdt, cdn);
+		if (item.override_price_list_rate) {
+			frappe.model.set_value(item.doctype, item.name, "pricing_rule", "");
+		}
 	},
 
 	setup_queries: function() {
