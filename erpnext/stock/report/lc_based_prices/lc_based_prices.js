@@ -133,16 +133,32 @@ frappe.query_reports["LC Based Prices"] = {
 		return default_formatter(value, row, column, data, {css: style, link_href: link, link_target: "_blank"});
 	},
 	onChange: function(new_value, column, data, rowIndex) {
-		return frappe.call({
-			method: "erpnext.stock.report.lc_based_prices.lc_based_prices.set_item_pl_rate",
-			args: {
+		var method;
+		var args;
+
+		if (column.fieldname === "print_in_price_list") {
+			method = "frappe.client.set_value";
+			args = {
+				doctype: "Item",
+				name: data.item_code,
+				fieldname: 'print_in_price_list',
+				value: new_value
+			};
+		} else {
+			method = "erpnext.stock.report.lc_based_prices.lc_based_prices.set_item_pl_rate";
+			args = {
 				effective_date: frappe.query_report.get_filter_value("date"),
 				item_code: data['item_code'],
 				price_list: column.price_list,
 				price_list_rate: new_value,
 				is_diff: cint(column.is_diff),
 				filters: frappe.query_report.get_filter_values()
-			},
+			};
+		}
+
+		return frappe.call({
+			method: method,
+			args: args,
 			callback: function(r) {
 				if (r.message) {
 					frappe.query_report.datatable.datamanager.data[rowIndex] = r.message[1][0];

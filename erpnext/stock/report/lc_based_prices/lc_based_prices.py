@@ -15,7 +15,7 @@ def execute(filters=None):
 	filters.date = getdate(filters.date or nowdate())
 	filters.from_date = filters.date
 	filters.to_date = frappe.utils.add_days(filters.from_date, 4)
-	filters.standard_price_list = frappe.db.get_single_value("Selling Settings", "selling_price_list")
+	filters.standard_price_list = frappe.db.get_single_value("Selling Settings", "base_price_list")
 
 	stock_settings = frappe.get_single("Stock Settings")
 	filters.item_groups_excluded = [d.item_group for d in stock_settings.price_list_excluded or []]
@@ -55,6 +55,10 @@ def get_data(filters):
 		left join tabCountry c on c.name = item.country_of_origin
 		where disabled != 1 and is_sales_item = 1 {0}
 	""".format(item_conditions), filters, as_dict=1)
+
+	price_list_item_data = frappe.db.sql("""
+		select item_code from `tabPrice List Item` where parenttype = 'Price List' and parent = %s
+	""", selected_price_list or filters.standard_price_list)
 
 	po_data = frappe.db.sql("""
 		select
@@ -96,6 +100,10 @@ def get_data(filters):
 	items_map = {}
 	for d in item_data:
 		items_map[d.item_code] = d
+
+	for d in price_list_item_data:
+		if d.item_code in items_map:
+			items_map[d.item_code].in_price_list_item = 1
 
 	for d in po_data:
 		if d.item_code in items_map:
@@ -159,8 +167,8 @@ def get_price_lists(filters):
 	def get_additional_price_lists():
 		res = []
 		for i in range(3):
-			if filters.get('price_list_' + str(i)):
-				res.append(filters.get('price_list_' + str(i)))
+			if filters.get('price_list_' + str(i+1)):
+				res.append(filters.get('price_list_' + str(i+1)))
 		return res
 
 	if filters.filter_price_list_by == "All Price Lists":
@@ -218,10 +226,11 @@ def get_columns(filters, price_lists):
 	columns = [
 		{"fieldname": "item_code", "label": _("Item Code"), "fieldtype": "Link", "options": "Item", "width": 80},
 		{"fieldname": "item_name", "label": _("Item Name"), "fieldtype": "Data", "width": 150},
-		{"fieldname": "item_group", "label": _("Item Group"), "fieldtype": "Link", "options": "Item Group", "width": 120},
-		{"fieldname": "po_qty", "label": _("PO Qty"), "fieldtype": "Float", "width": 70},
+		{"fieldname": "print_in_price_list", "label": _("Print"), "fieldtype": "Check", "width": 50, "editable": True},
+		# {"fieldname": "item_group", "label": _("Item Group"), "fieldtype": "Link", "options": "Item Group", "width": 120},
+		{"fieldname": "po_qty", "label": _("PO Qty"), "fieldtype": "Float", "width": 70, "restricted": True},
 		{"fieldname": "po_lc_rate", "label": _("PO LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
-		{"fieldname": "actual_qty", "label": _("Stock Qty"), "fieldtype": "Float", "width": 80},
+		{"fieldname": "actual_qty", "label": _("Stock Qty"), "fieldtype": "Float", "width": 80, "restricted": True},
 		{"fieldname": "valuation_rate", "label": _("Stock LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
 		{"fieldname": "avg_lc_rate", "label": _("Avg LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
 		{"fieldname": "standard_rate", "label": _("Base Price"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 80,
@@ -265,7 +274,7 @@ def get_columns(filters, price_lists):
 @frappe.whitelist()
 def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_diff=False, filters={}):
 	effective_date = frappe.utils.getdate(effective_date)
-	standard_price_list = frappe.db.get_single_value("Selling Settings", "selling_price_list")
+	standard_price_list = frappe.db.get_single_value("Selling Settings", "base_price_list")
 
 	old_standard_rate = frappe.db.sql_list("""
 		select price_list_rate

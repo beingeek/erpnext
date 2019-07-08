@@ -477,6 +477,18 @@ def close_or_unclose_sales_orders(names, status):
 
 	frappe.local.message_log = []
 
+
+@frappe.whitelist()
+def approve_sales_orders(names):
+	if not frappe.has_permission("Sales Order", "write"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	names = json.loads(names)
+	for name in names:
+		docstatus = frappe.db.get_value("Sales Order", name, "docstatus")
+		if docstatus == 0:
+			frappe.set_value("Sales Order", name, "authorize", "Approved")
+
 @frappe.whitelist()
 def make_material_request(source_name, target_doc=None):
 	def postprocess(source, doc):
