@@ -56,9 +56,9 @@ def get_data(filters):
 		where disabled != 1 and is_sales_item = 1 {0}
 	""".format(item_conditions), filters, as_dict=1)
 
-	price_list_item_data = frappe.db.sql("""
-		select item_code from `tabPrice List Item` where parenttype = 'Price List' and parent = %s
-	""", selected_price_list or filters.standard_price_list)
+	#price_list_item_data = frappe.db.sql("""
+	#	select item_code from `tabPrice List Item` where parenttype = 'Price List' and parent = %s
+	#""", selected_price_list or filters.standard_price_list)
 
 	po_data = frappe.db.sql("""
 		select
@@ -101,9 +101,9 @@ def get_data(filters):
 	for d in item_data:
 		items_map[d.item_code] = d
 
-	for d in price_list_item_data:
-		if d.item_code in items_map:
-			items_map[d.item_code].in_price_list_item = 1
+	#for d in price_list_item_data:
+	#	if d.item_code in items_map:
+	#		items_map[d.item_code].in_price_list_item = 1
 
 	for d in po_data:
 		if d.item_code in items_map:
