@@ -224,7 +224,8 @@ def get_po_conditions(filters):
 
 def get_columns(filters, price_lists):
 	columns = [
-		{"fieldname": "item_code", "label": _("Item Code"), "fieldtype": "Link", "options": "Item", "width": 80},
+		{"fieldname": "item_code", "label": _("Item Code"), "fieldtype": "Link", "options": "Item", "width": 80,
+			"price_list_note": frappe.db.get_single_value("Stock Settings", "price_list_note")},
 		{"fieldname": "item_name", "label": _("Item Name"), "fieldtype": "Data", "width": 150},
 		{"fieldname": "print_in_price_list", "label": _("Print"), "fieldtype": "Check", "width": 50, "editable": True},
 		# {"fieldname": "item_group", "label": _("Item Group"), "fieldtype": "Link", "options": "Item Group", "width": 120},
