@@ -191,7 +191,9 @@ def get_price_lists(filters):
 		price_lists += additional_price_lists
 
 	if not additional_price_lists and not filters.selected_price_list:
-		price_lists += frappe.db.sql_list("select name from `tabPrice List` where selling = 1 {0}".format(price_list_filter_cond))
+		price_lists += frappe.db.sql_list(
+			"select name from `tabPrice List` where selling = 1 and exclude_from_lc_based_prices_report = 0 {0}"
+				.format(price_list_filter_cond))
 
 	return price_lists, filters.selected_price_list
 
@@ -241,17 +243,18 @@ def get_columns(filters, price_lists):
 
 	for price_list in sorted(price_lists):
 		if price_list != filters.standard_price_list:
-			columns.append({
-				"fieldname": "rate_diff_" + scrub(price_list),
-				"label": "+/-",
-				"fieldtype": "Currency",
-				"options": "Company:company:default_currency",
-				"width": 40,
-				"editable": True,
-				"price_list": price_list,
-				"is_diff": True,
-				"restricted": True
-			})
+			if not frappe.get_cached_value("Price List", price_list, 'prices_independent_of_base_price'):
+				columns.append({
+					"fieldname": "rate_diff_" + scrub(price_list),
+					"label": "+/-",
+					"fieldtype": "Currency",
+					"options": "Company:company:default_currency",
+					"width": 40,
+					"editable": True,
+					"price_list": price_list,
+					"is_diff": True,
+					"restricted": True
+				})
 			columns.append({
 				"fieldname": "rate_" + scrub(price_list),
 				"label": price_list,

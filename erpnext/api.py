@@ -253,31 +253,41 @@ def remove_item_codes_from_party_default_items(party_type, party, item_codes):
 	frappe.msgprint(_("Selected items removed from {0} Default Items").format(party_type))
 
 @frappe.whitelist()
-def update_special_price(customer, item_code, rate, valid_from, valid_upto, reason="", pricing_rule=None, create_new=True):
-	create_new = cint(create_new)
+def update_special_price(args):
+	from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rules, filter_pricing_rules
+	from erpnext.stock.get_item_details import process_args
 
-	if not pricing_rule or create_new:
+	if isinstance(args, string_types):
+		args = json.loads(args)
+
+	args.update(args['items'][0])
+	args = process_args(args)
+
+	pricing_rules = get_pricing_rules(args)
+	existing_pricing_rule = filter_pricing_rules(args, pricing_rules)
+
+	if not existing_pricing_rule or cint(args.create_new):
 		doc = frappe.new_doc("Pricing Rule")
 		doc.update({
 			"applicable_for": "Customer",
-			"customer": customer,
+			"customer": args.customer,
 			"apply_on": "Item Code",
-			"item_code": item_code,
-			"title": frappe.model.naming.make_autoname("{}/{}".format(customer, item_code) + "-.#####", "Pricing Rule"),
+			"item_code": args.item_code,
+			"title": frappe.model.naming.make_autoname("{}/{}".format(args.customer, args.item_code) + "-.#####", "Pricing Rule"),
 			"selling": 1
 		})
 
-		if pricing_rule:
-			priority = cint(frappe.db.get_value("Pricing Rule", pricing_rule, "priority")) + 1
+		if existing_pricing_rule:
+			priority = cint(frappe.db.get_value("Pricing Rule", existing_pricing_rule.name, "priority")) + 1
 			doc.priority = priority
 	else:
-		doc = frappe.get_doc("Pricing Rule", pricing_rule)
+		doc = frappe.get_doc("Pricing Rule", existing_pricing_rule.name)
 
 	doc.rate_or_discount = "Rate"
-	doc.rate = rate
-	doc.valid_from = valid_from
-	doc.valid_upto = valid_upto
-	doc.reason = reason
+	doc.rate = args.new_rate
+	doc.valid_from = args.valid_from
+	doc.valid_upto = args.valid_upto
+	doc.reason = args.reason
 
 	doc.margin_type = ""
 	doc.save()

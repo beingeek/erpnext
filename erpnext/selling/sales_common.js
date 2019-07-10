@@ -93,19 +93,14 @@ Customer Request`}
 		}
 
 		dialog.set_primary_action(__('Update Special Price'), () => {
-			var args = dialog.get_values();
+			var args = Object.assign({}, this._get_args(item), dialog.get_values());
+			args.create_new = cint(args.create_new);
+
 			dialog.hide();
 			return frappe.call({
 				method: "erpnext.api.update_special_price",
 				args: {
-					"customer": me.frm.doc.customer,
-					"item_code": item.item_code,
-					"rate": args.new_rate,
-					"valid_from": args.valid_from,
-					"valid_upto": args.valid_upto,
-					"reason": args.reason,
-					"pricing_rule": item.pricing_rule,
-					"create_new": cint(args.create_new)
+					args: args
 				},
 				freeze: true,
 				callback: function(r) {
