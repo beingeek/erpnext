@@ -40,6 +40,23 @@ def execute(filters=None):
 	return columns, res
 
 
+def get_printable_data(columns, data, filters):
+	item_groups = {}
+
+	data = filter(lambda d: d.print_in_price_list, data)
+
+	for i in range(len(data)):
+		if not data[i].item_code:
+			continue
+
+		group = item_groups.setdefault(data[i].item_group, [])
+		group.append(data[i])
+
+	for item_group, items in iteritems(item_groups):
+		item_groups[item_group] = sorted(items, key=lambda d: d.item_name)
+
+	return item_groups
+
 def get_data(filters):
 	conditions = get_item_conditions(filters, use_doc_name=False)
 	item_conditions = get_item_conditions(filters, use_doc_name=True)
@@ -232,11 +249,11 @@ def get_columns(filters, price_lists):
 		{"fieldname": "print_in_price_list", "label": _("Print"), "fieldtype": "Check", "width": 50, "editable": True},
 		# {"fieldname": "item_group", "label": _("Item Group"), "fieldtype": "Link", "options": "Item Group", "width": 120},
 		{"fieldname": "po_qty", "label": _("PO Qty"), "fieldtype": "Float", "width": 70, "restricted": True},
-		{"fieldname": "po_lc_rate", "label": _("PO LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
+		{"fieldname": "po_lc_rate", "label": _("PO LC"), "fieldtype": "Currency", "width": 70, "restricted": True},
 		{"fieldname": "actual_qty", "label": _("Stock Qty"), "fieldtype": "Float", "width": 80, "restricted": True},
-		{"fieldname": "valuation_rate", "label": _("Stock LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
-		{"fieldname": "avg_lc_rate", "label": _("Avg LC"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 70, "restricted": True},
-		{"fieldname": "standard_rate", "label": _("Base Price"), "fieldtype": "Currency", "options": "Company:company:default_currency", "width": 80,
+		{"fieldname": "valuation_rate", "label": _("Stock LC"), "fieldtype": "Currency", "width": 70, "restricted": True},
+		{"fieldname": "avg_lc_rate", "label": _("Avg LC"), "fieldtype": "Currency", "width": 70, "restricted": True},
+		{"fieldname": "standard_rate", "label": _("Base Price"), "fieldtype": "Currency", "width": 80,
 			"editable": True, "price_list": filters.standard_price_list, "is_base_price": True},
 		{"fieldname": "margin_rate", "label": _("% Margin"), "fieldtype": "Percent", "width": 80, "restricted": True},
 	]
@@ -248,7 +265,6 @@ def get_columns(filters, price_lists):
 					"fieldname": "rate_diff_" + scrub(price_list),
 					"label": "+/-",
 					"fieldtype": "Currency",
-					"options": "Company:company:default_currency",
 					"width": 40,
 					"editable": True,
 					"price_list": price_list,
@@ -259,7 +275,6 @@ def get_columns(filters, price_lists):
 				"fieldname": "rate_" + scrub(price_list),
 				"label": price_list,
 				"fieldtype": "Currency",
-				"options": "Company:company:default_currency",
 				"width": 70,
 				"editable": True,
 				"price_list": price_list,

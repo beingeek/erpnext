@@ -1,4 +1,15 @@
 <style>
+@media screen {
+	.print-format {
+		padding: 8mm;
+	}
+}
+@media print {
+	.print-format {
+		padding: 0mm !important;
+	}
+}
+
 .print-format {
 	font-size: 9pt !important;
 }
@@ -6,19 +17,10 @@
     border-right: 1px #a1a8ab solid !important;
 }
 .print-format td, .print-format th {
-    padding: 5px !important;
+    padding: 3px !important;
 	vertical-align:middle !important;
 }
 </style>
-
-<h2 class="text-center" style="margin-top:0">
-    {% if (filters.customer_name) { %}
-        {%= filters.customer_name %} —
-	{% } else if(filters.customer) { %}
-        {%= filters.customer %} —
-	{% } %}
-    Price List: {%= __("From") %} {%= frappe.datetime.str_to_user(filters.date) %}
-</h2>
 
 {%
 
@@ -45,10 +47,18 @@ $.each(item_groups || {}, function(item_group, items) {
 
 %}
 
-<div>{%= columns[0].price_list_note %}</div>
+<div style="font-size: 8pt;">{%= columns[0].price_list_note %}</div>
 
-<table class="table table-bordered">
+<table class="table table-bordered" style="margin-top: 3px;">
 	<thead>
+        <tr><th class="text-center" style="font-size: 10pt;" colspan="10">
+            {% if (filters.customer_name) { %}
+                {%= filters.customer_name %} —
+            {% } else if(filters.customer) { %}
+                {%= filters.customer %} —
+            {% } %}
+            Price List: {%= __("From") %} {%= new frappe.datetime.datetime(filters.date).format("ddd, D MMMM, YYYY") %}
+        </th></tr>
 		<tr>
             <th style="width: 38%">{%= __("Product") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Box") %}</th>
@@ -66,7 +76,7 @@ $.each(item_groups || {}, function(item_group, items) {
 	<tbody>
     {% $.each(item_groups || {}, function(item_group, items) { %}
         <tr>
-            <td colspan="10" class="text-center" style="font-size: 11pt"><strong>{%= item_group %}</strong></td>
+            <td colspan="10" class="text-center" style="font-size: 9pt"><strong>{%= item_group %}</strong></td>
         </tr>
 
         {% $.each(items || [], function(i, d) { %}

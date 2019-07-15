@@ -459,6 +459,9 @@ def get_price_list_rate(args, item_doc, out):
 
 def insert_item_price(args):
 	"""Insert Item Price if Price List and Price List Rate are specified and currency is the same"""
+	if cint(args.is_return):
+		return
+
 	if frappe.db.get_value("Price List", args.price_list, "currency", cache=True) == args.currency \
 		and cint(frappe.db.get_single_value("Stock Settings", "auto_insert_price_list_rate_if_missing")):
 		if frappe.has_permission("Item Price", "write"):
@@ -515,7 +518,7 @@ def get_item_price(args, item_code, ignore_party=False):
 		conditions += """ and %(transaction_date)s between
 			ifnull(valid_from, '2000-01-01') and ifnull(valid_upto, '2500-12-31')"""
 
-	return frappe.db.sql(""" select name, price_list_rate, uom
+	return frappe.db.sql(""" select name, price_list_rate, uom, ifnull(valid_from, '2000-01-01') as valid_from
 		from `tabItem Price` {conditions}
 		order by uom desc, min_qty desc """.format(conditions=conditions), args)
 
@@ -543,7 +546,7 @@ def get_price_list_rate_for(args, item_code):
 			"transaction_date": args.get('delivery_date') or args.get('transaction_date'),
 	}
 
-	item_price_data = 0
+	item_price_data = None
 	price_list_rate = get_item_price(item_price_args, item_code)
 	if price_list_rate:
 		desired_qty = args.get("qty")
@@ -562,6 +565,12 @@ def get_price_list_rate_for(args, item_code):
 			item_price_data = general_price_list_rate
 
 	if item_price_data:
+		if args.doctype == "Purchase Order":
+			if frappe.utils.date_diff(frappe.utils.get_datetime(), frappe.utils.getdate(item_price_data[0][3])) > 14:
+				frappe.msgprint(
+					"Price for Item {0} has not been updated for more than 2 weeks. Please make sure the price is still valid."
+						.format(item_code))
+
 		if item_price_data[0][2] == args.get("uom"):
 			return item_price_data[0][1]
 		elif not args.get('price_list_uom_dependant'):
