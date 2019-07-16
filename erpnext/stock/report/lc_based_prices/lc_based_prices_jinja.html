@@ -21,7 +21,9 @@
 <body>
 	<div class="print-format-gutter">
 	    <div class="print-format">
-            <div class="letter-head">{{ letter_head }}</div>
+            <div id="header-html" class="hidden-pdf">
+                <div class="letter-head" style="padding-top:5mm;">{{ letter_head }}</div>
+            </div>
 
             {% if print_settings.repeat_header_footer %}
             <div id="footer-html" class="visible-pdf">
@@ -68,7 +70,7 @@
             }
             </style>
 
-            <div style="font-size: 8pt;">{{ data[0].price_list_note if data else "" }}</div>
+            <div style="font-size: 8pt;">{{ columns[1].price_list_note or "" }}</div>
 
             <table class="table table-bordered" style="margin-top: 3px;">
                 <thead>
@@ -97,7 +99,7 @@
                 <tbody>
                 {% for item_group, items in item_groups.iteritems() %}
                     <tr>
-                        <td colspan="10" class="text-center" style="font-size: 9pt"><strong>{{ item_group }}</strong></td>
+                        <th colspan="10" class="text-center" style="font-size: 9pt"><strong>{{ item_group }}</strong></th>
                     </tr>
 
                     {% for d in items %}
