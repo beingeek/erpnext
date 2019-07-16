@@ -337,10 +337,12 @@ def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_
 def _set_item_pl_rate(effective_date, item_code, price_list, price_list_rate):
 	from frappe.model.utils import get_fetch_values
 
+	effective_date = frappe.utils.getdate(effective_date)
+
 	item_prices = frappe.db.sql("""
 		select name, valid_from, valid_upto
 		from `tabItem Price`
-		where selling = 1 and item_code = %s and price_list = %s
+		where item_code = %s and price_list = %s
 		order by valid_from
 	""", [item_code, price_list], as_dict=1)
 
@@ -371,3 +373,5 @@ def _set_item_pl_rate(effective_date, item_code, price_list, price_list_rate):
 	before_effective_date = frappe.utils.add_days(effective_date, -1)
 	if past_item_price and past_item_price.valid_upto != before_effective_date:
 		frappe.set_value("Item Price", past_item_price.name, 'valid_upto', before_effective_date)
+
+	frappe.msgprint(_("Price updated for Item {0} in Price List {1}").format(item_code, price_list), alert=1)

@@ -471,12 +471,8 @@ def insert_item_price(args):
 			item_price = frappe.db.get_value('Item Price',
 				{'item_code': args.item_code, 'price_list': args.price_list, 'currency': args.currency},
 				['name', 'price_list_rate'], as_dict=1)
-			if item_price and item_price.name:
-				if item_price.price_list_rate != price_list_rate:
-					frappe.db.set_value('Item Price', item_price.name, "price_list_rate", price_list_rate)
-					frappe.msgprint(_("Item Price updated for {0} in Price List {1}").format(args.item_code,
-						args.price_list), alert=True)
-			else:
+
+			if not item_price:
 				item_price = frappe.get_doc({
 					"doctype": "Item Price",
 					"price_list": args.price_list,
@@ -565,8 +561,9 @@ def get_price_list_rate_for(args, item_code):
 			item_price_data = general_price_list_rate
 
 	if item_price_data:
-		if args.doctype == "Purchase Order":
-			if frappe.utils.date_diff(frappe.utils.get_datetime(), frappe.utils.getdate(item_price_data[0][3])) > 14:
+		if args.doctype == "Purchase Order" and not args.skip_old_price_alert:
+			if args.get('transaction_date') and frappe.utils.date_diff(frappe.utils.getdate(args.get('transaction_date')),
+					frappe.utils.getdate(item_price_data[0][3])) > 14:
 				frappe.msgprint(
 					"Price for Item {0} has not been updated for more than 2 weeks. Please make sure the price is still valid."
 						.format(item_code))

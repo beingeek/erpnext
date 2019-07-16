@@ -566,6 +566,9 @@ class BuyingController(StockController):
 		if self.get('is_return'):
 			return
 
+		if self.doctype == 'Purchase Order':
+			self.update_item_prices()
+
 		if self.doctype in ['Purchase Receipt', 'Purchase Invoice']:
 			field = 'purchase_invoice' if self.doctype == 'Purchase Invoice' else 'purchase_receipt'
 
@@ -597,6 +600,36 @@ class BuyingController(StockController):
 				})
 
 				validate_expense_against_budget(args)
+
+	def update_item_prices(self):
+		from erpnext.stock.get_item_details import get_price_list_rate, process_args
+		from erpnext.stock.report.lc_based_prices.lc_based_prices import _set_item_pl_rate
+
+		parent_dict = frappe._dict({"skip_old_price_alert": 1})
+		for fieldname in self.meta.get_valid_columns():
+			parent_dict[fieldname] = self.get(fieldname)
+
+		if self.doctype in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"]:
+			document_type = "{} Item".format(self.doctype)
+			parent_dict.update({"document_type": document_type})
+
+		for item in self.get("items"):
+			if item.get("item_code"):
+				args = parent_dict.copy()
+				args.update(item.as_dict())
+				args = process_args(args)
+
+				args["doctype"] = self.doctype
+				args["name"] = self.name
+
+				if not args.get("transaction_date"):
+					args["transaction_date"] = args.get("posting_date")
+
+				item_price_data = frappe._dict()
+				get_price_list_rate(args, frappe.get_cached_doc("Item", item.item_code), item_price_data)
+
+				if flt(item.rate) and abs(flt(item_price_data.price_list_rate) - flt(item.rate)) > 0.005:
+					_set_item_pl_rate(args["transaction_date"], item.item_code, self.buying_price_list, flt(item.rate))
 
 	def process_fixed_asset(self):
 		if self.doctype == 'Purchase Invoice' and not self.update_stock:
