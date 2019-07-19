@@ -182,7 +182,7 @@ class ReceivablePayableReport(object):
 		return_entries = self.get_return_entries(args.get("party_type"))
 
 		data = []
-		self.pdc_details = get_pdc_details(args.get("party_type"), self.filters.report_date)
+		self.pdc_details = get_pdc_details(args.get("party_type"), self.filters.report_date, self.filters.account)
 		gl_entries_data = self.get_entries_till(self.filters.report_date, args.get("party_type"))
 
 		if gl_entries_data:
@@ -342,7 +342,7 @@ class ReceivablePayableReport(object):
 
 			row[-1]=row[-2]=row[-3]=row[-4]=0
 
-		if self.filters.get(scrub(args.get("party_type"))):
+		if self.filters.get(scrub(args.get("party_type"))) or self.filters.get("account"):
 			row.append(gle.account_currency)
 		else:
 			row.append(self.company_currency)
@@ -446,7 +446,7 @@ class ReceivablePayableReport(object):
 	def get_gl_entries(self, party_type, date=None, for_future=False):
 		conditions, values = self.prepare_conditions(party_type)
 
-		if self.filters.get(scrub(party_type)):
+		if self.filters.get(scrub(party_type)) or self.filters.get("account"):
 			select_fields = "sum(debit_in_account_currency) as debit, sum(credit_in_account_currency) as credit"
 		else:
 			select_fields = "sum(debit) as debit, sum(credit) as credit"
@@ -537,9 +537,13 @@ class ReceivablePayableReport(object):
 					where supplier_group=%s)""")
 				values.append(self.filters.get("supplier_group"))
 
-		accounts = [d.name for d in frappe.get_all("Account",
-			filters={"account_type": account_type, "company": self.filters.company})]
-		conditions.append("account in (%s)" % ','.join(['%s'] *len(accounts)))
+		if self.filters.account:
+			accounts = [self.filters.account]
+		else:
+			accounts = [d.name for d in frappe.get_all("Account",
+				filters={"account_type": account_type, "company": self.filters.company})]
+
+		conditions.append("account in (%s)" % ','.join(['%s'] * len(accounts)))
 		values += accounts
 
 		return " and ".join(conditions), values
@@ -571,7 +575,7 @@ class ReceivablePayableReport(object):
 		(tuple(voucher_nos)), as_dict = 1)
 
 		for d in payment_terms_details:
-			if self.filters.get("customer") and d.currency == d.party_account_currency:
+			if (self.filters.get("customer") or self.filters.get("account")) and d.currency == d.party_account_currency:
 				payment_term_amount = d.payment_amount
 			else:
 				payment_term_amount = flt(flt(d.payment_amount) * flt(d.conversion_rate), self.currency_precision)
@@ -628,7 +632,7 @@ def get_ageing_data(first_range, second_range, third_range, age_as_on, entry_dat
 
 	return [age] + outstanding_range
 
-def get_pdc_details(party_type, report_date):
+def get_pdc_details(party_type, report_date, account=None):
 	pdc_details = frappe._dict()
 	pdc_via_pe = frappe.db.sql("""
 		select
@@ -647,7 +651,7 @@ def get_pdc_details(party_type, report_date):
 	for pdc in pdc_via_pe:
 			pdc_details.setdefault((pdc.invoice_no, pdc.party), []).append(pdc)
 
-	if scrub(party_type):
+	if scrub(party_type) or account:
 		amount_field = ("jea.debit_in_account_currency"
 			if party_type == 'Supplier' else "jea.credit_in_account_currency")
 	else:

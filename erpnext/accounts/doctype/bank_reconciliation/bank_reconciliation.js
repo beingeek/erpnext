@@ -4,6 +4,19 @@
 frappe.ui.form.on("Bank Reconciliation", {
 	setup: function(frm) {
 		frm.add_fetch("bank_account", "account_currency", "account_currency");
+
+		frm.doc.bank_account = get_url_arg("account");
+		var date = get_url_arg("date");
+		if (date) {
+			frm.doc.to_date = date;
+			frm.doc.from_date = new frappe.datetime.datetime(date).moment.startOf("month").format();
+
+			frm.events.get_payment_entries(frm);
+		} else {
+			frm.set_value("from_date", frappe.datetime.month_start());
+			frm.set_value("to_date", frappe.datetime.month_end());
+		}
+		//frm.trigger("item_code");
 	},
 
 	onload: function(frm) {
@@ -20,9 +33,6 @@ frappe.ui.form.on("Bank Reconciliation", {
 				}
 			};
 		});
-
-		frm.set_value("from_date", frappe.datetime.month_start());
-		frm.set_value("to_date", frappe.datetime.month_end());
 	},
 
 	refresh: function(frm) {

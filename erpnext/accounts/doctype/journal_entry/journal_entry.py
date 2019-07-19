@@ -23,7 +23,6 @@ class JournalEntry(AccountsController):
 	def validate(self):
 		if not self.is_opening:
 			self.is_opening='No'
-		self.clearance_date = None
 
 		self.validate_party()
 		self.validate_order_entries()
