@@ -71,7 +71,7 @@ class BankReconciliation(Document):
 			        {"account":self.bank_account, "from":self.from_date, "to":self.to_date}, as_dict=1)
 
 		entries = sorted(list(payment_entries)+list(journal_entries+list(pos_entries)),
-			key=lambda k: k['posting_date'] or getdate(nowdate()))
+			key=lambda k: k['cheque_date'] or k['posting_date'] or getdate(nowdate()))
 
 		self.set('payment_entries', [])
 		self.total_amount = 0.0

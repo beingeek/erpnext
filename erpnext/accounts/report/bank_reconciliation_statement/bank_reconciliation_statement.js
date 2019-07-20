@@ -35,7 +35,6 @@ frappe.query_reports["Bank Reconciliation Statement"] = {
 		},
 	],
 	formatter: function(value, row, column, data, default_formatter) {
-		var original_value = value;
 		var style = {};
 		var link;
 

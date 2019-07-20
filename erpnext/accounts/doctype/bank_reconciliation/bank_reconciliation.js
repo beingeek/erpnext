@@ -13,18 +13,16 @@ frappe.ui.form.on("Bank Reconciliation", {
 
 			frm.events.get_payment_entries(frm);
 		} else {
-			frm.set_value("from_date", frappe.datetime.month_start());
-			frm.set_value("to_date", frappe.datetime.month_end());
+			frm.doc.from_date = frappe.datetime.month_start();
+			frm.doc.to_date = frappe.datetime.month_end();
 		}
-		//frm.trigger("item_code");
+
+		let default_bank_account =  frappe.defaults.get_user_default("Company")?
+			locals[":Company"][frappe.defaults.get_user_default("Company")]["default_bank_account"]: "";
+		frm.doc.bank_account = default_bank_account;
 	},
 
 	onload: function(frm) {
-
-		let default_bank_account =  frappe.defaults.get_user_default("Company")? 
-			locals[":Company"][frappe.defaults.get_user_default("Company")]["default_bank_account"]: "";
-		frm.set_value("bank_account", default_bank_account);
-
 		frm.set_query("bank_account", function() {
 			return {
 				"filters": {

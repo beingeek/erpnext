@@ -30,10 +30,16 @@ $.extend(erpnext, {
 		if(cur_frm.fields_dict.company) {
 			var companies = Object.keys(locals[":Company"] || {});
 			if(companies.length === 1) {
-				if(!cur_frm.doc.company) cur_frm.set_value("company", companies[0]);
+				if(!cur_frm.doc.company) {
+					cur_frm.doc.company = companies[0];
+					cur_frm.trigger("company");
+				}
 				cur_frm.toggle_display("company", false);
 			} else if(erpnext.last_selected_company) {
-				if(!cur_frm.doc.company) cur_frm.set_value("company", erpnext.last_selected_company);
+				if(!cur_frm.doc.company) {
+					cur_frm.doc.company = erpnext.last_selected_company;
+					cur_frm.trigger("company");
+				}
 			}
 		}
 	},

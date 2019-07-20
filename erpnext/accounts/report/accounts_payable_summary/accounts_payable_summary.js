@@ -81,6 +81,15 @@ frappe.query_reports["Accounts Payable Summary"] = {
 		},
 	],
 
+	formatter: function(value, row, column, data, default_formatter) {
+		var link;
+		if (data && column.fieldname == 'advance_amount' && flt(value)) {
+			link = "desk#Form/Payment Reconciliation/Payment Reconciliation?party_type=Supplier&party=" + data['Supplier'];
+		}
+
+		return default_formatter(value, row, column, data, {link_href: link, link_target: "_blank"});
+	},
+
 	onload: function(report) {
 		report.page.add_inner_button(__("Accounts Payable"), function() {
 			var filters = report.get_values();
