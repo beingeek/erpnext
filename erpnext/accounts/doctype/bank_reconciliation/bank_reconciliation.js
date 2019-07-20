@@ -9,7 +9,7 @@ frappe.ui.form.on("Bank Reconciliation", {
 		var date = get_url_arg("date");
 		if (date) {
 			frm.doc.to_date = date;
-			frm.doc.from_date = new frappe.datetime.datetime(date).moment.startOf("month").format();
+			// frm.doc.from_date = new frappe.datetime.datetime(date).moment.startOf("month").format();
 
 			frm.events.get_payment_entries(frm);
 		} else {

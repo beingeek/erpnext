@@ -8,6 +8,9 @@ frappe.ui.form.on('Payment Entry', {
 			if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
 			if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
 		}
+
+		$(".control-value", frm.fields_dict.unallocated_advance_payments.$input_wrapper)
+			.wrap("<a href='#' id='unallocated_advance_payments_link' target='_blank'></a>");
 	},
 
 	setup: function(frm) {
@@ -294,6 +297,8 @@ frappe.ui.form.on('Payment Entry', {
 								}
 							},
 							() => frm.set_value("party_balance", r.message.party_balance),
+							() => frm.set_value("unallocated_advance_payments", r.message.unallocated_advance_payments),
+							() => $("#unallocated_advance_payments_link").attr("href", "desk#Form/Payment Reconciliation/Payment Reconciliation?party_type="+frm.doc.party_type+"&party=" + frm.doc.party),
 							() => frm.set_value("party_name", r.message.party_name),
 							() => frm.events.get_outstanding_documents(frm),
 							() => frm.events.hide_unhide_fields(frm),

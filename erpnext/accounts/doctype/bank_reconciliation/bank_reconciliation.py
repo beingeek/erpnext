@@ -13,14 +13,17 @@ form_grid_templates = {
 
 class BankReconciliation(Document):
 	def get_payment_entries(self):
-		if not (self.bank_account and self.from_date and self.to_date):
-			msgprint("Bank Account, From Date and To Date are Mandatory")
+		if not (self.bank_account):
+			msgprint("Bank Account is Mandatory")
 			return
 
 		condition = ""
 		if not self.include_reconciled_entries:
-			condition = "and (clearance_date is null or clearance_date='0000-00-00')"
-
+			condition = " and (clearance_date is null or clearance_date='0000-00-00')"
+		if self.from_date:
+			condition += " and posting_date >= %(from)s"
+		if self.to_date:
+			condition += " and posting_date <= %(to)s"
 
 		journal_entries = frappe.db.sql("""
 			select 
@@ -31,11 +34,14 @@ class BankReconciliation(Document):
 			from
 				`tabJournal Entry` t1, `tabJournal Entry Account` t2
 			where
-				t2.parent = t1.name and t2.account = %s and t1.docstatus=1
-				and t1.posting_date >= %s and t1.posting_date <= %s 
+				t2.parent = t1.name and t2.account = %(account)s and t1.docstatus=1
 				and ifnull(t1.is_opening, 'No') = 'No' {0}
 			order by t1.posting_date ASC, t1.name DESC
-		""".format(condition), (self.bank_account, self.from_date, self.to_date), as_dict=1)
+		""".format(condition), {
+			"account": self.bank_account,
+			"from": self.from_date,
+			"to": self.to_date
+		}, as_dict=1)
 
 		payment_entries = frappe.db.sql("""
 			select 
@@ -47,8 +53,7 @@ class BankReconciliation(Document):
 				if(paid_to=%(account)s, paid_to_account_currency, paid_from_account_currency) as account_currency
 			from `tabPayment Entry`
 			where
-				(paid_from=%(account)s or paid_to=%(account)s) and docstatus=1
-				and posting_date >= %(from)s and posting_date <= %(to)s {0}
+				(paid_from=%(account)s or paid_to=%(account)s) and docstatus=1 {0}
 			order by 
 				posting_date ASC, name DESC
 		""".format(condition), 
@@ -64,7 +69,7 @@ class BankReconciliation(Document):
 				from `tabSales Invoice Payment` sip, `tabSales Invoice` si, `tabAccount` account
 				where
 					sip.account=%(account)s and si.docstatus=1 and sip.parent = si.name
-					and account.name = sip.account and si.posting_date >= %(from)s and si.posting_date <= %(to)s {0}
+					and account.name = sip.account {0}
 				order by
 					si.posting_date ASC, si.name DESC
 			""".format(condition),
