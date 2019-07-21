@@ -33,6 +33,7 @@ frappe.query_reports["LC Based Prices"] = {
 			label: __("Item Group"),
 			fieldtype: "Link",
 			options:"Item Group",
+			default:"Vegetables"
 		},
 		{
 			fieldname: "brand",
@@ -73,6 +74,13 @@ frappe.query_reports["LC Based Prices"] = {
 			fieldtype: "Select",
 			options:"Enabled\nDisabled\nAll",
 			default:"Enabled"
+		},
+		{
+			fieldname: "buying_selling",
+			label: __("Buying Or Selling Prices"),
+			fieldtype: "Select",
+			options:"Selling\nBuying\nBoth",
+			default:"Selling"
 		},
 		{
 			fieldname: "price_list_1",

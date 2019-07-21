@@ -15,7 +15,11 @@ def execute(filters=None):
 	filters.date = getdate(filters.date or nowdate())
 	filters.from_date = filters.date
 	filters.to_date = frappe.utils.add_days(filters.from_date, 4)
-	filters.standard_price_list = frappe.db.get_single_value("Selling Settings", "base_price_list")
+
+	if filters.buying_selling == "Selling":
+		filters.standard_price_list = frappe.db.get_single_value("Selling Settings", "base_price_list")
+	elif filters.buying_selling == "Buying":
+		filters.standard_price_list = None
 
 	stock_settings = frappe.get_single("Stock Settings")
 	filters.item_groups_excluded = [d.item_group for d in stock_settings.price_list_excluded or []]
@@ -181,19 +185,19 @@ def get_data(filters):
 
 
 def get_price_lists(filters):
-	def get_additional_price_lists():
-		res = []
-		for i in range(3):
-			if filters.get('price_list_' + str(i+1)):
-				res.append(filters.get('price_list_' + str(i+1)))
-		return res
-
 	if filters.filter_price_list_by == "All Price Lists":
 		price_list_filter_cond = ""
 	elif filters.filter_price_list_by == "Disabled":
 		price_list_filter_cond = " and enabled = 0"
 	else:
 		price_list_filter_cond = " and enabled = 1"
+
+	if filters.buying_selling == "Selling":
+		buying_selling_cond = " and selling = 1"
+	elif filters.buying_selling == "Buying":
+		buying_selling_cond = " and buying = 1"
+	else:
+		buying_selling_cond = ""
 
 	price_lists = [filters.standard_price_list]
 
@@ -203,14 +207,21 @@ def get_price_lists(filters):
 	if filters.selected_price_list:
 		price_lists.append(filters.selected_price_list)
 
+	def get_additional_price_lists():
+		res = []
+		for i in range(3):
+			if filters.get('price_list_' + str(i+1)):
+				res.append(filters.get('price_list_' + str(i+1)))
+		return res
+
 	additional_price_lists = get_additional_price_lists()
 	if additional_price_lists:
 		price_lists += additional_price_lists
 
 	if not additional_price_lists and not filters.selected_price_list:
 		price_lists += frappe.db.sql_list(
-			"select name from `tabPrice List` where selling = 1 and exclude_from_lc_based_prices_report = 0 {0}"
-				.format(price_list_filter_cond))
+			"select name from `tabPrice List` where exclude_from_lc_based_prices_report = 0 {0} {1}"
+				.format(price_list_filter_cond, buying_selling_cond))
 
 	return price_lists, filters.selected_price_list
 
@@ -253,14 +264,18 @@ def get_columns(filters, price_lists):
 		{"fieldname": "actual_qty", "label": _("Stock Qty"), "fieldtype": "Float", "width": 80, "restricted": True},
 		{"fieldname": "valuation_rate", "label": _("Stock LC"), "fieldtype": "Currency", "width": 70, "restricted": True},
 		{"fieldname": "avg_lc_rate", "label": _("Avg LC"), "fieldtype": "Currency", "width": 70, "restricted": True},
-		{"fieldname": "standard_rate", "label": _("Base Price"), "fieldtype": "Currency", "width": 80,
-			"editable": True, "price_list": filters.standard_price_list, "is_base_price": True},
-		{"fieldname": "margin_rate", "label": _("% Margin"), "fieldtype": "Percent", "width": 80, "restricted": True},
 	]
+
+	if filters.standard_price_list:
+		columns += [
+			{"fieldname": "standard_rate", "label": _("Base Price"), "fieldtype": "Currency", "width": 80,
+				"editable": True, "price_list": filters.standard_price_list, "is_base_price": True},
+			{"fieldname": "margin_rate", "label": _("% Margin"), "fieldtype": "Percent", "width": 80, "restricted": True},
+		]
 
 	for price_list in sorted(price_lists):
 		if price_list != filters.standard_price_list:
-			if not frappe.get_cached_value("Price List", price_list, 'prices_independent_of_base_price'):
+			if filters.standard_price_list and not frappe.get_cached_value("Price List", price_list, 'prices_independent_of_base_price'):
 				columns.append({
 					"fieldname": "rate_diff_" + scrub(price_list),
 					"label": "+/-",
