@@ -298,7 +298,7 @@ frappe.ui.form.on('Payment Entry', {
 							},
 							() => frm.set_value("party_balance", r.message.party_balance),
 							() => frm.set_value("unallocated_advance_payments", r.message.unallocated_advance_payments),
-							() => $("#unallocated_advance_payments_link").attr("href", "desk#Form/Payment Reconciliation/Payment Reconciliation?party_type="+frm.doc.party_type+"&party=" + frm.doc.party),
+							() => $("a", frm.fields_dict.unallocated_advance_payments.$input_wrapper).attr("href", "desk#Form/Payment Reconciliation/Payment Reconciliation?party_type="+frm.doc.party_type+"&party=" + frm.doc.party),
 							() => frm.set_value("party_name", r.message.party_name),
 							() => frm.events.get_outstanding_documents(frm),
 							() => frm.events.hide_unhide_fields(frm),

@@ -56,23 +56,31 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 			if (checked_new_item && checked_new_item.length) {
 				var new_item_code = checked_new_item[0].doc.new_item_code;
 				$.each(checked || [], function(i, row) {
-					row.doc.new_item_code = new_item_code;
-					row.refresh_field("new_item_code");
+					if (me.is_row_editable(row.doc)) {
+						row.doc.new_item_code = new_item_code;
+						row.refresh_field("new_item_code");
+					}
 				});
 			}
 
 			$.each(unchecked || [], function(i, row) {
-				row.doc.new_item_code = "";
-				row.refresh_field("new_item_code");
+				if (me.is_row_editable(row.doc)) {
+					row.doc.new_item_code = "";
+					row.refresh_field("new_item_code");
+				}
 			});
 
 			me.calculate_totals();
 		});
 	},
 
+	is_row_editable: function(row) {
+		return Boolean(row.docstatus === 0 && row.dt === "Sales Order");
+	},
+
 	set_row_editable: function(grid_row, e) {
 		if(grid_row) {
-			var editable = Boolean(grid_row.doc.docstatus === 0 && grid_row.doc.dt === "Sales Order");
+			var editable = this.is_row_editable(grid_row.doc);
 
 			if (!editable) {
 				$("input", grid_row.wrapper).prop('disabled', !editable);
@@ -81,7 +89,7 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 					$("input", this.frm.open_grid_row().grid_form.wrapper).prop('disabled', !editable);
 				}
 			}
-			$("[data-fieldname]:not([data-fieldname='']), input", grid_row.wrapper).css("background", editable ? "inherit" : "#FFADB6");
+			$("input, .static-area, a", grid_row.wrapper).css("color", editable ? "inherit" : "red");
 
 			if (e && !editable) {
 				e.preventDefault();
@@ -118,13 +126,16 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 	},
 
 	new_item_code: function(frm, cdt, cdn) {
+		var me = this;
 		var grid_row = this.frm.fields_dict['sales_orders'].grid.grid_rows_by_docname[cdn];
 		if (grid_row && grid_row.doc.__checked) {
 			var checked_rows = this.frm.fields_dict['sales_orders'].grid.grid_rows
 				.filter(row => row.doc.__checked && row.doc.name != cdn);
 
 			$.each(checked_rows || [], function(i, d) {
-				d.doc.new_item_code = grid_row.doc.new_item_code;
+				if (me.is_row_editable(d.doc)) {
+					d.doc.new_item_code = grid_row.doc.new_item_code;
+				}
 			});
 
 			this.frm.refresh_field("sales_orders");
