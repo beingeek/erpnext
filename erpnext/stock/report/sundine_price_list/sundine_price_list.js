@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["LC Based Prices"] = {
+frappe.query_reports["Sundine Price List"] = {
 	filters: [
 		{
 			fieldname: "date",
