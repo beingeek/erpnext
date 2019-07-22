@@ -14,7 +14,7 @@ import json
 
 class QtyAdjust(Document):
 	def qty_adjust_sales_orders(self):
-		sales_orders = filter(lambda d: not d.docstatus and d.dt == "Sales Order", self.sales_orders)
+		sales_orders = filter(lambda d: d.docstatus == 0 and d.dt == "Sales Order", self.sales_orders)
 
 		# Validate
 		for d in sales_orders:
