@@ -185,7 +185,7 @@ def get_data(filters):
 
 
 def get_price_lists(filters):
-	if filters.filter_price_list_by == "All Price Lists":
+	if filters.filter_price_list_by == "All":
 		price_list_filter_cond = ""
 	elif filters.filter_price_list_by == "Disabled":
 		price_list_filter_cond = " and enabled = 0"

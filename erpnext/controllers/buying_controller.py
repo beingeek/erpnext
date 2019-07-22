@@ -603,7 +603,7 @@ class BuyingController(StockController):
 
 	def update_item_prices(self):
 		from erpnext.stock.get_item_details import get_price_list_rate, process_args
-		from erpnext.stock.report.lc_based_prices.lc_based_prices import _set_item_pl_rate
+		from erpnext.stock.report.sundine_price_list.sundine_price_list import _set_item_pl_rate
 
 		parent_dict = frappe._dict({"skip_old_price_alert": 1})
 		for fieldname in self.meta.get_valid_columns():

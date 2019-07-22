@@ -153,7 +153,7 @@ frappe.query_reports["Sundine Price List"] = {
 				value: new_value
 			};
 		} else {
-			method = "erpnext.stock.report.lc_based_prices.lc_based_prices.set_item_pl_rate";
+			method = "erpnext.stock.report.sundine_price_list.sundine_price_list.set_item_pl_rate";
 			args = {
 				effective_date: frappe.query_report.get_filter_value("date"),
 				item_code: data['item_code'],
@@ -186,10 +186,33 @@ frappe.query_reports["Sundine Price List"] = {
 			}
 		});
 	},
-	open_po_list: function(item_code) {
-		frappe.route_options = {
-			"item_code": item_code
-		};
-		frappe.set_route("query-report", "Purchase Order Items To Be Received");
+	onload: function(listview) {
+		listview.page.add_menu_item(__("Setup Auto Email"), function() {
+			var customer = frappe.query_report.get_filter_value("customer");
+			var title = "Price List";
+			if (customer) {
+				title = title + " - " + customer;
+			}
+
+			frappe.model.with_doctype('Auto Email Report', function() {
+				var doc = frappe.model.get_new_doc('Auto Email Report');
+				doc = Object.assign(doc,{
+					'report': frappe.query_report.report_name,
+					'title': title,
+					'from_date_field': 'date',
+					'to_date_field': 'date',
+					'dynamic_date_period': 'Daily',
+					'day_of_week': 'Tuesday',
+					'frequency': 'Weekly',
+					'format': 'PDF',
+					'filters': JSON.stringify(frappe.query_report.get_filter_values()),
+				});
+
+				frappe.run_serially([
+					() => frappe.set_route('Form', 'Auto Email Report', doc.name),
+					() => cur_frm.set_value('filters', JSON.stringify(frappe.query_report.get_filter_values()))
+				]);
+			});
+		});
 	}
 };
