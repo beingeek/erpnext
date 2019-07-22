@@ -192,12 +192,17 @@ def get_price_lists(filters):
 	else:
 		price_list_filter_cond = " and enabled = 1"
 
-	if filters.buying_selling == "Selling":
+	show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
+	show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
+	if not show_amounts:
 		buying_selling_cond = " and selling = 1"
-	elif filters.buying_selling == "Buying":
-		buying_selling_cond = " and buying = 1"
 	else:
-		buying_selling_cond = ""
+		if filters.buying_selling == "Selling":
+			buying_selling_cond = " and selling = 1"
+		elif filters.buying_selling == "Buying":
+			buying_selling_cond = " and buying = 1"
+		else:
+			buying_selling_cond = ""
 
 	price_lists = [filters.standard_price_list]
 
