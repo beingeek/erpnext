@@ -12,6 +12,14 @@ frappe.query_reports["Sundine Price List"] = {
 			reqd: 1
 		},
 		{
+			fieldname: "valid_days",
+			label: __("Valid For Days"),
+			fieldtype: "Int",
+			on_change: function () {
+				return false;
+			}
+		},
+		{
 			fieldname: "po_from_date",
 			label: __("PO From Date"),
 			default: frappe.datetime.nowdate(),

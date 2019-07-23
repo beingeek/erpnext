@@ -80,7 +80,10 @@
                         {% elif filters.customer %}
                             {{ filters.customer }} —
                         {% endif %}
-                        Price List: {{ _("From") }} {{ frappe.format_date(filters.date, "EEE, d MMMM, Y") }}
+                        Price List: {{ _("Valid From") }} {{ frappe.format_date(filters.date, "EEE, d MMMM, Y") }}
+                        {% if filters.valid_days %}
+                            {{ _("To") }} {{ frappe.format_date(frappe.utils.add_days(filters.date, filters.valid_days-1), "EEE, d MMMM, Y") }}
+                        {% endif %}
                     </th></tr>
                     <tr>
                         <th style="width: 38%">{{ _("Product") }}</th>
@@ -121,7 +124,7 @@
                 {% endfor %}
                 </tbody>
             </table>
-            <p class="text-right text-muted">{{ _("Printed On ") }}{{ frappe.utils.format_datetime(frappe.utils.get_datetime()) }}</p>
+            <p class="text-right text-muted" style="margin-bottom:0; padding-bottom:0;">{{ _("Printed On ") }}{{ frappe.utils.format_datetime(frappe.utils.get_datetime()) }}</p>
 
 
 

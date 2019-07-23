@@ -57,7 +57,10 @@ $.each(item_groups || {}, function(item_group, items) {
             {% } else if(filters.customer) { %}
                 {%= filters.customer %} —
             {% } %}
-            Price List: {%= __("From") %} {%= new frappe.datetime.datetime(filters.date).format("ddd, D MMMM, YYYY") %}
+            Price List: {%= __("Valid From") %} {%= new frappe.datetime.datetime(filters.date).format("ddd, D MMMM, YYYY") %}
+            {% if (filters.valid_days) { %}
+                {%= __("To") %} {%= new frappe.datetime.datetime(frappe.datetime.add_days(filters.date, filters.valid_days-1)).format("ddd, D MMMM, YYYY") %}
+            {% } %}
         </th></tr>
 		<tr>
             <th style="width: 38%">{%= __("Product") %}</th>
@@ -98,4 +101,4 @@ $.each(item_groups || {}, function(item_group, items) {
     {% }); %}
 	</tbody>
 </table>
-<p class="text-right text-muted">{{ __("Printed On ") }}{%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
+<p class="text-right text-muted" style="margin-bottom:0; padding-bottom:0;">{{ __("Printed On ") }}{%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
