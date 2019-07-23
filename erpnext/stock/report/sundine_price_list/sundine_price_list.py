@@ -7,6 +7,7 @@ from frappe import _, scrub
 from frappe.utils import flt, nowdate, getdate, add_days, cint
 from erpnext.stock.report.stock_ledger.stock_ledger import get_item_group_condition
 from six import iteritems, string_types
+from collections import OrderedDict
 import json
 
 
@@ -45,7 +46,7 @@ def execute(filters=None):
 
 
 def get_printable_data(columns, data, filters):
-	item_groups = {}
+	item_groups = OrderedDict()
 
 	data = filter(lambda d: d.print_in_price_list, data)
 
