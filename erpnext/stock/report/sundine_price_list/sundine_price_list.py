@@ -144,7 +144,11 @@ def get_data(filters):
 			price = item_price_map.setdefault(d.item_code, {}).setdefault(d.price_list, frappe._dict())
 			price.current_price = d.price_list_rate
 			price.valid_from = d.valid_from
-			price.item_price = d.name
+
+			show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
+			show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
+			if show_amounts:
+				price.item_price = d.name
 
 	for d in previous_item_prices:
 		if d.item_code in item_price_map and d.price_list in item_price_map[d.item_code]:
@@ -275,7 +279,7 @@ def get_columns(filters, price_lists):
 	if filters.standard_price_list:
 		columns += [
 			{"fieldname": "standard_rate", "label": _("Base Price"), "fieldtype": "Currency", "width": 80,
-				"editable": True, "price_list": filters.standard_price_list, "is_base_price": True},
+				"editable": True, "price_list": filters.standard_price_list, "is_base_price": True, "restricted": True},
 			{"fieldname": "margin_rate", "label": _("% Margin"), "fieldtype": "Percent", "width": 80, "restricted": True},
 		]
 

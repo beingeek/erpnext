@@ -47,6 +47,12 @@
 
 
             <style>
+/*
+.print-format {
+  margin-left:10mm;
+  margin-right:10mm;
+}
+*/
             @media screen {
                 .print-format {
                     padding: 8mm;
@@ -55,6 +61,7 @@
             @media print {
                 .print-format {
                     padding: 0mm !important;
+                    zoom: 95%;
                 }
             }
 
@@ -110,7 +117,7 @@
                         <tr>
                         {% endif %}
                             <td>{{ d.item_name }}</td>
-                            <td class="text-center">{{ d.weight }}</td>
+                            <td class="text-center">{{ frappe.format_value(d.weight) }}</td>
                             <td class="text-center">{{ d.origin }}</td>
                             <td class="text-center">{{ frappe.utils.fmt_money(d.print_rate) if d.print_rate else '' }}</td>
                             <td class="text-right{% if (loop.index0 % 2 != 1) %} right-border{% endif %}"></td>

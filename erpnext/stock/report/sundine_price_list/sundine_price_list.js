@@ -23,12 +23,14 @@ frappe.query_reports["Sundine Price List"] = {
 			fieldname: "po_from_date",
 			label: __("PO From Date"),
 			default: frappe.datetime.nowdate(),
-			fieldtype: "Date"
+			fieldtype: "Date",
+			hidden: !cint(frappe.defaults.get_default("restrict_amounts_in_report_to_role") && frappe.user.has_role(frappe.defaults.get_default("restrict_amounts_in_report_to_role")))
 		},
 		{
 			fieldname: "po_to_date",
 			label: __("PO To Date"),
-			fieldtype: "Date"
+			fieldtype: "Date",
+			hidden: !cint(frappe.defaults.get_default("restrict_amounts_in_report_to_role") && frappe.user.has_role(frappe.defaults.get_default("restrict_amounts_in_report_to_role")))
 		},
 		{
 			fieldname: "item_code",
@@ -48,6 +50,7 @@ frappe.query_reports["Sundine Price List"] = {
 			label: __("Brand"),
 			fieldtype: "Link",
 			options:"Brand",
+			hidden: !cint(frappe.defaults.get_default("restrict_amounts_in_report_to_role") && frappe.user.has_role(frappe.defaults.get_default("restrict_amounts_in_report_to_role")))
 		},
 		{
 			fieldname: "customer",
@@ -88,7 +91,8 @@ frappe.query_reports["Sundine Price List"] = {
 			label: __("Buying Or Selling Prices"),
 			fieldtype: "Select",
 			options:"Selling\nBuying\nBoth",
-			default:"Selling"
+			default:"Selling",
+			hidden: !cint(frappe.defaults.get_default("restrict_amounts_in_report_to_role") && frappe.user.has_role(frappe.defaults.get_default("restrict_amounts_in_report_to_role")))
 		},
 		{
 			fieldname: "price_list_1",
