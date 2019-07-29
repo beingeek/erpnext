@@ -362,6 +362,9 @@ def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_
 def _set_item_pl_rate(effective_date, item_code, price_list, price_list_rate):
 	from frappe.model.utils import get_fetch_values
 
+	if not price_list_rate:
+		frappe.msgprint(_("Rate for Item {1} is 0. Please confirm rate"))
+
 	effective_date = frappe.utils.getdate(effective_date)
 
 	item_prices = frappe.db.sql("""

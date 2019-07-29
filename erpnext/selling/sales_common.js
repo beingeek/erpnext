@@ -121,6 +121,28 @@ Customer Request`}
 		if (item.override_price_list_rate) {
 			frappe.model.set_value(item.doctype, item.name, "pricing_rule", "");
 		}
+		this.set_item_warning_color(item);
+	},
+
+	set_item_warning_color: function(item) {
+		if (item) {
+			var color = 'inherit';
+			var background = 'inherit';
+
+			if (item.is_authorize || (item.item_code && !item.rate) || item.override_price_list_rate || item.pricing_rule) {
+				color = 'red';
+			}
+			if (item.item_code && !item.rate) {
+				background = '#f8c3d7';
+			}
+
+			$("div[data-fieldname=items]").find(__('div.grid-row[data-idx="{0}"] *', [item.idx])).css({'color': color});
+			$("div[data-fieldname=items]").find(__('div.grid-row[data-idx="{0}"] * ', [item.idx])).css({'background-color': background});
+		}
+	},
+
+	is_authorize: function(doc, cdt, cdn) {
+		this.set_item_warning_color(frappe.get_doc(cdt, cdn));
 	},
 
 	setup_queries: function() {
@@ -186,6 +208,11 @@ Customer Request`}
 			var packing_list_exists = (this.frm.doc.packed_items || []).length;
 			this.frm.toggle_display("packing_list", packing_list_exists ? true : false);
 		}
+
+		var me =this;
+		$.each(me.frm.doc.items || [], function (i, item) {
+			me.set_item_warning_color(item);
+		});
 	},
 
 	customer: function() {

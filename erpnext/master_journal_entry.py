@@ -12,11 +12,16 @@ import json
 import collections
 from erpnext.controllers.sales_and_purchase_return import make_return_doc
 from erpnext.setup.utils import get_exchange_rate
+from six import string_types
 
 
 @frappe.whitelist()
 def makeJournalEntry(master_doc1,method=None):
-	master_doc=json.loads(str(master_doc1))
+	if isinstance(master_doc1, string_types):
+		master_doc=json.loads(str(master_doc1))
+	else:
+		master_doc=master_doc1
+
 	for row in master_doc["accounts"]:
 		if 'party' in row:
 			if row["party"]:

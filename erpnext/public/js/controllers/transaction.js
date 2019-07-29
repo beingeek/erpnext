@@ -38,6 +38,10 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			}
 			item.base_rate_with_margin = item.rate_with_margin * flt(frm.doc.conversion_rate);
 
+			if (cur_frm.cscript.set_item_warning_color) {
+				cur_frm.cscript.set_item_warning_color(item);
+			}
+
 			cur_frm.cscript.set_gross_profit(item);
 			cur_frm.cscript.calculate_taxes_and_totals();
 
@@ -460,7 +464,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 							is_subcontracted: me.frm.doc.is_subcontracted,
 							transaction_date: me.frm.doc.transaction_date || me.frm.doc.posting_date,
 							delivery_date: me.frm.doc.delivery_date || me.frm.doc.transaction_date || me.frm.doc.posting_date,
-							ignore_pricing_rule: me.frm.doc.ignore_pricing_rule,
+							ignore_pricing_rule: cint(item.override_price_list_rate || me.frm.doc.ignore_pricing_rule),
 							doctype: me.frm.doc.doctype,
 							name: me.frm.doc.name,
 							project: item.project || me.frm.doc.project,
@@ -1274,6 +1278,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	},
 
 	_get_item_list: function(item) {
+		var me = this;
 		var item_list = [];
 		var append_item = function(d) {
 			if (d.item_code) {
@@ -1291,7 +1296,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 					"warehouse": d.warehouse,
 					"serial_no": d.serial_no,
 					"discount_percentage": d.discount_percentage || 0.0,
-					"conversion_factor": d.conversion_factor || 1.0
+					"conversion_factor": d.conversion_factor || 1.0,
+					"ignore_pricing_rule": cint(d.override_price_list_rate || me.frm.doc.ignore_pricing_rule)
 				});
 
 				// if doctype is Quotation Item / Sales Order Iten then add Margin Type and rate in item_list
@@ -1334,6 +1340,10 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 				if (!item_doc.override_price_list_rate) {
 					me.apply_price_list();
 				}
+			}
+
+			if (cur_frm.cscript.set_item_warning_color) {
+				cur_frm.cscript.set_item_warning_color(d);
 			}
 		}
 

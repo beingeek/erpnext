@@ -161,6 +161,10 @@ class SellingController(StockController):
 			frappe.throw(_("""Selling rate for item {0} is lower than its {1}. Selling rate should be atleast {2}""")
 				.format(item_name, ref_rate_field, rate))
 
+		for item in self.get('items'):
+			if item.qty and not item.rate:
+				frappe.msgprint(_("Row #{0}: Rate of Item {1} is 0. Please confirm selling rate").format(item.idx, item.item_code))
+
 		if not frappe.db.get_single_value("Selling Settings", "validate_selling_price"):
 			return
 
