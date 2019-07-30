@@ -291,6 +291,11 @@ def get_basic_details(args, item):
 	args.conversion_factor = out.conversion_factor
 	out.stock_qty = out.qty * out.conversion_factor
 
+	# Contents UOM conversion factor and qty
+	out.alt_uom = item.alt_uom
+	out.alt_uom_size = item.alt_uom_size if out.alt_uom else 1.0
+	out.alt_uom_qty = out.stock_qty * out.alt_uom_size
+
 	# calculate last purchase rate
 	if args.get('doctype') in purchase_doctypes:
 		from erpnext.buying.doctype.purchase_order.purchase_order import item_last_purchase_rate
@@ -570,7 +575,7 @@ def get_price_list_rate_for(args, item_code):
 
 		if item_price_data[0][2] == args.get("uom"):
 			return item_price_data[0][1]
-		elif not args.get('price_list_uom_dependant'):
+		elif args.get('price_list_uom_dependant'):
 			return flt(item_price_data[0][1] * flt(args.get("conversion_factor", 1)))
 		else:
 			return item_price_data[0][1]
