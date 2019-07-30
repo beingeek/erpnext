@@ -112,15 +112,13 @@ def get_data(filters):
 			{0} {1}
 	""".format(item_conditions, price_lists_cond), filters, as_dict=1)
 
-	if filters.previous_price_date:
-		previous_price_date_cond = "and ifnull(p.valid_from, '2000-01-01') = %(previous_price_date)s"
-	else:
-		# Get monday
+	if not filters.previous_price_date:
+		# Get prev monday
 		filters.previous_price_date = filters.date + datetime.timedelta(days=-filters.date.weekday())
 		if filters.previous_price_date == filters.date:
 			filters.previous_price_date = filters.previous_price_date + datetime.timedelta(weeks=-1)
 
-		previous_price_date_cond = "and ifnull(p.valid_from, '2000-01-01') >= %(previous_price_date)s"
+	previous_price_date_cond = "and ifnull(p.valid_from, '2000-01-01') >= %(previous_price_date)s"
 
 	previous_item_prices = frappe.db.sql("""
 		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from

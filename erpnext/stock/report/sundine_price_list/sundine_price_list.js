@@ -21,7 +21,7 @@ frappe.query_reports["Sundine Price List"] = {
 		},
 		{
 			fieldname: "previous_price_date",
-			label: __("Previous Price Date"),
+			label: __("Price Ref Date for Increase/Decrease"),
 			fieldtype: "Date"
 		},
 		{
