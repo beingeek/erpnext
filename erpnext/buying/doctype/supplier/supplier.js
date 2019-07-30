@@ -17,6 +17,15 @@ frappe.ui.form.on("Supplier", {
 				}
 			}
 		});
+
+		frm.set_query('expense_account', function() {
+			return {
+				filters:[
+					['Account', 'is_group', '=', 0],
+					['Account', 'account_type', '=', 'Expense Account']
+				]
+			};
+		});
 	},
 	refresh: function (frm) {
 		frappe.dynamic_link = { doc: frm.doc, fieldname: 'name', doctype: 'Supplier' }

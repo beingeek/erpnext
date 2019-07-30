@@ -31,7 +31,7 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 		me.frm.fields_dict.items.grid.wrapper.off('change', 'input[data-fieldname="rate"]').on('change', 'input[data-fieldname="rate"]', function(e) {
 			var cdn = $(e.target).parent().parent().parent().parent().parent().attr("data-name");
 			if (cdn) {
-				var item = frappe.get_doc("Sales Order Item", cdn);
+				var item = frappe.get_doc(me.frm.doc.doctype + " Item", cdn);
 				me.show_edit_pricing_rule_dialog(item);
 			}
 		});
@@ -104,13 +104,13 @@ Customer Request`}
 				},
 				freeze: true,
 				callback: function(r) {
-					me.apply_price_list(item, true);
+					me.apply_price_list(item);
 				}
 			})
 		});
 
 		dialog.set_secondary_action(() => {
-			if (!item.override_price_list_rate) me.apply_price_list(item, true)
+			if (!item.override_price_list_rate) me.apply_price_list(item)
 		});
 
 		dialog.show();
@@ -120,6 +120,8 @@ Customer Request`}
 		var item = frappe.get_doc(cdt, cdn);
 		if (item.override_price_list_rate) {
 			frappe.model.set_value(item.doctype, item.name, "pricing_rule", "");
+		} else {
+			this.apply_price_list(item);
 		}
 		this.set_item_warning_color(item);
 	},
@@ -136,8 +138,10 @@ Customer Request`}
 				background = '#f8c3d7';
 			}
 
-			$("div[data-fieldname=items]").find(__('div.grid-row[data-idx="{0}"] *', [item.idx])).css({'color': color});
-			$("div[data-fieldname=items]").find(__('div.grid-row[data-idx="{0}"] * ', [item.idx])).css({'background-color': background});
+			$("input, .static-area, a, .col", $("[data-fieldname='items'] .grid-row[data-idx="+item.idx+"]")).css({
+				'color': color,
+				'background-color': background
+			});
 		}
 	},
 
@@ -256,6 +260,9 @@ Customer Request`}
 			item.rate = flt(item.price_list_rate * (1 - item.discount_percentage / 100.0),
 				precision("rate", item));
 
+		if (cur_frm.cscript.set_item_warning_color) {
+			cur_frm.cscript.set_item_warning_color(item);
+		}
 		this.calculate_taxes_and_totals();
 	},
 
