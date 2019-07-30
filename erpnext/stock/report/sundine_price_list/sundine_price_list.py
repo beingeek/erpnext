@@ -118,14 +118,14 @@ def get_data(filters):
 		if filters.previous_price_date == filters.date:
 			filters.previous_price_date = filters.previous_price_date + datetime.timedelta(weeks=-1)
 
-	previous_price_date_cond = "and ifnull(p.valid_from, '2000-01-01') >= %(previous_price_date)s"
+	previous_price_date_cond = "and p.valid_upto >= %(previous_price_date)s"
 
 	previous_item_prices = frappe.db.sql("""
 		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
 		from `tabItem Price` as p
 		inner join `tabItem` item on item.name = p.item_code
-		where ifnull(p.valid_from, '2000-01-01') < %(date)s {0} {1} {2}
-		order by ifnull(p.valid_from, '2000-01-01') desc
+		where ifnull(p.valid_upto, '0000-00-00') != '0000-00-00' and p.valid_upto < %(date)s {0} {1} {2}
+		order by p.valid_upto desc
 	""".format(item_conditions, price_lists_cond, previous_price_date_cond), filters, as_dict=1)
 
 	items_map = {}
