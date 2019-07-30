@@ -426,7 +426,7 @@ def make_sales_invoice(source_name, target_doc=None):
 
 	def set_missing_values(source, target):
 		target.is_pos = 0
-		target.ignore_pricing_rule = 1
+		# target.ignore_pricing_rule = 1
 		target.run_method("set_missing_values")
 		target.run_method("set_po_nos")
 
