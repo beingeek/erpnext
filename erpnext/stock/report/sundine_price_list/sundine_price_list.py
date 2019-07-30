@@ -8,6 +8,7 @@ from frappe.utils import flt, nowdate, getdate, add_days, cint
 from erpnext.stock.report.stock_ledger.stock_ledger import get_item_group_condition
 from six import iteritems, string_types
 from collections import OrderedDict
+import datetime
 import json
 
 
@@ -111,13 +112,23 @@ def get_data(filters):
 			{0} {1}
 	""".format(item_conditions, price_lists_cond), filters, as_dict=1)
 
+	if filters.previous_price_date:
+		previous_price_date_cond = "and ifnull(p.valid_from, '2000-01-01') = %(previous_price_date)s"
+	else:
+		# Get monday
+		filters.previous_price_date = filters.date + datetime.timedelta(days=-filters.date.weekday())
+		if filters.previous_price_date == filters.date:
+			filters.previous_price_date = filters.previous_price_date + datetime.timedelta(weeks=-1)
+
+		previous_price_date_cond = "and ifnull(p.valid_from, '2000-01-01') >= %(previous_price_date)s"
+
 	previous_item_prices = frappe.db.sql("""
 		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
 		from `tabItem Price` as p
 		inner join `tabItem` item on item.name = p.item_code
-		where ifnull(p.valid_from, '2000-01-01') < %(date)s {0} {1}
+		where ifnull(p.valid_from, '2000-01-01') < %(date)s {0} {1} {2}
 		order by ifnull(p.valid_from, '2000-01-01') desc
-	""".format(item_conditions, price_lists_cond), filters, as_dict=1)
+	""".format(item_conditions, price_lists_cond, previous_price_date_cond), filters, as_dict=1)
 
 	items_map = {}
 	for d in item_data:

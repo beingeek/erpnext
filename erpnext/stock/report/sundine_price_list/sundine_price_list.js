@@ -20,6 +20,11 @@ frappe.query_reports["Sundine Price List"] = {
 			}
 		},
 		{
+			fieldname: "previous_price_date",
+			label: __("Previous Price Date"),
+			fieldtype: "Date"
+		},
+		{
 			fieldname: "po_from_date",
 			label: __("PO From Date"),
 			default: frappe.datetime.nowdate(),
