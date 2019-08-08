@@ -152,7 +152,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 
 		if(this.frm.fields_dict["items"]) {
-			this["items_remove"] = this.calculate_net_weight;
+			this["items_remove"] = this.calculate_gross_weight;
 		}
 
 		if(this.frm.fields_dict["recurring_print_format"]) {
@@ -935,7 +935,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			refresh_field("stock_qty", item.name, item.parentfield);
 			refresh_field("total_weight", item.name, item.parentfield);
 			this.toggle_conversion_factor(item);
-			this.calculate_net_weight();
+			this.calculate_gross_weight();
 			if (!dont_fetch_price_list_rate &&
 				frappe.meta.has_field(doc.doctype, "price_list_currency")) {
 				this.apply_price_list(item, true);
@@ -1002,15 +1002,15 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 	},
 
-	calculate_net_weight: function(){
+	calculate_gross_weight: function(){
 		/* Calculate Total Net Weight then further applied shipping rule to calculate shipping charges.*/
 		var me = this;
-		this.frm.doc.total_net_weight= 0.0;
+		this.frm.doc.total_gross_weight = 0.0;
 
 		$.each(this.frm.doc["items"] || [], function(i, item) {
-			me.frm.doc.total_net_weight += flt(item.total_weight);
+			me.frm.doc.total_gross_weight += flt(item.total_weight);
 		});
-		refresh_field("total_net_weight");
+		refresh_field("total_gross_weight");
 		this.shipping_rule();
 	},
 
