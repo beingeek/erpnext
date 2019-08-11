@@ -27,9 +27,21 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		}
 	},
 
+	validate: function(doc) {
+		this._super(doc);
+		this.set_naming_series();
+	},
+
+	is_return: function(doc) {
+		this._super(doc);
+		this.set_naming_series();
+	},
+
 	refresh: function(doc) {
 		const me = this;
 		this._super();
+
+		this.set_naming_series();
 
 		hide_fields(this.frm.doc);
 		// Show / Hide button
@@ -134,6 +146,16 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 					}, __("Make"));
 				}
 			});
+		}
+	},
+
+	set_naming_series: function() {
+		if (this.frm.doc.docstatus === 0) {
+			if (this.frm.doc.is_return) {
+				this.frm.set_value('naming_series', 'PINV-RET-');
+			} else {
+				this.frm.set_value('naming_series', 'PINV-');
+			}
 		}
 	},
 

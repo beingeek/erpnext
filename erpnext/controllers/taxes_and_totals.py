@@ -57,6 +57,9 @@ class calculate_taxes_and_totals(object):
 			for item in self.doc.get("items"):
 				self.doc.round_floats_in(item)
 
+				item.alt_uom_size_std = item.stock_alt_uom_size_std * item.conversion_factor if item.alt_uom else 1.0
+				item.alt_uom_size_std = item.alt_uom_size_std or 1.0
+
 				item.alt_uom_size = item.stock_alt_uom_size * item.conversion_factor if item.alt_uom else 1.0
 				item.alt_uom_qty = flt(item.qty * item.alt_uom_size, item.precision('alt_uom_qty')) if item.alt_uom \
 					else item.qty

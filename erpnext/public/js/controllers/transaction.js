@@ -3,6 +3,7 @@
 
 erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	setup: function() {
+		var me = this;
 		this.remove_sidebar();
 		this._super();
 		frappe.flags.hide_serial_batch_dialog = false;
@@ -48,7 +49,11 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 		});
 
-
+		$(this.frm.wrapper).on('grid-row-render', function(e, grid_row) {
+			if(grid_row.doc.doctype === me.frm.doc.doctype + " Item") {
+				me.set_conditional_mandatory_alt_uom_qty(grid_row);
+			}
+		});
 
 		frappe.ui.form.on(this.frm.cscript.tax_table, "rate", function(frm, cdt, cdn) {
 			cur_frm.cscript.calculate_taxes_and_totals();
@@ -135,7 +140,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			}
 		});
 
-		var me = this;
 		if(this.frm.fields_dict["items"].grid.get_field('batch_no')) {
 			this.frm.set_query("batch_no", "items", function(doc, cdt, cdn) {
 				return me.set_query_for_batch(doc, cdt, cdn);
@@ -348,10 +352,15 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	},
 
 	add_empty_rows: function() {
-		for (var i = 0; i < 10; ++i) {
-			this.frm.add_child("items");
+		var current_len = (this.frm.doc.items || []).length;
+		var to_add = 10 - current_len;
+
+		if (to_add > 0) {
+			for (var i = 0; i < to_add; ++i) {
+				this.frm.add_child("items");
+			}
+			this.frm.refresh_field("items");
 		}
-		this.frm.refresh_field("items");
 	},
 
 	remove_sidebar: function() {
@@ -1026,6 +1035,13 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 	},
 
+	set_conditional_mandatory_alt_uom_qty: function(grid_row) {
+		/*if(grid_row) {
+			grid_row.toggle_editable("alt_uom_qty", cint(grid_row.doc.alt_uom_qty_editable));
+			grid_row.toggle_reqd("alt_uom_qty", cint(grid_row.doc.alt_uom_qty_editable));
+		}*/
+	},
+
 	alt_uom_qty: function(doc, cdt, cdn) {
 		var item = frappe.get_doc(cdt, cdn);
 
@@ -1244,7 +1260,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 				"base_net_amount", "base_rate_with_margin", "base_tax_exclusive_price_list_rate",
 				"base_tax_exclusive_rate", "base_tax_exclusive_amount", "base_tax_exclusive_rate_with_margin",
 				"base_amount_before_discount", "base_tax_exclusive_amount_before_discount",
-				"base_total_discount", "base_tax_exclusive_total_discount"],
+				"base_total_discount", "base_tax_exclusive_total_discount", "landed_cost_voucher_amount", "landed_rate"],
 			company_currency, "items");
 
 		this.frm.set_currency_labels(["rate", "net_rate", "alt_uom_rate", "price_list_rate", "amount", "net_amount", "rate_with_margin",
@@ -1891,7 +1907,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 					if (r.message && !r.exc) {
 						$.each(r.message || [], function(i, item_data) {
 							if (!existing_item_codes.includes(item_data.item_code)) {
-								var item = frappe.model.add_child(me.frm.doc, me.frm.doc.doctype + " Item", "items");
+								var item = frappe.model.add_child(me.frm.doc, me.frm.doc.doctype + " Item", "items", 1);
 
 								delete item_data['doctype'];
 								delete item_data['name'];

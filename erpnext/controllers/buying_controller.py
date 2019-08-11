@@ -757,19 +757,19 @@ class BuyingController(StockController):
 	def validate_schedule_date(self):
 		if not self.get("items"):
 			return
+
 		if not self.schedule_date:
-			self.schedule_date = min([d.schedule_date for d in self.get("items")])
+			frappe.throw(_("Please enter Arrival Date"))
 
-		if self.schedule_date:
-			for d in self.get('items'):
-				if not d.schedule_date:
-					d.schedule_date = self.schedule_date
+		if self.shipping_date and getdate(self.shipping_date) < getdate(self.transaction_date):
+			frappe.throw(_("Shipping Date cannot be before Transaction Date"))
 
-				if (d.schedule_date and self.transaction_date and
-					getdate(d.schedule_date) < getdate(self.transaction_date)):
-					frappe.throw(_("Row #{0}: Reqd by Date cannot be before Transaction Date").format(d.idx))
-		else:
-			frappe.throw(_("Please enter Reqd by Date"))
+		if self.shipping_date and getdate(self.schedule_date) < getdate(self.shipping_date):
+			frappe.throw(_("Arrival Date cannot be before Shipping Date"))
+
+		for d in self.get('items'):
+			d.schedule_date = self.schedule_date
+			d.expected_delivery_date = self.schedule_date
 
 	def validate_items(self):
 		# validate items to see if they have is_purchase_item or is_subcontracted_item enabled

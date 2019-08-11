@@ -269,7 +269,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 						if(!r.exc) {
 							$.each(me.frm.doc.items || [], function(i, item) {
 								if(item.item_code && r.message.hasOwnProperty(item.item_code)) {
-									me.set_item_custom_projected_qty(r.message[item.item_code]);
+									me.set_item_custom_projected_qty(item, r.message[item.item_code]);
 								} else {
 									item['actual_qty'] = 0;
 									item['projected_qty'] = 0;

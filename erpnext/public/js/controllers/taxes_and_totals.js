@@ -59,6 +59,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 		this.initialize_taxes();
 		this.determine_exclusive_rate();
 		this.calculate_net_total();
+		this.calculate_landed_rate();
 		this.calculate_taxes();
 		this.manipulate_grand_total_for_inclusive_tax();
 		this.calculate_totals();
@@ -93,6 +94,9 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 		if (!this.discount_amount_applied) {
 			$.each(this.frm.doc["items"] || [], function(i, item) {
 				frappe.model.round_floats_in(item);
+
+				item.alt_uom_size_std = item.alt_uom ? item.stock_alt_uom_size_std * item.conversion_factor : 1.0;
+				item.alt_uom_size_std = item.alt_uom_size_std || 1.0;
 
 				item.alt_uom_size = item.alt_uom ? item.stock_alt_uom_size * item.conversion_factor : 1.0;
 				item.alt_uom_qty = item.alt_uom ? flt(item.qty * item.alt_uom_size, precision('alt_uom_qty', item))
@@ -312,6 +316,14 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			"total_before_discount", "total_discount", "base_total_before_discount", "base_total_discount",
 			"tax_exclusive_total_before_discount", "tax_exclusive_total_discount",
 			"base_tax_exclusive_total_before_discount", "base_tax_exclusive_total_discount"]);
+	},
+
+	calculate_landed_rate: function() {
+		if (this.frm.doc.doctype === 'Purchase Order') {
+			$.each(this.frm.doc["items"] || [], function (i, item) {
+				item.landed_rate = item.qty ? (flt(item.base_net_amount) + flt(item.landed_cost_voucher_amount)) / flt(item.qty) : 0
+			});
+		}
 	},
 
 	calculate_taxes: function() {

@@ -34,6 +34,16 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		}
 	},
 
+	validate: function(doc) {
+		this._super(doc);
+		this.set_naming_series();
+	},
+
+	is_return: function(doc) {
+		this._super(doc);
+		this.set_naming_series();
+	},
+
 	refresh: function(doc, dt, dn) {
 		const me = this;
 		this._super();
@@ -41,6 +51,8 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 			// hide new msgbox
 			cur_frm.msgbox.hide();
 		}
+
+		this.set_naming_series();
 
 		this.frm.toggle_reqd("due_date", !this.frm.doc.is_return);
 
@@ -130,6 +142,14 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		})
 	},
 
+	after_submit: function() {
+		this.prompt_make_balance_so();
+	},
+
+	after_save: function() {
+		this.multi_batch_set();
+	},
+
 	set_default_print_format: function() {
 		// set default print format to POS type
 		if(cur_frm.doc.is_pos) {
@@ -141,6 +161,81 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 			if(cur_frm.meta._default_print_format) {
 				cur_frm.meta.default_print_format = cur_frm.meta._default_print_format;
 				cur_frm.meta._default_print_format = null;
+			}
+		}
+	},
+
+	set_naming_series: function() {
+		if (this.frm.doc.docstatus === 0) {
+			if (this.frm.doc.is_return) {
+				this.frm.set_value('naming_series', 'SINV-RET-');
+			} else {
+				this.frm.set_value('naming_series', 'SINV-');
+			}
+		}
+	},
+
+	prompt_make_balance_so: function() {
+		var me = this;
+		if (!me.frm.doc.is_return) {
+			frappe.call({
+				method: "erpnext.sales_confirm.checkConfirmSales",
+				args: {
+					'name': me.frm.doc.name
+				},
+				callback: function(r) {
+					if (r.message == true) {
+						frappe.confirm(
+							'Would you like to create new Sales Order for Balance QTY & close existing?',
+							function() {
+								frappe.call({
+									method: 'erpnext.sales_confirm.makeRemainItemOrder',
+									args: {
+										'name': me.frm.doc.name
+									},
+									callback: function(r) {
+										var msg = 'New Order Created :' + r.message;
+										show_alert(msg, 3);
+										frappe.set_route("Form", "Sales Order", r.message);
+									}
+								});
+							},
+							function() {
+								show_alert('No')
+							}
+						);
+					}
+				}
+			});
+		}
+	},
+
+	multi_batch_set: function() {
+		var me = this;
+		var count = 0;
+
+		if (me.frm.doc.update_stock == 1) {
+			for (var row in me.frm.oc.items) {
+				if (me.frm.doc.items[row].item_code) {
+					if (!me.frm.doc.items[row].batch_no) {
+						frappe.call({
+							"method": "erpnext.multibatch.multiBatchSet",
+							"args": {
+								name: me.frm.doc.name,
+								doc_name: me.frm.doc.items[row].name,
+								item_code: me.frm.doc.items[row].item_code,
+								warehouse: me.frm.doc.items[row].warehouse,
+								qty: me.frm.doc.items[row].qty
+							},
+							"freeze": true,
+							"freeze_message": "Please Wait...",
+							callback(r) {
+								cur_frm.reload_doc();
+								count = count + 1;
+							}
+						});
+					}
+				}
 			}
 		}
 	},

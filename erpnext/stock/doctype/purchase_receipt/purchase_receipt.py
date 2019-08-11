@@ -462,28 +462,12 @@ def make_purchase_invoice(source_name, target_doc=None):
 
 	def update_item(source_doc, target_doc, source_parent):
 		target_doc.qty, returned_qty = get_pending_qty(source_doc)
-		if source_doc.boxes_pallet_for_purchase==None:
-			target_doc.pallets_ordered = 0
-		elif source_doc.boxes_pallet_for_purchase==0:
-			target_doc.pallets_ordered = 0
-		else:
-			boxes_pallet_for_purchase=source_doc.boxes_pallet_for_purchase
-			target_doc.pallets_ordered = flt(source_doc.box)/flt(boxes_pallet_for_purchase)
 
-		target_doc.boxes_ordered = flt(source_doc.box)
-		target_doc.received_box=flt(source_doc.received_boxed)
-		if source_doc.uom=="Pallet":
-			target_doc.received_qty = flt(source_doc.received_boxed)/flt(boxes_pallet_for_purchase)
-		else:
-			target_doc.received_qty = flt(source_doc.received_boxed)
-		target_doc.box_rate=flt(source_doc.box_unit_rate)
-		target_doc.rate=flt(source_doc.box_unit_rate)
-		if source_doc.uom=="Pallet":
-			target_doc.qty =flt(source_doc.received_boxed)/flt(source_doc.boxes_pallet_for_purchase)
-		else:
-			target_doc.qty =flt(source_doc.received_boxed)
 		if not source_doc.purchase_order_item:
 			returned_qty_map_against_pr[source_doc.item_code] = returned_qty
+
+		target_doc.pallets_ordered = flt(source_doc.pallets)
+		target_doc.qty_ordered = flt(source_doc.qty)
 
 	def get_pending_qty(item_row):
 		pending_qty = item_row.qty - invoiced_qty_map.get(item_row.name, 0) \

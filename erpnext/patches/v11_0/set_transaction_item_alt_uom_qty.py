@@ -16,14 +16,9 @@ def execute():
 	item_doctypes = [d + " Item" for d in doctypes]
 	all_dts = doctypes + item_doctypes + ['Item']
 	quoted_dts = ["'" + dt + "'" for dt in all_dts]
+	quoted_dts_without_item = ["'" + dt + "'" for dt in doctypes + item_doctypes]
 
 	# Convert Data/Read Only fields to Float
-	print("Converting Data/Read Only to Float Convertible for {0}: {1}".format("Item", 'purchase_pallets, sale_pallets, weight_of_pallet'))
-	# ppk_calculation
-	frappe.db.sql("update `tabItem` set purchase_pallets = 0 where ifnull(purchase_pallets, '') = '' or purchase_pallets = 'NaN'")
-	frappe.db.sql("update `tabItem` set sale_pallets = 0 where ifnull(sale_pallets, '') = '' or sale_pallets = 'NaN'")
-	frappe.db.sql("update `tabItem` set weight_of_pallet = 0 where ifnull(weight_of_pallet, '') = '' or weight_of_pallet = 'NaN'")
-
 	for dt in doctypes:
 		if frappe.get_meta(dt).has_field('total_boxes'):
 			print("Converting Data/Read Only to Float Convertible for {0}: {1}".format(dt, 'total_boxes'))
@@ -75,7 +70,7 @@ def execute():
 				rename_field(dt, old, new)
 
 	for dt in item_doctypes:
-		for old, new in [('sale_pallets', 'qty_per_pallet'), ('boxes_pallet_for_purchase', 'qty_per_pallet'), ('boxes_ordered', 'ordered_qty'), ('is_authorize', 'requires_authorization')]:
+		for old, new in [('sale_pallets', 'qty_per_pallet'), ('boxes_pallet_for_purchase', 'qty_per_pallet'), ('boxes_ordered', 'qty_ordered'), ('is_authorize', 'requires_authorization')]:
 			if old_meta[dt].has_field(old) and not old_meta[dt].has_field(new):
 				print("Rename Field in {0}: {1} -> {2}".format(dt, old, new))
 				rename_field(dt, old, new)
@@ -180,7 +175,7 @@ def execute():
 			print("DocType {dt} does not have field total_gross_weight_lbs".format(dt=dt))
 
 		if frappe.get_meta(dt).has_field('total_gross_weight_kg'):
-			frappe.db.sql("update `tab{dt}` set total_gross_weight_kg = total_gross_weight * 0.45359237")
+			frappe.db.sql("update `tab{dt}` set total_gross_weight_kg = total_gross_weight * 0.45359237".format(dt=dt))
 
 		# Sales Order Title and Authorization
 		if dt == "Sales Order":
@@ -203,4 +198,7 @@ def execute():
 		frappe.delete_doc('Custom Field', name)
 	for name in prop_setters:
 		frappe.delete_doc('Property Setter', name)
-	frappe.db.commit()
+
+	custom_scripts = frappe.db.sql_list("select name from `tabCustom Script` where dt in ({0})".format(", ".join(quoted_dts_without_item)))
+	for name in custom_scripts:
+		frappe.delete_doc('Custom Script', name)

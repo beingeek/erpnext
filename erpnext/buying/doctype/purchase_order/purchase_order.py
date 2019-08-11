@@ -369,11 +369,8 @@ def make_purchase_receipt(source_name, target_doc=None):
 		target.base_amount = (flt(obj.qty) - flt(obj.received_qty)) * \
 			flt(obj.rate) * flt(source_parent.conversion_rate)
 
-		target.pallets_ordered = flt(obj.box)/flt(obj.boxes_pallet_for_purchase) if obj.boxes_pallet_for_purchase else 0
-		target.boxes_ordered = flt(obj.box)
-		target.received_boxed = flt(target.qty) * flt(obj.boxes_pallet_for_purchase) if obj.uom == "Pallet" else flt(target.qty)
-
-		target.box_rate = flt(obj.box_unit_rate)
+		target.pallets_ordered = flt(obj.pallets)
+		target.qty_ordered = flt(obj.qty)
 
 	doc = get_mapped_doc("Purchase Order", source_name,	{
 		"Purchase Order": {
@@ -408,6 +405,7 @@ def make_purchase_receipt(source_name, target_doc=None):
 def make_purchase_invoice(source_name, target_doc=None):
 	def postprocess(source, target):
 		set_missing_values(source, target)
+		target.update_stock = 1
 		#Get the advance paid Journal Entries in Purchase Invoice Advance
 		target.set_advances()
 
@@ -415,6 +413,9 @@ def make_purchase_invoice(source_name, target_doc=None):
 		target.amount = flt(obj.amount) - flt(obj.billed_amt)
 		target.base_amount = target.amount * flt(source_parent.conversion_rate)
 		target.qty = target.amount / flt(obj.rate) if (flt(obj.rate) and flt(obj.billed_amt)) else flt(obj.qty)
+
+		target.pallets_ordered = flt(obj.pallets)
+		target.qty_ordered = flt(obj.qty)
 
 		item = get_item_defaults(target.item_code, source_parent.company)
 		item_group = get_item_group_defaults(target.item_code, source_parent.company)

@@ -30,17 +30,10 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 	onload: function() {
 		this._super();
 		this.setup_queries();
-		this.frm.set_query('shipping_rule', function() {
-			return {
-				filters: {
-					"shipping_rule_type": "Selling"
-				}
-			};
-		});
 
 		var me = this;
 		me.frm.fields_dict.items.grid.wrapper.off('change', 'input[data-fieldname="rate"]').on('change', 'input[data-fieldname="rate"]', function(e) {
-			var cdn = $(e.target).parent().parent().parent().parent().parent().attr("data-name");
+			var cdn = $(e.target).closest(".grid-row").attr("data-name");
 			if (cdn) {
 				var item = frappe.get_doc(me.frm.doc.doctype + " Item", cdn);
 				me.show_edit_pricing_rule_dialog(item);
@@ -167,6 +160,22 @@ Customer Request`}
 
 	setup_queries: function() {
 		var me = this;
+
+		this.frm.set_query('shipping_rule', function() {
+			return {
+				filters: {
+					"shipping_rule_type": "Selling"
+				}
+			};
+		});
+
+		/*this.frm.set_query("driver", function() {
+			return {
+				"filters": {
+					"designation": "Driver"
+				}
+			};
+		});*/
 
 		$.each([["customer", "customer"],
 			["lead", "lead"]],
