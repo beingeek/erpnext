@@ -193,46 +193,19 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 	},
 
 	get_customer_default_items: function() {
-		var me = this;
-		if (this.frm.doc.docstatus===0 && me.frm.doc.customer) {
-			return frappe.call({
-				method: "erpnext.api.get_party_default_items",
-				args: {
-					party_type: "Customer",
-					party: me.frm.doc.customer
-				},
-				callback: function(r) {
-					if (r.message && !r.exc) {
-						var rows_added = [];
-						var existing_item_codes = me.frm.doc.items.map(d => d.item_code).filter(d => d);
-						$.each(r.message || [], function(i, item_code) {
-							if (!existing_item_codes.includes(item_code)) {
-								var row = frappe.model.add_child(me.frm.doc, "Sales Order Item", "items", 1);
-								row._item_code = item_code;
-								row.qty = 0;
-								rows_added.push(row);
-							}
-						});
-						me.frm.refresh_field("items");
-
-						$.each(rows_added, function(i, row) {
-							frappe.model.set_value(row.doctype, row.name, "item_code", row._item_code);
-						});
-					}
-				}
-			});
-		}
+		this.get_party_default_items();
 	},
 
 	update_selected_item_fields: function() {
 		if (this.frm.doc.docstatus == 0) {
 			var me = this;
+
 			if(this.selected_item_dn) {
 				var grid_row = this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn];
 				if(grid_row) {
-					me.frm.doc.current_actual_qty = grid_row.doc.current_actual_qty;
+					me.frm.doc.current_actual_qty = grid_row.doc.actual_qty;
 					me.frm.refresh_field("current_actual_qty");
-					me.frm.doc.current_projected_qty = grid_row.doc.current_projected_qty;
+					me.frm.doc.current_projected_qty = grid_row.doc.projected_qty;
 					me.frm.refresh_field("current_projected_qty");
 					for(var i = 1; i <= 5; ++i) {
 						me.frm.doc["po_day_" + i] = grid_row.doc["po_day_" + i];
@@ -265,6 +238,15 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		}
 	},
 
+	set_item_custom_projected_qty: function(item, data) {
+		item['actual_qty'] = data['actual_qty'];
+		item['projected_qty'] = data['projected_qty'];
+		for(var i = 0; i < 5; ++i) {
+			item['po_day_' + (i + 1)] = data['po_day_' + (i + 1)];
+			item['so_day_' + (i + 1)] = data['so_day_' + (i + 1)];
+		}
+	},
+
 	get_item_custom_projected_qty: function() {
 		var me = this;
 		if (me.frm.doc.docstatus == 0) {
@@ -287,15 +269,10 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 						if(!r.exc) {
 							$.each(me.frm.doc.items || [], function(i, item) {
 								if(item.item_code && r.message.hasOwnProperty(item.item_code)) {
-									item['current_actual_qty'] = r.message[item.item_code]['actual_qty'];
-									item['current_projected_qty'] = r.message[item.item_code]['projected_qty'];
-									for(var i = 0; i < 5; ++i) {
-										item['po_day_' + (i + 1)] = r.message[item.item_code]['po_day_' + (i + 1)];
-										item['so_day_' + (i + 1)] = r.message[item.item_code]['so_day_' + (i + 1)];
-									}
+									me.set_item_custom_projected_qty(r.message[item.item_code]);
 								} else {
-									item['current_actual_qty'] = 0;
-									item['current_projected_qty'] = 0;
+									item['actual_qty'] = 0;
+									item['projected_qty'] = 0;
 									for(var i = 0; i < 5; ++i) {
 										item['po_day_' + (i + 1)] = 0;
 										item['so_day_' + (i + 1)] = 0;
@@ -438,6 +415,22 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 						}
 					})
 				}, __("Get items from"));
+		}
+
+		if(me.frm.doc.status=="To Deliver and Bill" || me.frm.doc.status=="To Bill") {
+			me.frm.add_custom_button(__('Make New Sales Order For Balance Qty'), function() {
+				frappe.call({
+					method:'erpnext.sales_confirm.makeSOFromSo',
+					args:{'name':me.frm.doc.name},
+					freeze:true,
+					freeze_message:'Please Wait....',
+					callback:function(r){
+						var msg='New Order Created :' + r.message;
+						show_alert(msg,3);
+						frappe.set_route("Form", "Sales Order", r.message);
+					}
+				})
+			})
 		}
 
 		this.order_type(doc);

@@ -14,6 +14,17 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 		this._super();
 		this.frm.add_fetch("sales_partner", "commission_rate", "commission_rate");
 		this.frm.add_fetch("sales_person", "commission_rate", "commission_rate");
+
+		var me = this;
+		frappe.ui.form.on(this.frm.doctype + " Item", "rate", function(frm, cdt, cdn) {
+			me.validate_price_change(cdt, cdn);
+		});
+		frappe.ui.form.on(this.frm.doctype + " Item", "price_list_rate", function(frm, cdt, cdn) {
+			me.validate_price_change(cdt, cdn);
+		});
+		frappe.ui.form.on(this.frm.doctype + " Item", "items_remove", function(frm, cdt, cdn) {
+			me.set_price_override_authorization();
+		});
 	},
 
 	onload: function() {
@@ -35,6 +46,10 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 				me.show_edit_pricing_rule_dialog(item);
 			}
 		});
+
+		if (this.frm.doc.docstatus === 0) {
+			this.apply_price_list()
+		}
 	},
 
 	show_edit_pricing_rule_dialog: function(item) {
@@ -59,7 +74,8 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 				{"fieldtype": "Link", "label": __("Existing Pricing Rule"), "fieldname": "pricing_rule", "options": "Pricing Rule", "read_only":true, "default": item.pricing_rule},
 				{"fieldtype": "Check", "label": __("Create New Pricing Rule"), "fieldname": "create_new", "depends_on":"pricing_rule"},
 				{"fieldtype": "Column Break", "fieldname": "col_break1"},
-				{"fieldtype": "Currency", "label": __("New Rate"), "fieldname": "new_rate", "reqd":true, "default": item.rate},
+				{"fieldtype": "Currency", "label": __("New Rate (As Per Selected UOM)"), "fieldname": "new_uom_rate", "read_only":true, "default": item.rate},
+				{"fieldtype": "Currency", "label": __("New Rate"), "fieldname": "new_rate", "reqd":true, "default": flt(item.rate/item.conversion_factor, precision('rate', item))},
 				{"fieldtype": "Select", "label": __("Reason"), "fieldname": "reason", "options": `In-Store Promo
 Bad Quality
 Customer Request`}
@@ -264,6 +280,45 @@ Customer Request`}
 			cur_frm.cscript.set_item_warning_color(item);
 		}
 		this.calculate_taxes_and_totals();
+	},
+
+	validate_price_change: function(cdt, cdn) {
+		if (this.frm.updating_item_details) {
+			return;
+		}
+
+		var me = this;
+		var item = frappe.get_doc(cdt, cdn);
+		return this.frm.call({
+			method: "erpnext.stock.get_item_details.validate_price_change",
+			args: {
+				item_code: item.item_code,
+				price_list_rate: item.price_list_rate,
+				rate: item.rate
+			},
+			callback: function(r){
+				if (!r.exc) {
+					frappe.model.set_value(item.doctype, item.name, 'requires_authorization', cint(r.message));
+					me.set_price_override_authorization();
+				}
+			}
+		});
+	},
+
+	set_price_override_authorization: function() {
+		var me = this;
+
+		if (this.frm.doc.authorize !== "Approved") {
+			var required = false;
+			$.each(me.frm.doc.items || [], function (i, d) {
+				if (cint(d.requires_authorization)) {
+					required = true;
+				}
+			});
+
+			this.frm.doc.authorize = required ? "Required" : "Not Required";
+			refresh_field('authorize');
+		}
 	},
 
 	discount_percentage: function(doc, cdt, cdn) {

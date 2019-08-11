@@ -13,6 +13,7 @@ from erpnext.stock.doctype.batch.batch import get_batch_no
 from erpnext import get_company_currency
 from erpnext.stock.doctype.item.item import get_item_defaults, get_uom_conv_factor
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
+from erpnext.api import get_item_custom_projected_qty
 
 from six import string_types, iteritems
 
@@ -60,6 +61,8 @@ def get_item_details(args):
 
 	get_price_list_rate(args, item, out)
 
+	get_alt_uom_qty(args, item, out)
+
 	if args.customer and cint(args.is_pos):
 		out.update(get_pos_profile_item_details(args.company, args))
 
@@ -86,6 +89,10 @@ def get_item_details(args):
 	if args.doctype == 'Material Request':
 		out.rate = args.rate or out.price_list_rate
 		out.amount = flt(args.qty * out.rate)
+
+	if args.doctype == 'Sales Order':
+		custom_projected_qty = get_item_custom_projected_qty(args.transaction_date, [args.item_code], args.name)
+		out.update(custom_projected_qty.get(args.item_code))
 
 	return out
 
@@ -259,6 +266,8 @@ def get_basic_details(args, item):
 		"min_order_qty": flt(item.min_order_qty) if args.doctype == "Material Request" else "",
 		"qty": args.qty or 0.0,
 		"stock_qty": args.qty or 0.0,
+		"alt_uom_qty_editable": item.alt_uom_qty_editable,
+		"boxes": args.qty or 0.0,
 		"price_list_rate": 0.0,
 		"base_price_list_rate": 0.0,
 		"rate": 0.0,
@@ -278,6 +287,14 @@ def get_basic_details(args, item):
 		"transaction_date": args.get("transaction_date")
 	})
 
+	if args.get('doctype') in sales_doctypes:
+		out.qty_per_pallet = item.sale_pallets
+	else:
+		out.qty_per_pallet = item.purchase_pallets
+
+	pallets_precision = get_field_precision(frappe.get_meta(args.get('doctype') + " Item").get_field('pallets'))
+	out.pallets = flt(flt(out.qty) / flt(out.qty_per_pallet), pallets_precision) if out.qty_per_pallet else 0
+
 	if item.get("enable_deferred_revenue") or item.get("enable_deferred_expense"):
 		out.update(calculate_service_end_date(args, item))
 
@@ -290,11 +307,6 @@ def get_basic_details(args, item):
 
 	args.conversion_factor = out.conversion_factor
 	out.stock_qty = out.qty * out.conversion_factor
-
-	# Contents UOM conversion factor and qty
-	out.alt_uom = item.alt_uom
-	out.alt_uom_size = item.alt_uom_size if out.alt_uom else 1.0
-	out.alt_uom_qty = out.stock_qty * out.alt_uom_size
 
 	# calculate last purchase rate
 	if args.get('doctype') in purchase_doctypes:
@@ -314,6 +326,22 @@ def get_basic_details(args, item):
 		out[fieldname] = item.get(fieldname)
 
 	return out
+
+
+def get_alt_uom_qty(args, item, out):
+	meta = frappe.get_meta((args.parenttype or args.doctype) + " Item")
+	alt_uom_qty_precision = get_field_precision(meta.get_field("alt_uom_qty"))
+
+	out.alt_uom = item.alt_uom
+	out.stock_alt_uom_size = out.stock_alt_uom_size_std = item.alt_uom_size if out.alt_uom else 1.0 / out.conversion_factor
+	out.alt_uom_size = out.alt_uom_size_std = out.stock_alt_uom_size * out.conversion_factor if out.alt_uom else 1.0
+	out.alt_uom_qty = flt(out.stock_qty * out.stock_alt_uom_size, alt_uom_qty_precision) if out.alt_uom else out.qty
+
+	rate = flt(out.rate or args.rate)
+	out.alt_uom_rate = flt(rate / out.alt_uom_size_std)
+
+	return out
+
 
 @frappe.whitelist()
 def get_item_tax_info(company, tax_category, item_codes):
@@ -446,16 +474,21 @@ def get_price_list_rate(args, item_doc, out):
 		if not price_list_rate and item_doc.variant_of:
 			price_list_rate = get_price_list_rate_for(args, item_doc.variant_of)
 
+		'''
 		# insert in database
 		if not price_list_rate:
 			if args.price_list and args.rate:
 				insert_item_price(args)
 			return {}
+		'''
 
 		out.price_list_rate = flt(price_list_rate) * flt(args.plc_conversion_rate) \
 			/ flt(args.conversion_rate)
-		out.discount_percentage = 0
-		out.margin_type = ""
+
+		if not args.ignore_pricing_rule:
+			out.discount_percentage = 0
+			out.margin_type = ""
+			out.rate = out.price_list_rate
 
 		if not out.price_list_rate and args.transaction_type=="buying":
 			from erpnext.stock.doctype.item.item import get_last_purchase_details
@@ -1026,5 +1059,23 @@ def get_reserved_qty_for_so(sales_order, item_code):
 	""", (sales_order, item_code))
 	if reserved_qty and reserved_qty[0][0]:
 		return reserved_qty[0][0]
+	else:
+		return 0
+
+@frappe.whitelist()
+def validate_price_change(item_code, price_list_rate, rate):
+	price_list_rate = flt(price_list_rate)
+	rate = flt(rate)
+
+	if not price_list_rate:
+		return 0
+
+	change_rate = flt(frappe.get_cached_value("Item", item_code, 'change_rate'))
+
+	allowed_change = abs(price_list_rate * change_rate / 100)
+
+	if rate < price_list_rate:
+		difference = price_list_rate - rate
+		return cint(difference > allowed_change)
 	else:
 		return 0

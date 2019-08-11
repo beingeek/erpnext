@@ -52,11 +52,6 @@ def makeReturnReceipt(doc,method):
 
 
 @frappe.whitelist()
-def getItemtaxes(item_code):
-	item=frappe.get_doc("Item",item_code)
-	return dict(([d.tax_type, d.tax_rate] for d in item.get("taxes")))
-
-@frappe.whitelist()
 def validateReference(ref_no,party):
 	data=frappe.db.sql("""select mjea.idx,mje.name from `tabMaster Journal Entry` as mje inner join `tabMaster Journal Entry Account` as mjea on mje.name=mjea.parent where mjea.reference_name=%s and mjea.party=%s and mje.docstatus=1""",(ref_no,party),as_dict=1)
 	#return len(data)
@@ -204,15 +199,39 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 	return out
 
 @frappe.whitelist()
-def get_party_default_items(party_type, party):
-	if not party_type or not party:
+def get_party_default_items(args, existing_item_codes=None):
+	from erpnext.stock.get_item_details import get_item_details
+
+	if not existing_item_codes:
+		existing_item_codes = []
+	if isinstance(args, string_types):
+		args = json.loads(args)
+	if isinstance(existing_item_codes, string_types):
+		existing_item_codes = json.loads(existing_item_codes)
+
+	if not args.get('customer') and not args.get('supplier'):
 		return []
+
+	if args.get('customer'):
+		party_type = 'Customer'
+		party = args.get('customer')
+	else:
+		party_type = 'Supplier'
+		party = args.get('supplier')
 
 	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
 		filters={"parenttype": party_type, "parent": party})
-	default_item_codes = [d.item_code for d in default_items if not cint(frappe.get_cached_value("Item", d.item_code, "disabled"))]
+	item_codes = [d.item_code for d in default_items
+		if d.item_code not in existing_item_codes and not cint(frappe.get_cached_value("Item", d.item_code, "disabled"))]
 
-	return default_item_codes
+	out = []
+	for item_code in item_codes:
+		item_args = args.copy()
+		item_args['item_code'] = item_code
+
+		out.append(get_item_details(item_args))
+
+	return out
 
 @frappe.whitelist()
 def add_item_codes_to_party_default_items(party_type, party, item_codes):

@@ -57,6 +57,10 @@ class calculate_taxes_and_totals(object):
 			for item in self.doc.get("items"):
 				self.doc.round_floats_in(item)
 
+				item.alt_uom_size = item.stock_alt_uom_size * item.conversion_factor if item.alt_uom else 1.0
+				item.alt_uom_qty = flt(item.qty * item.alt_uom_size, item.precision('alt_uom_qty')) if item.alt_uom \
+					else item.qty
+
 				if item.discount_percentage == 100:
 					item.rate = 0.0
 				elif not item.rate:
@@ -71,17 +75,19 @@ class calculate_taxes_and_totals(object):
 				if has_margin_field and flt(item.rate_with_margin) > 0:
 					item.rate = flt(item.rate_with_margin * (1.0 - (item.discount_percentage / 100.0)), item.precision("rate"))
 					item.discount_amount = item.rate_with_margin - item.rate
-					item.amount_before_discount = flt(item.rate_with_margin * item.qty, item.precision("amount_before_discount"))
+					item.amount_before_discount = flt((item.rate_with_margin / item.alt_uom_size_std) * item.alt_uom_qty, item.precision("amount_before_discount"))
 				elif flt(item.price_list_rate) > 0:
 					item.discount_amount = item.price_list_rate - item.rate
-					item.amount_before_discount = flt(item.price_list_rate * item.qty, item.precision("amount_before_discount"))
+					item.amount_before_discount = flt((item.price_list_rate / item.alt_uom_size_std) * item.alt_uom_qty, item.precision("amount_before_discount"))
 				else:
 					item.discount_amount = 0
 					item.discount_percentage = 0
-					item.amount_before_discount = flt(item.rate * item.qty, item.precision("amount_before_discount"))
+					item.amount_before_discount = flt((item.rate / item.alt_uom_size_std) * item.alt_uom_qty, item.precision("amount_before_discount"))
+
+				item.alt_uom_rate = flt(item.rate / item.alt_uom_size_std)
+				item.amount = flt(item.alt_uom_rate * item.alt_uom_qty,	item.precision("amount"))
 
 				item.net_rate = item.rate
-				item.amount = flt(item.rate * item.qty,	item.precision("amount"))
 				item.net_amount = item.amount
 				item.total_discount = flt(item.amount_before_discount - item.amount, item.precision("total_discount"))
 
@@ -95,7 +101,7 @@ class calculate_taxes_and_totals(object):
 					item.tax_exclusive_rate_with_margin = item.rate_with_margin
 					item.base_tax_exclusive_rate_with_margin = item.base_rate_with_margin
 
-				self._set_in_company_currency(item, ["price_list_rate", "rate", "amount", "net_rate", "net_amount",
+				self._set_in_company_currency(item, ["price_list_rate", "rate", "alt_uom_rate", "amount", "net_rate", "net_amount",
 					"tax_exclusive_price_list_rate", "tax_exclusive_rate", "tax_exclusive_amount",
 					"amount_before_discount", "total_discount", "tax_exclusive_amount_before_discount", "tax_exclusive_total_discount"])
 
@@ -466,6 +472,8 @@ class calculate_taxes_and_totals(object):
 			for d in self.doc.items:
 				if d.total_weight:
 					self.doc.total_gross_weight += d.total_weight
+
+			self.doc.total_gross_weight_kg = self.doc.total_gross_weight * 0.45359237
 
 	def set_rounded_total(self):
 		if self.doc.meta.get_field("rounded_total"):

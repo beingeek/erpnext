@@ -94,17 +94,23 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			$.each(this.frm.doc["items"] || [], function(i, item) {
 				frappe.model.round_floats_in(item);
 
+				item.alt_uom_size = item.alt_uom ? item.stock_alt_uom_size * item.conversion_factor : 1.0;
+				item.alt_uom_qty = item.alt_uom ? flt(item.qty * item.alt_uom_size, precision('alt_uom_qty', item))
+					: item.qty;
+
 				var has_margin_field = frappe.meta.has_field(item.doctype, 'margin_type');
 				if(has_margin_field && flt(item.rate_with_margin) > 0) {
-					item.amount_before_discount = flt(item.rate_with_margin * item.qty, precision("amount_before_discount", item));
+					item.amount_before_discount = flt((item.rate_with_margin / item.alt_uom_size_std) * item.alt_uom_qty, precision("amount_before_discount", item));
 				} else if(flt(item.price_list_rate) > 0) {
-					item.amount_before_discount = flt(item.price_list_rate * item.qty, precision("amount_before_discount", item));
+					item.amount_before_discount = flt((item.price_list_rate / item.alt_uom_size_std) * item.alt_uom_qty, precision("amount_before_discount", item));
 				} else {
-					item.amount_before_discount = flt(item.rate * item.qty, precision("amount_before_discount", item));
+					item.amount_before_discount = flt((item.rate / item.alt_uom_size_std) * item.alt_uom_qty, precision("amount_before_discount", item));
 				}
 
+				item.alt_uom_rate = flt(item.rate / (item.alt_uom_size_std || 1));
+				item.amount = flt(item.alt_uom_rate * item.alt_uom_qty,	precision("amount", item));
+
 				item.net_rate = item.rate;
-				item.amount = flt(item.rate * item.qty, precision("amount", item));
 				item.net_amount = item.amount;
 				item.total_discount = flt(item.amount_before_discount - item.amount, precision("total_discount", item));
 
@@ -122,7 +128,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 				item.item_tax_amount = 0.0;
 				item.total_weight = flt(item.weight_per_unit * item.stock_qty);
 
-				me.set_in_company_currency(item, ["price_list_rate", "rate", "amount", "net_rate", "net_amount",
+				me.set_in_company_currency(item, ["price_list_rate", "rate", "alt_uom_rate", "amount", "net_rate", "net_amount",
 					"tax_exclusive_price_list_rate", "tax_exclusive_rate", "tax_exclusive_amount",
 					"amount_before_discount", "total_discount", "tax_exclusive_amount_before_discount", "tax_exclusive_total_discount"]);
 			});

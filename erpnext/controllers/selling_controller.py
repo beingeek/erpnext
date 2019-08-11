@@ -41,11 +41,14 @@ class SellingController(StockController):
 		self.validate_max_discount()
 		self.validate_selling_price()
 		self.set_qty_as_per_stock_uom()
-		self.set_alt_uom_qty()
 		self.set_po_nos()
 		self.set_gross_profit()
 		set_default_income_account_for_item(self)
 		self.set_customer_address()
+
+	def before_submit(self):
+		if self.authorize == "Required" and not frappe.user.has_role('Price Authorization'):
+			frappe.throw(_("Price Override Authorization required"))
 
 	def set_missing_values(self, for_validate=False):
 
@@ -54,6 +57,18 @@ class SellingController(StockController):
 		# set contact and address details for customer, if they are not mentioned
 		self.set_missing_lead_customer_details()
 		self.set_price_list_and_item_details(for_validate=for_validate)
+
+	def set_price_override_authorization(self):
+		from erpnext.stock.get_item_details import validate_price_change
+
+		required = False
+		for item in self.items:
+			item.authorization_required = validate_price_change(item.item_code, item.price_list_rate, item.rate)
+			if item.authorization_required:
+				required = True
+
+		if self.authorize != 'Authorized':
+			self.authorize = 'Required' if required else 'Not Required'
 
 	def set_missing_lead_customer_details(self):
 		if getattr(self, "customer", None):
@@ -156,13 +171,6 @@ class SellingController(StockController):
 				if not d.conversion_factor:
 					frappe.throw(_("Row {0}: Conversion Factor is mandatory").format(d.idx))
 				d.stock_qty = flt(d.qty) * flt(d.conversion_factor)
-
-	def set_alt_uom_qty(self):
-		for d in self.get("items"):
-			if d.meta.get_field("alt_uom_qty"):
-				if not d.alt_uom:
-					d.alt_uom_size = 1.0
-				d.alt_uom_qty = flt(flt(d.stock_qty) * flt(d.alt_uom_size), d.precision("alt_uom_qty"))
 
 	def validate_selling_price(self):
 		def throw_message(item_name, rate, ref_rate_field):

@@ -20,6 +20,20 @@ class StockController(AccountsController):
 	def validate(self):
 		super(StockController, self).validate()
 		self.validate_inspection()
+		self.set_pallets_qty()
+		self.set_total_boxes()
+
+	def set_pallets_qty(self):
+		if self.meta.get_field('total_pallets'):
+			self.total_pallets = 0
+
+			for d in self.get("items"):
+				d.pallets = flt(flt(d.stock_qty) / flt(d.qty_per_pallet), d.precision('pallets')) if d.qty_per_pallet else 0
+				self.total_pallets += d.pallets
+
+	def set_total_boxes(self):
+		if self.meta.get_field('total_boxes'):
+			self.total_boxes = sum([flt(d.boxes) for d in self.get("items")])
 
 	def make_gl_entries(self, gl_entries=None, repost_future_gle=True, from_repost=False):
 		if self.docstatus == 2:

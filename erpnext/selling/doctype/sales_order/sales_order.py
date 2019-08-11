@@ -108,6 +108,9 @@ class SalesOrder(SellingController):
 	def validate_delivery_date(self):
 		if self.order_type == 'Sales':
 			if self.delivery_date:
+				if self.delivery_date < self.transaction_date:
+					frappe.throw(_("Delivery Date cannot be before Transaction Date"))
+
 				for d in self.get("items"):
 					d.delivery_date = self.delivery_date
 			else:

@@ -220,35 +220,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 	},
 
 	get_supplier_default_items: function() {
-		var me = this;
-		if (this.frm.doc.docstatus===0 && me.frm.doc.supplier) {
-			return frappe.call({
-				method: "erpnext.api.get_party_default_items",
-				args: {
-					party_type: "Supplier",
-					party: me.frm.doc.supplier
-				},
-				callback: function(r) {
-					if (r.message && !r.exc) {
-						var rows_added = [];
-						var existing_item_codes = me.frm.doc.items.map(d => d.item_code).filter(d => d);
-						$.each(r.message || [], function(i, item_code) {
-							if (!existing_item_codes.includes(item_code)) {
-								var row = frappe.model.add_child(me.frm.doc, "Purchase Order Item", "items", 1);
-								row._item_code = item_code;
-								row.qty = 0;
-								rows_added.push(row);
-							}
-						});
-						me.frm.refresh_field("items");
-
-						$.each(rows_added, function(i, row) {
-							frappe.model.set_value(row.doctype, row.name, "item_code", row._item_code);
-						});
-					}
-				}
-			});
-		}
+		this.get_party_default_items();
 	},
 
 	get_items_from_open_material_requests: function() {

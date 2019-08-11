@@ -199,6 +199,7 @@ def get_pricing_rule_for_item(args):
 
 			item_details.update({
 				"price_list_rate": pricing_rule_rate * args.get("conversion_factor"),
+				"rate": pricing_rule_rate * args.get("conversion_factor"),
 				"discount_percentage": 0.0
 			})
 		else:
