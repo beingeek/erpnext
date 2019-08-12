@@ -92,8 +92,8 @@ def execute():
 		if frappe.get_meta(dt + " Item").has_field('stock_alt_uom_size'):
 			frappe.db.sql("""
 				update `tab{dt} Item` set
-					stock_alt_uom_size = weight_per_unit / conversion_factor,
-					stock_alt_uom_size_std = weight_per_unit / conversion_factor,
+					stock_alt_uom_size = weight_per_unit / if(conversion_factor=0, 1, conversion_factor),
+					stock_alt_uom_size_std = weight_per_unit / if(conversion_factor=0, 1, conversion_factor),
 					alt_uom_size_std = weight_per_unit
 			""".format(dt=dt))
 		else:
