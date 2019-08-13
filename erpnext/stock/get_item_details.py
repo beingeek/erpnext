@@ -92,7 +92,7 @@ def get_item_details(args):
 
 	if args.doctype == 'Sales Order':
 		custom_projected_qty = get_item_custom_projected_qty(args.transaction_date, [args.item_code], args.name)
-		out.update(custom_projected_qty.get(args.item_code))
+		out.update(custom_projected_qty.get(args.item_code, {}))
 
 	return out
 

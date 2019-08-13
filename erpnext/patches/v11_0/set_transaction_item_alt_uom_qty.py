@@ -63,6 +63,13 @@ def execute():
 	frappe.reload_doc('stock', 'doctype', 'stock_entry_detail', force=1)
 
 	# Rename fields
+	for dt in ['Item']:
+		for old, new in [('cost_center', 'selling_cost_center')]:
+			print("Rename Field in {0}: {1} -> {2}".format(dt, old, new))
+			rename_field(dt, old, new)
+
+	rename_field(dt, old, new)
+
 	for dt in doctypes:
 		for old, new in [('total_net_weight', 'total_gross_weight'), ('total_pallet', 'total_pallets')]:
 			if old_meta[dt].has_field(old) and not old_meta[dt].has_field(new):
@@ -79,6 +86,7 @@ def execute():
 	print("Item")
 	for item in frappe.db.sql("select name, gross_weight from tabItem", as_dict=1):
 		doc = frappe.get_doc('Item', item.name)
+		doc.weight_uom = 'lbs'
 		doc.alt_uom = doc.weight_uom if doc.weight_uom != doc.stock_uom else "lbs"
 		doc.alt_uom_size = flt(doc.weight_per_unit) or 1
 		doc.weight_per_unit = item.gross_weight
@@ -199,6 +207,6 @@ def execute():
 	for name in prop_setters:
 		frappe.delete_doc('Property Setter', name)
 
-	custom_scripts = frappe.db.sql_list("select name from `tabCustom Script` where dt in ({0})".format(", ".join(quoted_dts_without_item)))
+	custom_scripts = frappe.db.sql_list("select name from `tabCustom Script` where dt in ({0})".format(", ".join(quoted_dts)))
 	for name in custom_scripts:
 		frappe.delete_doc('Custom Script', name)

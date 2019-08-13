@@ -1903,6 +1903,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 					args: args,
 					existing_item_codes: existing_item_codes,
 				},
+				freeze: true,
+				freeze_message: "Loading default items. Please Wait...",
 				callback: function(r) {
 					if (r.message && !r.exc) {
 						$.each(r.message || [], function(i, item_data) {

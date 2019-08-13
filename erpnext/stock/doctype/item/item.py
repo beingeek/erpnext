@@ -131,6 +131,7 @@ class Item(WebsiteGenerator):
 		self.validate_item_defaults()
 		self.update_defaults_from_item_group()
 		self.validate_stock_for_has_batch_and_has_serial()
+		self.calculate_volume()
 
 		if not self.get("__islocal"):
 			self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
@@ -541,16 +542,17 @@ class Item(WebsiteGenerator):
 				self.append("uoms", d)
 
 	def add_alt_uom_in_conversion_table(self):
-		uom_conv_list = [(d.from_uom, d.to_uom) for d in self.get("uom_conversion_graph")]
-		if self.alt_uom and self.alt_uom != self.stock_uom \
-				and (self.stock_uom, self.alt_uom) not in uom_conv_list and (self.alt_uom, self.stock_uom) not in uom_conv_list:
+		if self.alt_uom and self.alt_uom != self.stock_uom:
 			if not flt(self.alt_uom_size):
-				frappe.throw(_("Per Box / Container Size is invalid"))
-			ch = self.append('uom_conversion_graph', {})
-			ch.from_qty = 1.0
-			ch.from_uom = self.stock_uom
-			ch.to_qty = flt(self.alt_uom_size)
-			ch.to_uom = self.alt_uom
+				frappe.throw(_("Per Unit cannot be 0"))
+
+			alt_uom_row = filter(lambda d: {d.from_uom, d.to_uom} == {self.stock_uom, self.alt_uom}, self.uom_conversion_graph)
+			alt_uom_row = alt_uom_row[0] if alt_uom_row else self.append('uom_conversion_graph')
+
+			alt_uom_row.from_qty = 1.0
+			alt_uom_row.from_uom = self.stock_uom
+			alt_uom_row.to_qty = flt(self.alt_uom_size)
+			alt_uom_row.to_uom = self.alt_uom
 
 	def update_template_tables(self):
 		template = frappe.get_doc("Item", self.variant_of)
@@ -580,9 +582,6 @@ class Item(WebsiteGenerator):
 			if d.uom and cstr(d.uom) == cstr(self.stock_uom) and flt(d.conversion_factor) != 1:
 				frappe.throw(
 					_("Conversion factor for default Unit of Measure must be 1"))
-
-			if self.alt_uom and d.uom == self.alt_uom:
-				self.alt_uom_size = flt(1/flt(d.conversion_factor), self.precision("alt_uom_size"))
 
 	def validate_item_type(self):
 		if self.has_serial_no == 1 and self.is_stock_item == 0 and not self.is_fixed_asset:
@@ -614,6 +613,8 @@ class Item(WebsiteGenerator):
 					frappe.throw(_("{0} entered twice in Item Tax").format(d.item_tax_template))
 				else:
 					check_list.append(d.item_tax_template)
+
+		self.hst = "Yes" if self.taxes else "No"
 
 	def validate_barcode(self):
 		from stdnum import ean
@@ -783,9 +784,15 @@ class Item(WebsiteGenerator):
 
 	def validate_item_defaults(self):
 		companies = list(set([row.company for row in self.item_defaults]))
-
 		if len(companies) != len(self.item_defaults):
 			frappe.throw(_("Cannot set multiple Item Defaults for a company."))
+
+		if len(companies) == 1:
+			for row in self.item_defaults:
+				row.selling_cost_center = self.selling_cost_center
+				row.buying_cost_center = self.buying_cost_center
+				row.default_warehouse = self.default_warehouse
+				row.default_supplier = self.default_supplier
 
 	def update_defaults_from_item_group(self):
 		"""Get defaults from Item Group"""
@@ -908,6 +915,11 @@ class Item(WebsiteGenerator):
 			for value in ["has_batch_no", "has_serial_no"]:
 				if frappe.db.get_value("Item", self.name, value) != self.get_value(value):
 					frappe.throw(_("Cannot change {0} as Stock Transaction for Item {1} exist.".format(value, self.name)))
+
+	def calculate_volume(self):
+		self.volume_per_unit = flt(self.size_l) * flt(self.size_b) * flt(self.size_h)
+		if self.volume_per_unit and not self.volume_uom:
+			frappe.throw(_("Please set Volume UOM"))
 
 def get_timeline_data(doctype, name):
 	'''returns timeline data based on stock ledger entry'''

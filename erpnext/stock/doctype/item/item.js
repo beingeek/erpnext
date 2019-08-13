@@ -92,6 +92,8 @@ frappe.ui.form.on("Item", {
 		erpnext.item.edit_prices_button(frm);
 		erpnext.item.toggle_attributes(frm);
 
+		erpnext.item.calculate_volume(frm);
+
 		frm.add_custom_button(__('Duplicate'), function() {
 			var new_item = frappe.model.copy_doc(frm.doc);
 			if(new_item.item_name===new_item.item_code) {
@@ -115,9 +117,6 @@ frappe.ui.form.on("Item", {
 		['is_stock_item', 'has_serial_no', 'has_batch_no'].forEach((fieldname) => {
 			frm.set_df_property(fieldname, 'read_only', stock_exists);
 		});
-
-		const alt_uom_readonly = (!frm.doc.__islocal && frm.doc.alt_uom && flt(frm.doc.alt_uom_size)) ? 1 : 0;
-		frm.set_df_property('alt_uom_size', 'read_only', alt_uom_readonly);
 	},
 
 	validate: function(frm){
@@ -177,6 +176,16 @@ frappe.ui.form.on("Item", {
 		if (frm.doc.default_warehouse && !frm.doc.website_warehouse){
 			frm.set_value("website_warehouse", frm.doc.default_warehouse);
 		}
+	},
+
+	size_l: function (frm) {
+		erpnext.item.calculate_volume(frm);
+	},
+	size_b: function (frm) {
+		erpnext.item.calculate_volume(frm);
+	},
+	size_h: function (frm) {
+		erpnext.item.calculate_volume(frm);
 	}
 });
 
@@ -707,6 +716,24 @@ $.extend(erpnext.item, {
 			frm.toggle_display("attributes", false);
 		}
 		frm.layout.refresh_sections();
+	},
+
+	reset_alt_uom_conversion: function(frm, cdt, cdn) {
+		var row = locals[cdt][cdn];
+		if ((row.from_uom == frm.doc.alt_uom && row.to_uom == frm.doc.stock_uom) || (row.to_uom == frm.doc.alt_uom && row.from_uom == frm.doc.stock_uom)) {
+			row.from_qty = 1.0;
+			row.from_uom = frm.doc.stock_uom;
+			row.to_qty = flt(frm.doc.alt_uom_size);
+			row.to_uom = frm.doc.alt_uom;
+
+			frm.refresh_field('uom_conversion_graph');
+			frappe.msgprint(__("Please set Contents UOM conversion from the 'Per Unit' field instead"));
+		}
+	},
+
+	calculate_volume: function (frm) {
+		frm.doc.volume_per_unit = flt(frm.doc.size_l) * flt(frm.doc.size_b) * flt(frm.doc.size_h);
+		frm.refresh_field('volume_per_unit');
 	}
 });
 
@@ -728,4 +755,19 @@ frappe.ui.form.on("UOM Conversion Detail", {
 			});
 		}
 	}
-})
+});
+
+frappe.ui.form.on("UOM Conversion Graph", {
+	from_qty: function (frm, cdt, cdn) {
+		erpnext.item.reset_alt_uom_conversion(frm, cdt, cdn);
+	},
+	to_qty: function (frm, cdt, cdn) {
+		erpnext.item.reset_alt_uom_conversion(frm, cdt, cdn);
+	},
+	from_uom: function (frm, cdt, cdn) {
+		erpnext.item.reset_alt_uom_conversion(frm, cdt, cdn);
+	},
+	to_uom: function (frm, cdt, cdn) {
+		erpnext.item.reset_alt_uom_conversion(frm, cdt, cdn);
+	},
+});
