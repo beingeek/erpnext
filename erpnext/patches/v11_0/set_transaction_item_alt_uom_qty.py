@@ -161,8 +161,8 @@ def execute():
 				update `tab{dt} Item` i
 				inner join `tab{dt}` m on m.name = i.parent
 				set
-					i.alt_uom_rate = i.amount / if(i.alt_uom_qty = 0, i.qty, i.alt_uom_qty),
-					i.base_alt_uom_rate = i.amount * m.conversion_rate / if(i.alt_uom_qty = 0, i.qty, i.alt_uom_qty)
+					i.alt_uom_rate = i.amount / if(i.alt_uom_qty = 0, if(i.qty=0, 1, i.qty), i.alt_uom_qty),
+					i.base_alt_uom_rate = i.amount * m.conversion_rate / if(i.alt_uom_qty = 0, if(i.qty=0, 1, i.qty), i.alt_uom_qty)
 			""".format(dt=dt))
 		else:
 			print("DocType {dt} Item does not have field alt_uom_rate".format(dt=dt))
