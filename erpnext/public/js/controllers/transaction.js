@@ -1019,11 +1019,14 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			item.stock_qty = flt(item.qty * item.conversion_factor, precision("stock_qty", item));
 			item.total_weight = flt(item.stock_qty * item.weight_per_unit);
 
+			item.volume_cuft = flt(item.stock_qty * item.volume_per_unit_cuft);
+
 			item.alt_uom_size = item.stock_alt_uom_size * item.conversion_factor;
 			item.alt_uom_size_std = item.stock_alt_uom_size_std * item.conversion_factor;
 
 			refresh_field("stock_qty", item.name, item.parentfield);
 			refresh_field("total_weight", item.name, item.parentfield);
+			refresh_field("volume_cuft", item.name, item.parentfield);
 
 			this.toggle_conversion_factor(item);
 			this.calculate_gross_weight();
@@ -1045,7 +1048,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	alt_uom_qty: function(doc, cdt, cdn) {
 		var item = frappe.get_doc(cdt, cdn);
 
-		if (!item.alt_uom_qty_editable) {
+		if (!item.alt_uom_qty_editable || item.alt_uom == item.uom) {
 			item.alt_uom_qty = item.alt_uom ? flt(item.qty * item.alt_uom_size, precision('alt_uom_qty', item)) : item.qty;
 			refresh_field('alt_uom_qty', item.name, item.parentfield);
 			return;
@@ -1164,14 +1167,17 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		/* Calculate Total Net Weight then further applied shipping rule to calculate shipping charges.*/
 		var me = this;
 		this.frm.doc.total_gross_weight = 0.0;
+		this.frm.doc.total_volume_cuft = 0.0;
 
 		$.each(this.frm.doc["items"] || [], function(i, item) {
 			me.frm.doc.total_gross_weight += flt(item.total_weight);
+			me.frm.doc.total_volume_cuft += flt(item.volume_cuft);
 		});
 
 		this.frm.doc.total_gross_weight_kg = this.frm.doc.total_gross_weight * 0.45359237;
 
 		refresh_field("total_gross_weight");
+		refresh_field("total_volume_cuft");
 		this.shipping_rule();
 	},
 

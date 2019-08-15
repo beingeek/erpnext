@@ -100,16 +100,16 @@ def execute():
 		if frappe.get_meta(dt + " Item").has_field('stock_alt_uom_size'):
 			frappe.db.sql("""
 				update `tab{dt} Item` set
-					stock_alt_uom_size = weight_per_unit / if(conversion_factor=0, 1, conversion_factor),
-					stock_alt_uom_size_std = weight_per_unit / if(conversion_factor=0, 1, conversion_factor),
-					alt_uom_size_std = weight_per_unit
+					stock_alt_uom_size = if(weight_per_unit=0, 1, weight_per_unit) / if(conversion_factor=0, 1, conversion_factor),
+					stock_alt_uom_size_std = if(weight_per_unit=0, 1, weight_per_unit) / if(conversion_factor=0, 1, conversion_factor),
+					alt_uom_size_std = if(weight_per_unit=0, 1, weight_per_unit)
 			""".format(dt=dt))
 		else:
 			print("DocType {dt} Item does not have field stock_alt_uom_size".format(dt=dt))
 
 		frappe.db.sql("""
 			update `tab{dt} Item` set
-				alt_uom_size = weight_per_unit,
+				alt_uom_size = if(weight_per_unit=0, 1, weight_per_unit),
 				alt_uom = weight_uom
 		""".format(dt=dt))
 
@@ -161,8 +161,8 @@ def execute():
 				update `tab{dt} Item` i
 				inner join `tab{dt}` m on m.name = i.parent
 				set
-					i.alt_uom_rate = if(i.alt_uom_qty = 0, 0, i.amount / i.alt_uom_qty),
-					i.base_alt_uom_rate = if(i.alt_uom_qty = 0, 0, i.amount * m.conversion_rate / i.alt_uom_qty)
+					i.alt_uom_rate = i.amount / if(i.alt_uom_qty = 0, i.qty, i.alt_uom_qty),
+					i.base_alt_uom_rate = i.amount * m.conversion_rate / if(i.alt_uom_qty = 0, i.qty, i.alt_uom_qty)
 			""".format(dt=dt))
 		else:
 			print("DocType {dt} Item does not have field alt_uom_rate".format(dt=dt))

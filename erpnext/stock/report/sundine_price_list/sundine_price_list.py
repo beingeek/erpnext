@@ -86,8 +86,8 @@ def get_data(filters):
 	po_data = frappe.db.sql("""
 		select
 			item.item_code,
-			sum(if(item.qty - item.received_qty < 0, 0, item.qty - item.received_qty)) as po_qty,
-			sum(if(item.qty - item.received_qty < 0, 0, item.qty - item.received_qty) * item.landed_rate) as po_lc_amount
+			sum(if(item.qty - item.received_qty < 0, 0, item.qty - item.received_qty) * item.conversion_factor) as po_qty,
+			sum(if(item.qty - item.received_qty < 0, 0, item.qty - item.received_qty) * item.conversion_factor * item.landed_rate) as po_lc_amount
 		from `tabPurchase Order Item` item
 		inner join `tabPurchase Order` po on po.name = item.parent
 		where item.docstatus < 2 and po.status != 'Closed' {0} {1}

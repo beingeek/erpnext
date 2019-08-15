@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+from frappe.utils import cint
 from frappe.model.document import Document
 from frappe.utils import flt
 from erpnext.api5 import qtyAdjust
@@ -28,15 +29,14 @@ class QtyAdjust(Document):
 
 		# Adjust
 		for d in sales_orders:
-			qtyAdjust(d.customer, d.dn, d.new_item_code or self.item_code, d.qty, d.allocated_qty,
-				d.back_order_qty, d.back_order_date or d.date)
+			qtyAdjust(d.customer, d.dn, d.new_item_code or self.item_code, d.qty / d.conversion_factor, d.allocated_qty / d.conversion_factor,
+				d.back_order_qty / d.conversion_factor, d.back_order_date or d.date)
 
 		frappe.msgprint("Sales Orders Adjusted")
 
 
 def change_item_code(sales_order, so_detail, new_item_code, old_item_code):
-	from erpnext.api2 import customerPriceList
-	from erpnext.stock.get_item_details import get_conversion_factor
+	from erpnext.stock.get_item_details import get_item_details
 
 	doc = frappe.get_doc("Sales Order", sales_order)
 	row = filter(lambda d: d.name == so_detail, doc.items)
@@ -45,30 +45,35 @@ def change_item_code(sales_order, so_detail, new_item_code, old_item_code):
 	else:
 		row = row[0]
 
-	rate = flt(customerPriceList(row.idx, row.idx, doc.customer, new_item_code, doc.selling_price_list)[0].get('price'))
-	item_details = frappe.db.get_value("Item", new_item_code, ["item_name", "description",
-		"sale_pallets", "gross_weight", "sales_uom", "stock_uom", "hst", "weight_per_unit", "weight_uom", "cost_center"], as_dict=1)
+	item_details = get_item_details({
+		'item_code': new_item_code,
+		'set_warehouse': doc.set_warehouse,
+		'warehouse': row.warehouse,
+		'customer': doc.customer,
+		'currency': doc.currency,
+		'conversion_rate': doc.conversion_rate,
+		'price_list': doc.selling_price_list,
+		'price_list_currency': doc.price_list_currency,
+		'plc_conversion_rate': doc.plc_conversion_rate,
+		'company': doc.company,
+		'order_type': doc.order_type,
+		'transaction_date': doc.transaction_date or doc.get('posting_date'),
+		'delivery_date': doc.delivery_date or doc.transaction_date or doc.get('posting_date'),
+		'ignore_pricing_rule': cint(row.override_price_list_rate or doc.ignore_pricing_rule),
+		'doctype': doc.doctype,
+		'name': doc.name,
+		'project': row.get('project') or doc.project,
+		'qty': row.qty or 0,
+		'stock_qty': row.stock_qty,
+		'uom': row.uom,
+		'tax_category': doc.tax_category
+	})
+
+	for f in ['meta', 'name', 'doctype']:
+		if f in item_details:
+			del item_details[f]
 
 	row.update(item_details)
-	row.item_code = new_item_code
-	row.rate = rate
-	row.uom = item_details.sales_uom or item_details.stock_uom
-	row.conversion_factor = get_conversion_factor(new_item_code, row.uom)['conversion_factor']
-	row.weight_lbs = item_details.weight_per_unit
-	row.gross_weight_lbs = item_details.gross_weight
-	row.weight_kgs = flt(item_details.weight_per_unit * 0.45359237, 2)
-	row.hst = 1 if item_details.hst == "Yes" else 0
-
-	doc.total_boxes = 0
-	doc.total_pallets = 0
-	doc.total_gross_weight_lbs = 0
-	for d in doc.items:
-		doc.total_boxes += flt(d.qty)
-		doc.total_gross_weight_lbs += flt(d.qty) * flt(d.gross_weight_lbs)
-		if flt(d.sale_pallets) > 0:
-			doc.total_pallets += flt(d.qty)/flt(d.sale_pallets)
-
-	doc.total_weight_kg = flt(doc.total_gross_weight_lbs * 0.45359237, 2)
 	doc.save()
 
 
@@ -81,7 +86,7 @@ def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
 
 	so_data = frappe.db.sql("""
 		select 'Sales Order' as dt, so.name as dn, so.docstatus, so.customer, so.delivery_date as date, i.name as so_detail,
-			i.qty - ifnull(i.delivered_qty, 0) as qty
+			(i.qty - ifnull(i.delivered_qty, 0)) * i.conversion_factor as qty, i.conversion_factor
 		from `tabSales Order Item` i
 		inner join `tabSales Order` so on so.name = i.parent
 		where so.docstatus < 2 and ifnull(i.delivered_qty, 0) < ifnull(i.qty, 0) and so.status != 'Closed'
@@ -90,7 +95,7 @@ def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
 		union all
 		
 		select 'Sales Invoice' as dt, sinv.name as dn, sinv.docstatus, sinv.customer, sinv.delivery_date as date, i.name as so_detail,
-			i.qty as qty
+			i.stock_qty as qty, i.conversion_factor
 		from `tabSales Invoice Item` i
 		inner join `tabSales Invoice` sinv on sinv.name = i.parent
 		where sinv.docstatus = 0 and ifnull(i.sales_order, '') = ''

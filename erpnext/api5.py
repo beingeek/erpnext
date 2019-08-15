@@ -447,11 +447,6 @@ def save_sales_order(sales_order_id,item_code,qty,backorder_date):
 	sales_order_data.selling_price_list=d.selling_price_list
 	sales_order_data.is_back_order = 1
 	sales_order_data.qty_adjust = 1
-	sales_order_data.total_boxes=flt(qty)
-	sales_order_data.total_gross_weight_lbs=flt(qty)*flt(data_soi.gross_weight_lbs)
-	#sales_order_data.total_pallets=flt(qty)/flt(data_soi.sale_pallets)
-	sales_order_data.total_weight_kg=flt(qty)*flt(data_soi.weight_kgs)
-	sales_order_data.total_net_weight=flt(qty)*flt(data_soi.weight_lbs)
 	final=sales_order_data.save(ignore_permissions=True)
 	if final:
 		return _(True)
@@ -476,12 +471,14 @@ def save_sales_order_item(sid,item_id,item_qty,rate,itemdoc_id,backorder_date):
 							"rate":rate,
 							"delivery_date":str(backorder_date),
 							"uom": datasalesorder_item.uom,
-							"weight_lbs": datasalesorder_item.weight_lbs,
-							"weight_kgs":datasalesorder_item.weight_kgs,
+							"alt_uom": datasalesorder_item.alt_uom,
+							"stock_alt_uom_size": datasalesorder_item.alt_uom,
+							"alt_uom_size": datasalesorder_item.alt_uom,
+							"stock_alt_uom_size_std": datasalesorder_item.alt_uom,
+							"alt_uom_size_std": datasalesorder_item.alt_uom,
 							"weight_per_unit":datasalesorder_item.weight_per_unit,
 							"weight_uom":datasalesorder_item.weight_uom,
-							"gross_weight_lbs":datasalesorder_item.gross_weight_lbs,
-							"sale_pallets":datasalesorder_item.sale_pallets,
+							"qty_per_pallet":datasalesorder_item.qty_per_pallet,
 							"cost_center":getCostCenter(item_id)
 						})
 	return item_doc.insert()

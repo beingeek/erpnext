@@ -28,10 +28,10 @@ def get_data(filters):
 			i.`schedule_date` as "Arrival Date",
 			po.`supplier` as "Supplier",
 			i.item_code as "Item Code",
-			i.qty as "Ordered Qty",
-			(i.qty - ifnull(i.received_qty, 0)) as "Balance Qty",
-			i.landed_rate as "LC/Unit",
-			i.landed_cost_voucher_amount / i.qty as "Expenses/Unit",
+			i.stock_qty as "Ordered Qty",
+			(i.qty - ifnull(i.received_qty, 0)) * i.conversion_factor as "Balance Qty",
+			i.landed_rate * i.conversion_factor as "LC/Unit",
+			i.landed_cost_voucher_amount / (i.qty * i.conversion_factor) as "Expenses/Unit",
 			po.order_type as "Shipping Mode",
 			po.status as "Status"
 		from

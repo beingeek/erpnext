@@ -917,9 +917,23 @@ class Item(WebsiteGenerator):
 					frappe.throw(_("Cannot change {0} as Stock Transaction for Item {1} exist.".format(value, self.name)))
 
 	def calculate_volume(self):
-		self.volume_per_unit = flt(self.size_l) * flt(self.size_b) * flt(self.size_h)
-		if self.volume_per_unit and not self.volume_uom:
-			frappe.throw(_("Please set Volume UOM"))
+		self.volume_per_unit = flt(self.size_l) * flt(self.size_w) * flt(self.size_h)
+		if self.volume_per_unit and not self.size_uom:
+			frappe.throw(_("Please set Dimension UOM"))
+
+		to_ft = {
+			"Inch": 1.0/12,
+			"Centimeter": 1.0/30.48,
+			"Millimeter": 1.0/304.8,
+		}
+		to_mt = {
+			"Inch": 1.0/39.37,
+			"Centimeter": 1.0/100,
+			"Millimeter": 1.0/1000,
+		}
+
+		self.volume_per_unit_cuft = self.volume_per_unit * to_ft[self.size_uom]**3
+		self.volume_per_unit_cumt = self.volume_per_unit * to_mt[self.size_uom]**3
 
 def get_timeline_data(doctype, name):
 	'''returns timeline data based on stock ledger entry'''

@@ -92,8 +92,6 @@ frappe.ui.form.on("Item", {
 		erpnext.item.edit_prices_button(frm);
 		erpnext.item.toggle_attributes(frm);
 
-		erpnext.item.calculate_volume(frm);
-
 		frm.add_custom_button(__('Duplicate'), function() {
 			var new_item = frappe.model.copy_doc(frm.doc);
 			if(new_item.item_name===new_item.item_code) {
@@ -181,10 +179,13 @@ frappe.ui.form.on("Item", {
 	size_l: function (frm) {
 		erpnext.item.calculate_volume(frm);
 	},
-	size_b: function (frm) {
+	size_w: function (frm) {
 		erpnext.item.calculate_volume(frm);
 	},
 	size_h: function (frm) {
+		erpnext.item.calculate_volume(frm);
+	},
+	size_uom: function (frm) {
 		erpnext.item.calculate_volume(frm);
 	}
 });
@@ -732,8 +733,25 @@ $.extend(erpnext.item, {
 	},
 
 	calculate_volume: function (frm) {
-		frm.doc.volume_per_unit = flt(frm.doc.size_l) * flt(frm.doc.size_b) * flt(frm.doc.size_h);
+		frm.doc.volume_per_unit = flt(frm.doc.size_l) * flt(frm.doc.size_w) * flt(frm.doc.size_h);
+
+		var to_ft = {
+			"Inch": 1.0/12,
+			"Centimeter": 1.0/30.48,
+			"Millimeter": 1.0/304.8,
+		};
+		var to_mt = {
+			"Inch": 1.0/39.37,
+			"Centimeter": 1.0/100,
+			"Millimeter": 1.0/1000,
+		};
+
+		frm.doc.volume_per_unit_cuft = frm.doc.volume_per_unit * Math.pow(to_ft[frm.doc.size_uom], 3);
+		frm.doc.volume_per_unit_cumt = frm.doc.volume_per_unit * Math.pow(to_mt[frm.doc.size_uom], 3);
+
 		frm.refresh_field('volume_per_unit');
+		frm.refresh_field('volume_per_unit_cuft');
+		frm.refresh_field('volume_per_unit_cumt');
 	}
 });
 

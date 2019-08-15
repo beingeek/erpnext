@@ -131,6 +131,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 				item.item_tax_amount = 0.0;
 				item.total_weight = flt(item.weight_per_unit * item.stock_qty);
+				item.volume_cuft = flt(item.volume_per_unit_cuft * item.stock_qty);
 
 				me.set_in_company_currency(item, ["price_list_rate", "rate", "alt_uom_rate", "amount", "net_rate", "net_amount",
 					"tax_exclusive_price_list_rate", "tax_exclusive_rate", "tax_exclusive_amount",

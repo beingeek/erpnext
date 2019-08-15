@@ -108,6 +108,11 @@ class calculate_taxes_and_totals(object):
 					"tax_exclusive_price_list_rate", "tax_exclusive_rate", "tax_exclusive_amount",
 					"amount_before_discount", "total_discount", "tax_exclusive_amount_before_discount", "tax_exclusive_total_discount"])
 
+				item.total_weight = flt(item.weight_per_unit * item.stock_qty)
+
+				if item.meta.get_field('volume_cuft'):
+					item.volume_cuft = flt(item.volume_per_unit_cuft * item.stock_qty)
+
 				item.item_tax_amount = 0.0
 
 	def _set_in_company_currency(self, doc, fields, do_not_round_before_conversion=False):
@@ -477,6 +482,12 @@ class calculate_taxes_and_totals(object):
 					self.doc.total_gross_weight += d.total_weight
 
 			self.doc.total_gross_weight_kg = self.doc.total_gross_weight * 0.45359237
+
+		if self.doc.meta.get_field('total_volume_cuft'):
+			self.doc.total_volume_cuft = 0.0
+			for d in self.doc.items:
+				if d.volume_cuft:
+					self.doc.total_volume_cuft += d.volume_cuft
 
 	def set_rounded_total(self):
 		if self.doc.meta.get_field("rounded_total"):

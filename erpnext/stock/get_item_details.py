@@ -283,6 +283,7 @@ def get_basic_details(args, item):
 		"is_fixed_asset": item.is_fixed_asset,
 		"weight_per_unit":item.weight_per_unit,
 		"weight_uom":item.weight_uom,
+		"volume_per_unit_cuft": item.volume_per_unit_cuft,
 		"last_purchase_rate": item.last_purchase_rate if args.get("doctype") in ["Purchase Order"] else 0,
 		"transaction_date": args.get("transaction_date")
 	})

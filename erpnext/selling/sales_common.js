@@ -140,7 +140,7 @@ Customer Request`}
 			var color = 'inherit';
 			var background = 'inherit';
 
-			if (item.is_authorize || (item.item_code && !item.rate) || item.override_price_list_rate || item.pricing_rule) {
+			if (item.requires_authorization || (item.item_code && !item.rate) || item.override_price_list_rate || item.pricing_rule) {
 				color = 'red';
 			}
 			if (item.item_code && !item.rate) {
@@ -154,7 +154,7 @@ Customer Request`}
 		}
 	},
 
-	is_authorize: function(doc, cdt, cdn) {
+	requires_authorization: function(doc, cdt, cdn) {
 		this.set_item_warning_color(frappe.get_doc(cdt, cdn));
 	},
 

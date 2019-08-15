@@ -200,19 +200,17 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		if (this.frm.doc.docstatus == 0) {
 			var me = this;
 
-			if(this.selected_item_dn) {
-				var grid_row = this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn];
-				if(grid_row) {
-					me.frm.doc.current_actual_qty = grid_row.doc.actual_qty;
-					me.frm.refresh_field("current_actual_qty");
-					me.frm.doc.current_projected_qty = grid_row.doc.projected_qty;
-					me.frm.refresh_field("current_projected_qty");
-					for(var i = 1; i <= 5; ++i) {
-						me.frm.doc["po_day_" + i] = grid_row.doc["po_day_" + i];
-						me.frm.refresh_field("po_day_" + i);
-						me.frm.doc["so_day_" + i] = grid_row.doc["so_day_" + i];
-						me.frm.refresh_field("so_day_" + i);
-					}
+			var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
+			if(grid_row && grid_row.doc.item_code) {
+				me.frm.doc.current_actual_qty = grid_row.doc.actual_qty / grid_row.doc.conversion_factor;
+				me.frm.refresh_field("current_actual_qty");
+				me.frm.doc.current_projected_qty = grid_row.doc.projected_qty / grid_row.doc.conversion_factor;
+				me.frm.refresh_field("current_projected_qty");
+				for(var i = 1; i <= 5; ++i) {
+					me.frm.doc["po_day_" + i] = grid_row.doc["po_day_" + i] / grid_row.doc.conversion_factor;
+					me.frm.refresh_field("po_day_" + i);
+					me.frm.doc["so_day_" + i] = grid_row.doc["so_day_" + i] / grid_row.doc.conversion_factor;
+					me.frm.refresh_field("so_day_" + i);
 				}
 			} else {
 				me.frm.doc.current_actual_qty = 0;
@@ -227,6 +225,11 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 				}
 			}
 		}
+	},
+
+	conversion_factor: function(doc, cdt, cdn, dont_fetch_price_list_rate) {
+		this._super(doc, cdt, cdn, dont_fetch_price_list_rate);
+		this.update_selected_item_fields();
 	},
 
 	set_po_qty_labels: function() {
@@ -516,7 +519,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 	},
 
 	order_type: function() {
-		this.frm.fields_dict.items.grid.toggle_reqd("delivery_date", this.frm.doc.order_type == "Sales");
+		//this.frm.fields_dict.items.grid.toggle_reqd("delivery_date", this.frm.doc.order_type == "Sales");
 	},
 
 	tc_name: function() {

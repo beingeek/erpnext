@@ -122,7 +122,7 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 	po_data = frappe.db.sql("""
 		select
 			i.item_code, po.schedule_date as date,
-			sum(i.qty - ifnull(i.received_qty, 0)) as qty
+			sum((i.qty - ifnull(i.received_qty, 0)) * i.conversion_factor) as qty
 		from `tabPurchase Order Item` i
 		inner join `tabPurchase Order` po on po.name = i.parent
 		where po.docstatus < 2 and po.status != 'Closed' and ifnull(i.received_qty, 0) < ifnull(i.qty, 0)
@@ -135,7 +135,7 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 	so_data = frappe.db.sql("""
 		select
 			i.item_code, so.delivery_date as date,
-			sum(i.qty - ifnull(i.delivered_qty, 0)) as qty
+			sum((i.qty - ifnull(i.delivered_qty, 0)) * i.conversion_factor) as qty
 		from `tabSales Order Item` i
 		inner join `tabSales Order` so on so.name = i.parent
 		where so.docstatus < 2 and so.status != 'Closed' and ifnull(i.delivered_qty, 0) < ifnull(i.qty, 0)
@@ -146,7 +146,7 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 	sinv_data = frappe.db.sql("""
 		select
 			i.item_code, sinv.delivery_date as date,
-			sum(i.qty) as qty
+			sum(i.stock_qty) as qty
 		from `tabSales Invoice Item` i
 		inner join `tabSales Invoice` sinv on sinv.name = i.parent
 		where sinv.docstatus = 0 and ifnull(i.sales_order, '') = ''
