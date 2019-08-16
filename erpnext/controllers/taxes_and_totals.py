@@ -109,6 +109,7 @@ class calculate_taxes_and_totals(object):
 					"amount_before_discount", "total_discount", "tax_exclusive_amount_before_discount", "tax_exclusive_total_discount"])
 
 				item.total_weight = flt(item.weight_per_unit * item.stock_qty)
+				item.total_weight_kg = flt(item.total_weight * 0.45359237)
 
 				if item.meta.get_field('volume_cuft'):
 					item.volume_cuft = flt(item.volume_per_unit_cuft * item.stock_qty)
@@ -477,17 +478,15 @@ class calculate_taxes_and_totals(object):
 	def calculate_total_gross_weight(self):
 		if self.doc.meta.get_field('total_gross_weight'):
 			self.doc.total_gross_weight = 0.0
+			self.doc.total_gross_weight_kg = 0.0
 			for d in self.doc.items:
-				if d.total_weight:
-					self.doc.total_gross_weight += d.total_weight
-
-			self.doc.total_gross_weight_kg = self.doc.total_gross_weight * 0.45359237
+				self.doc.total_gross_weight += flt(d.total_weight)
+				self.doc.total_gross_weight_kg += flt(d.total_weight_kg)
 
 		if self.doc.meta.get_field('total_volume_cuft'):
 			self.doc.total_volume_cuft = 0.0
 			for d in self.doc.items:
-				if d.volume_cuft:
-					self.doc.total_volume_cuft += d.volume_cuft
+				self.doc.total_volume_cuft += flt(d.volume_cuft)
 
 	def set_rounded_total(self):
 		if self.doc.meta.get_field("rounded_total"):

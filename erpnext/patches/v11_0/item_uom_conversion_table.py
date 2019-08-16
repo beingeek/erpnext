@@ -2,7 +2,7 @@ import frappe
 from frappe.utils import flt
 
 def execute():
-	for f in ['purchase_pallets', 'sale_pallets', 'ppk_calculation', 'weight_of_pallet']:
+	for f in ['purchase_pallets', 'sale_pallets', 'ppk_calculation', 'weight_of_pallets']:
 		print("Converting Data/Read Only to Float Convertible for {0}: {1}".format("Item", f))
 		frappe.db.sql("update `tabItem` set {0} = 0 where ifnull({0}, '') = '' or {0} = 'NaN'".format(f))
 

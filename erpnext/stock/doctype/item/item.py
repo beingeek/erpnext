@@ -109,6 +109,7 @@ class Item(WebsiteGenerator):
 		self.add_alt_uom_in_conversion_table()
 		self.compute_uom_conversion_factors()
 		self.validate_conversion_factor()
+		self.set_ppk_calculation()
 		self.validate_item_type()
 		self.check_for_active_boms()
 		self.fill_customer_code()
@@ -129,6 +130,7 @@ class Item(WebsiteGenerator):
 		self.validate_retain_sample()
 		self.validate_uom_conversion_factor()
 		self.validate_item_defaults()
+		self.validate_uom_additional_cost()
 		self.update_defaults_from_item_group()
 		self.validate_stock_for_has_batch_and_has_serial()
 		self.calculate_volume()
@@ -583,6 +585,12 @@ class Item(WebsiteGenerator):
 				frappe.throw(
 					_("Conversion factor for default Unit of Measure must be 1"))
 
+	def set_ppk_calculation(self):
+		for d in self.get('uoms'):
+			if d.uom == 'PPK':
+				self.ppk_calculation = d.conversion_factor
+				return
+
 	def validate_item_type(self):
 		if self.has_serial_no == 1 and self.is_stock_item == 0 and not self.is_fixed_asset:
 			msgprint(_("'Has Serial No' can not be 'Yes' for non-stock item"), raise_exception=1)
@@ -793,6 +801,11 @@ class Item(WebsiteGenerator):
 				row.buying_cost_center = self.buying_cost_center
 				row.default_warehouse = self.default_warehouse
 				row.default_supplier = self.default_supplier
+
+	def validate_uom_additional_cost(self):
+		unique_rows = list(set([(row.company, row.uom) for row in self.uom_additional_cost]))
+		if len(unique_rows) != len(self.uom_additional_cost):
+			frappe.throw(_("Cannot set multiple UOM additional cost for a UOM."))
 
 	def update_defaults_from_item_group(self):
 		"""Get defaults from Item Group"""

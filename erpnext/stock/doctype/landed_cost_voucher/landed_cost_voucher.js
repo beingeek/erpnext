@@ -258,7 +258,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 	calculate_taxes_and_totals: function() {
 		var me = this;
 
-		var item_total_fields = ['qty', 'amount', 'weight', 'gross_weight', 'pallets'];
+		var item_total_fields = ['qty', 'amount', 'alt_uom_qty', 'gross_weight', 'pallets'];
 		$.each(item_total_fields || [], function(i, f) {
 			me.frm.doc['total_' + f] = flt(frappe.utils.sum((me.frm.doc.items || []).map(d => flt(d[f]))),
 				precision('total_' + f));
@@ -311,7 +311,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 	distribute_applicable_charges_for_item: function() {
 		var me = this;
 		var totals = {};
-		var item_total_fields = ['qty', 'amount', 'weight', 'gross_weight', 'pallets'];
+		var item_total_fields = ['qty', 'amount', 'alt_uom_qty', 'gross_weight', 'pallets'];
 		$.each(item_total_fields || [], function(i, f) {
 			totals[f] = flt(frappe.utils.sum((me.frm.doc.items || []).map(d => flt(d[f]))));
 		});

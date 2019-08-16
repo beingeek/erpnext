@@ -80,6 +80,15 @@ def _get_party_details(party=None, account=None, party_type="Customer", letter_o
 	if party_type == "Supplier" and party:
 		out["supplier_tds"] = frappe.get_value(party_type, party.name, "tax_withholding_category")
 
+	if doctype == "Sales Order":
+		from erpnext.selling.doctype.customer.customer import get_credit_limit, get_customer_outstanding
+		out["customer_credit_limit"] = get_credit_limit(party.name, company)
+		out["customer_outstanding_amount"] = frappe.db.sql("""
+			select ifnull(sum(debit) - sum(credit), 0)
+			from `tabGL Entry`
+			where party_type = 'Customer' and party = %s and company=%s""", (party.name, company))
+		out["customer_outstanding_amount"] = out["customer_outstanding_amount"][0][0] if out["customer_outstanding_amount"] else 0
+
 	return out
 
 def set_address_details(out, party, party_type, doctype=None, company=None, party_address=None, shipping_address=None):

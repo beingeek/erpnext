@@ -134,19 +134,39 @@ frappe.ui.form.on("Sales Order", {
 				}
 			});
 		}
+
+		$(".control-value", frm.fields_dict.customer_outstanding_amount.$input_wrapper)
+			.wrap("<a href='#' id='customer_outstanding_amount_link' target='_blank'></a>");
 	},
 	refresh: function(frm) {
 		frm.cscript.get_item_custom_projected_qty();
+		frm.cscript.customer_outstanding_amount();
 	},
 	transaction_date: function(frm) {
 		frm.cscript.set_po_qty_labels();
 		frm.cscript.get_item_custom_projected_qty();
 	},
+
+	onload_post_render(frm) {
+		frm.cscript.customer_outstanding_amount();
+	},
+
+	customer: function (frm) {
+		frm.cscript.customer_outstanding_amount();
+	}
 });
 
 erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend({
 	onload: function(doc, dt, dn) {
 		this._super();
+	},
+
+	customer_outstanding_amount: function() {
+		$("a", this.frm.fields_dict.customer_outstanding_amount.$input_wrapper)
+			.attr("href", "desk#query-report/Accounts Receivable/?customer=" + this.frm.doc.customer);
+
+		$("a", this.frm.fields_dict.customer_outstanding_amount.$input_wrapper).css("color",
+			this.frm.doc.customer_credit_limit && flt(this.frm.doc.customer_outstanding_amount) >= flt(this.frm.doc.customer_credit_limit) ? "red" : "inherit");
 	},
 
 	show_hide_add_remove_default_items: function() {

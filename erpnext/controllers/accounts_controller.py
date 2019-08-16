@@ -274,7 +274,7 @@ class AccountsController(TransactionBase):
 							elif fieldname in ['cost_center', 'conversion_factor'] and not item.get(fieldname):
 								item.set(fieldname, value)
 
-							elif fieldname in ['price_list_rate', 'rate', 'discount_percentage', 'margin_type']\
+							elif fieldname in ['price_list_rate', 'rate', 'discount_percentage', 'margin_type', 'margin_rate_or_amount']\
 									and not cint(self.get('ignore_pricing_rule')) and not cint(item.get('override_price_list_rate'))\
 									and self.doctype in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"]:
 								item.set(fieldname, value)

@@ -488,8 +488,17 @@ def get_price_list_rate(args, item_doc, out):
 
 		if not args.ignore_pricing_rule:
 			out.discount_percentage = 0
-			out.margin_type = ""
-			out.rate = out.price_list_rate
+
+			uom_margin = item_doc.get("uom_additional_cost", {"uom": args.uom, "company": args.company})
+			if uom_margin:
+				uom_margin = uom_margin[0]
+				out.margin_type = "Amount"
+				out.margin_rate_or_amount = uom_margin.margin_rate
+			else:
+				out.margin_type = ""
+				out.margin_rate_or_amount = 0
+
+			out.rate = out.price_list_rate + (out.margin_rate_or_amount if out.margin_type == "Amount" else 0)
 
 		if not out.price_list_rate and args.transaction_type=="buying":
 			from erpnext.stock.doctype.item.item import get_last_purchase_details
@@ -679,11 +688,13 @@ def get_party_item_code(args, item_doc, out):
 
 		if customer_item_code:
 			out.customer_item_code = customer_item_code[0].ref_code
+			out.item_name = customer_item_code[0].item_name or out.item_name
 		else:
 			customer_group = frappe.get_cached_value("Customer", args.customer, "customer_group")
 			customer_group_item_code = item_doc.get("customer_items", {"customer_group": customer_group})
 			if customer_group_item_code and not customer_group_item_code[0].customer_name:
 				out.customer_item_code = customer_group_item_code[0].ref_code
+				out.item_name = customer_group_item_code[0].item_name or out.item_name
 
 	if args.transaction_type=="buying" and args.supplier:
 		item_supplier = item_doc.get("supplier_items", {"supplier": args.supplier})

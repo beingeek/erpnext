@@ -68,7 +68,14 @@ def execute():
 			print("Rename Field in {0}: {1} -> {2}".format(dt, old, new))
 			rename_field(dt, old, new)
 
-	rename_field(dt, old, new)
+	for dt in ['Landed Cost Voucher']:
+		for old, new in [('total_weight', 'total_alt_uom_qty')]:
+			print("Rename Field in {0}: {1} -> {2}".format(dt, old, new))
+			rename_field(dt, old, new)
+	for dt in ['Landed Cost Item']:
+		for old, new in [('weight', 'alt_uom_qty')]:
+			print("Rename Field in {0}: {1} -> {2}".format(dt, old, new))
+			rename_field(dt, old, new)
 
 	for dt in doctypes:
 		for old, new in [('total_net_weight', 'total_gross_weight'), ('total_pallet', 'total_pallets')]:
@@ -137,6 +144,11 @@ def execute():
 				alt_uom_qty = alt_uom_size * qty,
 				total_weight = weight_per_unit * stock_qty
 		""".format(dt=dt))
+
+		if frappe.get_meta(dt + " Item").has_field('total_weight_kg'):
+			frappe.db.sql("""update `tab{dt} Item` set total_weight_kg = total_weight * 0.45359237""".format(dt=dt))
+		else:
+			print("DocType {dt} Item does not have field total_weight_kg".format(dt=dt))
 
 		# Items without Contents UOM
 		frappe.db.sql("""
