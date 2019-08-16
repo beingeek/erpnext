@@ -1214,7 +1214,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			"base_raw_material_cost", "base_total_cost", "base_scrap_material_cost",
 			"base_rounding_adjustment", "base_tax_exclusive_total",
 			"base_total_before_discount", "base_tax_exclusive_total_before_discount",
-			"base_total_discount", "base_tax_exclusive_total_discount"], company_currency);
+			"base_total_discount", "base_tax_exclusive_total_discount",
+			"base_total_taxes", "base_delivery_charges"], company_currency);
 
 		this.frm.set_currency_labels(["total", "net_total", "total_taxes_and_charges", "discount_amount",
 			"grand_total", "taxes_and_charges_added", "taxes_and_charges_deducted",
@@ -1222,7 +1223,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			"scrap_material_cost", "rounding_adjustment", "raw_material_cost",
 			"total_cost", "tax_exclusive_total",
 			"total_before_discount", "tax_exclusive_total_before_discount",
-			"total_discount", "tax_exclusive_total_discount"], this.frm.doc.currency);
+			"total_discount", "tax_exclusive_total_discount",
+			"total_taxes", "delivery_charges"], this.frm.doc.currency);
 
 		this.frm.set_currency_labels(["outstanding_amount", "total_advance"],
 			this.frm.doc.party_account_currency);
@@ -1241,7 +1243,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			"base_grand_total", "base_rounded_total", "base_in_words", "base_discount_amount",
 			"base_paid_amount", "base_write_off_amount", "base_operating_cost", "base_raw_material_cost",
 			"base_total_cost", "base_scrap_material_cost", "base_rounding_adjustment",
-			"base_total_before_discount", "base_total_discount", "calculate_tax_on_company_currency"],
+			"base_total_before_discount", "base_total_discount", "calculate_tax_on_company_currency",
+			"base_total_taxes", "base_delivery_charges"],
 		this.frm.doc.currency != company_currency);
 
 		this.frm.toggle_display(["plc_conversion_rate", "price_list_currency"],
@@ -1621,6 +1624,28 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 					}
 				}
 			});
+		}
+	},
+
+	delivery_charges: function() {
+		if (this.frm.doc.company) {
+			var delivery_charges_account = frappe.get_doc(":Company", this.frm.doc.company).delivery_charges_account;
+			if (delivery_charges_account) {
+				var taxes_row = this.frm.doc.taxes.filter(d => d.account_head == delivery_charges_account);
+				if (taxes_row && taxes_row.length) {
+					taxes_row = taxes_row[0];
+				} else {
+					taxes_row = this.frm.add_child('taxes', {
+						charge_type: "Actual",
+						account_head: delivery_charges_account
+					});
+				}
+
+				frappe.model.set_value(taxes_row.doctype, taxes_row.name, 'tax_amount', flt(this.frm.doc.delivery_charges));
+			} else {
+				frappe.msgprint(__("Delivery Charges Account not set in Company {0}", [this.frm.doc.company]));
+				this.calculate_taxes_and_totals();
+			}
 		}
 	},
 

@@ -215,7 +215,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		var count = 0;
 
 		if (me.frm.doc.update_stock == 1) {
-			for (var row in me.frm.oc.items) {
+			for (var row in me.frm.doc.items) {
 				if (me.frm.doc.items[row].item_code) {
 					if (!me.frm.doc.items[row].batch_no) {
 						frappe.call({

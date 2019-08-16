@@ -37,6 +37,7 @@ class calculate_taxes_and_totals(object):
 		self.calculate_taxes()
 		self.manipulate_grand_total_for_inclusive_tax()
 		self.calculate_totals()
+		self.calculate_delivery_charges()
 		self._cleanup()
 		self.calculate_total_gross_weight()
 
@@ -346,6 +347,18 @@ class calculate_taxes_and_totals(object):
 							self.doc.rounding_adjustment = flt(self.doc.grand_total
 								- flt(self.doc.discount_amount) - tax.total,
 								self.doc.precision("rounding_adjustment"))
+
+	def calculate_delivery_charges(self):
+		if self.doc.meta.get_field('delivery_charges'):
+			self.doc.delivery_charges = 0
+
+			delivery_charges_account = frappe.get_cached_value("Company", self.doc.company, 'delivery_charges_account')
+			if delivery_charges_account:
+				self.doc.delivery_charges = sum([flt(tax.get('tax_amount')) for tax in self.doc.taxes if tax.account_head == delivery_charges_account])
+
+			self.doc.delivery_charges = flt(self.doc.delivery_charges, self.doc.precision('delivery_charges'))
+			self.doc.total_taxes = self.doc.total_taxes_and_charges - self.doc.delivery_charges
+			self._set_in_company_currency(self.doc, ["total_taxes", "delivery_charges"], not self.should_round_transaction_currency())
 
 	def get_tax_amount_if_for_valuation_or_deduction(self, tax_amount, tax):
 		# if just for valuation, do not add the tax amount in total

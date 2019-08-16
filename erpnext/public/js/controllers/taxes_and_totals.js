@@ -63,6 +63,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 		this.calculate_taxes();
 		this.manipulate_grand_total_for_inclusive_tax();
 		this.calculate_totals();
+		this.calculate_delivery_charges();
 		this._cleanup();
 	},
 
@@ -604,6 +605,23 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 		// rounded totals
 		this.set_rounded_total();
+	},
+
+	calculate_delivery_charges: function() {
+		if (frappe.meta.get_docfield(this.frm.doc.doctype, 'delivery_charges', this.frm.doc.name)) {
+			this.frm.doc.delivery_charges = 0;
+
+			var delivery_charges_account = frappe.get_doc(":Company", this.frm.doc.company).delivery_charges_account;
+			if (delivery_charges_account) {
+				this.frm.doc.delivery_charges = frappe.utils.sum(this.frm.doc.taxes
+					.filter(tax => tax.account_head == delivery_charges_account)
+					.map(tax => flt(tax.tax_amount)));
+			}
+
+			this.frm.doc.delivery_charges = flt(this.frm.doc.delivery_charges, precision('delivery_charges'));
+			this.frm.doc.total_taxes = this.frm.doc.total_taxes_and_charges - this.frm.doc.delivery_charges;
+			this.set_in_company_currency(this.frm.doc, ["total_taxes", "delivery_charges"], !this.should_round_transaction_currency());
+		}
 	},
 
 	set_rounded_total: function() {

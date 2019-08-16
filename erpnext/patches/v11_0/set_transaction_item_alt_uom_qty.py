@@ -24,7 +24,7 @@ def execute():
 			print("Converting Data/Read Only to Float Convertible for {0}: {1}".format(dt, 'total_boxes'))
 			frappe.db.sql("update `tab{0}` set total_boxes = total_qty where ifnull(total_boxes, '') = '' or total_boxes = 'NaN'".format(dt))
 
-		for f in ['total_pallet', 'total_pallets', 'total_gross_weight_lbs']:
+		for f in ['total_pallet', 'total_pallets', 'total_gross_weight_lbs', 'delivery_charges']:
 			df = frappe.get_meta(dt).get_field(f)
 			if df and df.fieldtype != 'Float':
 				print("Converting Data/Read Only to Float Convertible for {0}: {1}".format(dt, f))
@@ -103,7 +103,7 @@ def execute():
 	for dt in doctypes:
 		print(dt)
 
-		# Contents Qty from Old Net Weight
+		# Item Per Unit from Old Net Weight
 		if frappe.get_meta(dt + " Item").has_field('stock_alt_uom_size'):
 			frappe.db.sql("""
 				update `tab{dt} Item` set
@@ -196,6 +196,12 @@ def execute():
 
 		if frappe.get_meta(dt).has_field('total_gross_weight_kg'):
 			frappe.db.sql("update `tab{dt}` set total_gross_weight_kg = total_gross_weight * 0.45359237".format(dt=dt))
+
+		# Parent Total Taxes
+		if frappe.get_meta(dt).has_field('total_taxes'):
+			frappe.db.sql("""update `tab{dt}` set total_taxes = total_taxes_and_charges""".format(dt=dt))
+		else:
+			print("DocType {dt} does not have field total_taxes".format(dt=dt))
 
 		# Sales Order Title and Authorization
 		if dt == "Sales Order":
