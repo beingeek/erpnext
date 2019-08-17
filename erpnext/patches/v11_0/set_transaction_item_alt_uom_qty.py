@@ -6,6 +6,7 @@ import frappe
 from frappe.utils import flt
 
 from frappe.model.utils.rename_field import rename_field
+from erpnext.stock.doctype.item_price.item_price import ItemPriceDuplicateItem
 
 def execute():
 	doctypes = [
@@ -104,8 +105,14 @@ def execute():
 
 	# Item Price
 	print("Item Price")
-	for name in frappe.get_all('Item Price'):
-		frappe.get_doc('Item Price', name).save()
+	for name in frappe.get_all('Item Price', order_by=('creation desc')):
+		doc = frappe.get_doc('Item Price', name)
+		try:
+			doc.update_item_details()
+			doc.check_duplicates()
+			doc.db_update()
+		except ItemPriceDuplicateItem:
+			print("Item Price ({0}) for Item ({1}) is duplicate".format(doc.name, doc.item_code))
 
 	# Transactions
 	for dt in doctypes:
