@@ -44,6 +44,7 @@ def execute():
 	# Load updated DocType
 	print("Reloading DocTypes")
 	frappe.reload_doc('stock', 'doctype', 'item', force=1)
+	frappe.reload_doc('stock', 'doctype', 'uom_additional_cost', force=1)
 	frappe.reload_doc('selling', 'doctype', 'quotation', force=1)
 	frappe.reload_doc('selling', 'doctype', 'quotation_item', force=1)
 	frappe.reload_doc('selling', 'doctype', 'sales_order', force=1)
@@ -98,6 +99,11 @@ def execute():
 		doc.alt_uom_size = flt(doc.weight_per_unit) or 1
 		doc.weight_per_unit = item.gross_weight
 		doc.save()
+
+	# Item Price
+	print("Item Price")
+	for name in frappe.get_all('Item Price'):
+		frappe.get_doc('Item Price', name).save()
 
 	# Transactions
 	for dt in doctypes:
