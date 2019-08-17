@@ -45,6 +45,8 @@ def execute():
 	print("Reloading DocTypes")
 	frappe.reload_doc('stock', 'doctype', 'item', force=1)
 	frappe.reload_doc('stock', 'doctype', 'uom_additional_cost', force=1)
+	frappe.reload_doc('stock', 'doctype', 'landed_cost_voucher', force=1)
+	frappe.reload_doc('stock', 'doctype', 'landed_cost_item', force=1)
 	frappe.reload_doc('selling', 'doctype', 'quotation', force=1)
 	frappe.reload_doc('selling', 'doctype', 'quotation_item', force=1)
 	frappe.reload_doc('selling', 'doctype', 'sales_order', force=1)
