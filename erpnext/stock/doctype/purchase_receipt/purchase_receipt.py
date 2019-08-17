@@ -502,6 +502,7 @@ def make_purchase_invoice(source_name, target_doc=None):
 				"purchase_order": "purchase_order",
 				"is_fixed_asset": "is_fixed_asset",
 				"asset": "asset",
+				"batch_no": "batch_no"
 			},
 			"postprocess": update_item,
 			#"filter": lambda d: get_pending_qty(d)[0]<=0
