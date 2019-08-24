@@ -84,8 +84,14 @@ class PaymentEntry(AccountsController):
 		self.update_reference_details()
 
 	def validate_date(self):
-		if self.payment_type == "Receive" and frappe.utils.getdate(self.posting_date) > frappe.utils.nowdate():
-			frappe.msgprint(_("Posting Date cannot be in the future"))
+		if self.mode_of_payment:
+			disable_past_entry_for = frappe.get_cached_value("Mode of Payment", self.mode_of_payment, "disable_past_entry")
+			disable_past_entry = disable_past_entry_for == "For All"\
+					or (disable_past_entry_for == "For Receive" and self.payment_type == "Receive")\
+					or disable_past_entry_for == "For Pay" and self.payment_type == "Pay"
+
+			if disable_past_entry and self.posting_date < frappe.utils.nowdate():
+				frappe.throw(_("Posting Date cannot be set in the past"))
 
 	def validate_duplicate_entry(self):
 		reference_names = []

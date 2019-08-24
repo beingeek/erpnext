@@ -22,7 +22,7 @@ frappe.ui.form.on("Supplier", {
 			return {
 				filters:[
 					['Account', 'is_group', '=', 0],
-					['Account', 'account_type', '=', 'Expense Account']
+					['Account', 'account_type', 'in', ['Expense Account', 'Cost of Goods Sold']]
 				]
 			};
 		});

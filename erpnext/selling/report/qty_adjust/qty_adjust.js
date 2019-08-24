@@ -31,32 +31,26 @@ frappe.query_reports["Qty Adjust"] = {
 		},
 	],
 	formatter: function(value, row, column, data, default_formatter) {
-		value = default_formatter(value, row, column, data);
+		var options = {
+			css: {},
+			link_target: "_blank"
+		};
+
 		if (['draft_so_qty', 'total_po_qty', 'actual_qty'].includes(column.fieldname)) {
-			value = $(`<span>${value}</span>`);
-			var $value = $(value).css("font-weight", "bold");
-			value = $value.wrap("<p></p>").parent().html();
+			options.css['font-weight'] = "bold";
 		}
 
 		if (column.is_so_qty) {
-			var link = encodeURI("desk#Form/Qty Adjust/Qty Adjust" +
+			options.css['color'] = "#0a0157";
+			options.link_href = encodeURI("desk#Form/Qty Adjust/Qty Adjust" +
 				"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
-
-			value = $(`<span>${value}</span>`);
-			var $value = $(value).css("color", "#0a0157");
-			$value = $value.wrap("<a href='" + link + "' target='_blank'></a>").parent();
-			value = $value.wrap("<p></p>").parent().html();
 		}
 
 		if (column.is_po_qty) {
-			var link = encodeURI("desk#query-report/Purchase Order Items To Be Received" +
+			options.link_href = encodeURI("desk#query-report/Purchase Order Items To Be Received" +
 				"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
-
-			value = $(`<span>${value}</span>`);
-			var $value = $(value).wrap("<a href='" + link + "' target='_blank'></a>").parent();
-			value = $value.wrap("<p></p>").parent().html();
 		}
 
-		return value;
+		return default_formatter(value, row, column, data, options);
 	}
 };

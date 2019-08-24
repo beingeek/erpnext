@@ -119,43 +119,48 @@ frappe.query_reports["Sundine Price List"] = {
 		},
 	],
 	formatter: function(value, row, column, data, default_formatter) {
-		var original_value = value;
-		var style = {};
-		var link;
+		var options = {
+			link_target: "_blank",
+			css: {}
+		};
 
 		if (column.price_list && !column.is_diff) {
 			var old_rate_field = "rate_old_" + frappe.scrub(column.price_list);
 			if (data.hasOwnProperty(old_rate_field)) {
-				if (flt(original_value) < flt(data[old_rate_field])) {
-					style['color'] = 'green';
-				} else if (flt(original_value) > flt(data[old_rate_field])) {
-					style['color'] = 'red';
+				if (flt(value) < flt(data[old_rate_field])) {
+					options.css['color'] = 'green';
+				} else if (flt(value) > flt(data[old_rate_field])) {
+					options.css['color'] = 'red';
 				}
 			}
 
 			var item_price_field = "item_price_" + frappe.scrub(column.price_list);
 			if (data.hasOwnProperty(item_price_field) && data[item_price_field]) {
-				link = "desk#Form/Item Price/" + data[item_price_field];
+				options.link_href = "desk#Form/Item Price/" + data[item_price_field];
 			}
 		}
 
 		if (column.fieldname == "po_qty") {
 			var po_from_date = frappe.query_report.get_filter_value("po_from_date");
 			var po_to_date = frappe.query_report.get_filter_value("po_to_date");
-			link = "desk#query-report/Purchase Order Items To Be Received?item_code=" + data.item_code;
+			options.link_href = "desk#query-report/Purchase Order Items To Be Received?item_code=" + data.item_code;
 			if(po_from_date) {
-				link += "&from_date=" + po_from_date
+				options.link_href += "&from_date=" + po_from_date
 			}
 			if(po_to_date) {
-				link += "&to_date=" + po_to_date
+				options.link_href += "&to_date=" + po_to_date
 			}
 		}
 
 		if (['po_qty', 'actual_qty', 'standard_rate', 'avg_lc_rate'].includes(column.fieldname)) {
-			style['font-weight'] = 'bold';
+			options.css['font-weight'] = 'bold';
 		}
 
-		return default_formatter(value, row, column, data, {css: style, link_href: link, link_target: "_blank"});
+		if (column.fieldname == "alt_uom_size") {
+			options.always_show_decimals = 0;
+		}
+
+		return default_formatter(value, row, column, data, options);
 	},
 	onChange: function(new_value, column, data, rowIndex) {
 		var method;

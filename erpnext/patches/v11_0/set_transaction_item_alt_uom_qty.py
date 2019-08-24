@@ -157,7 +157,7 @@ def execute():
 		if frappe.get_meta(dt + " Item").has_field('packed_pallets'):
 			frappe.db.sql("""update `tab{dt} Item` set packed_pallets = pallets""".format(dt=dt))
 		else:
-			print("DocType {dt} Item does not have field boxes".format(dt=dt))
+			print("DocType {dt} Item does not have field packed_pallets".format(dt=dt))
 
 		# Item Contents Qty and Gross Weight
 		frappe.db.sql("""
