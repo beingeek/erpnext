@@ -63,6 +63,7 @@ class PaymentEntry(AccountsController):
 		self.ensure_supplier_is_not_blocked()
 
 	def on_submit(self):
+		self.validate_date()
 		self.set_remarks()
 		self.setup_party_account_field()
 		if self.difference_amount:
@@ -81,6 +82,10 @@ class PaymentEntry(AccountsController):
 		self.update_expense_claim()
 		self.delink_advance_entry_references()
 		self.update_reference_details()
+
+	def validate_date(self):
+		if self.payment_type == "Receive" and frappe.utils.getdate(self.posting_date) > frappe.utils.nowdate():
+			frappe.msgprint(_("Posting Date cannot be in the future"))
 
 	def validate_duplicate_entry(self):
 		reference_names = []

@@ -103,6 +103,14 @@ frappe.query_reports["Accounts Receivable"] = {
 			"options": "Sales Person"
 		},
 		{
+			"fieldname":"voucher_type",
+			"label": __("Voucher Type"),
+			"fieldtype": "Select",
+			"options": [{ "value": "", "label": __("Voucher Type") },{ "value": "Sales Invoice", "label": __("Sales Invoice") },
+						{ "value": "Payment Entry", "label": __("Payment Entry") }],
+			"default": "",
+		},
+		{
 			"fieldname": "account",
 			"label": __("Receivable Account"),
 			"fieldtype": "Link",
@@ -118,6 +126,11 @@ frappe.query_reports["Accounts Receivable"] = {
 					}
 				}
 			}
+		},
+		{
+			"fieldname":"show_only_open_invoice",
+			"label": __("Show Only Open Invoices"),
+			"fieldtype": "Check",
 		},
 		{
 			"fieldname":"based_on_payment_terms",

@@ -1026,6 +1026,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			var item = frappe.get_doc(cdt, cdn);
 			frappe.model.round_floats_in(item, ["qty", "conversion_factor"]);
 
+			var stock_qty_before = flt(item.stock_qty, precision("stock_qty", item));
 			item.stock_qty = flt(item.qty * item.conversion_factor, precision("stock_qty", item));
 			item.total_weight = flt(item.stock_qty * item.weight_per_unit);
 			item.total_weight_kg = flt(item.total_weight * 0.45359237);
@@ -1043,6 +1044,11 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			this.toggle_conversion_factor(item);
 			this.calculate_gross_weight();
 			this.set_pallets_qty(item);
+
+			if (item.stock_qty != stock_qty_before && frappe.meta.has_field(cdt, "boxes")) {
+				frappe.model.set_value(cdt, cdn, 'boxes', item.stock_qty);
+			}
+
 			if (!dont_fetch_price_list_rate &&
 				frappe.meta.has_field(doc.doctype, "price_list_currency")) {
 				this.apply_price_list(item, true);
@@ -1078,11 +1084,13 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	},
 
 	set_pallets_qty: function(item) {
-		if (frappe.meta.get_docfield(item.doctype, "boxes", item.name)) {
-			item.pallets = item.qty_per_pallet ? flt(flt(item.stock_qty) / flt(item.qty_per_pallet), precision('pallets', item)) : 0;
-			refresh_field("pallets", item.name, item.parentfield);
+		item.pallets = item.qty_per_pallet ? flt(flt(item.stock_qty) / flt(item.qty_per_pallet), precision('pallets', item)) : 0;
+		refresh_field("pallets", item.name, item.parentfield);
 
-			this.calculate_total_pallets();
+		this.calculate_total_pallets();
+
+		if (frappe.meta.get_docfield(item.doctype, "packed_pallets", item.name)) {
+			frappe.model.set_value(item.doctype, item.name, 'packed_pallets', item.pallets);
 		}
 	},
 
@@ -1095,6 +1103,22 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		});
 
 		refresh_field('total_pallets');
+	},
+
+	packed_pallets: function() {
+		this.calculate_total_packed_pallets();
+	},
+
+	calculate_total_packed_pallets: function() {
+		if (frappe.meta.get_docfield(this.frm.doc.doctype, "total_packed_pallets", this.frm.doc.name)) {
+			var me = this;
+			me.frm.doc.total_packed_pallets = 0;
+			$.each(me.frm.doc.items || [], function (i, item) {
+				me.frm.doc.total_packed_pallets += flt(item.packed_pallets);
+			});
+
+			refresh_field('total_packed_pallets');
+		}
 	},
 
 	boxes: function() {
@@ -1136,7 +1160,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 	qty: function(doc, cdt, cdn) {
 		var item = frappe.get_doc(cdt, cdn);
-		frappe.model.set_value(cdt, cdn, 'boxes', item.qty);
 
 		this.conversion_factor(doc, cdt, cdn, true);
 		this.apply_pricing_rule(item, true);

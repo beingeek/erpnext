@@ -72,8 +72,8 @@ def get_data(filters):
 	price_lists_cond = " and p.price_list in ('{0}')".format("', '".join([frappe.db.escape(d) for d in price_lists]))
 
 	item_data = frappe.db.sql("""
-		select item.name as item_code, item.item_name, upper(c.code) as origin, item.weight_per_unit as weight,
-			item.item_group, item.stock_uom, item.print_in_price_list
+		select item.name as item_code, item.item_name, upper(c.code) as origin, item.item_group, item.print_in_price_list,
+			item.stock_uom, item.sales_uom, item.purchase_uom, item.alt_uom, item.alt_uom_size
 		from tabItem item
 		left join tabCountry c on c.name = item.country_of_origin
 		where disabled != 1 and is_sales_item = 1 {0}
@@ -131,6 +131,7 @@ def get_data(filters):
 	items_map = {}
 	for d in item_data:
 		items_map[d.item_code] = d
+		items_map[d.item_code]['uom'] = (d.purchase_uom if filters.buying_selling == "Buying" else d.sales_uom) or d.stock_uom
 
 	#for d in price_list_item_data:
 	#	if d.item_code in items_map:
@@ -277,6 +278,8 @@ def get_columns(filters, price_lists):
 			"price_list_note": frappe.db.get_single_value("Stock Settings", "price_list_note")},
 		{"fieldname": "item_name", "label": _("Item Name"), "fieldtype": "Data", "width": 150},
 		{"fieldname": "print_in_price_list", "label": _("Print"), "fieldtype": "Check", "width": 50, "editable": True},
+		{"fieldname": "uom", "label": _("UOM"), "fieldtype": "Data", "width": 50},
+		{"fieldname": "alt_uom_size", "label": _("Per Unit"), "fieldtype": "Float", "width": 68},
 		# {"fieldname": "item_group", "label": _("Item Group"), "fieldtype": "Link", "options": "Item Group", "width": 120},
 		{"fieldname": "po_qty", "label": _("PO Qty"), "fieldtype": "Float", "width": 70, "restricted": True},
 		{"fieldname": "po_lc_rate", "label": _("PO LC"), "fieldtype": "Currency", "width": 70, "restricted": True},

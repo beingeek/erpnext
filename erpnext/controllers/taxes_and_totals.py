@@ -242,12 +242,16 @@ class calculate_taxes_and_totals(object):
 
 	def calculate_net_total(self):
 		self.doc.total_qty = self.doc.total = self.doc.base_total = self.doc.net_total = self.doc.base_net_total = 0.0
+		self.doc.total_pallets = 0
 		self.doc.total_alt_uom_qty = 0
 		self.doc.base_tax_exclusive_total = self.doc.tax_exclusive_total = 0.0
 		self.doc.base_total_discount = self.doc.total_discount = 0.0
 		self.doc.base_total_before_discount = self.doc.total_before_discount = 0.0
 		self.doc.base_tax_exclusive_total_before_discount = self.doc.tax_exclusive_total_before_discount = 0.0
 		self.doc.base_tax_exclusive_total_discount = self.doc.tax_exclusive_total_discount = 0.0
+
+		if self.doc.meta.get_field('total_packed_pallets'):
+			self.doc.total_packed_pallets = 0
 
 		for item in self.doc.get("items"):
 			self.doc.total_qty += item.qty
@@ -271,6 +275,9 @@ class calculate_taxes_and_totals(object):
 
 			self.doc.net_total += item.net_amount
 			self.doc.base_net_total += item.base_net_amount
+
+			if self.doc.meta.get_field('total_packed_pallets'):
+				self.doc.total_packed_pallets += item.packed_pallets
 
 		self.doc.round_floats_in(self.doc, ["total", "base_total", "net_total", "base_net_total",
 			"tax_exclusive_total", "base_tax_exclusive_total",

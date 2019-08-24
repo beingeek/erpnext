@@ -63,14 +63,14 @@ $.each(item_groups || {}, function(item_group, items) {
             {% } %}
         </th></tr>
 		<tr>
-            <th style="width: 38%">{%= __("Product") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Box") %}</th>
+            <th style="width: 37%">{%= __("Product") %}</th>
+            <th style="width: 4%" class="text-center">{%= __("Unit Qty") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
             <th style="width: 3%" class="right-border text-right">{%= __("Order") %}</th>
 
-            <th style="width: 38%">{%= __("Product") %}</th>
-            <th style="width: 3%" class="text-center">{%= __("Box") %}</th>
+            <th style="width: 37%">{%= __("Product") %}</th>
+            <th style="width: 4%" class="text-center">{%= __("Unit Qty") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Origin") %}</th>
             <th style="width: 3%" class="text-center">{%= __("Price") %}</th>
             <th style="width: 3%" class="text-right">{%= __("Order") %}</th>
@@ -87,7 +87,7 @@ $.each(item_groups || {}, function(item_group, items) {
             <tr>
             {% } %}
                 <td>{%= d.item_name %}</td>
-                <td class="text-center">{%= d.weight %}</td>
+                <td class="text-center text-nowrap">{%= d.alt_uom_size %} {%= d.alt_uom %} {%= d.uom %}</td>
                 <td class="text-center">{%= d.origin %}</td>
                 <td class="text-center">{%= d.print_rate ? format_currency(d.print_rate) : '' %}</td>
                 <td class="text-right{% if (i % 2 != 1) { %} right-border{% } %}"></td>

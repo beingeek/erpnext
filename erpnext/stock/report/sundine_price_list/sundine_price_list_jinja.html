@@ -93,14 +93,14 @@
                         {% endif %}
                     </th></tr>
                     <tr>
-                        <th style="width: 38%">{{ _("Product") }}</th>
-                        <th style="width: 3%" class="text-center">{{ _("Box") }}</th>
+                        <th style="width: 37%">{{ _("Product") }}</th>
+                        <th style="width: 4%" class="text-center">{{ _("Unit Qty") }}</th>
                         <th style="width: 3%" class="text-center">{{ _("Origin") }}</th>
                         <th style="width: 3%" class="text-center">{{ _("Price") }}</th>
                         <th style="width: 3%" class="right-border text-right">{{ _("Order") }}</th>
 
-                        <th style="width: 38%">{{ _("Product") }}</th>
-                        <th style="width: 3%" class="text-center">{{ _("Box") }}</th>
+                        <th style="width: 37%">{{ _("Product") }}</th>
+                        <th style="width: 4%" class="text-center">{{ _("Unit Qty") }}</th>
                         <th style="width: 3%" class="text-center">{{ _("Origin") }}</th>
                         <th style="width: 3%" class="text-center">{{ _("Price") }}</th>
                         <th style="width: 3%" class="text-right">{{ _("Order") }}</th>
@@ -117,7 +117,7 @@
                         <tr>
                         {% endif %}
                             <td>{{ d.item_name }}</td>
-                            <td class="text-center">{{ frappe.format_value(d.weight) }}</td>
+                            <td class="text-center text-nowrap">{{ frappe.format_value(d.alt_uom_size) }} {{ d.alt_uom }} {{ d.uom }}</td>
                             <td class="text-center">{{ d.origin }}</td>
                             <td class="text-center">{{ frappe.utils.fmt_money(d.print_rate) if d.print_rate else '' }}</td>
                             <td class="text-right{% if (loop.index0 % 2 != 1) %} right-border{% endif %}"></td>
