@@ -407,7 +407,8 @@ def make_purchase_invoice(source_name, target_doc=None):
 		set_missing_values(source, target)
 		target.update_stock = 1
 		#Get the advance paid Journal Entries in Purchase Invoice Advance
-		target.set_advances()
+		if target.get("allocate_advances_automatically"):
+			target.set_advances()
 
 	def update_item(obj, target, source_parent):
 		target.amount = flt(obj.amount) - flt(obj.billed_amt)
