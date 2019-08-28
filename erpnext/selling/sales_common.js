@@ -25,6 +25,10 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 		frappe.ui.form.on(this.frm.doctype + " Item", "items_remove", function(frm, cdt, cdn) {
 			me.set_price_override_authorization();
 		});
+
+		if (this.frm.doc.docstatus === 0) {
+			this.apply_price_list()
+		}
 	},
 
 	onload: function() {
@@ -39,10 +43,6 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 				me.show_edit_pricing_rule_dialog(item);
 			}
 		});
-
-		if (this.frm.doc.docstatus === 0) {
-			this.apply_price_list()
-		}
 	},
 
 	show_edit_pricing_rule_dialog: function(item) {
