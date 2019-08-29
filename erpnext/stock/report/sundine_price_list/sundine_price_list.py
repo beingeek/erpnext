@@ -4,10 +4,11 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _, scrub
-from frappe.utils import flt, nowdate, getdate, add_days, cint
+from frappe.utils import flt, nowdate, getdate, cstr, cint
 from erpnext.stock.report.stock_ledger.stock_ledger import get_item_group_condition
 from six import iteritems, string_types
 from collections import OrderedDict
+from erpnext.stock.doctype.item.item import convert_item_uom_for
 import datetime
 import json
 
@@ -105,7 +106,7 @@ def get_data(filters):
 	""".format(item_conditions), filters, as_dict=1)
 
 	item_price_data = frappe.db.sql("""
-		select p.name, p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
+		select p.name, p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from, p.uom
 		from `tabItem Price` p
 		inner join `tabItem` item on item.name = p.item_code
 		where %(date)s between ifnull(p.valid_from, '2000-01-01') and ifnull(p.valid_upto, '2500-12-31')
@@ -121,7 +122,7 @@ def get_data(filters):
 	previous_price_date_cond = "and p.valid_upto >= %(previous_price_date)s"
 
 	previous_item_prices = frappe.db.sql("""
-		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from
+		select p.price_list, p.item_code, p.price_list_rate, ifnull(p.valid_from, '2000-01-01') as valid_from, p.uom
 		from `tabItem Price` as p
 		inner join `tabItem` item on item.name = p.item_code
 		where ifnull(p.valid_upto, '0000-00-00') != '0000-00-00' and p.valid_upto < %(date)s {0} {1} {2}
@@ -130,12 +131,20 @@ def get_data(filters):
 
 	items_map = {}
 	for d in item_data:
-		items_map[d.item_code] = d
-		items_map[d.item_code]['uom'] = (d.purchase_uom if filters.buying_selling == "Buying" else d.sales_uom) or d.stock_uom
+		if filters.uom:
+			d['uom'] = filters.uom
+		elif filters.default_uom == "Stock UOM":
+			d['uom'] = d.stock_uom
+		elif filters.default_uom == "Contents UOM":
+			d['uom'] = d.alt_uom
+		else:
+			d['uom'] = d.purchase_uom if filters.buying_selling == "Buying" else d.sales_uom
 
-	#for d in price_list_item_data:
-	#	if d.item_code in items_map:
-	#		items_map[d.item_code].in_price_list_item = 1
+		if not d.get('uom'):
+			d['uom'] = d.stock_uom
+
+		d['alt_uom_size'] = convert_item_uom_for(d.alt_uom_size, d.item_code, d.stock_uom, d.uom)
+		items_map[d.item_code] = d
 
 	for d in po_data:
 		if d.item_code in items_map:
@@ -145,15 +154,23 @@ def get_data(filters):
 		if d.item_code in items_map:
 			items_map[d.item_code].update(d)
 
+	for item_prices in [item_price_data, previous_item_prices]:
+		for d in item_prices:
+			if d.item_code in items_map:
+				d.price_list_rate = convert_item_uom_for(d.price_list_rate, d.item_code, d.uom, items_map[d.item_code]['uom'],
+					null_if_not_convertible=True)
+
 	item_price_map = {}
 	for d in item_price_data:
-		if d.item_code in items_map:
-			if d.price_list == filters.standard_price_list:
-				items_map[d.item_code].standard_rate = d.price_list_rate
-
+		if d.item_code in items_map and d.price_list_rate is not None:
 			price = item_price_map.setdefault(d.item_code, {}).setdefault(d.price_list, frappe._dict())
-			price.current_price = d.price_list_rate
-			price.valid_from = d.valid_from
+			if price.get('current_price') is None or cstr(d.uom) == cstr(items_map[d.item_code].uom):
+				price.current_price = d.price_list_rate
+				price.valid_from = d.valid_from
+				price.reference_uom = d.uom
+
+				if d.price_list == filters.standard_price_list:
+					items_map[d.item_code].standard_rate = d.price_list_rate
 
 			show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
 			show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
@@ -161,9 +178,9 @@ def get_data(filters):
 				price.item_price = d.name
 
 	for d in previous_item_prices:
-		if d.item_code in item_price_map and d.price_list in item_price_map[d.item_code]:
+		if d.item_code in item_price_map and d.price_list in item_price_map[d.item_code] and d.price_list_rate is not None:
 			price = item_price_map[d.item_code][d.price_list]
-			if 'previous_price' not in price and d.valid_from < price.valid_from:
+			if 'previous_price' not in price and d.valid_from < price.valid_from and cstr(price.reference_uom) == cstr(d.uom):
 				price.previous_price = d.price_list_rate
 
 	for item_code, d in iteritems(items_map):
@@ -328,8 +345,8 @@ def get_columns(filters, price_lists):
 	return columns
 
 @frappe.whitelist()
-def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_diff=False, filters={}):
-	effective_date = frappe.utils.getdate(effective_date)
+def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_diff=False, uom=None, conversion_factor=None, filters=None):
+	effective_date = getdate(effective_date)
 	standard_price_list = frappe.db.get_single_value("Selling Settings", "base_price_list")
 
 	old_standard_rate = frappe.db.sql_list("""
@@ -357,61 +374,71 @@ def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_
 				and %s between ifnull(valid_from, '2000-01-01') and ifnull(valid_upto, '2500-12-31')
 		""", [old_standard_rate[0], item_code, price_list, effective_date], as_dict=1)
 
-	_set_item_pl_rate(effective_date, item_code, price_list, price_list_rate)
+	_set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, uom, conversion_factor)
 
 	dependent_price_list_visited = set()
 	for d in dependent_item_prices:
 		if d.price_list not in dependent_price_list_visited:
 			dependent_price_list_visited.add(d.price_list)
-			_set_item_pl_rate(effective_date, item_code, d.price_list, flt(price_list_rate) + flt(d.diff))
+			_set_item_pl_rate(effective_date, item_code, d.price_list, flt(price_list_rate) + flt(d.diff), uom, conversion_factor)
 
+	if not filters:
+		filters = {}
 	if isinstance(filters, string_types):
 		filters = json.loads(filters)
 	filters['item_code'] = item_code
 	return execute(filters)
 
 
-def _set_item_pl_rate(effective_date, item_code, price_list, price_list_rate):
+def _set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, uom=None, conversion_factor=None):
 	from frappe.model.utils import get_fetch_values
+	from erpnext.stock.get_item_details import get_item_price
 
 	if not price_list_rate:
 		frappe.msgprint(_("Rate for Item {1} is 0. Please confirm rate"))
 
-	effective_date = frappe.utils.getdate(effective_date)
+	effective_date = getdate(effective_date)
+	item_price_args = {
+		"item_code": item_code,
+		"price_list": price_list,
+		"uom": uom,
+		"min_qty": 0,
+		"transaction_date": effective_date,
+	}
+	current_effective_item_price = get_item_price(item_price_args, item_code)
+	current_effective_item_price = current_effective_item_price[0] if current_effective_item_price else None
 
-	item_prices = frappe.db.sql("""
-		select name, valid_from, valid_upto
-		from `tabItem Price`
-		where item_code = %s and price_list = %s
-		order by valid_from
-	""", [item_code, price_list], as_dict=1)
+	existing_item_price = past_item_price = None
+	if current_effective_item_price and getdate(current_effective_item_price[3]) == effective_date:
+		existing_item_price = current_effective_item_price
+	else:
+		past_item_price = current_effective_item_price
 
-	existing_item_price = filter(lambda d: d.valid_from == effective_date, item_prices)
-	existing_item_price = existing_item_price[0] if existing_item_price else None
-	past_item_price = filter(lambda d: not d.valid_from or d.valid_from < effective_date, item_prices)
-	past_item_price = past_item_price[-1] if past_item_price else None
-	future_item_price = filter(lambda d: d.valid_from and d.valid_from > effective_date, item_prices)
+	item_price_args['period'] = 'future'
+	future_item_price = get_item_price(item_price_args, item_code)
 	future_item_price = future_item_price[0] if future_item_price else None
 
 	# Update or add item price
 	if existing_item_price:
-		doc = frappe.get_doc("Item Price", existing_item_price.name)
+		doc = frappe.get_doc("Item Price", existing_item_price[0])
+		doc.price_list_rate = convert_item_uom_for(price_list_rate, item_code, uom, doc.uom, conversion_factor)
 	else:
 		doc = frappe.new_doc("Item Price")
 		doc.item_code = item_code
 		doc.price_list = price_list
+		doc.uom = uom
+		doc.price_list_rate = flt(price_list_rate)
 		doc.update(get_fetch_values("Item Price", 'item_code', item_code))
 		doc.update(get_fetch_values("Item Price", 'price_list', price_list))
 
-	doc.price_list_rate = flt(price_list_rate)
 	doc.valid_from = effective_date
 	if future_item_price:
-		doc.valid_upto = frappe.utils.add_days(future_item_price.valid_from, -1)
+		doc.valid_upto = frappe.utils.add_days(future_item_price[3], -1)
 	doc.save()
 
 	# Update previous item price
 	before_effective_date = frappe.utils.add_days(effective_date, -1)
-	if past_item_price and past_item_price.valid_upto != before_effective_date:
-		frappe.set_value("Item Price", past_item_price.name, 'valid_upto', before_effective_date)
+	if past_item_price and past_item_price[4] != before_effective_date:
+		frappe.set_value("Item Price", past_item_price[0], 'valid_upto', before_effective_date)
 
 	frappe.msgprint(_("Price updated for Item {0} in Price List {1}").format(item_code, price_list), alert=1)

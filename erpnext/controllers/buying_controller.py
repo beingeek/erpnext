@@ -629,7 +629,7 @@ class BuyingController(StockController):
 				get_price_list_rate(args, frappe.get_cached_doc("Item", item.item_code), item_price_data)
 
 				if flt(item.rate) and abs(flt(item_price_data.price_list_rate) - flt(item.rate)) > 0.005:
-					_set_item_pl_rate(args["transaction_date"], item.item_code, self.buying_price_list, flt(item.rate))
+					_set_item_pl_rate(args["transaction_date"], item.item_code, self.buying_price_list, flt(item.rate), item.uom, item.conversion_factor)
 
 	def process_fixed_asset(self):
 		if self.doctype == 'Purchase Invoice' and not self.update_stock:

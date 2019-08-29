@@ -117,6 +117,19 @@ frappe.query_reports["Sundine Price List"] = {
 			fieldtype: "Link",
 			options:"Price List"
 		},
+		{
+			fieldname: "uom",
+			label: __("UOM"),
+			fieldtype: "Link",
+			options:"UOM"
+		},
+		{
+			fieldname: "default_uom",
+			label: __("Default UOM"),
+			fieldtype: "Select",
+			options: "Default UOM\nStock UOM\nContents UOM",
+			default: "Default UOM"
+		},
 	],
 	formatter: function(value, row, column, data, default_formatter) {
 		var options = {
@@ -182,6 +195,7 @@ frappe.query_reports["Sundine Price List"] = {
 				price_list: column.price_list,
 				price_list_rate: new_value,
 				is_diff: cint(column.is_diff),
+				uom: data['uom'],
 				filters: frappe.query_report.get_filter_values()
 			};
 		}
