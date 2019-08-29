@@ -100,7 +100,7 @@ def set_address_details(out, party, party_type, doctype=None, company=None, part
 	# address display
 	out.address_display = get_address_display(out[billing_address_field])
 	# shipping address
-	if party_type in ["Customer", "Lead"]:
+	if party_type in ["Customer", "Lead", "Supplier"]:
 		out.shipping_address_name = shipping_address or get_party_shipping_address(party_type, party.name)
 		out.shipping_address = get_address_display(out["shipping_address_name"])
 		if doctype:
@@ -110,14 +110,6 @@ def set_address_details(out, party, party_type, doctype=None, company=None, part
 		out.update(get_company_address(company))
 		if out.company_address:
 			out.update(get_fetch_values(doctype, 'company_address', out.company_address))
-		get_regional_address_details(out, doctype, company)
-
-	elif doctype and doctype == "Purchase Invoice":
-		out.update(get_company_address(company))
-		if out.company_address:
-			out["shipping_address"] = shipping_address or out["company_address"]
-			out.shipping_address_display = get_address_display(out["shipping_address"])
-			out.update(get_fetch_values(doctype, 'shipping_address', out.shipping_address))
 		get_regional_address_details(out, doctype, company)
 
 	return out.get(billing_address_field), out.shipping_address_name
@@ -592,7 +584,7 @@ def get_party_shipping_address(doctype, name):
 		'and dl.link_name=%s '
 		'and dl.parenttype="Address" '
 		'and ifnull(ta.disabled, 0) = 0 and'
-		'(ta.address_type="Shipping" or ta.is_shipping_address=1) '
+		'(ta.address_type in ("Shipping", "Warehouse") or ta.is_shipping_address=1) '
 		'order by ta.is_shipping_address desc, ta.address_type desc limit 1',
 		(doctype, name)
 	)

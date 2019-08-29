@@ -12,7 +12,7 @@ frappe.ui.form.on("Purchase Order", {
 			'Purchase Invoice': 'Invoice',
 			'Stock Entry': 'Material to Supplier',
 			'Landed Cost Voucher': 'Landed Cost Voucher'
-		}
+		};
 
 		frm.set_query("reserve_warehouse", "supplied_items", function() {
 			return {
@@ -169,7 +169,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			cur_frm.page.set_inner_btn_group_as_primary(__("Make"));
 		}
 
-		if(doc.docstatus < 2) {
+		if(doc.docstatus < 2 && !doc.__islocal) {
 			cur_frm.add_custom_button(__('Landed Cost Voucher'), this.make_landed_cost_voucher, __("Make"));
 		}
 	},

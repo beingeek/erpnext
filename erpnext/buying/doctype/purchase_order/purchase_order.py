@@ -430,7 +430,8 @@ def make_purchase_invoice(source_name, target_doc=None):
 			"doctype": "Purchase Invoice",
 			"field_map": {
 				"party_account_currency": "party_account_currency",
-				"supplier_warehouse":"supplier_warehouse"
+				"supplier_warehouse":"supplier_warehouse",
+				"posting_date": "received_date"
 			},
 			"validation": {
 				"docstatus": ["=", 1],

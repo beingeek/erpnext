@@ -218,8 +218,8 @@ erpnext.utils.get_shipping_address = function(frm, callback){
 			},
 			callback: function(r){
 				if(r.message){
-					frm.set_value("shipping_address", r.message[0]) //Address title or name
-					frm.set_value("shipping_address_display", r.message[1]) //Address to be displayed on the page
+					frm.set_value("shipping_address_name", r.message[0]) //Address title or name
+					frm.set_value("shipping_address", r.message[1]) //Address to be displayed on the page
 				}
 
 				if(callback){

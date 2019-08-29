@@ -250,9 +250,6 @@ class calculate_taxes_and_totals(object):
 		self.doc.base_tax_exclusive_total_before_discount = self.doc.tax_exclusive_total_before_discount = 0.0
 		self.doc.base_tax_exclusive_total_discount = self.doc.tax_exclusive_total_discount = 0.0
 
-		if self.doc.meta.get_field('total_packed_pallets'):
-			self.doc.total_packed_pallets = 0
-
 		for item in self.doc.get("items"):
 			self.doc.total_qty += item.qty
 			self.doc.total_alt_uom_qty += item.alt_uom_qty
@@ -276,8 +273,8 @@ class calculate_taxes_and_totals(object):
 			self.doc.net_total += item.net_amount
 			self.doc.base_net_total += item.base_net_amount
 
-			if self.doc.meta.get_field('total_packed_pallets'):
-				self.doc.total_packed_pallets += item.packed_pallets
+		if self.doc.meta.get_field('actual_boxes'):
+			self.doc.actual_boxes = self.doc.total_qty
 
 		self.doc.round_floats_in(self.doc, ["total", "base_total", "net_total", "base_net_total",
 			"tax_exclusive_total", "base_tax_exclusive_total",
@@ -507,6 +504,12 @@ class calculate_taxes_and_totals(object):
 			self.doc.total_volume_cuft = 0.0
 			for d in self.doc.items:
 				self.doc.total_volume_cuft += flt(d.volume_cuft)
+
+		if self.doc.meta.get_field('gross_weight_with_pallets'):
+			self.doc.actual_pallets = self.doc.total_packed_pallets
+			empty_pallets_weight = flt(self.doc.get('empty_pallet_weight')) * flt(self.doc.get('actual_pallets'))
+			self.doc.gross_weight_with_pallets = self.doc.total_gross_weight + empty_pallets_weight
+			self.doc.gross_weight_with_pallets_kg = self.doc.total_gross_weight_kg + empty_pallets_weight * 0.45359237
 
 	def set_rounded_total(self):
 		if self.doc.meta.get_field("rounded_total"):

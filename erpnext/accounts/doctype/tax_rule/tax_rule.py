@@ -113,7 +113,7 @@ def get_party_details(party, party_type, args=None):
 	if args:
 		if args.get('billing_address'):
 			billing_address = frappe.get_doc('Address', args.get('billing_address'))
-		if args.get('shipping_address'):
+		if args.get('shipping_address_name'):
 			shipping_address = frappe.get_doc('Address', args.get('shipping_address'))
 	else:
 		billing_address_name = get_default_address(party_type, party)

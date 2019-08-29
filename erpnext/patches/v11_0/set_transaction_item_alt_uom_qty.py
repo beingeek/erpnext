@@ -153,12 +153,6 @@ def execute():
 		else:
 			print("DocType {dt} Item does not have field pallets".format(dt=dt))
 
-		# Item Packed In Qty
-		if frappe.get_meta(dt + " Item").has_field('packed_pallets'):
-			frappe.db.sql("""update `tab{dt} Item` set packed_pallets = pallets""".format(dt=dt))
-		else:
-			print("DocType {dt} Item does not have field packed_pallets".format(dt=dt))
-
 		# Item Contents Qty and Gross Weight
 		frappe.db.sql("""
 			update `tab{dt} Item` set
@@ -208,13 +202,6 @@ def execute():
 				from `tab{dt} Item` d where d.parent = m.name and d.parenttype = '{dt}'
 			)
 		""".format(dt=dt))
-
-		# Parent Packed Pallets
-		if frappe.get_meta(dt).has_field('total_packed_pallets'):
-			frappe.db.sql("""
-				update `tab{dt}` m
-				set total_packed_pallets = total_pallets
-			""".format(dt=dt))
 
 		# Parent Total Gross Weight
 		if old_meta[dt].has_field('total_gross_weight_lbs'):

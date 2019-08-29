@@ -314,6 +314,8 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			me.frm.doc.base_net_total += item.base_net_amount;
 		});
 
+		me.frm.doc.actual_boxes = me.frm.doc.total_qty;
+
 		frappe.model.round_floats_in(this.frm.doc, ["total", "base_total", "net_total", "base_net_total",
 			"tax_exclusive_total", "base_tax_exclusive_total",
 			"total_before_discount", "total_discount", "base_total_before_discount", "base_total_discount",

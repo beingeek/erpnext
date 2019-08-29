@@ -204,6 +204,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		var me = this;
 
 		if(this.frm.doc.__islocal) {
+			this.add_empty_rows();
+
 			var currency = frappe.defaults.get_user_default("currency");
 
 			let set_value = (fieldname, value) => {
@@ -212,11 +214,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 				}
 			};
 
-			if (this.frm.doc.__islocal) {
-				this.add_empty_rows();
-			}
-
 			return frappe.run_serially([
+				() => set_value('empty_pallet_weight', flt(frappe.defaults.get_default("empty_pallet_weight"))),
 				() => set_value('currency', currency),
 				() => set_value('price_list_currency', currency),
 				() => set_value('status', 'Draft'),
@@ -1078,6 +1077,11 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		this.apply_pricing_rule(item, true);
 	},
 
+	alt_uom_rate: function(doc, cdt, cdn) {
+		var item = frappe.get_doc(cdt, cdn);
+		frappe.model.set_value(cdt, cdn, "rate", item.alt_uom_rate * item.alt_uom_size_std);
+	},
+
 	qty_per_pallet: function(doc, cdt, cdn) {
 		var item = frappe.get_doc(cdt, cdn);
 		this.set_pallets_qty(item);
@@ -1088,10 +1092,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		refresh_field("pallets", item.name, item.parentfield);
 
 		this.calculate_total_pallets();
-
-		if (frappe.meta.get_docfield(item.doctype, "packed_pallets", item.name)) {
-			frappe.model.set_value(item.doctype, item.name, 'packed_pallets', item.pallets);
-		}
 	},
 
 	calculate_total_pallets: function() {
@@ -1103,22 +1103,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		});
 
 		refresh_field('total_pallets');
-	},
-
-	packed_pallets: function() {
-		this.calculate_total_packed_pallets();
-	},
-
-	calculate_total_packed_pallets: function() {
-		if (frappe.meta.get_docfield(this.frm.doc.doctype, "total_packed_pallets", this.frm.doc.name)) {
-			var me = this;
-			me.frm.doc.total_packed_pallets = 0;
-			$.each(me.frm.doc.items || [], function (i, item) {
-				me.frm.doc.total_packed_pallets += flt(item.packed_pallets);
-			});
-
-			refresh_field('total_packed_pallets');
-		}
 	},
 
 	boxes: function() {
@@ -1210,10 +1194,26 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			me.frm.doc.total_volume_cuft += flt(item.volume_cuft);
 		});
 
+		me.frm.doc.actual_pallets = flt(me.frm.doc.total_packed_pallets);
+		var empty_pallets_weight = flt(me.frm.doc.empty_pallet_weight) * flt(me.frm.doc.actual_pallets);
+		me.frm.doc.gross_weight_with_pallets = me.frm.doc.total_gross_weight + empty_pallets_weight;
+		me.frm.doc.gross_weight_with_pallets_kg = me.frm.doc.total_gross_weight_kg + empty_pallets_weight * 0.45359237;
+
 		refresh_field("total_gross_weight");
 		refresh_field("total_gross_weight_kg");
+		refresh_field("gross_weight_with_pallets");
+		refresh_field("gross_weight_with_pallets_kg");
 		refresh_field("total_volume_cuft");
 		this.shipping_rule();
+	},
+
+	empty_pallet_weight: function() {
+		this.calculate_gross_weight();
+	},
+
+	total_packed_pallets: function() {
+		this.frm.set_value('actual_pallets', this.frm.doc.total_packed_pallets);
+		this.calculate_gross_weight();
 	},
 
 	set_dynamic_labels: function() {

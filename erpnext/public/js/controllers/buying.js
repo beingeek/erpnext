@@ -43,8 +43,12 @@ erpnext.buying.BuyingController = erpnext.TransactionController.extend({
 						query: 'frappe.contacts.doctype.address.address.address_query',
 						filters: { link_doctype: 'Customer', link_name: me.frm.doc.customer }
 					};
-				} else
-					return erpnext.queries.company_address_query(me.frm.doc)
+				} else {
+					return {
+						query: 'frappe.contacts.doctype.address.address.address_query',
+						filters: {link_doctype: 'Supplier', link_name: me.frm.doc.supplier}
+					}
+				}
 			});
 		}
 		/* eslint-enable */
@@ -231,8 +235,8 @@ erpnext.buying.BuyingController = erpnext.TransactionController.extend({
 
 	shipping_address: function(){
 		var me = this;
-		erpnext.utils.get_address_display(this.frm, "shipping_address",
-			"shipping_address_display", true);
+		erpnext.utils.get_address_display(this.frm, "shipping_address_name",
+			"shipping_address", true);
 	},
 
 	tc_name: function() {

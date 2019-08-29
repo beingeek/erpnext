@@ -114,7 +114,7 @@ class PaymentEntry(AccountsController):
 	def validate_allocated_amount(self):
 		for d in self.get("references"):
 			if flt(d.allocated_amount) > flt(d.outstanding_amount) \
-					or (flt(d.outstanding_amount) < 0 and flt(d.allocated_amount) < flt(d.outstanding_amount)):
+					or (flt(d.outstanding_amount) < 0 and flt(d.allocated_amount, d.precision('outstanding_amount')) < flt(d.outstanding_amount, d.precision('outstanding_amount'))):
 				frappe.throw(_("Row #{0}: Allocated Amount of {1} against {2} is greater than its Outstanding Amount {3}.")
 					.format(d.idx, flt(d.allocated_amount), d.reference_name, flt(d.outstanding_amount)))
 
