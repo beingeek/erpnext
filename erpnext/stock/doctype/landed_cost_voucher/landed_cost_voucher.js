@@ -63,9 +63,6 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 				}
 			}
 		});
-
-		this.frm.add_fetch("receipt_document", "supplier", "supplier");
-		this.frm.add_fetch("receipt_document", "base_grand_total", "grand_total");
 	},
 
 	validate: function() {
@@ -74,7 +71,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 	},
 
 	refresh: function(doc) {
-		erpnext.toggle_naming_series();
+		//erpnext.toggle_naming_series();
 		erpnext.hide_company();
 		this.set_dynamic_labels();
 
@@ -122,6 +119,32 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 
 		set_field_options("landed_cost_help", help_content);
 	},
+
+	receipt_document_type: function(doc, cdt, cdn) {
+		frappe.model.set_value(cdt, cdn, 'receipt_document', '');
+	},
+	receipt_document: function(doc, cdt, cdn) {
+		this.get_purchase_receipt_details(frappe.get_doc(cdt, cdn));
+	},
+	get_purchase_receipt_details: function(row) {
+		var me = this;
+		if (row.receipt_document_type && row.receipt_document) {
+			return frappe.call({
+				method: "erpnext.stock.doctype.landed_cost_voucher.landed_cost_voucher.get_purchase_receipt_details",
+				args: {
+					dt: row.receipt_document_type,
+					dn: row.receipt_document
+				},
+				callback: function(r) {
+					if(r.message) {
+						Object.assign(row, r.message);
+						me.calculate_taxes_and_totals();
+					}
+				}
+			});
+		}
+	},
+
 
 	get_referenced_taxes: function() {
 		var me = this;
@@ -261,6 +284,12 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 		var item_total_fields = ['qty', 'amount', 'alt_uom_qty', 'gross_weight', 'pallets'];
 		$.each(item_total_fields || [], function(i, f) {
 			me.frm.doc['total_' + f] = flt(frappe.utils.sum((me.frm.doc.items || []).map(d => flt(d[f]))),
+				precision('total_' + f));
+		});
+
+		var receipt_total_fields = ['actual_pallets', 'gross_weight_with_pallets', 'gross_weight_with_pallets_kg'];
+		$.each(receipt_total_fields || [], function(i, f) {
+			me.frm.doc['total_' + f] = flt(frappe.utils.sum((me.frm.doc.purchase_receipts || []).map(d => flt(d[f]))),
 				precision('total_' + f));
 		});
 

@@ -23,6 +23,7 @@ class LandedCostVoucher(AccountsController):
 		self.check_mandatory()
 		self.validate_credit_to_account()
 		self.validate_purchase_receipts()
+		self.update_purchase_receipt_details()
 		self.clear_advances_table_if_not_payable()
 		self.clear_unallocated_advances("Landed Cost Voucher Advance", "advances")
 		self.calculate_taxes_and_totals()
@@ -178,16 +179,15 @@ class LandedCostVoucher(AccountsController):
 					if precs or pinvs:
 						to_remove.append(d)
 						for p in precs:
-							to_add.append({"receipt_document_type": "Purchase Receipt", "receipt_document": p.name,
-								"supplier": p.supplier, "grand_total": p.grand_total})
+							to_add.append({"receipt_document_type": "Purchase Receipt", "receipt_document": p.name})
 						for p in pinvs:
-							to_add.append({"receipt_document_type": "Purchase Invoice", "receipt_document": p.name,
-								"supplier": p.supplier, "grand_total": p.grand_total})
+							to_add.append({"receipt_document_type": "Purchase Invoice", "receipt_document": p.name})
 				else:
 					frappe.msgprint(_("Purchase Order {0} is still open and not completely received").format(d.receipt_document))
 
 		[self.remove(row) for row in to_remove]
 		[self.append("purchase_receipts", row) for row in to_add]
+		self.update_purchase_receipt_details()
 		self.get_items_from_purchase_receipts()
 
 	def check_mandatory(self):
@@ -235,6 +235,10 @@ class LandedCostVoucher(AccountsController):
 			if not item.cost_center:
 				frappe.throw(_("Item Row {0}: Cost center is not set for item {1}")
 					.format(item.idx, item.item_code))
+
+	def update_purchase_receipt_details(self):
+		for d in self.purchase_receipts:
+			d.update(get_purchase_receipt_details(d.receipt_document_type, d.receipt_document))
 
 	def clear_advances_table_if_not_payable(self):
 		if not self.party:
@@ -307,6 +311,10 @@ class LandedCostVoucher(AccountsController):
 		item_total_fields = ['qty', 'amount', 'alt_uom_qty', 'gross_weight', 'pallets']
 		for f in item_total_fields:
 			self.set('total_' + f, flt(sum([flt(d.get(f)) for d in self.get("items")]), self.precision('total_' + f)))
+
+		receipt_total_fields = ['actual_pallets', 'gross_weight_with_pallets', 'gross_weight_with_pallets_kg']
+		for f in receipt_total_fields:
+			self.set('total_' + f, flt(sum([flt(d.get(f)) for d in self.get("purchase_receipts")]), self.precision('total_' + f)))
 
 		self.total_taxes_and_charges = 0
 		self.taxes_not_in_valuation = 0
@@ -499,18 +507,37 @@ def update_rate_in_serial_no(receipt_document):
 					.format(", ".join(["%s"]*len(serial_nos))), tuple([item.valuation_rate] + serial_nos))
 
 @frappe.whitelist()
+def get_purchase_receipt_details(dt, dn):
+	doc = frappe.get_doc(dt, dn)
+	out = {
+		"posting_date": doc.get('posting_date') or doc.get('transaction_date'),
+		"supplier": doc.get('supplier'),
+		"pickup_no": doc.get('pickup_no'),
+		"grand_total": doc.get('base_grand_total'),
+		"total_qty": flt(doc.get('total_qty')),
+		"actual_pallets": flt(doc.get('actual_pallets')),
+		"gross_weight_with_pallets": flt(doc.get('gross_weight_with_pallets')),
+		"gross_weight_with_pallets_kg": flt(doc.get('gross_weight_with_pallets_kg')),
+		"shipping_address_name": doc.get('shipping_address_name'),
+	}
+
+	contact_details = filter(lambda d: d, [doc.contact_display, doc.contact_mobile])
+	out['contact_display'] = "\n".join(contact_details)
+
+	return out
+
+@frappe.whitelist()
 def get_landed_cost_voucher(dt, dn):
 	doc = frappe.get_doc(dt, dn)
 
 	lcv = frappe.new_doc("Landed Cost Voucher")
 	lcv.company = doc.company
-	lcv.append("purchase_receipts", {
+
+	row = lcv.append("purchase_receipts", {
 		"receipt_document_type": dt,
-		"receipt_document": dn,
-		"supplier": doc.supplier,
-		"posting_date": doc.get("posting_date") or doc.get("transaction_date"),
-		"grand_total": doc.base_grand_total
+		"receipt_document": dn
 	})
+	row.update(get_purchase_receipt_details(dt, dn))
 
 	if doc.get("letter_of_credit"):
 		lcv.party_type = "Letter of Credit"
