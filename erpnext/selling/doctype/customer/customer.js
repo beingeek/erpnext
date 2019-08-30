@@ -43,6 +43,13 @@ frappe.ui.form.on("Customer", {
 				}
 			}
 		})
+		frm.set_query("invoice_print_format", function() {
+			return {
+				filters: {
+					"doc_type": "Sales Invoice"
+				}
+			};
+		});
 	},
 	customer_primary_address: function(frm){
 		if(frm.doc.customer_primary_address){

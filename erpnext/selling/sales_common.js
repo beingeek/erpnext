@@ -169,13 +169,20 @@ Customer Request`}
 			};
 		});
 
-		/*this.frm.set_query("driver", function() {
+		this.frm.set_query("driver", function() {
 			return {
-				"filters": {
-					"designation": "Driver"
+				filters: {
+					"is_delivery": 1
 				}
 			};
-		});*/
+		});
+		this.frm.set_query("packed_by", function() {
+			return {
+				filters: {
+					"is_packing": 1
+				}
+			};
+		});
 
 		$.each([["customer", "customer"],
 			["lead", "lead"]],
