@@ -47,7 +47,7 @@ class SellingController(StockController):
 		self.set_customer_address()
 
 	def before_submit(self):
-		if self.authorize == "Required" and not frappe.user.has_role('Price Authorization'):
+		if self.authorize == "Required" and 'Price Authorization' not in frappe.get_roles():
 			frappe.throw(_("Price Override Authorization required"))
 
 	def set_missing_values(self, for_validate=False):
