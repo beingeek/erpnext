@@ -172,10 +172,10 @@ def get_data(filters):
 				if d.price_list == filters.standard_price_list:
 					items_map[d.item_code].standard_rate = d.price_list_rate
 
-			show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
-			show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
-			if show_amounts:
-				price.item_price = d.name
+				show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
+				show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
+				if show_amounts:
+					price.item_price = d.name
 
 	for d in previous_item_prices:
 		if d.item_code in item_price_map and d.price_list in item_price_map[d.item_code] and d.price_list_rate is not None:
