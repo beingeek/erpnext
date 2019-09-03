@@ -490,7 +490,7 @@ def get_price_list_rate(args, item_doc, out):
 			out.discount_percentage = 0
 
 			uom_margin = item_doc.get("uom_additional_cost", {"uom": args.uom, "company": args.company})
-			if uom_margin:
+			if uom_margin and not pl_details.get("prices_independent_of_additional_uom_cost"):
 				uom_margin = uom_margin[0]
 				out.margin_type = "Amount"
 				out.margin_rate_or_amount = uom_margin.margin_rate
@@ -951,12 +951,12 @@ def get_price_list_currency(price_list):
 def get_price_list_uom_dependant(price_list):
 	if price_list:
 		result = frappe.db.get_value("Price List", {"name": price_list,
-			"enabled": 1}, ["name", "price_not_uom_dependant"], as_dict=True)
+			"enabled": 1}, ["name", "price_not_uom_dependant", "prices_independent_of_additional_uom_cost"], as_dict=True)
 
 		if not result:
 			throw(_("Price List {0} is disabled or does not exist").format(price_list))
 
-		return not result.price_not_uom_dependant
+		return not result.price_not_uom_dependant, result.prices_independent_of_additional_uom_cost
 
 
 def get_price_list_currency_and_exchange_rate(args):
@@ -969,7 +969,7 @@ def get_price_list_currency_and_exchange_rate(args):
 		args.update({"exchange_rate": "for_buying"})
 
 	price_list_currency = get_price_list_currency(args.price_list)
-	price_list_uom_dependant = get_price_list_uom_dependant(args.price_list)
+	price_list_uom_dependant, prices_independent_of_additional_uom_cost = get_price_list_uom_dependant(args.price_list)
 	plc_conversion_rate = args.plc_conversion_rate
 	company_currency = get_company_currency(args.company)
 
@@ -982,7 +982,8 @@ def get_price_list_currency_and_exchange_rate(args):
 	return frappe._dict({
 		"price_list_currency": price_list_currency,
 		"price_list_uom_dependant": price_list_uom_dependant,
-		"plc_conversion_rate": plc_conversion_rate
+		"plc_conversion_rate": plc_conversion_rate,
+		"prices_independent_of_additional_uom_cost": prices_independent_of_additional_uom_cost
 	})
 
 @frappe.whitelist()

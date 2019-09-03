@@ -23,7 +23,6 @@ class LandedCostVoucher(AccountsController):
 		self.check_mandatory()
 		self.validate_credit_to_account()
 		self.validate_purchase_receipts()
-		self.update_purchase_receipt_details()
 		self.clear_advances_table_if_not_payable()
 		self.clear_unallocated_advances("Landed Cost Voucher Advance", "advances")
 		self.calculate_taxes_and_totals()
@@ -31,6 +30,7 @@ class LandedCostVoucher(AccountsController):
 
 	def on_update(self):
 		self.update_landed_cost_in_purchase_orders()
+		self.update_purchase_receipt_details()
 
 	def on_trash(self):
 		self.update_landed_cost_in_purchase_orders(on_trash=True)
@@ -79,6 +79,10 @@ class LandedCostVoucher(AccountsController):
 
 					po.set("modified", frappe.utils.now())
 					po.set("modified_by", frappe.session.user)
+					po.set("pickup_no", d.pickup_no)
+					po.set("total_packed_pallets", d.actual_pallets)
+					po.calculate_taxes_and_totals()
+					po.db_update()
 					po.notify_update()
 				else:
 					frappe.msgprint(_("Purchase Order {0} could not be found").format(d.receipt_document))
