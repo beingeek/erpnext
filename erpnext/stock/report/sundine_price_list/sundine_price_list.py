@@ -165,7 +165,7 @@ def get_data(filters):
 			current_item = items_map[d.item_code]
 			price = item_price_map.setdefault(d.item_code, {}).setdefault(d.price_list, frappe._dict())
 			pick_price = (cstr(d.uom) == cstr(current_item.uom)
-					or (cstr(price.uom) != cstr(current_item.uom) and cstr(d.uom) != current_item.stock_uom)
+					or (cstr(price.reference_uom) != cstr(current_item.uom) and cstr(d.uom) != current_item.stock_uom)
 					or not price)
 
 			if pick_price:
