@@ -68,6 +68,7 @@ def get_data(filters):
 	conditions = get_item_conditions(filters, use_doc_name=False)
 	item_conditions = get_item_conditions(filters, use_doc_name=True)
 	po_conditions = get_po_conditions(filters)
+	show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
 
 	price_lists, selected_price_list = get_price_lists(filters)
 	price_lists_cond = " and p.price_list in ('{0}')".format("', '".join([frappe.db.escape(d) for d in price_lists]))
@@ -107,6 +108,7 @@ def get_data(filters):
 		inner join `tabItem` item on item.name = p.item_code
 		where %(date)s between ifnull(p.valid_from, '2000-01-01') and ifnull(p.valid_upto, '2500-12-31')
 			{0} {1}
+		order by p.uom
 	""".format(item_conditions, price_lists_cond), filters, as_dict=1)
 
 	if not filters.previous_price_date:
@@ -160,8 +162,13 @@ def get_data(filters):
 	item_price_map = {}
 	for d in item_price_data:
 		if d.item_code in items_map and d.price_list_rate is not None:
+			current_item = items_map[d.item_code]
 			price = item_price_map.setdefault(d.item_code, {}).setdefault(d.price_list, frappe._dict())
-			if price.get('current_price') is None or cstr(d.uom) == cstr(items_map[d.item_code].uom):
+			pick_price = (cstr(d.uom) == cstr(current_item.uom)
+					or (cstr(price.uom) != cstr(current_item.uom) and cstr(d.uom) != current_item.stock_uom)
+					or not price)
+
+			if pick_price:
 				price.current_price = d.price_list_rate
 				price.valid_from = d.valid_from
 				price.reference_uom = d.uom
@@ -169,7 +176,6 @@ def get_data(filters):
 				if d.price_list == filters.standard_price_list:
 					items_map[d.item_code].standard_rate = d.price_list_rate
 
-				show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
 				show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
 				if show_amounts:
 					price.item_price = d.name
