@@ -142,7 +142,7 @@ def qty_adjust_so_item(sales_order_name, so_detail, adjusted_qty, backorder_qty=
 
 def create_backorder(sales_order, so_item, backorder_qty, backorder_date):
 	existing_backorder = frappe.db.sql_list("""select name from `tabSales Order`
-		where delivery_date=%s and customer=%s and selling_price_list=%s
+		where delivery_date=%s and customer=%s and selling_price_list=%s and docstatus=0
 		order by name limit 1""", [backorder_date, sales_order.customer, sales_order.selling_price_list])
 
 	if existing_backorder:
