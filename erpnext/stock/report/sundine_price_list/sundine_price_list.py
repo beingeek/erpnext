@@ -80,10 +80,6 @@ def get_data(filters):
 		where disabled != 1 and is_sales_item = 1 {0}
 	""".format(item_conditions), filters, as_dict=1)
 
-	#price_list_item_data = frappe.db.sql("""
-	#	select item_code from `tabPrice List Item` where parenttype = 'Price List' and parent = %s
-	#""", selected_price_list or filters.standard_price_list)
-
 	po_data = frappe.db.sql("""
 		select
 			item.item_code,
@@ -131,14 +127,15 @@ def get_data(filters):
 
 	items_map = {}
 	for d in item_data:
+		default_uom = d.purchase_uom if filters.buying_selling == "Buying" else d.sales_uom
 		if filters.uom:
 			d['uom'] = filters.uom
 		elif filters.default_uom == "Stock UOM":
 			d['uom'] = d.stock_uom
 		elif filters.default_uom == "Contents UOM":
-			d['uom'] = d.alt_uom
+			d['uom'] = d.alt_uom or default_uom
 		else:
-			d['uom'] = d.purchase_uom if filters.buying_selling == "Buying" else d.sales_uom
+			d['uom'] = default_uom
 
 		if not d.get('uom'):
 			d['uom'] = d.stock_uom
