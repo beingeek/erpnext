@@ -187,8 +187,9 @@ def get_data(filters):
 				price.previous_price = d.price_list_rate
 
 	for item_code, d in iteritems(items_map):
-		d.actual_qty = flt(d.actual_qty)
-		d.po_qty = flt(d.po_qty)
+		conversion_factor = convert_item_uom_for(1, d.item_code, d.stock_uom, d.uom)
+		d.actual_qty = flt(d.actual_qty) / conversion_factor
+		d.po_qty = flt(d.po_qty) / conversion_factor
 
 		d.po_lc_rate = flt(d.po_lc_amount) / d.po_qty if d.po_qty else 0
 		d.valuation_rate = flt(d.stock_value) / d.actual_qty if d.actual_qty else 0
