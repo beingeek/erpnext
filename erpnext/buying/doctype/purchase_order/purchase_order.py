@@ -75,7 +75,6 @@ class PurchaseOrder(BuyingController):
 
 		for name in lcvs_to_update:
 			doc = frappe.get_doc("Landed Cost Voucher", name)
-			doc.update_purchase_receipt_details()
 			doc.get_items_from_purchase_receipts()
 			doc.calculate_taxes_and_totals()
 			doc.save()
