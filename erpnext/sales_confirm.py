@@ -79,46 +79,39 @@ def makeRemainItemOrder(name):
 @frappe.whitelist()
 def makeSOFromSo(name):
 	so_item=[]
-	total_box=0
-	total_pallet=0
-	total_lbs_box=0
 	so_data=frappe.get_doc("Sales Order",name)
 	for row1 in so_data.items:
 		if(row1.qty>row1.delivered_qty):
 			item_json2={}
 			item_json2["item_code"]=row1.item_code
-			item_json2["qty"]=row1.qty-row1.delivered_qty
-			item_json2["cost_center"]=getCostCenter(row1.item_code)
-			qty=flt(row1.qty)-flt(row1.delivered_qty)
-			total_box=total_box+qty
-			total_pallet=total_pallet+(qty/row1.sale_pallets)
-			total_lbs_box=qty*row1.gross_weight_lbs
+			item_json2["item_name"]=row1.item_name
+			item_json2["qty"]=flt(row1.qty)-flt(row1.delivered_qty)
+			item_json2["uom"]=row1.uom
 			so_item.append(item_json2)
 		
-	if not len(so_item)==0:
-		so_name=makeSalesOrder(name,so_item,total_box,total_lbs_box,total_pallet)
+	if so_item:
+		so_name=makeSalesOrder(name, so_item)
 		return so_name
 
 
 @frappe.whitelist()
-def makeSalesOrder(name,item_obj,total_box,total_lbs_box,total_pallet):
+def makeSalesOrder(name, item_obj):
 	doc=frappe.get_doc("Sales Order",name)
 	so_data=frappe.get_doc(dict(
 		doctype="Sales Order",
-		company=frappe.defaults.get_defaults().company,
-		customer=str(doc.customer),
-		delivery_date=add_days(doc.delivery_date,2),
-		transaction_date=str(today()),
-		selling_price_list=str(doc.selling_price_list),
+		company=doc.company,
+		customer=doc.customer,
+		delivery_date=add_days(today(), 1),
+		transaction_date=today(),
+		selling_price_list=doc.selling_price_list,
+		payment_terms_template=doc.payment_terms_template,
+		currency=doc.currency,
 		items=item_obj,
-		total_boxes=total_box,
-		total_gross_weight_lbs=total_lbs_box,
-		total_weight_kg=flt(total_lbs_box)*0.45359237,
-		total_pallets=total_pallet,
 		is_back_order=1,
 		sales_order_ref=name
-	)).insert()
-	update_status('Closed',name)
+	))
+	so_data.save()
+	doc.update_status('Closed')
 	return so_data.name	
 
 

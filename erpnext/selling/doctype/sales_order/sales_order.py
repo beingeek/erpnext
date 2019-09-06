@@ -31,14 +31,14 @@ class SalesOrder(SellingController):
 		super(SalesOrder, self).__init__(*args, **kwargs)
 
 	def validate(self):
+		self.validate_delivery_date()
+		self.validate_for_items()
 		super(SalesOrder, self).validate()
 		self.validate_order_type()
-		self.validate_delivery_date()
 		self.validate_proj_cust()
 		self.validate_po()
 		self.validate_uom_is_integer("stock_uom", "stock_qty")
 		self.validate_uom_is_integer("uom", "qty")
-		self.validate_for_items()
 		self.validate_warehouse()
 		self.validate_drop_ship()
 		self.validate_serial_no_based_delivery()
