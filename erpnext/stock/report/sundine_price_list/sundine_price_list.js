@@ -132,6 +132,14 @@ frappe.query_reports["Sundine Price List"] = {
 		},
 	],
 	formatter: function(value, row, column, data, default_formatter) {
+		if (!data) {
+			if (in_list(['po_qty', 'actual_qty'], column.fieldname)) {
+				return default_formatter(value, row, column, data);
+			} else {
+				return '';
+			}
+		}
+
 		var options = {
 			link_target: "_blank",
 			css: {}
@@ -151,6 +159,10 @@ frappe.query_reports["Sundine Price List"] = {
 			if (data.hasOwnProperty(item_price_field) && data[item_price_field]) {
 				options.link_href = "desk#Form/Item Price/" + data[item_price_field];
 			}
+		}
+
+		if (column.fieldname == 'valuation_rate' && data.hasOwnProperty('stock_item_price') && data['stock_item_price']) {
+			options.link_href = "desk#Form/Item Price/" + data['stock_item_price'];
 		}
 
 		if (column.fieldname == "po_qty") {
@@ -249,6 +261,19 @@ frappe.query_reports["Sundine Price List"] = {
 					() => cur_frm.set_value('filters', JSON.stringify(frappe.query_report.get_filter_values()))
 				]);
 			});
+		});
+	},
+	get_datatable_options(options) {
+		return Object.assign(options, {
+			hooks: {
+				columnTotal: function (values, column, type) {
+					if (in_list(['po_qty', 'actual_qty'], column.column.fieldname)) {
+						frappe.utils.report_column_total(values, column, type);
+					} else {
+						return '';
+					}
+				}
+			},
 		});
 	}
 };

@@ -163,6 +163,7 @@ def get_data(filters):
 	for d in item_price_data:
 		if d.item_code in items_map and d.price_list_rate is not None:
 			current_item = items_map[d.item_code]
+			show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
 			price = item_price_map.setdefault(d.item_code, {}).setdefault(d.price_list, frappe._dict())
 			pick_price = (cstr(d.uom) == cstr(current_item.uom)
 					or (cstr(price.reference_uom) != cstr(current_item.uom) and cstr(d.uom) != current_item.stock_uom)
@@ -176,9 +177,12 @@ def get_data(filters):
 				if d.price_list == filters.standard_price_list:
 					items_map[d.item_code].standard_rate = d.price_list_rate
 
-				show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
 				if show_amounts:
 					price.item_price = d.name
+
+			stock_price_list = selected_price_list or filters.standard_price_list
+			if show_amounts and d.price_list == stock_price_list and d.uom == current_item.stock_uom:
+				price.stock_item_price = d.name
 
 	for d in previous_item_prices:
 		if d.item_code in item_price_map and d.price_list in item_price_map[d.item_code] and d.price_list_rate is not None:
@@ -206,6 +210,8 @@ def get_data(filters):
 				d["rate_old_" + scrub(price_list)] = price.previous_price
 			if price.item_price:
 				d["item_price_" + scrub(price_list)] = price.item_price
+			if price.stock_item_price:
+				d["stock_item_price"] = price.stock_item_price
 
 		d['print_rate'] = d.get("rate_" + scrub(selected_price_list)) if selected_price_list else d.standard_rate
 
