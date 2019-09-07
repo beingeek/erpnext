@@ -161,8 +161,8 @@ frappe.query_reports["Sundine Price List"] = {
 			}
 		}
 
-		if (column.fieldname == 'valuation_rate' && data.hasOwnProperty('stock_item_price') && data['stock_item_price']) {
-			options.link_href = "desk#Form/Item Price/" + data['stock_item_price'];
+		if (column.fieldname == 'valuation_rate') {
+			options.link_href = "desk#query-report/Stock Ledger?item_code=" + data['item_code'];
 		}
 
 		if (column.fieldname == "po_qty") {
