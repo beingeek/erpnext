@@ -254,7 +254,14 @@ class AccountsController(TransactionBase):
 			for item in self.get("items"):
 				if item.get("item_code"):
 					args = parent_dict.copy()
-					args.update(item.as_dict())
+					item_dict = item.as_dict()
+					
+					if 'delivery_date' in item_dict:
+						del item_dict['delivery_date']
+					if 'transaction_date' in item_dict:
+						del item_dict['transaction_date']
+
+					args.update(item_dict)
 
 					args["doctype"] = self.doctype
 					args["name"] = self.name
