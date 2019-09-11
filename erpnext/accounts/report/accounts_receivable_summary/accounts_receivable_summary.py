@@ -200,16 +200,13 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		if party_naming_by == "Naming Series":
 			cols += ["party_name"]
 
-		if args.get("party_type") == 'Customer':
-			cols += ["contact"]
-
-		cols += ["voucher_type", "voucher_no", "due_date"]
+		cols += ["voucher_no"]
 
 		if args.get("party_type") == "Supplier":
 			cols += ["bill_no", "bill_date"]
 
-		cols += ["invoiced_amt", "paid_amt", "credit_amt",
-		"outstanding_amt", "age", "range1", "range2", "range3", "range4", "currency", "pdc/lc_date", "pdc/lc_ref",
+		cols += ["invoiced_amt", "credit_amt", "paid_amt",
+		"outstanding_amt", "range1", "range2", "range3", "range4", "currency", "pdc/lc_ref",
 		"pdc/lc_amount"]
 
 		if args.get("party_type") == "Supplier":
