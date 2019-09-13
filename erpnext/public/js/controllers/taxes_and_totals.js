@@ -615,7 +615,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 			var delivery_charges_account = frappe.get_doc(":Company", this.frm.doc.company).delivery_charges_account;
 			if (delivery_charges_account) {
-				this.frm.doc.delivery_charges = frappe.utils.sum(this.frm.doc.taxes
+				this.frm.doc.delivery_charges = frappe.utils.sum((this.frm.doc.taxes || [])
 					.filter(tax => tax.account_head == delivery_charges_account)
 					.map(tax => flt(tax.tax_amount)));
 			}
