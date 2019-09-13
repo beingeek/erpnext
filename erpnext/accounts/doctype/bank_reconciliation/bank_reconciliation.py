@@ -107,9 +107,6 @@ class BankReconciliation(Document):
 					d.clearance_date = None
 
 				frappe.db.set_value(d.payment_document, d.payment_entry, "clearance_date", d.clearance_date)
-				frappe.db.sql("""update `tab{0}` set clearance_date = %s, modified = %s 
-					where name=%s""".format(d.payment_document), 
-				(d.clearance_date, nowdate(), d.payment_entry))
 				
 				clearance_date_updated = True
 
