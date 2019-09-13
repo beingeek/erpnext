@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Sundine Price List"] = {
+frappe.query_reports["Price List"] = {
 	filters: [
 		{
 			fieldname: "date",
@@ -48,7 +48,7 @@ frappe.query_reports["Sundine Price List"] = {
 			label: __("Item Group"),
 			fieldtype: "Link",
 			options:"Item Group",
-			default:"Vegetables"
+			default:frappe.defaults.get_default("item_group")
 		},
 		{
 			fieldname: "brand",
@@ -200,7 +200,7 @@ frappe.query_reports["Sundine Price List"] = {
 				value: new_value
 			};
 		} else {
-			method = "erpnext.stock.report.sundine_price_list.sundine_price_list.set_item_pl_rate";
+			method = "erpnext.stock.report.price_list.price_list.set_item_pl_rate";
 			args = {
 				effective_date: frappe.query_report.get_filter_value("date"),
 				item_code: data['item_code'],

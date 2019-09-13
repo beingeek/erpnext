@@ -11,11 +11,11 @@
  "modified": "2019-09-07 14:41:40.130754", 
  "modified_by": "Administrator", 
  "module": "Stock", 
- "name": "Sundine Price List", 
+ "name": "Price List",
  "owner": "Administrator", 
  "prepared_report": 0, 
  "ref_doctype": "Item Price", 
- "report_name": "Sundine Price List", 
+ "report_name": "Price List",
  "report_type": "Script Report", 
  "roles": [
   {
