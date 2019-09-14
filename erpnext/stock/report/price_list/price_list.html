@@ -87,7 +87,7 @@ $.each(item_groups || {}, function(item_group, items) {
             <tr>
             {% } %}
                 <td>{%= d.item_name %}</td>
-                <td class="text-center text-nowrap">{%= d.alt_uom_size %} {%= d.alt_uom %} {%= d.uom %}</td>
+                <td class="text-center text-nowrap">{%= d.alt_uom_size %} {%= d.alt_uom %}</td>
                 <td class="text-center">{%= d.origin %}</td>
                 <td class="text-center">{%= d.print_rate ? format_currency(d.print_rate) : '' %}</td>
                 <td class="text-right{% if (i % 2 != 1) { %} right-border{% } %}"></td>

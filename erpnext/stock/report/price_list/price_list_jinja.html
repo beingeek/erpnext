@@ -117,7 +117,7 @@
                         <tr>
                         {% endif %}
                             <td>{{ d.item_name }}</td>
-                            <td class="text-center text-nowrap">{{ frappe.format_value(d.alt_uom_size) }} {{ d.alt_uom }} {{ d.uom }}</td>
+                            <td class="text-center text-nowrap">{{ frappe.format_value(d.alt_uom_size) }} {{ d.alt_uom }}</td>
                             <td class="text-center">{{ d.origin }}</td>
                             <td class="text-center">{{ frappe.utils.fmt_money(d.print_rate) if d.print_rate else '' }}</td>
                             <td class="text-right{% if (loop.index0 % 2 != 1) %} right-border{% endif %}"></td>
