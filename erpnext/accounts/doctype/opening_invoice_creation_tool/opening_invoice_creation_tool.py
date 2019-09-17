@@ -162,6 +162,7 @@ class OpeningInvoiceCreationTool(Document):
 		args = frappe._dict({
 			"items": [item],
 			"is_opening": "Yes",
+			"ignore_pricing_rule": 1,
 			"set_posting_time": 1,
 			"company": self.company,
 			"due_date": row.due_date,
