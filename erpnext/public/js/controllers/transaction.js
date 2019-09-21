@@ -583,11 +583,11 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 										});
 
 										erpnext.show_serial_batch_selector(me.frm, d, (item) => {
-											me.frm.script_manager.trigger('qty', item.doctype, item.name);
+											me.qty(item, item.doctype, item.name, true);
 										});
 									}
 								},
-								() => me.conversion_factor(doc, cdt, cdn, true),
+								() => me.conversion_factor(doc, cdt, cdn, true, true),
 								() => {
 									if (me.frm.doc.doctype == "Sales Order") {
 										me.set_item_custom_projected_qty(item, r.message);
@@ -1020,7 +1020,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 	},
 
-	conversion_factor: function(doc, cdt, cdn, dont_fetch_price_list_rate) {
+	conversion_factor: function(doc, cdt, cdn, dont_fetch_price_list_rate, dont_fetch_batch_no) {
 		if(doc.doctype != 'Material Request' && frappe.meta.get_docfield(cdt, "stock_qty", cdn)) {
 			var item = frappe.get_doc(cdt, cdn);
 			frappe.model.round_floats_in(item, ["qty", "conversion_factor"]);
@@ -1142,10 +1142,10 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		frappe.model.set_value(cdt, cdn, "rate", item.tax_exclusive_rate * (1 + item.cumulated_tax_fraction));
 	},
 
-	qty: function(doc, cdt, cdn) {
+	qty: function(doc, cdt, cdn, dont_fetch_batch_no) {
 		var item = frappe.get_doc(cdt, cdn);
 
-		this.conversion_factor(doc, cdt, cdn, true);
+		this.conversion_factor(doc, cdt, cdn, true, dont_fetch_batch_no);
 		this.apply_pricing_rule(item, true);
 	},
 
@@ -1999,7 +1999,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	},
 });
 
-erpnext.show_serial_batch_selector = function(frm, d, callback, on_close, show_dialog) {
+erpnext.show_serial_batch_selector = function(frm, d, callback, on_close, show_dialog, on_make_dialog) {
 	frappe.require("assets/erpnext/js/utils/serial_no_batch_selector.js", function() {
 		new erpnext.SerialNoBatchSelector({
 			frm: frm,
@@ -2009,7 +2009,8 @@ erpnext.show_serial_batch_selector = function(frm, d, callback, on_close, show_d
 				name: d.warehouse
 			},
 			callback: callback,
-			on_close: on_close
+			on_close: on_close,
+			on_make_dialog: on_make_dialog
 		}, show_dialog);
 	});
 }
