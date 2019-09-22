@@ -305,8 +305,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		if(frappe.meta.get_docfield(this.frm.doc.doctype + " Item", "item_code")) {
 			this.setup_item_selector();
 		}
-
-		this.setup_keyboard_table_nav();
 	},
 
 	refresh: function() {
@@ -317,47 +315,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		this.setup_quality_inspection();
 		this.frm.fields_dict["scan_barcode"] && this.frm.fields_dict["scan_barcode"].set_value("");
 		this.frm.fields_dict["scan_barcode"] && this.frm.fields_dict["scan_barcode"].set_new_description("");
-	},
-
-	setup_keyboard_table_nav: function() {
-		var me = this;
-        me.frm.fields_dict.items.grid.wrapper.on('keydown', 'input[data-doctype="' + me.frm.doc.doctype + ' Item"]', function(e) {
-			var input_type = $(this).attr('data-fieldtype');
-			var input_field = $(this).attr('data-fieldname');
-			var next_selected_input =  'input[data-fieldname="'+input_field+'"]';
-			var parent_row = $(this).parents('.grid-row');
-			var parent_row_id = cint(parent_row.attr('data-idx'));
-
-			/*if(e.keyCode == 9)
-			{
-				if($(this).attr("data-fieldname") == "item_name")
-				{
-					me.frm.fields_dict.items.grid.grid_rows[parent_row_id].toggle_editable_row();
-					me.frm.fields_dict.items.grid.grid_rows[parent_row_id].row.find('input[data-fieldname="qty"]').focus();
-					me.frm.fields_dict.items.grid.set_focus_on_row();
-					me.frm.refresh_field("items");
-					return false;
-				}
-			}*/
-
-			if(input_type != "Link"  && (e.keyCode == 38 || e.keyCode == 40)) {
-				if(e.keyCode == 38 && parent_row_id > 1) {
-					parent_row_id = cint(parent_row_id) - 2;
-				} else if ( e.keyCode == 40 ) {
-					parent_row_id = parent_row_id;
-				} else {
-					parent_row_id = cint(parent_row_id) - 1;
-				}
-
-				if (parent_row_id < me.frm.fields_dict.items.grid.grid_rows.length) {
-					me.frm.fields_dict.items.grid.grid_rows[parent_row_id].toggle_editable_row();
-					me.frm.fields_dict.items.grid.grid_rows[parent_row_id].row.find(next_selected_input).focus();
-					//me.frm.fields_dict.items.grid.grid_rows[parent_row_id].row.find('input[type="Text"],textarea,select').filter(':visible:first').focus();
-					me.frm.fields_dict.items.grid.set_focus_on_row();
-					me.frm.refresh_field("items");
-				}
-			}
-        });
 	},
 
 	add_empty_rows: function() {
