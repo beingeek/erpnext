@@ -372,12 +372,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 	},
 
-	remove_sidebar: function() {
-		this.frm.page.sidebar.remove(); // this removes the sidebar
-		this.frm.page.wrapper.find(".layout-main-section-wrapper").removeClass("col-md-10");
-		this.frm.page.wrapper.find(".layout-main-section-wrapper").addClass("col-md-12");
-	},
-
 	scan_barcode: function() {
 		let scan_barcode_field = this.frm.fields_dict["scan_barcode"];
 

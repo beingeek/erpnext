@@ -596,3 +596,4 @@ erpnext.patches.v11_0.make_italian_localization_fields # 26-03-2019
 erpnext.patches.v11_1.update_landed_cost_vouchers
 erpnext.patches.v11_1.make_job_card_time_logs
 erpnext.patches.v11_1.set_variant_based_on
+erpnext.patches.v11_1.stock_reconciliation_enhancement

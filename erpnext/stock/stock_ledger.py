@@ -29,7 +29,7 @@ def make_sl_entries(sl_entries, is_amended=None, allow_negative_stock=False, via
 			if sle.get('is_cancelled') == 'Yes':
 				sle['actual_qty'] = -flt(sle['actual_qty'])
 
-			if sle.get("actual_qty") or sle.get("voucher_type")=="Stock Reconciliation":
+			if sle.get("actual_qty"):
 				sle_id = make_entry(sle, allow_negative_stock, via_landed_cost_voucher)
 
 			args = sle.copy()
@@ -159,26 +159,22 @@ class update_entries_after(object):
 			self.qty_after_transaction += flt(sle.actual_qty)
 			self.stock_value = flt(self.qty_after_transaction) * flt(self.valuation_rate)
 		else:
-			if sle.voucher_type=="Stock Reconciliation":
-				# assert
-				self.valuation_rate = sle.valuation_rate
-				self.qty_after_transaction = sle.qty_after_transaction
-				self.stock_queue = [[self.qty_after_transaction, self.valuation_rate]]
+			if sle.voucher_type=="Stock Reconciliation" and flt(sle.actual_qty) > 0:
+				sle.incoming_rate = self.valuation_rate
+
+			if self.valuation_method == "Moving Average":
+				self.get_moving_average_values(sle)
+				self.qty_after_transaction += flt(sle.actual_qty)
 				self.stock_value = flt(self.qty_after_transaction) * flt(self.valuation_rate)
 			else:
-				if self.valuation_method == "Moving Average":
-					self.get_moving_average_values(sle)
-					self.qty_after_transaction += flt(sle.actual_qty)
-					self.stock_value = flt(self.qty_after_transaction) * flt(self.valuation_rate)
-				else:
-					self.get_fifo_values(sle)
-					self.qty_after_transaction += flt(sle.actual_qty)
-					self.stock_value = sum((flt(batch[0]) * flt(batch[1]) for batch in self.stock_queue))
+				self.get_fifo_values(sle)
+				self.qty_after_transaction += flt(sle.actual_qty)
+				self.stock_value = sum((flt(batch[0]) * flt(batch[1]) for batch in self.stock_queue))
 
 		# rounding as per precision
 		self.stock_value = flt(self.stock_value, self.precision)
 
-		if self.prev_stock_value < 0 and self.stock_value >= 0 and sle.voucher_type != 'Stock Reconciliation':
+		if self.prev_stock_value < 0 and self.stock_value >= 0:
 			stock_value_difference = sle.actual_qty * self.valuation_rate
 		else:
 			stock_value_difference = self.stock_value - self.prev_stock_value
