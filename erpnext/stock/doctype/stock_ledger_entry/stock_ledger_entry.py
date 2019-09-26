@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import flt, getdate, add_days, formatdate
+from frappe.utils import flt, getdate, add_days, formatdate, cint
 from frappe.model.document import Document
 from datetime import date
 from erpnext.controllers.item_variant import ItemTemplateCannotHaveStock
@@ -37,7 +37,8 @@ class StockLedgerEntry(Document):
 
 	#check for item quantity available in stock
 	def actual_amt_check(self):
-		if self.batch_no and not self.get("allow_negative_stock"):
+		allow_negative_stock = cint(frappe.db.get_single_value("Stock Settings", "allow_negative_stock"))
+		if self.batch_no and not allow_negative_stock:
 			batch_bal_after_transaction = flt(frappe.db.sql("""select sum(actual_qty)
 				from `tabStock Ledger Entry`
 				where warehouse=%s and item_code=%s and batch_no=%s""",
