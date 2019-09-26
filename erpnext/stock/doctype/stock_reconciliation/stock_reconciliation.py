@@ -6,7 +6,6 @@ import frappe, erpnext
 import frappe.defaults
 from frappe import msgprint, _
 from frappe.utils import cstr, flt, cint, get_datetime, formatdate, getdate
-from erpnext.stock.stock_ledger import update_entries_after
 from erpnext.stock.doctype.batch.batch import get_batches, get_batch_received_date
 from erpnext.controllers.stock_controller import StockController
 from erpnext.accounts.utils import get_company_default
@@ -34,6 +33,7 @@ class StockReconciliation(StockController):
 			self.cost_center = frappe.get_cached_value('Company',  self.company,  "cost_center")
 		self.validate_posting_time()
 
+		self.update_current_qty_valuation_rate()
 		if self._action == "submit":
 			self.remove_items_with_no_change()
 
@@ -49,25 +49,28 @@ class StockReconciliation(StockController):
 		self.update_stock_ledger()
 		self.make_gl_entries_on_cancel()
 
+	def update_current_qty_valuation_rate(self):
+		for item in self.items:
+			qty, rate = get_stock_balance_for(item.item_code, item.warehouse,
+				self.posting_date, self.posting_time, item.batch_no, with_valuation_rate=True)
+
+			item.current_qty = qty
+			item.current_valuation_rate = rate
+			item.valuation_rate = rate
+
 	def remove_items_with_no_change(self):
 		"""Remove items if qty or rate is not changed"""
-		self.difference_amount = 0.0
 		def _changed(item):
-			qty, rate = get_stock_balance_for(item.item_code, item.warehouse,
-					self.posting_date, self.posting_time, item.batch_no, with_valuation_rate=True)
-			if (item.qty==None or item.qty==qty) and (item.valuation_rate==None or item.valuation_rate==rate):
+			if (item.qty is None or item.qty == item.current_qty) and (item.valuation_rate is None or item.valuation_rate == item.current_valuation_rate):
 				return False
 			else:
 				# set default as current rates
-				if item.qty==None:
-					item.qty = qty
+				if item.qty is None:
+					item.qty = item.current_qty
 
-				if item.valuation_rate==None:
-					item.valuation_rate = rate
+				if item.valuation_rate is None:
+					item.valuation_rate = item.current_valuation_rate
 
-				item.current_qty = qty
-				item.current_valuation_rate = rate
-				self.difference_amount += (flt(item.qty) * flt(item.valuation_rate or rate)) - (flt(qty) * flt(rate))
 				return True
 
 		items = list(filter(lambda d: _changed(d), self.items))
@@ -80,7 +83,6 @@ class StockReconciliation(StockController):
 			self.items = items
 			for i, item in enumerate(self.items):
 				item.idx = i + 1
-			#frappe.msgprint(_("Removed items with no change in quantity or value."))
 
 	def validate_data(self):
 		def _get_msg(row_num, msg):
@@ -199,13 +201,17 @@ class StockReconciliation(StockController):
 				frappe.throw(_("Difference Account must be a Asset/Liability type account, since this Stock Reconciliation is an Opening Entry"), OpeningEntryAccountError)
 
 	def set_total_qty_and_amount(self):
+		stock_value_precision = get_field_precision(frappe.get_meta("Stock Ledger Entry").get_field("stock_value"),
+			currency=frappe.get_cached_value('Company', self.company, "default_currency"))
+
+		self.difference_amount = 0.0
 		for d in self.get("items"):
-			d.amount = flt(d.qty, d.precision("qty")) * flt(d.valuation_rate, d.precision("valuation_rate"))
-			d.current_amount = (flt(d.current_qty,
-				d.precision("current_qty")) * flt(d.current_valuation_rate, d.precision("current_valuation_rate")))
+			d.amount = flt(flt(d.qty) * flt(d.valuation_rate), stock_value_precision)
+			d.current_amount = flt(flt(d.current_qty) * flt(d.current_valuation_rate), stock_value_precision)
 
 			d.quantity_difference = flt(d.qty) - flt(d.current_qty)
 			d.amount_difference = flt(d.amount) - flt(d.current_amount)
+			self.difference_amount += d.amount_difference
 
 	def get_items_for(self, warehouse):
 		self.items = []
@@ -352,13 +358,11 @@ def get_item_details(args):
 	elif args.batch_no and item.has_batch_no:
 		out.batch_date = get_batch_received_date(args.batch_no, args.warehouse)
 
-	meta = frappe.get_meta("Stock Reconciliation Item")
-	current_qty_precision = get_field_precision(meta.get_field('current_qty'))
-	current_val_rate_precision = get_field_precision(meta.get_field('current_valuation_rate'))
-	val_rate_precision = get_field_precision(meta.get_field('valuation_rate'))
+	stock_value_precision = get_field_precision(frappe.get_meta("Stock Ledger Entry").get_field("stock_value"),
+		currency=frappe.get_cached_value('Company', args.company, "default_currency"))
 
-	out.current_amount = flt(out.current_qty, current_qty_precision) * flt(out.current_valuation_rate, current_val_rate_precision)
-	out.amount = flt(out.qty, current_qty_precision) * flt(out.valuation_rate, val_rate_precision)
+	out.current_amount = flt(flt(out.current_qty) * flt(out.current_valuation_rate), stock_value_precision)
+	out.amount = flt(flt(out.qty) * flt(out.valuation_rate), stock_value_precision)
 
 	if out.qty or out.valuation_rate:
 		out.quantity_difference = flt(out.qty) - flt(out.current_qty)
