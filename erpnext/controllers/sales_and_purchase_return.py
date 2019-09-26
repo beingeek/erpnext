@@ -111,7 +111,7 @@ def validate_returned_items(doc):
 		frappe.throw(_("Atleast one item should be entered with negative quantity in return document"))
 
 def validate_quantity(doc, args, ref, valid_items, already_returned_items):
-	fields = ['stock_qty']
+	fields = ['stock_qty', 'alt_uom_qty']
 	if doc.doctype in ['Purchase Receipt', 'Purchase Invoice']:
 		fields.extend(['received_qty', 'rejected_qty'])
 
