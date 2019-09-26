@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import frappe, erpnext
 import frappe.defaults
 from frappe import msgprint, _
-from frappe.utils import cstr, flt, cint, get_datetime
+from frappe.utils import cstr, flt, cint, get_datetime, formatdate, getdate
 from erpnext.stock.stock_ledger import update_entries_after
 from erpnext.stock.doctype.batch.batch import get_batches, get_batch_received_date
 from erpnext.controllers.stock_controller import StockController
@@ -295,7 +295,13 @@ def get_items(args):
 		else:
 			return cstr(d.get('item_code')), cstr(d.get('warehouse')), get_datetime(d.get('batch_date'))
 
-	return sorted(res, key=sort_by)
+	res = sorted(res, key=sort_by)
+
+	for d in res:
+		if d.batch_date:
+			d.batch_date = formatdate(getdate(d.batch_date), "d-MMM-YY")
+
+	return res
 
 @frappe.whitelist()
 def get_item_details(args):
@@ -336,6 +342,8 @@ def get_item_details(args):
 
 	if not item.has_batch_no or args.batch_no:
 		out.qty = flt(args.qty) or out.current_qty or None
+		if out.qty and flt(out.qty) < 1:
+			out.qty = "0"
 		out.valuation_rate = out.current_valuation_rate or None
 
 	out.batch_no = args.batch_no if item.has_batch_no else None
