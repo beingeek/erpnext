@@ -58,6 +58,17 @@ frappe.ui.form.on('Stock Entry', {
 			}
 		});
 
+		frm.set_query("account_head", function(doc) {
+			var account_type = ["Tax", "Chargeable", "Expenses Included In Valuation"];
+			return {
+				query: "erpnext.controllers.queries.tax_account_query",
+				filters: {
+					"account_type": account_type,
+					"company": doc.company
+				}
+			}
+		});
+
 		frm.add_fetch("bom_no", "inspection_required", "inspection_required");
 	},
 
@@ -788,8 +799,8 @@ erpnext.stock.StockEntry = erpnext.stock.StockController.extend({
 		}
 
 		// Addition costs based on purpose
-		this.frm.toggle_display(["additional_costs", "total_additional_costs", "additional_costs_section"],
-			doc.purpose!='Material Issue');
+		this.frm.toggle_display(["additional_costs", "total_additional_costs", "additional_costs_section",
+			"additional_cost_account"], doc.purpose!='Material Issue');
 
 		this.frm.fields_dict["items"].grid.set_column_disp("additional_cost", doc.purpose!='Material Issue');
 	},

@@ -575,7 +575,7 @@ class StockEntry(StockController):
 		self.make_sl_entries(sl_entries, self.amended_from and 'Yes' or 'No')
 
 	def get_gl_entries(self, warehouse_account):
-		expenses_included_in_valuation = self.get_company_default("expenses_included_in_valuation")
+		expenses_included_in_valuation = self.get('additional_cost_account') or self.get_company_default("expenses_included_in_valuation")
 
 		gl_entries = super(StockEntry, self).get_gl_entries(warehouse_account)
 
