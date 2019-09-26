@@ -289,6 +289,14 @@ def get_sufficient_batch_or_fifo(item_code, warehouse, qty=1, conversion_factor=
 
 	return selected_batches
 
+def get_batch_received_date(batch_no, warehouse):
+	date = frappe.db.sql("""
+		select min(timestamp(posting_date, posting_time))
+		from `tabStock Ledger Entry`
+		where batch_no = %s and warehouse = %s
+	""", [batch_no, warehouse])
+
+	return date[0][0] if date else None
 
 def get_batches(item_code, warehouse):
 	batches = frappe.db.sql("""

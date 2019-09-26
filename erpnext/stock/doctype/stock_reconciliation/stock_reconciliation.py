@@ -5,14 +5,16 @@ from __future__ import unicode_literals
 import frappe, erpnext
 import frappe.defaults
 from frappe import msgprint, _
-from frappe.utils import cstr, flt, cint
+from frappe.utils import cstr, flt, cint, get_datetime
 from erpnext.stock.stock_ledger import update_entries_after
+from erpnext.stock.doctype.batch.batch import get_batches, get_batch_received_date
 from erpnext.controllers.stock_controller import StockController
 from erpnext.accounts.utils import get_company_default
 from erpnext.stock.utils import get_stock_balance
 from erpnext.stock.doctype.batch.batch import get_batch_qty
 from erpnext.stock.doctype.item.item import get_item_defaults
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
+from erpnext.stock.get_item_details import get_default_cost_center
 from frappe.model.meta import get_field_precision
 import json
 from six import string_types
@@ -31,7 +33,10 @@ class StockReconciliation(StockController):
 		if not self.cost_center:
 			self.cost_center = frappe.get_cached_value('Company',  self.company,  "cost_center")
 		self.validate_posting_time()
-		self.remove_items_with_no_change()
+
+		if self._action == "submit":
+			self.remove_items_with_no_change()
+
 		self.validate_data()
 		self.validate_expense_account()
 		self.set_total_qty_and_amount()
@@ -82,16 +87,17 @@ class StockReconciliation(StockController):
 			return _("Row # {0}: ").format(row_num+1) + msg
 
 		self.validation_messages = []
-		item_warehouse_combinations = []
+		unique_combinations = []
 
 		default_currency = frappe.db.get_default("currency")
 
 		for row_num, row in enumerate(self.items):
+			key = (row.item_code, row.warehouse, cstr(row.batch_no))
 			# find duplicates
-			if [row.item_code, row.warehouse] in item_warehouse_combinations:
+			if key in unique_combinations:
 				self.validation_messages.append(_get_msg(row_num, _("Duplicate entry")))
 			else:
-				item_warehouse_combinations.append([row.item_code, row.warehouse])
+				unique_combinations.append(key)
 
 			self.validate_item(row.item_code, row_num+1)
 
@@ -220,47 +226,76 @@ class StockReconciliation(StockController):
 			self._cancel()
 
 @frappe.whitelist()
-def get_items(warehouse, posting_date, posting_time, company, item_group=None):
-	wh_lft, wh_rgt = frappe.db.get_value("Warehouse", warehouse, ["lft", "rgt"])
-	item_group_cond = ""
-	if item_group:
-		ig_lft, ig_rgt = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"])
-		item_group_cond = "and exists (select name from `tabItem Group` where lft >= {0} and rgt <= {1} and name=i.item_group)"\
-			.format(ig_lft, ig_rgt)
+def get_items(args):
+	if isinstance(args, string_types):
+		args = json.loads(args)
+	args = frappe._dict(args)
+
+	if not args.warehouse:
+		frappe.throw(_("Please select Warehouse"))
+	if not args.company:
+		args.company = frappe.get_cached_value("Warehouse", args.warehouse, 'company')
+	if not args.company:
+		frappe.throw(_("Please select Company"))
+	if not args.posting_date:
+		frappe.throw(_("Please set Posting Date"))
+
+	conditions = []
+
+	if args.warehouse:
+		lft, rgt = frappe.db.get_value("Warehouse", args.warehouse, ["lft", "rgt"])
+		conditions.append("exists(select name from `tabWarehouse` where lft >= {0} and rgt <= {1} and name=bin.warehouse)"
+			.format(lft, rgt))
+
+	if args.item_code:
+		conditions.append("i.item_code = %(item_code)s")
+	elif args.item_group:
+		lft, rgt = frappe.db.get_value("Item Group", args.item_group, ["lft", "rgt"])
+		conditions.append("exists (select name from `tabItem Group` where lft >= {0} and rgt <= {1} and name=i.item_group)"
+			.format(lft, rgt))
+
+	conditions = "and {0}".format(" and ".join(conditions)) if conditions else ""
 
 	items = frappe.db.sql("""
 		select i.name, bin.warehouse
 		from tabBin bin, tabItem i
-		where i.name=bin.item_code and i.disabled=0
-		and exists(select name from `tabWarehouse` where lft >= %s and rgt <= %s and name=bin.warehouse)
-		{0}
-	""".format(item_group_cond), (wh_lft, wh_rgt))
-
-	items += frappe.db.sql("""
-		select i.name, id.default_warehouse
-		from tabItem i, `tabItem Default` id
-		where i.name = id.parent
-			and exists(select name from `tabWarehouse` where lft >= %s and rgt <= %s and (name=id.default_warehouse or name=i.default_warehouse))
-			and i.is_stock_item = 1 and i.has_serial_no = 0
-			and i.has_variants = 0 and i.disabled = 0 and id.company=%s
-			{0}
-		group by i.name
-	""".format(item_group_cond), (wh_lft, wh_rgt, company))
+		where i.name=bin.item_code and i.disabled=0 and actual_qty > 0 {0}
+	""".format(conditions), args)
 
 	res = []
 	for d in set(items):
-		item_details = get_item_details({
-			"company": company,
-			"posting_date": posting_date,
-			"posting_time": posting_time,
-			"item_code": d[0],
-			"warehouse": d[1],
-		})
-		res.append(item_details)
+		item_code, warehouse = d
+		item_details_args = {
+			"company": args.company,
+			"posting_date": args.posting_date,
+			"posting_time": args.posting_time,
+			"item_code": item_code,
+			"warehouse": warehouse,
+		}
+		batch_list = []
 
-	res = sorted(res, key=lambda d: not bool(d.get('current_qty')))
+		if frappe.get_cached_value("Item", item_code, "has_batch_no") and cint(args.get_batches):
+			batches = get_batches(item_code, warehouse)
+			for b in batches:
+				batch_list.append({'batch_no': b.name, 'batch_date': b.received_date})
+		else:
+			batch_list = [{'batch_no': None}]
 
-	return res
+		for b in batch_list:
+			args_copy = item_details_args.copy()
+			args_copy.update(b)
+			item_details = get_item_details(args_copy)
+			res.append(item_details)
+
+	def sort_by(d):
+		if args.sort_by == 'Item Group':
+			return cstr(d.get('item_group')), cstr(d.get('item_code')), cstr(d.get('warehouse')), get_datetime(d.get('batch_date'))
+		elif args.sort_by == 'Stock Qty':
+			return -flt(d.get('current_qty'))
+		else:
+			return cstr(d.get('item_code')), cstr(d.get('warehouse')), get_datetime(d.get('batch_date'))
+
+	return sorted(res, key=sort_by)
 
 @frappe.whitelist()
 def get_item_details(args):
@@ -279,6 +314,7 @@ def get_item_details(args):
 
 	out.item_code = args.item_code
 	out.item_name = args.item_name or item.item_name
+	out.item_group = item.item_group
 
 	if args.warehouse:
 		out.warehouse = args.warehouse
@@ -292,6 +328,8 @@ def get_item_details(args):
 			item_group_defaults.get("default_warehouse")
 		args.warehouse = out.warehouse
 
+	out.cost_center = get_default_cost_center(args, item_defaults, item_group_defaults)
+
 	if args.item_code and args.warehouse:
 		out.current_qty, out.current_valuation_rate = get_stock_balance_for(args.item_code, args.warehouse,
 			args.posting_date, args.posting_time, args.batch_no)
@@ -299,6 +337,12 @@ def get_item_details(args):
 	if not item.has_batch_no or args.batch_no:
 		out.qty = flt(args.qty) or out.current_qty or None
 		out.valuation_rate = out.current_valuation_rate or None
+
+	out.batch_no = args.batch_no if item.has_batch_no else None
+	if args.batch_date:
+		out.batch_date = args.batch_date if item.has_batch_no else None
+	elif args.batch_no and item.has_batch_no:
+		out.batch_date = get_batch_received_date(args.batch_no, args.warehouse)
 
 	meta = frappe.get_meta("Stock Reconciliation Item")
 	current_qty_precision = get_field_precision(meta.get_field('current_qty'))
