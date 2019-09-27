@@ -52,7 +52,7 @@ def validate_returned_items(doc):
 
 	valid_items = frappe._dict()
 
-	select_fields = "item_code, qty, stock_qty, rate, parenttype, conversion_factor"
+	select_fields = "item_code, qty, stock_qty, alt_uom_qty, rate, parenttype, conversion_factor"
 	if doc.doctype != 'Purchase Invoice':
 		select_fields += ",serial_no, batch_no"
 
@@ -132,7 +132,12 @@ def validate_quantity(doc, args, ref, valid_items, already_returned_items):
 			current_stock_qty = args.get(column) * args.get("conversion_factor", 1.0)
 
 		max_returnable_qty = flt(reference_qty, stock_qty_precision) - returned_qty
-		label = column.replace('_', ' ').title()
+
+		df = frappe.get_meta(doc.doctype + " Item").get_field(column)
+		if df:
+			label = df.label
+		else:
+			label = column.replace('_', ' ').title()
 
 		if reference_qty:
 			if flt(args.get(column)) > 0:
@@ -151,6 +156,7 @@ def get_ref_item_dict(valid_items, ref_item_row):
 		"qty": 0,
 		"rate": 0,
 		"stock_qty": 0,
+		"alt_uom_qty": 0,
 		"rejected_qty": 0,
 		"received_qty": 0,
 		"serial_no": [],
@@ -160,6 +166,7 @@ def get_ref_item_dict(valid_items, ref_item_row):
 	item_dict = valid_items[ref_item_row.item_code]
 	item_dict["qty"] += ref_item_row.qty
 	item_dict["stock_qty"] += ref_item_row.get('stock_qty', 0)
+	item_dict["alt_uom_qty"] += ref_item_row.get('alt_uom_qty', 0)
 	if ref_item_row.get("rate", 0) > item_dict["rate"]:
 		item_dict["rate"] = ref_item_row.get("rate", 0)
 
