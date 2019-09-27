@@ -90,7 +90,7 @@ def get_stock_balance(item_code, warehouse, posting_date=None, posting_time=None
 		"posting_time": posting_time })
 
 	if with_valuation_rate:
-		return (last_entry.qty_after_transaction, last_entry.valuation_rate) if last_entry else (0.0, 0.0)
+		return (last_entry.qty_after_transaction, last_entry.valuation_rate, last_entry.stock_value) if last_entry else (0.0, 0.0, 0.0)
 	else:
 		return last_entry.qty_after_transaction if last_entry else 0.0
 

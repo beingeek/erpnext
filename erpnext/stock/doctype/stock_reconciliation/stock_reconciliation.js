@@ -88,6 +88,7 @@ frappe.ui.form.on("Stock Reconciliation", {
 				method: "erpnext.stock.doctype.stock_reconciliation.stock_reconciliation.get_item_details",
 				args: {
 					args: {
+						name: frm.doc.name,
 						company: frm.doc.company,
 						posting_date: frm.doc.posting_date,
 						posting_time: frm.doc.posting_time,
@@ -95,7 +96,7 @@ frappe.ui.form.on("Stock Reconciliation", {
 						warehouse: d.warehouse,
 						batch_no: d.batch_no,
 						cost_center: d.cost_center,
-						qty: d.qty
+						qty: d.qty,
 					}
 				},
 				callback: function(r) {
