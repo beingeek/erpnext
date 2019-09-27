@@ -9,7 +9,7 @@ from frappe.utils import cstr, flt, cint, get_datetime, formatdate, getdate
 from erpnext.stock.doctype.batch.batch import get_batches, get_batch_received_date
 from erpnext.controllers.stock_controller import StockController
 from erpnext.accounts.utils import get_company_default
-from erpnext.stock.utils import get_stock_balance
+from erpnext.stock.utils import get_stock_balance, get_incoming_rate
 from erpnext.stock.doctype.batch.batch import get_batch_qty
 from erpnext.stock.doctype.item.item import get_item_defaults
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
@@ -56,20 +56,16 @@ class StockReconciliation(StockController):
 
 			item.current_qty = qty
 			item.current_valuation_rate = rate
-			item.valuation_rate = rate
 
 	def remove_items_with_no_change(self):
 		"""Remove items if qty or rate is not changed"""
 		def _changed(item):
-			if (item.qty is None or item.qty == item.current_qty) and (item.valuation_rate is None or item.valuation_rate == item.current_valuation_rate):
+			if item.qty is None or item.qty == item.current_qty:
 				return False
 			else:
 				# set default as current rates
 				if item.qty is None:
 					item.qty = item.current_qty
-
-				if item.valuation_rate is None:
-					item.valuation_rate = item.current_valuation_rate
 
 				return True
 
@@ -200,16 +196,36 @@ class StockReconciliation(StockController):
 			if frappe.db.get_value("Account", self.expense_account, "report_type") == "Profit and Loss":
 				frappe.throw(_("Difference Account must be a Asset/Liability type account, since this Stock Reconciliation is an Opening Entry"), OpeningEntryAccountError)
 
+	def get_args_for_incoming_rate(self, item):
+		return frappe._dict({
+			"item_code": item.item_code,
+			"warehouse": item.warehouse,
+			"posting_date": self.posting_date,
+			"posting_time": self.posting_time,
+			"qty": flt(item.quantity_difference),
+			"voucher_type": self.doctype,
+			"voucher_no": self.name,
+			"company": self.company
+		})
+
 	def set_total_qty_and_amount(self):
 		stock_value_precision = get_field_precision(frappe.get_meta("Stock Ledger Entry").get_field("stock_value"),
 			currency=frappe.get_cached_value('Company', self.company, "default_currency"))
 
 		self.difference_amount = 0.0
 		for d in self.get("items"):
+			d.quantity_difference = flt(d.qty) - flt(d.current_qty)
+
+			if d.quantity_difference:
+				frappe.msgprint(str([d.item_code, d.quantity_difference]))
+				args = self.get_args_for_incoming_rate(d)
+				d.valuation_rate = get_incoming_rate(args, raise_error_if_no_rate=False)
+			else:
+				d.valuation_rate = d.current_valuation_rate
+
 			d.amount = flt(flt(d.qty) * flt(d.valuation_rate), stock_value_precision)
 			d.current_amount = flt(flt(d.current_qty) * flt(d.current_valuation_rate), stock_value_precision)
 
-			d.quantity_difference = flt(d.qty) - flt(d.current_qty)
 			d.amount_difference = flt(d.amount) - flt(d.current_amount)
 			self.difference_amount += d.amount_difference
 
@@ -350,7 +366,6 @@ def get_item_details(args):
 		out.qty = flt(args.qty) or out.current_qty or None
 		if out.qty and flt(out.qty) < 1:
 			out.qty = "0"
-		out.valuation_rate = out.current_valuation_rate or None
 
 	out.batch_no = args.batch_no if item.has_batch_no else None
 	if args.batch_date:
