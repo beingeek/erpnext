@@ -10,7 +10,7 @@ from erpnext.stock.doctype.batch.batch import get_batches, get_batch_received_da
 from erpnext.controllers.stock_controller import StockController
 from erpnext.accounts.utils import get_company_default
 from erpnext.stock.utils import get_stock_balance, get_incoming_rate
-from erpnext.stock.doctype.batch.batch import get_batch_qty
+from erpnext.stock.doctype.batch.batch import get_batch_qty_on
 from erpnext.stock.doctype.item.item import get_item_defaults
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.stock.get_item_details import get_default_cost_center
@@ -381,7 +381,7 @@ def get_stock_balance_for(item_code, warehouse, posting_date, posting_time, batc
 		posting_date, posting_time, with_valuation_rate=with_valuation_rate)
 
 	if item_dict.get("has_batch_no") and batch_no:
-		qty = flt(get_batch_qty(batch_no, warehouse))
+		qty = flt(get_batch_qty_on(batch_no, warehouse, posting_date, posting_time))
 
 	return qty, rate, amount
 

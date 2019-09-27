@@ -150,7 +150,7 @@ def get_batch_qty(batch_no=None, warehouse=None, item_code=None):
 
 	out = 0
 	if batch_no and warehouse:
-		out = float(frappe.db.sql("""select sum(actual_qty)
+		out = flt(frappe.db.sql("""select sum(actual_qty)
 			from `tabStock Ledger Entry`
 			where warehouse=%s and batch_no=%s""",
 			(warehouse, batch_no))[0][0] or 0)
@@ -168,6 +168,16 @@ def get_batch_qty(batch_no=None, warehouse=None, item_code=None):
 			group by batch_no''', (item_code, warehouse), as_dict=1)
 
 	return out
+
+def get_batch_qty_on(batch_no, warehouse, posting_date, posting_time):
+	res = frappe.db.sql("""
+		select sum(actual_qty)
+		from `tabStock Ledger Entry`
+		where timestamp(posting_date, posting_time) <= timestamp(%s, %s)
+			and ifnull(is_cancelled, 'No') = 'No' and warehouse=%s and batch_no=%s""",
+	(posting_date, posting_time, warehouse, batch_no))
+
+	return flt(res[0][0]) if res else 0.0
 
 
 @frappe.whitelist()
