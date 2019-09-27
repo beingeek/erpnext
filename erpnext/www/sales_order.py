@@ -114,3 +114,7 @@ def get_sales_territoryo():
 			list.append(acc[0])
 		
 	return list
+
+def get_context(context):
+	context["google_maps_api_key"] = (frappe.db.get_single_value("Website Settings", "google_maps_api_key")
+		or frappe.conf.get("google_maps_api_key"))
