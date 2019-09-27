@@ -53,6 +53,8 @@ frappe.ui.form.on("Purchase Receipt", {
 				grid_row.remove();
 			}
 		}
+
+		frm.cscript.set_naming_series();
 	}
 });
 
@@ -136,6 +138,18 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 		}
 
 		this.frm.toggle_reqd("supplier_warehouse", this.frm.doc.is_subcontracted==="Yes");
+
+		this.set_naming_series();
+	},
+
+	set_naming_series: function() {
+		if (this.frm.doc.docstatus === 0) {
+			if (this.frm.doc.is_return) {
+				this.frm.set_value('naming_series', 'PREC-RET-');
+			} else {
+				this.frm.set_value('naming_series', 'PREC-');
+			}
+		}
 	},
 
 	make_purchase_invoice: function() {
