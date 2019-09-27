@@ -60,3 +60,7 @@ def get_item_details(item_code):
         items = frappe.get_doc("Item", item_code)
 
         return items;
+
+def get_context(context):
+	context["google_maps_api_key"] = (frappe.db.get_single_value("Website Settings", "google_maps_api_key")
+		or frappe.conf.get("google_maps_api_key"))
