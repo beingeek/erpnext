@@ -222,10 +222,12 @@ class StockReconciliation(StockController):
 			else:
 				incoming_rate = d.current_valuation_rate
 
-			d.current_amount = flt(flt(d.current_qty) * flt(d.current_valuation_rate), stock_value_precision)
-			d.amount = flt(d.current_amount + (d.quantity_difference * incoming_rate), stock_value_precision)
+			d.current_amount = flt(d.current_qty) * flt(d.current_valuation_rate)
+			d.amount = d.current_amount + (d.quantity_difference * incoming_rate)
 			d.valuation_rate = d.amount / flt(d.qty) if flt(d.qty) else d.current_valuation_rate
 
+			d.current_amount = flt(d.current_amount, stock_value_precision)
+			d.amount = flt(d.current_amount, stock_value_precision)
 			d.amount_difference = flt(d.amount) - flt(d.current_amount)
 			self.difference_amount += d.amount_difference
 
