@@ -124,7 +124,7 @@ def validate_quantity(doc, args, ref, valid_items, already_returned_items):
 	for column in fields:
 		returned_qty = flt(already_returned_data.get(column, 0)) if len(already_returned_data) > 0 else 0
 
-		if column == 'stock_qty':
+		if column in ('stock_qty', 'alt_uom_qty'):
 			reference_qty = ref.get(column)
 			current_stock_qty = args.get(column)
 		else:
