@@ -217,14 +217,14 @@ class StockReconciliation(StockController):
 			d.quantity_difference = flt(d.qty) - flt(d.current_qty)
 
 			if d.quantity_difference:
-				frappe.msgprint(str([d.item_code, d.quantity_difference]))
 				args = self.get_args_for_incoming_rate(d)
-				d.valuation_rate = get_incoming_rate(args, raise_error_if_no_rate=False)
+				incoming_rate = get_incoming_rate(args, raise_error_if_no_rate=False)
 			else:
-				d.valuation_rate = d.current_valuation_rate
+				incoming_rate = d.current_valuation_rate
 
-			d.amount = flt(flt(d.qty) * flt(d.valuation_rate), stock_value_precision)
 			d.current_amount = flt(flt(d.current_qty) * flt(d.current_valuation_rate), stock_value_precision)
+			d.amount = flt(d.current_amount + (d.quantity_difference * incoming_rate), stock_value_precision)
+			d.valuation_rate = d.amount / flt(d.qty) if flt(d.qty) else d.current_valuation_rate
 
 			d.amount_difference = flt(d.amount) - flt(d.current_amount)
 			self.difference_amount += d.amount_difference
