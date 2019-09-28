@@ -688,7 +688,7 @@ class SalesInvoice(SellingController):
 		if gl_entries:
 			from erpnext.accounts.general_ledger import make_gl_entries
 
-			make_gl_entries(gl_entries, cancel=(self.docstatus == 2), merge_entries=False)
+			make_gl_entries(gl_entries, cancel=(self.docstatus == 2), merge_entries=False, from_repost=from_repost)
 
 			if repost_future_gle and cint(self.update_stock) \
 				and cint(auto_accounting_for_stock):
