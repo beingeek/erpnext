@@ -62,8 +62,10 @@ def _make_naming_series_key(prefix):
 	"""
 	if not unicode(prefix):
 		return ''
-	else:
+	elif not prefix.find('#'):
 		return prefix.upper() + '.#####'
+	else:
+		return prefix.upper()
 
 
 def get_batch_naming_series():
@@ -91,7 +93,8 @@ class Batch(Document):
 
 			if create_new_batch:
 				if batch_number_series:
-					self.batch_id = make_autoname(batch_number_series)
+					batch_number_series = self.replace_supplier_code_namng_series(batch_number_series)
+					self.batch_id = make_autoname(batch_number_series, self.doctype, self.name)
 				elif batch_uses_naming_series():
 					self.batch_id = self.get_name_from_naming_series()
 				else:
@@ -130,11 +133,28 @@ class Batch(Document):
 		"""
 		naming_series_prefix = _get_batch_prefix()
 		# validate_template(naming_series_prefix)
-		naming_series_prefix = render_template(str(naming_series_prefix), self.__dict__)
-		key = _make_naming_series_key(naming_series_prefix)
-		name = make_autoname(key)
+		naming_series_prefix = self.replace_supplier_code_namng_series(naming_series_prefix)
+		name = make_autoname(naming_series_prefix, self.doctype, self)
 
 		return name
+
+	def replace_supplier_code_namng_series(self, series):
+		if series.find('.{SC}.'):
+			supplier_code = None
+			if self.supplier:
+				supplier_code = frappe.get_cached_value("Supplier", self.supplier, 'supplier_code')
+
+			if supplier_code:
+				series = series.replace('.{SC}.', supplier_code)
+			else:
+				if self.supplier:
+					frappe.throw(_("Cannot automatically create Batch No for Item {0} because Supplier Code not set for Supplier {1}. Please set Supplier Code or create Batch manually.")
+						.format(self.item, self.supplier))
+				else:
+					frappe.throw(_("Cannot automatically create Batch No for Item {0} because no Supplier can be found. Please create Batch manually.")
+						.format(self.item))
+
+		return series
 
 
 @frappe.whitelist()
