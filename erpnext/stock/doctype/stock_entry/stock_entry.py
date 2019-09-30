@@ -1279,7 +1279,7 @@ def get_expired_batch_items():
 	from `tabBatch` b, `tabStock Ledger Entry` sle
 	where b.expiry_date <= %s
 	and b.expiry_date is not NULL
-	and b.batch_id = sle.batch_no
+	and b.name = sle.batch_no
 	group by sle.warehouse, sle.item_code, sle.batch_no""",(nowdate()), as_dict=1)
 
 @frappe.whitelist()

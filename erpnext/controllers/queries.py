@@ -427,7 +427,7 @@ def get_doctype_wise_filters(filters):
 
 @frappe.whitelist()
 def get_batch_numbers(doctype, txt, searchfield, start, page_len, filters):
-	query = """select batch_id from `tabBatch`
+	query = """select name from `tabBatch`
 			where disabled = 0
 			and (expiry_date >= CURDATE() or expiry_date IS NULL)
 			and name like '{txt}'""".format(txt = frappe.db.escape('%{0}%'.format(txt)))
