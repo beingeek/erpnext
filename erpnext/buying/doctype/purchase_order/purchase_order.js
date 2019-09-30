@@ -64,6 +64,10 @@ frappe.ui.form.on("Purchase Order", {
 			frm.cscript.show_hide_add_remove_default_items(frm);
 		});
 
+		if (frm.doc.__onload && frm.doc.__onload.from_copy) {
+			frm.cscript.apply_price_list();
+		}
+
 		frm.fields_dict.items.grid.add_custom_button("Remove Supplier Default", frm.cscript.remove_selected_from_default_items);
 		frm.fields_dict.items.grid.add_custom_button("Add Supplier Default", frm.cscript.add_selected_to_default_items);
 		frm.fields_dict.items.grid.clear_custom_buttons();
