@@ -146,10 +146,6 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		this.prompt_make_balance_so();
 	},
 
-	after_save: function() {
-		this.multi_batch_set();
-	},
-
 	set_default_print_format: function() {
 		// set default print format to POS type
 		if(cur_frm.doc.is_pos) {
@@ -214,36 +210,6 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 					}
 				}
 			});
-		}
-	},
-
-	multi_batch_set: function() {
-		var me = this;
-		var count = 0;
-
-		if (me.frm.doc.update_stock == 1) {
-			for (var row in me.frm.doc.items) {
-				if (me.frm.doc.items[row].item_code) {
-					if (!me.frm.doc.items[row].batch_no) {
-						frappe.call({
-							"method": "erpnext.multibatch.multiBatchSet",
-							"args": {
-								name: me.frm.doc.name,
-								doc_name: me.frm.doc.items[row].name,
-								item_code: me.frm.doc.items[row].item_code,
-								warehouse: me.frm.doc.items[row].warehouse,
-								qty: me.frm.doc.items[row].qty
-							},
-							"freeze": true,
-							"freeze_message": "Please Wait...",
-							callback(r) {
-								cur_frm.reload_doc();
-								count = count + 1;
-							}
-						});
-					}
-				}
-			}
 		}
 	},
 

@@ -29,6 +29,17 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 		if (this.frm.doc.docstatus === 0) {
 			this.apply_price_list()
 		}
+
+		$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
+			if(grid_row.doc && grid_row.doc.doctype === me.frm.doc.doctype + " Item") {
+				$(grid_row.wrapper).off('focus', 'input').on('focus', 'input', function() {
+					me.frm.focused_item_dn = grid_row.doc.name;
+					var show_select_batch = me.frm.doc.docstatus === 0 && !me.frm.doc.is_return && grid_row.doc.has_batch_no
+						&& (me.frm.doc.doctype === 'Delivery Note' || (me.frm.doc.doctype === 'Sales Invoice' && me.frm.doc.update_stock));
+					me.toggle_select_batch_button(show_select_batch);
+				});
+			}
+		});
 	},
 
 	onload: function() {

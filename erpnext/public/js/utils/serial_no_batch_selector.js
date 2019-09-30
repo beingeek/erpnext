@@ -211,7 +211,6 @@ erpnext.SerialNoBatchSelector = Class.extend({
 				if (i !== 0 && !this.batch_exists(batch_no)) {
 					row = frappe.model.copy_doc(this.item, true, this.frm.doc, 'items');
 					Object.assign(row, {
-						'qty': batch.selected_qty,
 						'batch_no': batch_no
 					});
 					this.frm.doc.items.pop();
@@ -230,6 +229,7 @@ erpnext.SerialNoBatchSelector = Class.extend({
 
 				this.map_row_values(row, batch, 'batch_no',
 					'selected_qty', this.values.warehouse);
+				row.actual_batch_qty = batch.available_qty;
 			});
 		} else {
 			this.map_row_values(this.item, this.values, 'serial_no', 'qty');
@@ -245,8 +245,10 @@ erpnext.SerialNoBatchSelector = Class.extend({
 	},
 
 	map_row_values: function(row, values, number, qty_field, warehouse) {
+		row.boxes = flt(row.qty) ? flt(row.boxes) * flt(values[qty_field]) / flt(row.qty) : 0;
 		row.qty = values[qty_field];
 		row.transfer_qty = flt(values[qty_field]) * flt(row.conversion_factor);
+		row.stock_qty = flt(values[qty_field]) * flt(row.conversion_factor);
 		row[number] = values[number];
 		if(this.warehouse_details.type === 'Source Warehouse') {
 			row.s_warehouse = values.warehouse || warehouse;
