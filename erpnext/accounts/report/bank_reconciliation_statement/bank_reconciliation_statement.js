@@ -22,8 +22,15 @@ frappe.query_reports["Bank Reconciliation Statement"] = {
 			}
 		},
 		{
+			"fieldname":"from_date",
+			"label": __("From Date"),
+			"fieldtype": "Date",
+			"default": frappe.datetime.add_months(frappe.datetime.get_today(), -1),
+			"reqd": 1
+		},
+		{
 			"fieldname":"report_date",
-			"label": __("Date"),
+			"label": __("To Date"),
 			"fieldtype": "Date",
 			"default": frappe.datetime.get_today(),
 			"reqd": 1
@@ -38,7 +45,7 @@ frappe.query_reports["Bank Reconciliation Statement"] = {
 		var style = {};
 		var link;
 
-		if (column.fieldname == 'payment_entry' && value == __("'Outstanding Cheques and Deposits to clear'")) {
+		if (column.fieldname == 'payment_entry' && value == __("'Outstanding Cheques and Deposits to Clear'")) {
 			var date = frappe.query_report.get_filter_value("report_date");
 			var account = frappe.query_report.get_filter_value("account");
 			link = "desk#Form/Bank Reconciliation/Bank Reconciliation?date=" + date + "&account=" + account;
@@ -46,4 +53,5 @@ frappe.query_reports["Bank Reconciliation Statement"] = {
 
 		return default_formatter(value, row, column, data, {css: style, link_href: link, link_target: "_blank"});
 	},
+	initial_depth: 1
 }
