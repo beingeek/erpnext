@@ -17,7 +17,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		return self.get_columns(party_naming_by, args), self.get_data(party_naming_by, args)
 
 	def get_columns(self, party_naming_by, args):
-		columns = [_(args.get("party_type")) + ":Link/" + args.get("party_type") + ":200"]
+		columns = [_(args.get("party_type")) + ":Data:200"]
 
 		if party_naming_by == "Naming Series":
 			columns += [ args.get("party_type") + " Name::140"]

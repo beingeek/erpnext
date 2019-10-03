@@ -148,6 +148,13 @@ class ReceivablePayableReport(object):
 
 		columns.append(_("Remarks") + "::200")
 
+		columns.append({
+			"label": _("Voucher Type"),
+			"fieldtype": "Data",
+			"fieldname": "voucher_type",
+			"width": 110
+		})
+
 		return columns
 
 	def get_data(self, party_naming_by, args):
@@ -347,6 +354,8 @@ class ReceivablePayableReport(object):
 			row += [self.get_supplier_group(gle.party)]
 
 		row.append(gle.remarks)
+
+		row.append(gle.voucher_type)
 
 		return row
 

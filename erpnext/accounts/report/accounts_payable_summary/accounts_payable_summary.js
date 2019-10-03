@@ -83,8 +83,12 @@ frappe.query_reports["Accounts Payable Summary"] = {
 
 	formatter: function(value, row, column, data, default_formatter) {
 		var link;
+		var filters = frappe.query_report.get_values();
 		if (data && column.fieldname == 'advance_amount' && flt(value)) {
 			link = "desk#Form/Payment Reconciliation/Payment Reconciliation?party_type=Supplier&party=" + data['Supplier'];
+		}
+		if (data && column.fieldname == __("Supplier")) {
+			link = "desk#query-report/Accounts Payable/Accounts Payable?supplier=" + data['Supplier'] + "&report_date=" + filters.report_date;
 		}
 
 		return default_formatter(value, row, column, data, {link_href: link, link_target: "_blank"});
