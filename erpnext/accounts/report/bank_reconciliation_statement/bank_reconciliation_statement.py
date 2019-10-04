@@ -20,7 +20,6 @@ def execute(filters=None):
 	account_currency = frappe.db.get_value("Account", filters.account, "account_currency")
 	closing_balance_as_per_system = get_balance_on(filters["account"], filters["report_date"])
 	opening_balance_as_per_statement = get_bank_statement_balance(filters)
-	amounts_not_reflected_in_system = get_amounts_not_reflected_in_system(filters)
 
 	entries = get_entries(filters)
 
@@ -52,7 +51,7 @@ def execute(filters=None):
 				total_uncleared_outgoing += diff
 
 	closing_balance_as_per_statement = flt(opening_balance_as_per_statement) + flt(total_cleared_incoming) \
-		+ flt(total_cleared_outgoing) + amounts_not_reflected_in_system
+		+ flt(total_cleared_outgoing)
 
 	# noinspection PyListCreation
 	data = [
@@ -74,10 +73,7 @@ def execute(filters=None):
 	data.append({})
 
 	data += [
-		get_balance_row(_("'Closing Bank Balance as per General Ledger'"), closing_balance_as_per_system, account_currency),
-		get_balance_row(_("'Cheques and Deposits Incorrectly Cleared'"), amounts_not_reflected_in_system,
-			account_currency),
-		{},
+		get_balance_row(_("'Closing Bank Balance as per General Ledger'"), closing_balance_as_per_system, account_currency),\
 		get_balance_row(_("'Calculated Closing Bank Statement Balance'"), closing_balance_as_per_statement, account_currency)
 	]
 
@@ -93,7 +89,8 @@ def get_entries(filters):
 		from
 			`tabJournal Entry Account` jvd, `tabJournal Entry` jv
 		where jvd.parent = jv.name and jv.docstatus=1
-			and jvd.account = %(account)s and jv.posting_date between %(from_date)s and %(report_date)s
+			and jvd.account = %(account)s
+			and (jv.posting_date between %(from_date)s and %(report_date)s or jv.clearance_date between %(from_date)s and %(report_date)s)
 			and jv.is_opening != 'Yes'""", filters, as_dict=1)
 			
 	payment_entries = frappe.db.sql("""
@@ -107,7 +104,7 @@ def get_entries(filters):
 		from `tabPayment Entry`
 		where
 			(paid_from=%(account)s or paid_to=%(account)s) and docstatus=1
-			and posting_date between %(from_date)s and %(report_date)s
+			and (posting_date between %(from_date)s and %(report_date)s or clearance_date between %(from_date)s and %(report_date)s)
 	""", filters, as_dict=1)
 
 	pos_entries = []
@@ -120,7 +117,8 @@ def get_entries(filters):
 			from `tabSales Invoice Payment` sip, `tabSales Invoice` si, `tabAccount` account
 			where
 				sip.account=%(account)s and si.docstatus=1 and sip.parent = si.name
-				and account.name = sip.account and si.posting_date between %(start_date)s and %(report_date)s
+				and account.name = sip.account
+				and (si.posting_date between %(start_date)s and %(report_date)s or sip.clearance_date between %(start_date)s and %(report_date)s)
 		""", filters, as_dict=1)
 
 	return sorted(payment_entries + journal_entries + pos_entries, key=lambda k: k['posting_date'] or getdate(nowdate()))
@@ -157,27 +155,6 @@ def get_bank_statement_balance(filters):
 	pos_amount = flt(pos_amount[0][0]) if pos_amount else 0.0
 
 	return je_amount + pe_amount + pos_amount
-
-
-def get_amounts_not_reflected_in_system(filters):
-	je_amount = frappe.db.sql("""
-		select sum(jvd.debit_in_account_currency - jvd.credit_in_account_currency)
-		from `tabJournal Entry Account` jvd, `tabJournal Entry` jv
-		where jvd.parent = jv.name and jv.docstatus=1 and jvd.account=%(account)s
-		and jv.posting_date > %(report_date)s and jv.clearance_date <= %(report_date)s 
-		and ifnull(jv.is_opening, 'No') = 'No' """, filters)
-
-	je_amount = flt(je_amount[0][0]) if je_amount else 0.0
-	
-	pe_amount = frappe.db.sql("""
-		select sum(if(paid_from=%(account)s, paid_amount, received_amount))
-		from `tabPayment Entry`
-		where (paid_from=%(account)s or paid_to=%(account)s) and docstatus=1 
-		and posting_date > %(report_date)s and clearance_date <= %(report_date)s""", filters)
-
-	pe_amount = flt(pe_amount[0][0]) if pe_amount else 0.0
-	
-	return je_amount + pe_amount
 
 
 def get_balance_row(label, amount, account_currency):
