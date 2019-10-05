@@ -199,8 +199,7 @@ def makeso1(poname,ps):
 								"shipping_address_name": row[0]["address"] or None,
 								"comm_1": row[0]["mso_notes"]
 							})
-			d=data3.insert(ignore_permissions=True)
-			frappe.db.sql("""UPDATE `tabSales Order`  SET `delivery_date` = %s where  name = %s """, (row[0]["delivery_date"], d.name))
+			d=data3.save()
 			frappe.db.sql("""UPDATE `tabMaster Sales Order Item`  SET `sales_order` = %s
 			where  parent = %s AND customer = %s AND col_number = %s """, (d.name, poname, row[0]["customer"], row[0]["col_number"]))
 			count=count+1
