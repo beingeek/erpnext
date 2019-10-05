@@ -90,8 +90,8 @@ def makeMasterPoOrder(po,ps):
 								"customer": row["customer"],
 								"row_number": row["row_number"],
 								"col_number": row["col_number"],
-								"address_title": row["address_title"],
-								"address": row["address"],
+								"address_title": row["address_title"] or None,
+								"address": row["address"] or None,
 								"po_no": row["po_no"],
 								"mso_notes": row["mso_notes"]
 							})
@@ -147,8 +147,8 @@ def saveMasterPoOrder(po,ps):
 								"customer": row["customer"],
 								"row_number": row["row_number"],
 								"col_number": row["col_number"],
-								"address_title": row["address_title"],
-								"address": row["address"],
+								"address_title": row["address_title"] or None,
+								"address": row["address"] or None,
 								"po_no": row["po_no"],
 								"mso_notes": row["mso_notes"]
 							})
@@ -196,7 +196,7 @@ def makeso1(poname,ps):
 								"total_gross_weight_lbs": row[0]["total_gross_weight_lbs"],
 								"total_weight_kg": row[0]["total_weight_kg"],
 								"po_no": row[0]["po_no"],
-								"shipping_address_name": row[0]["address"],
+								"shipping_address_name": row[0]["address"] or None,
 								"comm_1": row[0]["mso_notes"]
 							})
 			d=data3.insert(ignore_permissions=True)
@@ -303,8 +303,8 @@ def updateMasterPoOrder(po,ps):
 								"customer": row["customer"],
 								"row_number": row["row_number"],
 								"col_number": row["col_number"],
-								"address_title": row["address_title"],
-								"address": row["address"],
+								"address_title": row["address_title"] or None,
+								"address": row["address"] or None,
 								"po_no": row["po_no"],
 								"mso_notes": row["mso_notes"]
 							})
