@@ -192,12 +192,6 @@ def get_columns():
 			"width": 90
 		},
 		{
-			"fieldname": "ref_date",
-			"label": _("Ref Date"),
-			"fieldtype": "Date",
-			"width": 110
-		},
-		{
 			"fieldname": "clearance_date",
 			"label": _("Clearance Date"),
 			"fieldtype": "Date",

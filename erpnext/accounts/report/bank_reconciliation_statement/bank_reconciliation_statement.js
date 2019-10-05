@@ -51,8 +51,7 @@ frappe.query_reports["Bank Reconciliation Statement"] = {
 			link = "desk#Form/Bank Reconciliation/Bank Reconciliation?date=" + date + "&account=" + account;
 		}
 
-		if (column.fieldname == 'credit' && flt(value) > 0
-				&& data['payment_entry'] == __("'Calculated Closing Bank Statement Balance'")) {
+		if (column.fieldname == 'credit' && flt(value) > 0) {
 			style.color = 'red';
 		}
 
