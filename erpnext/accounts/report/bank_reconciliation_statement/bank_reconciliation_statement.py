@@ -16,6 +16,7 @@ def execute(filters=None):
 		return columns, []
 
 	filters["report_date"] = getdate(filters["report_date"])
+	filters["from_date"] = getdate(filters["from_date"])
 
 	account_currency = frappe.db.get_value("Account", filters.account, "account_currency")
 	closing_balance_as_per_system = get_balance_on(filters["account"], filters["report_date"])
@@ -32,7 +33,8 @@ def execute(filters=None):
 	for d in entries:
 		d.indent = 1
 
-		is_cleared = d.get('clearance_date') and getdate(d.get('clearance_date')) <= filters['report_date']
+		is_cleared = d.get('clearance_date')\
+			and filters['from_date'] <= getdate(d.get('clearance_date')) <= filters['report_date']
 		diff = d.debit - d.credit
 
 		if diff > 0:
