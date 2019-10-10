@@ -64,6 +64,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 		this.manipulate_grand_total_for_inclusive_tax();
 		this.calculate_totals();
 		this.calculate_delivery_charges();
+		this.calculate_gross_profit();
 		this._cleanup();
 	},
 
@@ -624,6 +625,33 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			this.frm.doc.total_taxes = this.frm.doc.total_taxes_and_charges - this.frm.doc.delivery_charges;
 			this.set_in_company_currency(this.frm.doc, ["total_taxes", "delivery_charges"], !this.should_round_transaction_currency());
 		}
+	},
+
+	calculate_gross_profit: function() {
+		if (this.frm.doc.doctype != 'Purchase Invoice') {
+			return;
+		}
+
+		this.frm.doc.total_revenue = 0;
+		this.frm.doc.total_cogs = 0;
+
+		var me = this;
+		$.each(this.frm.doc.items || [], function (i, item) {
+			item.batch_value = item.base_net_amount + item.lcv_cost + item.repack_cost;
+			item.lc_rate = item.stock_qty ? item.batch_value / flt(item.stock_qty) : 0;
+			item.used_batch_qty = flt(item.stock_qty) - flt(item.actual_batch_qty);
+			item.batch_cogs = item.lc_rate * item.used_batch_qty;
+			item.gross_profit = item.batch_revenue - item.batch_cogs;
+			item.per_gross_profit = item.batch_revenue ? item.gross_profit / item.batch_revenue * 100 : 0;
+
+			me.frm.doc.total_revenue += item.batch_revenue;
+			me.frm.doc.total_cogs += item.batch_cogs;
+		});
+
+		this.frm.doc.total_gross_profit = this.frm.doc.total_revenue - this.frm.doc.total_cogs;
+		this.frm.doc.per_gross_profit = this.frm.doc.total_revenue ? this.frm.doc.total_gross_profit / this.frm.doc.total_revenue * 100 : 0;
+
+		this.update_selected_item_fields();
 	},
 
 	set_rounded_total: function() {

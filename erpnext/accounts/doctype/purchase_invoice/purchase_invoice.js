@@ -5,6 +5,11 @@ frappe.provide("erpnext.accounts");
 {% include 'erpnext/public/js/controllers/buying.js' %};
 
 erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
+	item_cost_and_revenue_fields: ['direct_revenue', 'direct_qty_sold', 'repacked_revenue', 'repacked_qty_sold', 'lcv_cost',
+		'repack_cost', 'actual_batch_qty', 'batch_revenue'],
+	calculated_item_cost_and_revenue_fields: ['batch_value', 'lc_rate', 'used_batch_qty', 'batch_cogs', 'gross_profit',
+		'per_gross_profit'],
+
 	setup: function(doc) {
 		this.setup_posting_date_time_check();
 		this._super(doc);
@@ -13,6 +18,18 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		if(this.frm.doc.update_stock) {
 			this.frm.set_indicator_formatter('item_code', function(doc) {
 				return (doc.qty<=doc.received_qty) ? "green" : "orange";
+			});
+		}
+
+		var me = this;
+		if (me.frm.doc.docstatus == 0) {
+			$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
+				if(grid_row.doc && grid_row.doc.doctype == "Purchase Invoice Item") {
+					$(grid_row.wrapper).off('focus', 'input').on('focus', 'input', function() {
+						me.selected_item_dn = grid_row.doc.name;
+						me.update_selected_item_fields();
+					});
+				}
 			});
 		}
 	},
@@ -35,6 +52,71 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 	is_return: function(doc) {
 		this._super(doc);
 		this.set_naming_series();
+	},
+
+	get_batch_cost_and_revenue: function() {
+		var me = this;
+		if (me.frm.doc.docstatus == 0) {
+			var batch_nos = [];
+			$.each(this.frm.doc.items || [], function(i, item) {
+				if(item.batch_no) {
+					batch_nos.push(item.batch_no);
+				}
+			});
+
+			if(batch_nos.length) {
+				return this.frm.call({
+					method: "erpnext.api.get_batch_cost_and_revenue",
+					args: {
+						batch_nos: batch_nos
+					},
+					callback: function(r) {
+						if(!r.exc) {
+							$.each(me.frm.doc.items || [], function(i, item) {
+								me.set_item_cost_and_revenue(item, r.message[item.batch_no]);
+							});
+							me.calculate_taxes_and_totals();
+
+							me.update_selected_item_fields();
+						}
+					}
+				});
+			}
+		}
+	},
+
+	set_item_cost_and_revenue: function(item, data) {
+		if (data) {
+			$.each(this.item_cost_and_revenue_fields, function (i, f) {
+				item[f] = flt(data[f]);
+			});
+		} else {
+			$.each(this.item_cost_and_revenue_fields, function (i, f) {
+				item[f] = 0;
+			});
+		}
+	},
+
+	update_selected_item_fields: function() {
+		var all_fields = [];
+		all_fields.push(...this.item_cost_and_revenue_fields);
+		all_fields.push(...this.calculated_item_cost_and_revenue_fields);
+
+		if (this.frm.doc.docstatus == 0) {
+			var me = this;
+
+			var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
+			if(grid_row && grid_row.doc.batch_no) {
+				$.each(all_fields, function (i, f) {
+					me.frm.doc['selected_' + f] = grid_row.doc[f];
+				});
+			} else {
+				$.each(all_fields, function (i, f) {
+					me.frm.doc['selected_' + f] = null;
+				});
+			}
+			me.frm.refresh_fields(all_fields);
+		}
 	},
 
 	refresh: function(doc) {
@@ -147,6 +229,8 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 				}
 			});
 		}
+
+		this.get_batch_cost_and_revenue();
 	},
 
 	set_naming_series: function() {
