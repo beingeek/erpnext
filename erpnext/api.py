@@ -229,30 +229,30 @@ def get_batch_cost_and_revenue(batch_nos):
 	source_actual_batch_qty = frappe.db.sql("""
 		select batch_no, sum(actual_qty) as qty
 		from `tabStock Ledger Entry`
-		where batch_no in (%s) and is_cancelled = 'No'
+		where batch_no in ({0}) and is_cancelled = 'No'
 		group by batch_no
-	""", [batch_nos], as_dict=1)
+	""".format(", ".join(['%s'] * len(batch_nos))), batch_nos, as_dict=1)
 
 	source_batch_revenue = frappe.db.sql("""
 		select batch_no, sum(base_net_amount) as amount, sum(stock_qty) as qty
 		from `tabSales Invoice Item`
-		where docstatus = 1 and batch_no in (%s)
+		where docstatus = 1 and batch_no in ({0})
 		group by batch_no
-	""", [batch_nos], as_dict=1)
+	""".format(", ".join(['%s'] * len(batch_nos))), batch_nos, as_dict=1)
 
 	target_batch_revenue = frappe.db.sql("""
 		select batch_no, sum(base_net_amount) as amount, sum(stock_qty) as qty
 		from `tabSales Invoice Item`
-		where docstatus = 1 and batch_no in (%s)
+		where docstatus = 1 and batch_no in ({0})
 		group by batch_no
-	""", [repacked_batch_nos], as_dict=1)
+	""".format(", ".join(['%s'] * len(repacked_batch_nos))), repacked_batch_nos, as_dict=1)
 
 	batch_lc_amount = frappe.db.sql("""
 		select batch_no, sum(landed_cost_voucher_amount) as amount
 		from `tabPurchase Receipt Item`
-		where docstatus = 1 and batch_no in (%s)
+		where docstatus = 1 and batch_no in ({0})
 		group by batch_no
-	""", [batch_nos], as_dict=1)
+	""".format(", ".join(['%s'] * len(batch_nos))), batch_nos, as_dict=1)
 
 	# Prepare output
 	out = {}
