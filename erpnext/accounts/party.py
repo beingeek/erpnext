@@ -89,6 +89,9 @@ def _get_party_details(party=None, account=None, party_type="Customer", letter_o
 			where party_type = 'Customer' and party = %s and company=%s""", (party.name, company))
 		out["customer_outstanding_amount"] = out["customer_outstanding_amount"][0][0] if out["customer_outstanding_amount"] else 0
 
+	if party.get('party_warehouse'):
+		out['set_warehouse'] = party.get('party_warehouse')
+
 	return out
 
 def set_address_details(out, party, party_type, doctype=None, company=None, party_address=None, shipping_address=None):
