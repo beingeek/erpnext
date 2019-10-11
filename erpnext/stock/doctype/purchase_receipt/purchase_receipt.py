@@ -440,6 +440,14 @@ def update_billed_amount_based_on_pr(bill_doc, update_modified=True):
 @frappe.whitelist()
 def make_purchase_invoice(source_name, target_doc=None):
 	from frappe.model.mapper import get_mapped_doc
+
+	draft_invoices = frappe.get_all("Purchase Invoice Item", fields='distinct parent', filters={
+		"purchase_receipt": source_name, "docstatus": 0
+	})
+	if draft_invoices:
+		draft_names = [frappe.get_desk_link("Purchase Invoice", d.parent) for d in draft_invoices]
+		frappe.throw(_("Draft Purchase Invoice already exists: {0}").format(", ".join(draft_names)))
+
 	doc = frappe.get_doc('Purchase Receipt', source_name)
 	purchase_orders = [d.purchase_order for d in doc.items]
 	returned_qty_map_against_po = get_returned_qty_map_against_po(purchase_orders)
