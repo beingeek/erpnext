@@ -38,10 +38,6 @@ class Supplier(TransactionBase):
 		else:
 			set_name_by_naming_series(self)
 
-	def on_update(self):
-		if not self.naming_series:
-			self.naming_series = ''
-
 	def validate(self):
 		# validation for Naming Series mandatory field...
 		if frappe.defaults.get_global_default('supp_master_name') == 'Naming Series':
