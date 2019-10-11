@@ -204,6 +204,9 @@ def get_batch_cost_and_revenue(batch_nos):
 		batch_nos = json.loads(batch_nos)
 	batch_nos = list(set(batch_nos))
 
+	if not batch_nos:
+		return {}
+
 	# Get Data
 	repacked_batch_map = {}
 	repacked_batch_nos = []
@@ -240,12 +243,29 @@ def get_batch_cost_and_revenue(batch_nos):
 		group by batch_no
 	""".format(", ".join(['%s'] * len(batch_nos))), batch_nos, as_dict=1)
 
-	target_batch_revenue = frappe.db.sql("""
-		select batch_no, sum(base_net_amount) as amount, sum(stock_qty) as qty
-		from `tabSales Invoice Item`
-		where docstatus = 1 and batch_no in ({0})
-		group by batch_no
-	""".format(", ".join(['%s'] * len(repacked_batch_nos))), repacked_batch_nos, as_dict=1)
+	source_batch_qty_sold = frappe.db.sql("""
+		select item.batch_no, sum(item.stock_qty) as qty
+		from `tabSales Invoice Item` item, `tabSales Invoice` inv
+		where inv.name = item.parent and inv.docstatus = 1 and inv.update_stock = 1 and item.batch_no in ({0})
+		group by item.batch_no
+	""".format(", ".join(['%s'] * len(batch_nos))), batch_nos, as_dict=1)
+
+	target_batch_revenue = []
+	target_batch_qty_sold = []
+	if repacked_batch_nos:
+		target_batch_revenue = frappe.db.sql("""
+			select batch_no, sum(base_net_amount) as amount
+			from `tabSales Invoice Item`
+			where docstatus = 1 and batch_no in ({0})
+			group by batch_no
+		""".format(", ".join(['%s'] * len(repacked_batch_nos))), repacked_batch_nos, as_dict=1)
+
+		target_batch_qty_sold = frappe.db.sql("""
+			select item.batch_no, sum(item.stock_qty) as qty
+			from `tabSales Invoice Item` item, `tabSales Invoice` inv
+			where inv.name = item.parent and inv.docstatus = 1 and inv.update_stock = 1 and item.batch_no in ({0})
+			group by item.batch_no
+		""".format(", ".join(['%s'] * len(repacked_batch_nos))), repacked_batch_nos, as_dict=1)
 
 	batch_lc_amount = frappe.db.sql("""
 		select batch_no, sum(landed_cost_voucher_amount) as amount
@@ -272,22 +292,27 @@ def get_batch_cost_and_revenue(batch_nos):
 
 	for d in source_batch_revenue:
 		out[d.batch_no].direct_revenue = d.amount
+	for d in source_batch_qty_sold:
 		out[d.batch_no].direct_qty_sold = d.qty
 
 	for d in target_batch_revenue:
 		repacked_batch_dict = repacked_batch_map[d.batch_no]
 		source_batch_nos = list(repacked_batch_dict.get('source_batch_nos', set()))
-
 		for source_batch in source_batch_nos:
 			out[source_batch].repacked_revenue += d.amount / len(source_batch_nos)
+
+	for d in target_batch_qty_sold:
+		repacked_batch_dict = repacked_batch_map[d.batch_no]
+		source_batch_nos = list(repacked_batch_dict.get('source_batch_nos', set()))
+		for source_batch in source_batch_nos:
 			out[source_batch].repacked_qty_sold += d.qty / len(source_batch_nos)
 
-	for repacked_batch_dict in repacked_batch_map.values():
+	for target_batch, repacked_batch_dict in iteritems(repacked_batch_map):
 		source_batch_nos = list(repacked_batch_dict.get('source_batch_nos', set()))
-
 		if len(source_batch_nos) > 1:
 			frappe.msgprint(_("Multiple Source Batches found for Repacked Batch {0}. This may result in inaccurate values. Source Batches: {1}")
-				.format(d.batch_no, ", ".join(source_batch_nos)))
+				.format(target_batch, ", ".join(source_batch_nos)))
+
 		for source_batch in source_batch_nos:
 			out[source_batch].repack_cost += repacked_batch_dict.additional_cost / len(source_batch_nos)
 
