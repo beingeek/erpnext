@@ -94,7 +94,7 @@ class Batch(Document):
 			if create_new_batch:
 				if batch_number_series:
 					batch_number_series = self.replace_supplier_code_namng_series(batch_number_series)
-					self.batch_id = make_autoname(batch_number_series, self.doctype, self.name)
+					self.batch_id = make_autoname(batch_number_series, self.doctype, self)
 				elif batch_uses_naming_series():
 					self.batch_id = self.get_name_from_naming_series()
 				else:
@@ -139,7 +139,7 @@ class Batch(Document):
 		return name
 
 	def replace_supplier_code_namng_series(self, series):
-		if series.find('.{SC}.'):
+		if '.{SC}.' in series:
 			supplier_code = None
 			if self.supplier:
 				supplier_code = frappe.get_cached_value("Supplier", self.supplier, 'supplier_code')
