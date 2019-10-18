@@ -9,6 +9,8 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		'repack_cost', 'actual_batch_qty', 'batch_revenue'],
 	calculated_item_cost_and_revenue_fields: ['batch_value', 'lc_rate', 'used_batch_qty', 'batch_cogs', 'gross_profit',
 		'per_gross_profit'],
+	gp_link_fields: ['selected_direct_revenue', 'selected_direct_qty_sold', 'selected_repacked_revenue',
+		'selected_repacked_qty_sold', 'selected_lcv_cost', 'selected_repack_cost', 'selected_actual_batch_qty'],
 
 	setup: function(doc) {
 		this.setup_posting_date_time_check();
@@ -42,6 +44,11 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 				this.frm.set_df_property("credit_to", "print_hide", 0);
 			}
 		}
+
+		var me = this;
+		$.each(this.gp_link_fields, function (i, f) {
+			$(".control-value", me.frm.fields_dict[f].$input_wrapper).wrap("<a href='#' target='_blank'></a>");
+		});
 	},
 
 	validate: function(doc) {
@@ -66,7 +73,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 
 			if(batch_nos.length) {
 				return this.frm.call({
-					method: "erpnext.api.get_batch_cost_and_revenue",
+					method: "erpnext.stock.report.batch_profitability.batch_profitability.get_batch_cost_and_revenue",
 					args: {
 						batch_nos: batch_nos
 					},
@@ -115,6 +122,12 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 					me.frm.doc['selected_' + f] = null;
 				});
 			}
+
+			$.each(me.gp_link_fields, function (i, f) {
+				$("a", me.frm.fields_dict[f].$input_wrapper).attr("href",
+					"desk#query-report/Batch Profitability/Report?batch_no=" + grid_row.doc.batch_no);
+			});
+
 			me.frm.refresh_fields(all_fields);
 		}
 	},
