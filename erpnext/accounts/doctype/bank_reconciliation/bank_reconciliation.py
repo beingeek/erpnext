@@ -56,7 +56,7 @@ class BankReconciliation(Document):
 				(paid_from=%(account)s or paid_to=%(account)s) and docstatus=1 {0}
 			order by 
 				posting_date ASC, name DESC
-		""".format(condition), 
+		""".format(condition),
 		        {"account":self.bank_account, "from":self.from_date, "to":self.to_date}, as_dict=1)
 
 		pos_entries = []
@@ -106,9 +106,23 @@ class BankReconciliation(Document):
 				if not d.clearance_date:
 					d.clearance_date = None
 
-				frappe.db.set_value(d.payment_document, d.payment_entry, "clearance_date", d.clearance_date)
-				
-				clearance_date_updated = True
+				prev_clearance_date = frappe.db.get_value(d.payment_document, d.payment_entry, "clearance_date")
+
+				if not d.clearance_date and not d.confirm_unset and prev_clearance_date:
+					frappe.throw(_("Row #{0}: Clearance Date is empty. Please check 'Confirm Unset Clearance Date' to confirm and unset Clearance Date for {1}")
+						.format(d.idx, d.payment_entry))
+
+				if (None if not d.clearance_date else getdate(d.clearance_date)) != prev_clearance_date:
+					frappe.db.set_value(d.payment_document, d.payment_entry, "clearance_date", d.clearance_date)
+					clearance_date_updated = True
+
+					frappe.get_doc(dict(
+						doctype='Version',
+						ref_doctype=d.payment_document,
+						docname=d.payment_entry,
+						data=frappe.as_json(dict(comment_type="Label", comment=_("Set Clearance Date to {0}".format(
+							frappe.utils.formatdate(d.clearance_date) if d.clearance_date else "None"))))
+					)).insert(ignore_permissions=True)
 
 		if clearance_date_updated:
 			self.get_payment_entries()
