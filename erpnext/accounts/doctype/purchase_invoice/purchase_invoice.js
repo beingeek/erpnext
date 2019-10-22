@@ -125,7 +125,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 
 			$.each(me.gp_link_fields, function (i, f) {
 				$("a", me.frm.fields_dict[f].$input_wrapper).attr("href",
-					"desk#query-report/Batch Profitability/Report?batch_no=" + grid_row.doc.batch_no);
+					"desk#query-report/Batch Profitability?batch_no=" + grid_row.doc.batch_no);
 			});
 
 			me.frm.refresh_fields(all_fields);
