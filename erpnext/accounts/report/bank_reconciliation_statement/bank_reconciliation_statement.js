@@ -57,5 +57,15 @@ frappe.query_reports["Bank Reconciliation Statement"] = {
 
 		return default_formatter(value, row, column, data, {css: style, link_href: link, link_target: "_blank"});
 	},
+	after_datatable_render: function(datatable_obj) {
+		var indexes = [];
+		for (var i = 0; i < datatable_obj.datamanager.data.length; ++i) {
+			if(datatable_obj.datamanager.data[i]._collapsed) {
+				indexes.push(i);
+			}
+		}
+
+		indexes.map(i => datatable_obj.rowmanager.closeSingleNode(i));
+	},
 	initial_depth: 1
 }

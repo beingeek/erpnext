@@ -67,10 +67,10 @@ def execute(filters=None):
 	data.append(get_balance_row(_("'Total Uncleared Outgoing'"), total_uncleared_outgoing, account_currency))
 	data += uncleared_outgoing
 	data.append({})
-	data.append(get_balance_row(_("'Total Cleared Incoming'"), total_cleared_incoming, account_currency))
+	data.append(get_balance_row(_("'Total Cleared Incoming'"), total_cleared_incoming, account_currency, collapsed=True))
 	data += cleared_incoming
 	data.append({})
-	data.append(get_balance_row(_("'Total Cleared Outgoing'"), total_cleared_outgoing, account_currency))
+	data.append(get_balance_row(_("'Total Cleared Outgoing'"), total_cleared_outgoing, account_currency, collapsed=True))
 	data += cleared_outgoing
 	data.append({})
 
@@ -159,14 +159,15 @@ def get_bank_statement_balance(filters):
 	return je_amount + pe_amount + pos_amount
 
 
-def get_balance_row(label, amount, account_currency):
+def get_balance_row(label, amount, account_currency, collapsed=False):
 	if amount > 0:
 		return {
 			"payment_entry": label,
 			"debit": amount,
 			"credit": 0,
 			"account_currency": account_currency,
-			"_bold": 1
+			"_bold": 1,
+			"_collapsed": collapsed
 		}
 	else:
 		return {
@@ -174,7 +175,8 @@ def get_balance_row(label, amount, account_currency):
 			"debit": 0,
 			"credit": abs(amount),
 			"account_currency": account_currency,
-			"_bold": 1
+			"_bold": 1,
+			"_collapsed": collapsed
 		}
 
 
