@@ -5,12 +5,13 @@ frappe.provide("erpnext.accounts");
 {% include 'erpnext/public/js/controllers/buying.js' %};
 
 erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
-	item_cost_and_revenue_fields: ['direct_revenue', 'direct_qty_sold', 'repacked_revenue', 'repacked_qty_sold', 'lcv_cost',
-		'repack_cost', 'actual_batch_qty', 'batch_revenue'],
-	calculated_item_cost_and_revenue_fields: ['batch_value', 'lc_rate', 'used_batch_qty', 'batch_cogs', 'gross_profit',
-		'per_gross_profit'],
-	gp_link_fields: ['selected_direct_revenue', 'selected_direct_qty_sold', 'selected_repacked_revenue',
-		'selected_repacked_qty_sold', 'selected_lcv_cost', 'selected_repack_cost', 'selected_actual_batch_qty'],
+	item_cost_and_revenue_fields: ["source_sales_revenue", "source_sales_qty", "source_actual_qty", "source_reconciled_qty",
+		"source_lcv_cost", "source_repack_qty", "repacked_sales_revenue", "repacked_sales_qty", "repacked_repack_qty",
+		"repacked_actual_qty", "repacked_reconciled_qty", "repacked_additional_cost", "batch_revenue"],
+	calculated_item_cost_and_revenue_fields: ['source_batch_value', 'lc_rate', 'repacked_batch_value', 'repacked_cost_rate',
+		"batch_cogs", "gross_profit", "gross_profit_per_unit", "per_gross_profit"],
+	gp_link_fields: ['selected_source_sales_revenue', 'selected_source_sales_qty', 'selected_repacked_sales_revenue',
+		'selected_source_repack_qty', 'selected_source_lcv_cost', 'selected_repacked_additional_cost'],
 
 	setup: function(doc) {
 		this.setup_posting_date_time_check();
@@ -63,7 +64,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 
 	get_batch_cost_and_revenue: function() {
 		var me = this;
-		if (me.frm.doc.docstatus == 0) {
+		if (me.frm.doc.docstatus < 2) {
 			var batch_nos = [];
 			$.each(this.frm.doc.items || [], function(i, item) {
 				if(item.batch_no) {
@@ -77,14 +78,14 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 					args: {
 						batch_nos: batch_nos
 					},
+					freeze: true,
+					freeze_message: __("Loading Gross Profit..."),
 					callback: function(r) {
 						if(!r.exc) {
 							$.each(me.frm.doc.items || [], function(i, item) {
 								me.set_item_cost_and_revenue(item, r.message[item.batch_no]);
 							});
 							me.calculate_taxes_and_totals();
-
-							me.update_selected_item_fields();
 						}
 					}
 				});
@@ -105,31 +106,32 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 	},
 
 	update_selected_item_fields: function() {
+		var me = this;
+
 		var all_fields = [];
 		all_fields.push(...this.item_cost_and_revenue_fields);
 		all_fields.push(...this.calculated_item_cost_and_revenue_fields);
 
-		if (this.frm.doc.docstatus == 0) {
-			var me = this;
-
-			var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
-			if(grid_row && grid_row.doc.batch_no) {
-				$.each(all_fields, function (i, f) {
-					me.frm.doc['selected_' + f] = grid_row.doc[f];
-				});
-			} else {
-				$.each(all_fields, function (i, f) {
-					me.frm.doc['selected_' + f] = null;
-				});
-			}
-
-			$.each(me.gp_link_fields, function (i, f) {
-				$("a", me.frm.fields_dict[f].$input_wrapper).attr("href",
-					"desk#query-report/Batch Profitability?batch_no=" + grid_row.doc.batch_no);
+		var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
+		if(grid_row && grid_row.doc.batch_no) {
+			$.each(all_fields, function (i, f) {
+				me.frm.doc['selected_' + f] = grid_row.doc[f];
 			});
-
-			me.frm.refresh_fields(all_fields);
+		} else {
+			$.each(all_fields, function (i, f) {
+				me.frm.doc['selected_' + f] = null;
+			});
 		}
+
+		$.each(me.gp_link_fields, function (i, f) {
+			var link = "desk#query-report/Batch Profitability";
+			if (grid_row) {
+				link += "?batch_no=" + grid_row.doc.batch_no;
+			}
+			$("a", me.frm.fields_dict[f].$input_wrapper).attr("href", link);
+		});
+
+		me.frm.refresh_fields(all_fields.map(d => "selected_" + d));
 	},
 
 	refresh: function(doc) {
