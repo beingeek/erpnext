@@ -85,7 +85,9 @@ def get_total(data, label):
 
 def apply_source_repack_contribution(data, source_batch, target_batch_source_contribution):
 	for d in data:
-		d.repack_contribution = target_batch_source_contribution[d.get('for_target_batch') or d.batch_no][source_batch]
+		d.repack_contribution = target_batch_source_contribution\
+			.get(d.get('for_target_batch') or d.batch_no, {})\
+			.get(source_batch, 100)
 
 		if d.revenue is not None:
 			d.revenue = d.revenue * d.repack_contribution / 100
@@ -176,15 +178,18 @@ def get_repack_entry_data(batch_nos):
 	target_raw_material_data = []
 	repacked_batch_nos = []
 	stock_entry_to_target_batch = {}
+	warned = set()
 	for d in repack_entry_data:
 		if d.t_warehouse:
 			target_repack_data.append(d)
 			repacked_batch_nos.append(d.batch_no)
 
-			if d.batch_no in stock_entry_to_target_batch:
-				frappe.msgprint(_(
-					"Warning: Repack Entry {0} has multiple target batches. Gross Profit calculation may be inaccurate")
-					.format(frappe.get_desk_link("Stock Entry", d.name)))
+			if d.name in stock_entry_to_target_batch:
+				if d.name not in warned:
+					frappe.msgprint(_(
+						"Warning: Repack Entry {0} has multiple target batches. Gross Profit calculation may be inaccurate")
+						.format(frappe.get_desk_link("Stock Entry", d.name)))
+					warned.add(d.name)
 			else:
 				stock_entry_to_target_batch[d.name] = d.batch_no
 
@@ -263,20 +268,20 @@ def get_batch_cost_and_revenue(batch_nos):
 		out[d.batch_no].source_lcv_cost += d.cost
 
 	for d in target_sinv_data:
-		source_batch_contributions = target_batch_source_contribution[d.batch_no]
+		source_batch_contributions = target_batch_source_contribution.get(d.batch_no, {})
 		for source_batch, contribution in iteritems(source_batch_contributions):
 			out[source_batch].repacked_sales_revenue += d.revenue * contribution / 100
 			if d.update_stock:
 				out[source_batch].repacked_sales_qty += d.qty
 
 	for d in target_repack_data:
-		source_batch_contributions = target_batch_source_contribution[d.batch_no]
+		source_batch_contributions = target_batch_source_contribution.get(d.batch_no, {})
 		for source_batch, contribution in iteritems(source_batch_contributions):
 			out[source_batch].repacked_additional_cost += d.cost * contribution / 100
 			out[source_batch].repacked_repack_qty += d.qty
 
 	for d in target_raw_material_data:
-		source_batch_contributions = target_batch_source_contribution[d.for_target_batch]
+		source_batch_contributions = target_batch_source_contribution.get(d.for_target_batch, {})
 		for source_batch, contribution in iteritems(source_batch_contributions):
 			out[source_batch].repacked_additional_cost += d.cost * contribution / 100
 
@@ -287,7 +292,7 @@ def get_batch_cost_and_revenue(batch_nos):
 		out[d.batch_no].source_actual_qty = d.qty
 
 	for d in target_actual_qty:
-		source_batch_contributions = target_batch_source_contribution[d.batch_no]
+		source_batch_contributions = target_batch_source_contribution.get(d.batch_no, {})
 		for source_batch in source_batch_contributions.keys():
 			out[source_batch].repacked_actual_qty += d.qty
 
@@ -295,7 +300,7 @@ def get_batch_cost_and_revenue(batch_nos):
 		out[d.batch_no].source_reconciled_qty += d.qty
 
 	for d in target_reco_data:
-		source_batch_contributions = target_batch_source_contribution[d.batch_no]
+		source_batch_contributions = target_batch_source_contribution.get(d.batch_no, {})
 		for source_batch in source_batch_contributions.keys():
 			out[source_batch].repacked_reconciled_qty += d.qty
 
