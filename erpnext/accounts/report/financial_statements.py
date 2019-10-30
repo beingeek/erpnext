@@ -437,6 +437,8 @@ def get_columns(periodicity, period_list, accumulated_values=1, company=None):
 			"label": period.label,
 			"fieldtype": "Currency",
 			"options": "currency",
+			"from_date": period.from_date,
+			"to_date": period.to_date,
 			"width": 150
 		})
 	if periodicity!="Yearly":

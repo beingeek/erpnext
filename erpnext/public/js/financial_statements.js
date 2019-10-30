@@ -11,7 +11,16 @@ erpnext.financial_statements = {
 			column.is_tree = true;
 		}
 
-		value = default_formatter(value, row, column, data);
+		var options = {
+			link_target: "_blank",
+			css: {}
+		};
+
+		if (column.from_date && column.to_date && data.account) {
+			options.link_href = `desk#query-report/General Ledger?account=${data.account}&from_date=${column.from_date}&to_date=${column.to_date}`;
+		}
+
+		value = default_formatter(value, row, column, data, options);
 
 		if (!data.parent_account) {
 			value = $(`<span>${value}</span>`);
