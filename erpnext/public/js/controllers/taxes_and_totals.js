@@ -647,8 +647,12 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			item.batch_cogs += flt(item.repacked_cost_rate) * (flt(item.repacked_sales_qty) - flt(item.repacked_reconciled_qty));
 
 			item.gross_profit = flt(item.batch_revenue) - flt(item.batch_cogs);
-			item.gross_profit_per_unit = item.qty ? flt(item.gross_profit) / flt(item.qty) : 0;
 			item.per_gross_profit = item.batch_revenue ? flt(item.gross_profit) / flt(item.batch_revenue) * 100 : 0;
+
+			item.repack_conversion_factor = item.repacked_repack_qty ? flt(item.source_repack_qty) / flt(item.repacked_repack_qty) : 0;
+			item.qty_used_for_gp = flt(item.source_sales_qty) - flt(item.source_reconciled_qty);
+			item.qty_used_for_gp += (flt(item.repacked_sales_qty) - flt(item.repacked_reconciled_qty)) * item.repack_conversion_factor;
+			item.gross_profit_per_unit = item.gross_profit / item.qty_used_for_gp;
 
 			me.frm.doc.total_revenue += item.batch_revenue;
 			me.frm.doc.total_cogs += item.batch_cogs;
