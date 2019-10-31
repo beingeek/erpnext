@@ -146,6 +146,7 @@ class Item(WebsiteGenerator):
 		self.validate_name_with_item_group()
 		self.update_variants()
 		self.update_item_price()
+		self.update_batch()
 		self.update_template_item()
 
 	def validate_description(self):
@@ -673,6 +674,10 @@ class Item(WebsiteGenerator):
 		frappe.db.sql("""update `tabItem Price` set item_name=%s,
 			item_description=%s, brand=%s where item_code=%s""",
 					(self.item_name, self.description, self.brand, self.name))
+
+	def update_batch(self):
+		frappe.db.sql("""update `tabBatch` set item_name=%s, item_group=%s where item=%s""",
+					(self.item_name, self.item_group, self.name))
 
 	def on_trash(self):
 		super(Item, self).on_trash()

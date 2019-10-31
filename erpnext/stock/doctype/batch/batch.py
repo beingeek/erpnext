@@ -112,6 +112,12 @@ class Batch(Document):
 
 	def validate(self):
 		self.item_has_batch_enabled()
+		self.update_item_details()
+
+	def update_item_details(self):
+		item_details = frappe.db.get_value("Item", self.item, ["item_name", "item_group"], as_dict=1)
+		self.item_name = item_details.item_name
+		self.item_group = item_details.item_group
 
 	def item_has_batch_enabled(self):
 		if frappe.db.get_value("Item", self.item, "has_batch_no") == 0:
