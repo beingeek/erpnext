@@ -85,6 +85,11 @@ frappe.query_reports["Price List"] = {
 			fieldtype: "Check"
 		},
 		{
+			fieldname: "filter_items_without_print",
+			label: __("Show Only Items For Print"),
+			fieldtype: "Check"
+		},
+		{
 			fieldname: "filter_price_list_by",
 			label: __("Filter Price List By"),
 			fieldtype: "Select",
@@ -108,12 +113,6 @@ frappe.query_reports["Price List"] = {
 		{
 			fieldname: "price_list_2",
 			label: __("Additional Price List 2"),
-			fieldtype: "Link",
-			options:"Price List"
-		},
-		{
-			fieldname: "price_list_3",
-			label: __("Additional Price List 3"),
 			fieldtype: "Link",
 			options:"Price List"
 		},

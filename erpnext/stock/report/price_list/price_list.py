@@ -287,6 +287,9 @@ def get_item_conditions(filters, use_doc_name):
 	if filters.get("item_groups_excluded"):
 		conditions.append("item.item_group not in ('{}')".format("', '".join([frappe.db.escape(d) for d in filters.get("item_groups_excluded")])))
 
+	if use_doc_name and filters.get("filter_items_without_print"):
+		conditions.append("item.print_in_price_list = 1")
+
 	return " and " + " and ".join(conditions) if conditions else ""
 
 

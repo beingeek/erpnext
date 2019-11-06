@@ -10,8 +10,8 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		"repacked_actual_qty", "repacked_reconciled_qty", "repacked_additional_cost", "batch_revenue"],
 	calculated_item_cost_and_revenue_fields: ['source_batch_value', 'lc_rate', 'repacked_batch_value', 'repacked_cost_rate',
 		"batch_cogs", "gross_profit", "gross_profit_per_unit", "per_gross_profit"],
-	gp_link_fields: ['selected_source_sales_revenue', 'selected_source_sales_qty', 'selected_repacked_sales_revenue',
-		'selected_source_repack_qty', 'selected_source_lcv_cost', 'selected_repacked_additional_cost'],
+	gp_link_fields: ['source_sales_revenue', 'source_sales_qty', 'repacked_sales_revenue', 'source_repack_qty',
+		'source_lcv_cost', 'repacked_additional_cost', 'source_reconciled_qty'],
 
 	setup: function(doc) {
 		this.setup_posting_date_time_check();
@@ -48,7 +48,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 
 		var me = this;
 		$.each(this.gp_link_fields, function (i, f) {
-			$(".control-value", me.frm.fields_dict[f].$input_wrapper).wrap("<a href='#' target='_blank'></a>");
+			$(".control-value", me.frm.fields_dict['selected_' + f].$input_wrapper).wrap("<a href='#' target='_blank'></a>");
 		});
 	},
 
@@ -64,7 +64,10 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 
 	get_batch_cost_and_revenue: function() {
 		var me = this;
-		if (me.frm.doc.docstatus < 2) {
+		var has_permission = me.frm.fields_dict.total_gross_profit.disp_status;
+		has_permission = has_permission && has_permission != 'None';
+
+		if (me.frm.doc.docstatus < 2 && has_permission) {
 			var batch_nos = [];
 			$.each(this.frm.doc.items || [], function(i, item) {
 				if(item.batch_no) {
@@ -128,10 +131,23 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 			if (grid_row) {
 				link += "?batch_no=" + grid_row.doc.batch_no;
 			}
-			$("a", me.frm.fields_dict[f].$input_wrapper).attr("href", link);
+			$("a", me.frm.fields_dict['selected_' + f].$input_wrapper).attr("href", link);
 		});
 
 		me.frm.refresh_fields(all_fields.map(d => "selected_" + d));
+	},
+
+	form_render: function(doc, cdt, cdn) {
+		if (cdt == "Purchase Invoice Item") {
+			var grid_row = this.frm.fields_dict['items'].grid.grid_rows_by_docname[cdn];
+			var link = "desk#query-report/Batch Profitability";
+			if (grid_row) {
+				link += "?batch_no=" + grid_row.doc.batch_no;
+			}
+			$.each(this.gp_link_fields, function (i, f) {
+				$(".control-value", grid_row.grid_form.fields_dict[f].$input_wrapper).wrap(`<a href='${link}' target='_blank'></a>`);
+			});
+		}
 	},
 
 	refresh: function(doc) {

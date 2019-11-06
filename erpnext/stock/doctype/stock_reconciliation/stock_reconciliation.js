@@ -40,6 +40,8 @@ frappe.ui.form.on("Stock Reconciliation", {
 		if (!frm.doc.expense_account) {
 			frm.trigger("set_expense_account");
 		}
+
+		frm.events.update_item_details(frm);
 	},
 
 	refresh: function(frm) {
@@ -108,6 +110,21 @@ frappe.ui.form.on("Stock Reconciliation", {
 			});
 		}
 	},
+
+	update_item_details: function(frm) {
+		if (frm.doc.docstatus == 0 && !frm.doc.__islocal) {
+			frappe.call({
+				method: "update_item_details",
+				doc: frm.doc,
+				freeze: true,
+				callback: function (r) {
+					frm.dirty();
+					frm.refresh_fields();
+				}
+			});
+		}
+	},
+
 	set_item_code: function(doc, cdt, cdn) {
 		var d = frappe.model.get_doc(cdt, cdn);
 		if (d.barcode) {

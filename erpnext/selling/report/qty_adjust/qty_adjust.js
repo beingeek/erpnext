@@ -36,19 +36,21 @@ frappe.query_reports["Qty Adjust"] = {
 			link_target: "_blank"
 		};
 
-		if (['draft_so_qty', 'total_po_qty', 'actual_qty'].includes(column.fieldname)) {
-			options.css['font-weight'] = "bold";
-		}
+		if (data) {
+			if (['draft_so_qty', 'total_po_qty', 'actual_qty'].includes(column.fieldname)) {
+				options.css['font-weight'] = "bold";
+			}
 
-		if (column.is_so_qty) {
-			options.css['color'] = "#0a0157";
-			options.link_href = encodeURI("desk#Form/Qty Adjust/Qty Adjust" +
-				"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
-		}
+			if (column.is_so_qty) {
+				options.css['color'] = "#0a0157";
+				options.link_href = encodeURI("desk#Form/Qty Adjust/Qty Adjust" +
+					"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
+			}
 
-		if (column.is_po_qty) {
-			options.link_href = encodeURI("desk#query-report/Purchase Order Items To Be Received" +
-				"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
+			if (column.is_po_qty) {
+				options.link_href = encodeURI("desk#query-report/Purchase Order Items To Be Received" +
+					"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
+			}
 		}
 
 		return default_formatter(value, row, column, data, options);

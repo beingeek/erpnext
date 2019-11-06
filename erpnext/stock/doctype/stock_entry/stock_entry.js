@@ -813,7 +813,7 @@ erpnext.stock.StockEntry = erpnext.stock.StockController.extend({
 erpnext.stock.select_batch_and_serial_no = (frm, item) => {
 	let get_warehouse_type_and_name = (item) => {
 		let value = '';
-		if(frm.fields_dict.from_warehouse.disp_status === "Write") {
+			if(frm.fields_dict.from_warehouse.disp_status === "Write") {
 			value = cstr(item.s_warehouse) || '';
 			return {
 				type: 'Source Warehouse',

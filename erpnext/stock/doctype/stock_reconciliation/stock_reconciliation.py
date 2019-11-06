@@ -204,6 +204,11 @@ class StockReconciliation(StockController):
 			d.amount_difference = flt(d.amount) - flt(d.current_amount)
 			self.difference_amount += d.amount_difference
 
+	def update_item_details(self):
+		self.validate_posting_time()
+		self.update_current_qty_valuation_rate()
+		self.set_total_qty_and_amount()
+
 	def get_items_for(self, warehouse):
 		self.items = []
 		for item in get_items(warehouse, self.posting_date, self.posting_time, self.company):
