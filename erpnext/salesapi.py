@@ -199,7 +199,7 @@ def makeso1(poname,ps):
 								"shipping_address_name": row[0]["address"] or None,
 								"comm_1": row[0]["mso_notes"]
 							})
-			d=data3.save()
+			d=data3.insert()
 			frappe.db.sql("""UPDATE `tabMaster Sales Order Item`  SET `sales_order` = %s
 			where  parent = %s AND customer = %s AND col_number = %s """, (d.name, poname, row[0]["customer"], row[0]["col_number"]))
 			count=count+1
