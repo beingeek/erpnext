@@ -107,6 +107,7 @@ frappe.query_reports["Accounts Receivable Summary"] = {
 			"fieldname":"show_only_open_invoice",
 			"label": __("Show Only Open Invoices"),
 			"fieldtype": "Check",
+			"default": 1
 		},
 	],
 
