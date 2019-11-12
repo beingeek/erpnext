@@ -38,18 +38,20 @@ class SalesInvoice(SellingController):
 		super(SalesInvoice, self).__init__(*args, **kwargs)
 		self.status_updater = [{
 			'source_dt': 'Sales Invoice Item',
-			'target_field': 'billed_amt',
-			'target_ref_field': 'amount',
+			'target_field': 'billed_qty',
+			'target_ref_field': 'qty',
 			'target_dt': 'Sales Order Item',
 			'join_field': 'so_detail',
 			'target_parent_dt': 'Sales Order',
 			'target_parent_field': 'per_billed',
-			'source_field': 'amount',
+			'source_field': 'qty',
 			'join_field': 'so_detail',
 			'percent_join_field': 'sales_order',
 			'status_field': 'billing_status',
 			'keyword': 'Billed',
-			'overflow_type': 'billing'
+			'overflow_type': 'billing',
+			'extra_cond': """ and exists(select name from `tabSales Invoice` where name=`tabSales Invoice Item`.parent
+				and (is_return=0 or update_billed_amount_in_sales_order=1))"""
 		}]
 
 	def set_indicator(self):
