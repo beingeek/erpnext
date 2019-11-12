@@ -598,3 +598,4 @@ erpnext.patches.v11_1.make_job_card_time_logs
 erpnext.patches.v11_1.set_variant_based_on
 erpnext.patches.v11_1.stock_reconciliation_enhancement
 erpnext.patches.v11_1.set_batch_item_details
+erpnext.patches.v11_0.update_billing_status
