@@ -34,20 +34,20 @@ status_map = {
 	],
 	"Sales Order": [
 		["Draft", None],
-		["To Deliver and Bill", "eval:self.per_delivered < 100 and self.per_billed < 100 and self.docstatus == 1"],
-		["To Bill", "eval:self.per_delivered == 100 and self.per_billed < 100 and self.docstatus == 1"],
-		["To Deliver", "eval:self.per_delivered < 100 and self.per_billed == 100 and self.docstatus == 1"],
-		["Completed", "eval:self.per_delivered == 100 and self.per_billed == 100 and self.docstatus == 1"],
-		["Completed", "eval:self.order_type == 'Maintenance' and self.per_billed == 100 and self.docstatus == 1"],
+		["To Deliver and Bill", "eval:self.per_delivered < 100 and self.per_completed < 100 and self.docstatus == 1"],
+		["To Bill", "eval:self.per_delivered == 100 and self.per_completed < 100 and self.docstatus == 1"],
+		["To Deliver", "eval:self.per_delivered < 100 and self.per_completed == 100 and self.docstatus == 1"],
+		["Completed", "eval:self.per_delivered == 100 and self.per_completed == 100 and self.docstatus == 1"],
+		["Completed", "eval:self.order_type == 'Maintenance' and self.per_completed == 100 and self.docstatus == 1"],
 		["Cancelled", "eval:self.docstatus==2"],
 		["Closed", "eval:self.status=='Closed'"],
 	],
 	"Sales Invoice": [
 		["Draft", None],
 		["Submitted", "eval:self.docstatus==1"],
+		["Paid", "eval:self.outstanding_amount==0 and self.docstatus==1"],
 		["Return", "eval:self.is_return==1 and self.docstatus==1"],
-		["Paid", "eval:self.outstanding_amount<=0 and self.docstatus==1 and self.is_return==0"],
-		["Credit Note Issued", "eval:self.outstanding_amount < 0 and self.docstatus==1 and self.is_return==0 and get_value('Sales Invoice', {'is_return': 1, 'return_against': self.name, 'docstatus': 1})"],
+		["Credit Note Issued", "eval:self.outstanding_amount < 0 and self.docstatus==1"],
 		["Unpaid", "eval:self.outstanding_amount > 0 and getdate(self.due_date) >= getdate(nowdate()) and self.docstatus==1"],
 		["Overdue", "eval:self.outstanding_amount > 0 and getdate(self.due_date) < getdate(nowdate()) and self.docstatus==1"],
 		["Cancelled", "eval:self.docstatus==2"],
@@ -55,34 +55,34 @@ status_map = {
 	"Purchase Invoice": [
 		["Draft", None],
 		["Submitted", "eval:self.docstatus==1"],
+		["Paid", "eval:self.outstanding_amount==0 and self.docstatus==1"],
 		["Return", "eval:self.is_return==1 and self.docstatus==1"],
-		["Paid", "eval:self.outstanding_amount<=0 and self.docstatus==1 and self.is_return==0"],
-		["Debit Note Issued", "eval:self.outstanding_amount < 0 and self.docstatus==1 and self.is_return==0 and get_value('Purchase Invoice', {'is_return': 1, 'return_against': self.name, 'docstatus': 1})"],
+		["Debit Note Issued", "eval:self.outstanding_amount < 0 and self.docstatus==1"],
 		["Unpaid", "eval:self.outstanding_amount > 0 and getdate(self.due_date) >= getdate(nowdate()) and self.docstatus==1"],
 		["Overdue", "eval:self.outstanding_amount > 0 and getdate(self.due_date) < getdate(nowdate()) and self.docstatus==1"],
 		["Cancelled", "eval:self.docstatus==2"],
 	],
 	"Purchase Order": [
 		["Draft", None],
-		["To Receive and Bill", "eval:self.per_received < 100 and self.per_billed < 100 and self.docstatus == 1"],
-		["To Bill", "eval:self.per_received == 100 and self.per_billed < 100 and self.docstatus == 1"],
-		["To Receive", "eval:self.per_received < 100 and self.per_billed == 100 and self.docstatus == 1"],
-		["Completed", "eval:self.per_received == 100 and self.per_billed == 100 and self.docstatus == 1"],
+		["To Receive and Bill", "eval:self.per_received < 100 and self.per_completed < 100 and self.docstatus == 1"],
+		["To Bill", "eval:self.per_received == 100 and self.per_completed < 100 and self.docstatus == 1"],
+		["To Receive", "eval:self.per_received < 100 and self.per_completed == 100 and self.docstatus == 1"],
+		["Completed", "eval:self.per_received == 100 and self.per_completed == 100 and self.docstatus == 1"],
 		["Delivered", "eval:self.status=='Delivered'"],
 		["Cancelled", "eval:self.docstatus==2"],
 		["Closed", "eval:self.status=='Closed'"],
 	],
 	"Delivery Note": [
 		["Draft", None],
-		["To Bill", "eval:self.per_billed < 100 and self.docstatus == 1"],
-		["Completed", "eval:self.per_billed == 100 and self.docstatus == 1"],
+		["To Bill", "eval:self.per_completed < 100 and self.docstatus == 1"],
+		["Completed", "eval:(self.grand_total == 0 or self.per_completed == 100) and self.docstatus == 1"],
 		["Cancelled", "eval:self.docstatus==2"],
 		["Closed", "eval:self.status=='Closed'"],
 	],
 	"Purchase Receipt": [
 		["Draft", None],
-		["To Bill", "eval:self.per_billed < 100 and self.docstatus == 1"],
-		["Completed", "eval:self.per_billed == 100 and self.docstatus == 1"],
+		["To Bill", "eval:self.per_completed < 100 and self.docstatus == 1"],
+		["Completed", "eval:(self.grand_total == 0 or self.per_completed == 100) and self.docstatus == 1"],
 		["Cancelled", "eval:self.docstatus==2"],
 		["Closed", "eval:self.status=='Closed'"],
 	],
@@ -175,8 +175,8 @@ class StatusUpdater(Document):
 
 					# get all qty where qty > target_field
 					item = frappe.db.sql("""select item_code, `{target_ref_field}`,
-						`{target_field}`, parenttype, parent from `tab{target_dt}`
-						where `{target_ref_field}` < `{target_field}`
+						{target_field}, parenttype, parent from `tab{target_dt}`
+						where `{target_ref_field}` < {target_field}
 						and name=%s and docstatus=1""".format(**args),
 						args['name'], as_dict=1)
 					if item:
@@ -235,10 +235,21 @@ class StatusUpdater(Document):
 			else:
 				args['cond'] = ' and parent!="%s"' % self.name.replace('"', '\"')
 
-			self._update_children(args, update_modified)
+			updated_parents = []
+			if "update_children" in args and callable(args['update_children']):
+				updated_parents = args["update_children"](update_modified)
+			elif args.get('update_children', True):
+				self._update_children(args, update_modified)
 
-			if "percent_join_field" in args:
-				self._update_percent_field_in_targets(args, update_modified)
+			if "percent_join_field" in args or "percent_join_name" in args:
+				if not updated_parents:
+					if args.get('percent_join_name'):
+						updated_parents.append(args.get('percent_join_name'))
+					elif args.get('percent_join_field'):
+						updated_parents = [d.get(args['percent_join_field']) for d in self.get_all_children(args['source_dt'])]
+
+				updated_parents = set(updated_parents)
+				self._update_percent_field_in_targets(args, updated_parents, update_modified)
 
 	def _update_children(self, args, update_modified):
 		"""Update quantities or amount in child table"""
@@ -275,12 +286,9 @@ class StatusUpdater(Document):
 					%(update_modified)s
 					where name='%(detail_id)s'""" % args)
 
-	def _update_percent_field_in_targets(self, args, update_modified=True):
+	def _update_percent_field_in_targets(self, args, targets, update_modified=True):
 		"""Update percent field in parent transaction"""
-		distinct_transactions = set([d.get(args['percent_join_field'])
-			for d in self.get_all_children(args['source_dt'])])
-
-		for name in distinct_transactions:
+		for name in targets:
 			if name:
 				args['name'] = name
 				self._update_percent_field(args, update_modified)
@@ -320,19 +328,27 @@ class StatusUpdater(Document):
 				.format(frappe.db.escape(frappe.session.user))
 
 	def update_billing_status_for_zero_amount_refdoc(self, ref_dt):
-		ref_fieldname = ref_dt.lower().replace(" ", "_")
-		zero_amount_refdoc = []
-		all_zero_amount_refdoc = frappe.db.sql_list("""select name from `tab%s`
-			where docstatus=1 and base_net_total = 0""" % ref_dt)
+		ref_fieldname = frappe.scrub(ref_dt)
 
-		for item in self.get("items"):
-			if item.get(ref_fieldname) \
-				and item.get(ref_fieldname) in all_zero_amount_refdoc \
-				and item.get(ref_fieldname) not in zero_amount_refdoc:
-					zero_amount_refdoc.append(item.get(ref_fieldname))
+		ref_docs = [item.get(ref_fieldname) for item in (self.get('items') or []) if item.get(ref_fieldname)]
+		if not ref_docs:
+			return
 
-		if zero_amount_refdoc:
-			self.update_billing_status(zero_amount_refdoc, ref_dt, ref_fieldname)
+		zero_amount_refdocs = frappe.db.sql_list("""
+			SELECT
+				name
+			from
+				`tab{ref_dt}`
+			where
+				docstatus = 1
+				and base_net_total = 0
+				and name in %(ref_docs)s
+		""".format(ref_dt=ref_dt), {
+			'ref_docs': ref_docs
+		})
+
+		if zero_amount_refdocs:
+			self.update_billing_status(zero_amount_refdocs, ref_dt, ref_fieldname)
 
 	def update_billing_status(self, zero_amount_refdoc, ref_dt, ref_fieldname):
 		for ref_dn in zero_amount_refdoc:

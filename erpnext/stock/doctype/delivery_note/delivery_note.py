@@ -38,8 +38,10 @@ class DeliveryNote(SellingController):
 			'second_source_field': 'qty',
 			'second_join_field': 'so_detail',
 			'overflow_type': 'delivery',
+			'extra_cond': """ and exists (select name from `tabDelivery Note`
+				where name=`tabDelivery Note Item`.parent and (is_return=0 or reopen_order=1))""",
 			'second_source_extra_cond': """ and exists(select name from `tabSales Invoice`
-				where name=`tabSales Invoice Item`.parent and update_stock = 1)"""
+				where name=`tabSales Invoice Item`.parent and update_stock = 1 and (is_return=0 or reopen_order=1))"""
 		},
 		{
 			'source_dt': 'Delivery Note Item',
@@ -62,6 +64,70 @@ class DeliveryNote(SellingController):
 			'source_field': '-1 * qty',
 			'extra_cond': """ and exists (select name from `tabDelivery Note` where name=`tabDelivery Note Item`.parent and is_return=1)"""
 		}]
+		if cint(self.is_return):
+			self.status_updater.append({
+				'source_dt': 'Delivery Note Item',
+				'target_dt': 'Sales Order Item',
+				'join_field': 'so_detail',
+				'target_field': 'total_returned_qty',
+				'target_parent_dt': 'Sales Order',
+				'source_field': '-1 * qty',
+				'second_source_dt': 'Sales Invoice Item',
+				'second_source_field': '-1 * qty',
+				'second_join_field': 'so_detail',
+				'extra_cond': """ and exists (select name from `tabDelivery Note`
+					where name=`tabDelivery Note Item`.parent and is_return=1)""",
+				'second_source_extra_cond': """ and exists (select name from `tabSales Invoice`
+					where name=`tabSales Invoice Item`.parent and is_return=1 and update_stock=1)"""
+			})
+			self.status_updater.append({
+				'source_dt': 'Delivery Note Item',
+				'target_dt': 'Sales Order Item',
+				'join_field': 'so_detail',
+				'target_field': 'returned_qty',
+				'target_ref_field': 'qty',
+				'source_field': '-1 * qty',
+				'target_parent_dt': 'Sales Order',
+				'target_parent_field': 'per_returned',
+				'percent_join_field': 'against_sales_order',
+				'extra_cond': """ and exists (select name from `tabDelivery Note` where name=`tabDelivery Note Item`.parent
+					and is_return=1 and reopen_order = 0)"""
+			})
+			self.status_updater.append({
+				'source_dt': 'Delivery Note Item',
+				'target_dt': 'Delivery Note Item',
+				'join_field': 'dn_detail',
+				'target_field': 'returned_qty',
+				'target_ref_field': 'qty',
+				'source_field': '-1 * qty',
+				'target_parent_dt': 'Delivery Note',
+				'target_parent_field': 'per_returned',
+				'percent_join_name': self.return_against,
+				'extra_cond': """ and exists(select name from `tabDelivery Note` where name=`tabDelivery Note Item`.parent
+					and is_return=1)"""
+			})
+			self.status_updater.append({
+				'source_dt': 'Delivery Note Item',
+				'target_dt': 'Delivery Note Item',
+				'join_field': 'dn_detail',
+				'target_field': '(billed_qty + returned_qty)',
+				'update_children': False,
+				'target_ref_field': 'qty',
+				'target_parent_dt': 'Delivery Note',
+				'target_parent_field': 'per_completed',
+				'percent_join_name': self.return_against
+			})
+			self.status_updater.append({
+				'source_dt': 'Delivery Note Item',
+				'target_dt': 'Sales Order Item',
+				'join_field': 'so_detail',
+				'target_field': '(billed_qty + returned_qty)',
+				'update_children': False,
+				'target_ref_field': 'qty',
+				'target_parent_dt': 'Sales Order',
+				'target_parent_field': 'per_completed',
+				'percent_join_field': 'against_sales_order'
+			})
 
 	def before_print(self):
 		def toggle_print_hide(meta, fieldname):
@@ -139,6 +205,12 @@ class DeliveryNote(SellingController):
 			"Sales Invoice Item": {
 				"ref_dn_field": "si_detail",
 				"compare_fields": [["item_code", "="], ["uom", "="], ["conversion_factor", "="]],
+				"is_child_table": True,
+				"allow_duplicate_prev_row_id": True
+			},
+			"Delivery Note Item": {
+				"ref_dn_field": "dn_detail",
+				"compare_fields": [["item_code", "="]],
 				"is_child_table": True,
 				"allow_duplicate_prev_row_id": True
 			},
@@ -305,6 +377,7 @@ class DeliveryNote(SellingController):
 		updated_delivery_notes = [self.name]
 		for d in self.get("items"):
 			if d.si_detail and not d.so_detail:
+				d.db_set('billed_qty', d.qty, update_modified=update_modified)
 				d.db_set('billed_amt', d.amount, update_modified=update_modified)
 			elif d.so_detail:
 				updated_delivery_notes += update_billed_amount_based_on_so(d.so_detail, update_modified)
@@ -325,14 +398,28 @@ class DeliveryNote(SellingController):
 		except:
 			frappe.throw(_("Could not create Credit Note automatically, please uncheck 'Issue Credit Note' and submit again"))
 
+def update_billed_amount_based_on_dn(dn_detail, update_modified=True):
+	billed_qty = frappe.db.sql("""
+		select sum(item.qty)
+		from `tabSales Invoice Item` item, `tabSales Invoice` inv
+		where inv.name=item.parent and item.dn_detail=%s and item.docstatus=1 and inv.is_return = 0
+	""", dn_detail)
+
+	billed_qty = billed_qty and billed_qty[0][0] or 0
+	frappe.db.set_value("Delivery Note Item", dn_detail, "billed_qty", billed_qty, update_modified=update_modified)
+
 def update_billed_amount_based_on_so(so_detail, update_modified=True):
 	# Billed against Sales Order directly
-	billed_against_so = frappe.db.sql("""select sum(amount) from `tabSales Invoice Item`
-		where so_detail=%s and (dn_detail is null or dn_detail = '') and docstatus=1""", so_detail)
+	billed_against_so = frappe.db.sql("""
+		select sum(item.qty)
+		from `tabSales Invoice Item` item, `tabSales Invoice` inv
+		where inv.name=item.parent and item.so_detail=%s and (item.dn_detail is null or item.dn_detail = '')
+			and item.docstatus=1 and inv.is_return = 0
+	""", so_detail)
 	billed_against_so = billed_against_so and billed_against_so[0][0] or 0
 
 	# Get all Delivery Note Item rows against the Sales Order Item row
-	dn_details = frappe.db.sql("""select dn_item.name, dn_item.amount, dn_item.si_detail, dn_item.parent
+	dn_details = frappe.db.sql("""select dn_item.name, dn_item.qty, dn_item.returned_qty, dn_item.si_detail, dn_item.parent
 		from `tabDelivery Note Item` dn_item, `tabDelivery Note` dn
 		where dn.name=dn_item.parent and dn_item.so_detail=%s
 			and dn.docstatus=1 and dn.is_return = 0
@@ -340,29 +427,33 @@ def update_billed_amount_based_on_so(so_detail, update_modified=True):
 
 	updated_dn = []
 	for dnd in dn_details:
-		billed_amt_agianst_dn = 0
+		billed_qty_agianst_dn = 0
 
 		# If delivered against Sales Invoice
 		if dnd.si_detail:
-			billed_amt_agianst_dn = flt(dnd.amount)
-			billed_against_so -= billed_amt_agianst_dn
+			billed_qty_agianst_dn = flt(dnd.qty)
+			billed_against_so -= billed_qty_agianst_dn
 		else:
-			# Get billed amount directly against Delivery Note
-			billed_amt_agianst_dn = frappe.db.sql("""select sum(amount) from `tabSales Invoice Item`
-				where dn_detail=%s and docstatus=1""", dnd.name)
-			billed_amt_agianst_dn = billed_amt_agianst_dn and billed_amt_agianst_dn[0][0] or 0
+			# Get billed qty directly against Delivery Note
+			billed_qty_agianst_dn = frappe.db.sql("""
+				select sum(item.qty)
+				from `tabSales Invoice Item` item, `tabSales Invoice` inv
+				where inv.name=item.parent and item.dn_detail=%s and item.docstatus=1 and inv.is_return = 0
+			""", dnd.name)
+			billed_qty_agianst_dn = billed_qty_agianst_dn and billed_qty_agianst_dn[0][0] or 0
 
-		# Distribute billed amount directly against SO between DNs based on FIFO
-		if billed_against_so and billed_amt_agianst_dn < dnd.amount:
-			pending_to_bill = flt(dnd.amount) - billed_amt_agianst_dn
+		# Distribute billed qty directly against SO between DNs based on FIFO
+		billable_qty = flt(dnd.qty) - flt(dnd.returned_qty)
+		if billed_against_so and billed_qty_agianst_dn < billable_qty:
+			pending_to_bill = billable_qty - billed_qty_agianst_dn
 			if pending_to_bill <= billed_against_so:
-				billed_amt_agianst_dn += pending_to_bill
+				billed_qty_agianst_dn += pending_to_bill
 				billed_against_so -= pending_to_bill
 			else:
-				billed_amt_agianst_dn += billed_against_so
+				billed_qty_agianst_dn += billed_against_so
 				billed_against_so = 0
 
-		frappe.db.set_value("Delivery Note Item", dnd.name, "billed_amt", billed_amt_agianst_dn, update_modified=update_modified)
+		frappe.db.set_value("Delivery Note Item", dnd.name, "billed_qty", billed_qty_agianst_dn, update_modified=update_modified)
 
 		updated_dn.append(dnd.parent)
 
@@ -381,37 +472,26 @@ def get_list_context(context=None):
 
 def get_invoiced_qty_map(delivery_note):
 	"""returns a map: {dn_detail: invoiced_qty}"""
-	invoiced_qty_map = {}
-
-	for dn_detail, qty in frappe.db.sql("""select dn_detail, qty from `tabSales Invoice Item`
-		where delivery_note=%s and docstatus=1""", delivery_note):
-			if not invoiced_qty_map.get(dn_detail):
-				invoiced_qty_map[dn_detail] = 0
-			invoiced_qty_map[dn_detail] += qty
-
+	invoiced_qty_map = frappe._dict(frappe.db.sql("""
+		select si_item.dn_detail, sum(si_item.qty)
+		from `tabSales Invoice Item` si_item, `tabSales Invoice` si
+		where si.name = si_item.parent
+			and si.docstatus = 1
+			and si.is_return = 0
+			and si_item.delivery_note = %s
+		group by si_item.dn_detail""", delivery_note))
 	return invoiced_qty_map
 
-def get_returned_qty_map_against_so(sales_orders):
-	"""returns a map: {so_detail: returned_qty}"""
-	returned_qty_map = {}
-
-	for name, returned_qty in frappe.get_all('Sales Order Item', fields = ["name", "returned_qty"],
-		filters = {'parent': ('in', sales_orders), 'docstatus': 1}, as_list=1):
-		if not returned_qty_map.get(name):
-				returned_qty_map[name] = 0
-		returned_qty_map[name] += returned_qty
-
-	return returned_qty_map
-
-def get_returned_qty_map_against_dn(delivery_note):
-	"""returns a map: {so_detail: returned_qty}"""
-	returned_qty_map = frappe._dict(frappe.db.sql("""select dn_item.item_code, sum(abs(dn_item.qty)) as qty
+def get_returned_qty_map(delivery_note):
+	"""returns a map: {dn_detail: returned_qty}"""
+	returned_qty_map = frappe._dict(frappe.db.sql("""
+		select dn_item.dn_detail, sum(abs(dn_item.qty)) as qty
 		from `tabDelivery Note Item` dn_item, `tabDelivery Note` dn
 		where dn.name = dn_item.parent
 			and dn.docstatus = 1
 			and dn.is_return = 1
 			and dn.return_against = %s
-		group by dn_item.item_code
+		group by dn_item.dn_detail
 	""", delivery_note))
 
 	return returned_qty_map
@@ -419,14 +499,14 @@ def get_returned_qty_map_against_dn(delivery_note):
 @frappe.whitelist()
 def make_sales_invoice(source_name, target_doc=None):
 	doc = frappe.get_doc('Delivery Note', source_name)
-	sales_orders = [d.against_sales_order for d in doc.items]
-	returned_qty_map_against_so = get_returned_qty_map_against_so(sales_orders)
-	returned_qty_map_against_dn = get_returned_qty_map_against_dn(source_name)
+
+	to_make_invoice_qty_map = {}
+	returned_qty_map = get_returned_qty_map(source_name)
 	invoiced_qty_map = get_invoiced_qty_map(source_name)
 
 	def set_missing_values(source, target):
 		target.is_pos = 0
-		# target.ignore_pricing_rule = 1
+		target.ignore_pricing_rule = 1
 		target.run_method("set_missing_values")
 		target.run_method("set_po_nos")
 
@@ -441,27 +521,33 @@ def make_sales_invoice(source_name, target_doc=None):
 			target.update(get_fetch_values("Sales Invoice", 'company_address', target.company_address))
 
 	def update_item(source_doc, target_doc, source_parent):
-		target_doc.qty, returned_qty = get_pending_qty(source_doc)
-		if not source_doc.so_detail:
-			returned_qty_map_against_dn[source_doc.item_code] = returned_qty
+		target_doc.qty = to_make_invoice_qty_map[source_doc.name]
 
 		if source_doc.serial_no and source_parent.per_billed > 0:
 			target_doc.serial_no = get_delivery_note_serial_no(source_doc.item_code,
 				target_doc.qty, source_parent.name)
 
 	def get_pending_qty(item_row):
-		pending_qty = item_row.qty - invoiced_qty_map.get(item_row.name, 0) - returned_qty_map_against_so.get(item_row.so_detail, 0)
-		returned_qty = flt(returned_qty_map_against_dn.get(item_row.item_code, 0))
-		if not item_row.so_detail:
+		pending_qty = item_row.qty - invoiced_qty_map.get(item_row.name, 0)
+
+		returned_qty = 0
+		if returned_qty_map.get(item_row.name, 0) > 0:
+			returned_qty = flt(returned_qty_map.get(item_row.name, 0))
+			returned_qty_map[item_row.name] -= pending_qty
+
+		if returned_qty:
 			if returned_qty >= pending_qty:
 				pending_qty = 0
 				returned_qty -= pending_qty
 			else:
 				pending_qty -= returned_qty
 				returned_qty = 0
-		return pending_qty, returned_qty
 
-	doc = get_mapped_doc("Delivery Note", source_name, 	{
+		to_make_invoice_qty_map[item_row.name] = pending_qty
+
+		return pending_qty
+
+	doc = get_mapped_doc("Delivery Note", source_name, {
 		"Delivery Note": {
 			"doctype": "Sales Invoice",
 			"validation": {
@@ -479,7 +565,7 @@ def make_sales_invoice(source_name, target_doc=None):
 				"cost_center": "cost_center"
 			},
 			"postprocess": update_item,
-			"filter": lambda d: get_pending_qty(d)[0]<=0
+			"filter": lambda d: get_pending_qty(d) <= 0 if not doc.get("is_return") else get_pending_qty(d) > 0
 		},
 		"Sales Taxes and Charges": {
 			"doctype": "Sales Taxes and Charges",

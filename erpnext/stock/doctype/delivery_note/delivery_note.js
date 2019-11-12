@@ -101,6 +101,42 @@ erpnext.stock.DeliveryNoteController = erpnext.selling.SellingController.extend(
 	refresh: function(doc, dt, dn) {
 		var me = this;
 		this._super();
+		if ((!doc.is_return) && (doc.status!="Closed" || this.frm.is_new())) {
+			if (this.frm.doc.docstatus===0) {
+				this.frm.add_custom_button(__('Sales Order'),
+					function() {
+						erpnext.utils.map_current_doc({
+							method: "erpnext.selling.doctype.sales_order.sales_order.make_delivery_note",
+							source_doctype: "Sales Order",
+							target: me.frm,
+							setters: {
+								customer: me.frm.doc.customer || undefined,
+							},
+							get_query_filters: {
+								docstatus: 1,
+								status: ["!=", "Closed"],
+								per_delivered: ["<", 99.99],
+								company: me.frm.doc.company,
+								project: me.frm.doc.project || undefined,
+							}
+						})
+					}, __("Get items from"));
+			}
+		}
+
+		if(doc.docstatus==1 && !doc.is_return && doc.status!="Closed" && flt(doc.per_completed) < 100) {
+			// show Make Invoice button only if Delivery Note is not created from Sales Invoice
+			var from_sales_invoice = false;
+			from_sales_invoice = me.frm.doc.items.some(function(item) {
+				return item.against_sales_invoice ? true : false;
+			});
+
+			if(!from_sales_invoice) {
+				this.frm.add_custom_button(__('Invoice'), function() { me.make_sales_invoice() },
+					__("Make"));
+			}
+		}
+
 		if (!doc.is_return && doc.status!="Closed") {
 			if(flt(doc.per_installed, 2) < 100 && doc.docstatus==1)
 				this.frm.add_custom_button(__('Installation Note'), function() {

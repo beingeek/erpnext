@@ -411,19 +411,10 @@ def make_purchase_invoice(source_name, target_doc=None):
 			target.set_advances()
 
 	def update_item(obj, target, source_parent):
-		target.amount = flt(obj.amount) - flt(obj.billed_amt)
-		target.base_amount = target.amount * flt(source_parent.conversion_rate)
-		target.qty = target.amount / flt(obj.rate) if (flt(obj.rate) and flt(obj.billed_amt)) else flt(obj.qty)
+		target.qty = flt(obj.qty) - flt(obj.billed_qty) - flt(obj.returned_qty)
 
 		target.pallets_ordered = flt(obj.pallets)
 		target.qty_ordered = flt(obj.qty)
-
-		item = get_item_defaults(target.item_code, source_parent.company)
-		item_group = get_item_group_defaults(target.item_code, source_parent.company)
-		target.cost_center = (obj.cost_center
-			or frappe.db.get_value("Project", obj.project, "cost_center")
-			or item.get("buying_cost_center")
-			or item_group.get("buying_cost_center"))
 
 	doc = get_mapped_doc("Purchase Order", source_name,	{
 		"Purchase Order": {
@@ -444,7 +435,7 @@ def make_purchase_invoice(source_name, target_doc=None):
 				"parent": "purchase_order",
 			},
 			"postprocess": update_item,
-			"condition": lambda doc: (doc.base_amount==0 or abs(doc.billed_amt) < abs(doc.amount))
+			"condition": lambda doc: doc.qty and (abs(doc.billed_qty) < abs(doc.qty))
 		},
 		"Purchase Taxes and Charges": {
 			"doctype": "Purchase Taxes and Charges",
