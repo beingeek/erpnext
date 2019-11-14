@@ -6,10 +6,15 @@ frappe.query_reports["Qty Adjust"] = {
 	"filters": [
 		{
 			fieldname: "date",
-			label: __("Date"),
+			label: __("From Date"),
 			fieldtype: "Date",
 			default: frappe.datetime.get_today(),
 			reqd: 1
+		},
+		{
+			fieldname: "selected_to_date",
+			label: __("To Date"),
+			fieldtype: "Date",
 		},
 		{
 			fieldname: "item_code",
@@ -37,7 +42,8 @@ frappe.query_reports["Qty Adjust"] = {
 		};
 
 		if (data) {
-			if (['draft_so_qty', 'total_po_qty', 'actual_qty'].includes(column.fieldname)) {
+			if (['draft_so_qty', 'total_po_qty', 'actual_qty', 'total_selected_po_qty', 'total_selected_so_qty',
+					'total_available_qty', 'short_excess'].includes(column.fieldname)) {
 				options.css['font-weight'] = "bold";
 			}
 
@@ -50,6 +56,13 @@ frappe.query_reports["Qty Adjust"] = {
 			if (column.is_po_qty) {
 				options.link_href = encodeURI("desk#query-report/Purchase Order Items To Be Received" +
 					"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
+			}
+
+			if (column.fieldname == 'total_selected_so_qty' && flt(value) > 0) {
+				options.css['color'] = 'red';
+			}
+			if (column.fieldname == 'short_excess' && flt(value) < 0) {
+				options.css['color'] = 'red';
 			}
 		}
 
