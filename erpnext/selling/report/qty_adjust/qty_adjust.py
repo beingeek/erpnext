@@ -64,7 +64,7 @@ def get_data(filters):
 
 		for d in item_map.values():
 			d.total_available_qty = d.actual_qty + d.total_selected_po_qty
-			d.short_excess = d.total_available_qty + d.total_selected_so_qty
+			d.short_excess = d.total_available_qty - d.total_selected_so_qty
 
 	data = sorted(item_map.values(), key=lambda d: (d.total_so_qty, d.actual_qty), reverse=True)
 	return data

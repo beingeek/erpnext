@@ -15,6 +15,7 @@ frappe.query_reports["Qty Adjust"] = {
 			fieldname: "selected_to_date",
 			label: __("To Date"),
 			fieldtype: "Date",
+			default: frappe.datetime.add_days(frappe.datetime.get_today(), 1)
 		},
 		{
 			fieldname: "item_code",
