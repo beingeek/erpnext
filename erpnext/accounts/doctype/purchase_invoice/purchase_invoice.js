@@ -7,7 +7,7 @@ frappe.provide("erpnext.accounts");
 erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 	item_cost_and_revenue_fields: ["source_sales_revenue", "source_sales_qty", "source_actual_qty", "source_reconciled_qty",
 		"source_lcv_cost", "source_repack_qty", "repacked_sales_revenue", "repacked_sales_qty", "repacked_repack_qty",
-		"repacked_actual_qty", "repacked_reconciled_qty", "repacked_additional_cost", "batch_revenue"],
+		"repacked_actual_qty", "repacked_reconciled_qty", "repacked_additional_cost", "batch_revenue", "source_purchase_cost"],
 	calculated_item_cost_and_revenue_fields: ['source_batch_value', 'lc_rate', 'repacked_batch_value', 'repacked_cost_rate',
 		"batch_cogs", "gross_profit", "gross_profit_per_unit", "per_gross_profit"],
 	gp_link_fields: ['source_sales_revenue', 'source_sales_qty', 'repacked_sales_revenue', 'source_repack_qty',
@@ -67,7 +67,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		var has_permission = me.frm.fields_dict.total_gross_profit.disp_status;
 		has_permission = has_permission && has_permission != 'None';
 
-		if (me.frm.doc.docstatus < 2 && has_permission) {
+		if (me.frm.doc.docstatus < 2 && !me.frm.doc.is_return && has_permission) {
 			var batch_nos = [];
 			$.each(this.frm.doc.items || [], function(i, item) {
 				if(item.batch_no) {
@@ -79,7 +79,8 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 				return this.frm.call({
 					method: "erpnext.stock.report.batch_profitability.batch_profitability.get_batch_cost_and_revenue",
 					args: {
-						batch_nos: batch_nos
+						batch_nos: batch_nos,
+						exclude_pinv: me.frm.doc.__islocal ? null : me.frm.doc.name
 					},
 					freeze: true,
 					freeze_message: __("Loading Gross Profit..."),
@@ -116,7 +117,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		all_fields.push(...this.calculated_item_cost_and_revenue_fields);
 
 		var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
-		if(grid_row && grid_row.doc.batch_no) {
+		if(grid_row && grid_row.doc.batch_no && !me.frm.doc.is_return) {
 			$.each(all_fields, function (i, f) {
 				me.frm.doc['selected_' + f] = grid_row.doc[f];
 			});

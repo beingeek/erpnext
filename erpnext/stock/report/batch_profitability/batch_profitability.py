@@ -20,6 +20,7 @@ def execute(filters=None):
 	source_sinv_data = get_sinv_data(batch_nos)
 	source_lcv_data = get_lcv_data(batch_nos)
 	source_prec_data = get_prec_data(batch_nos)
+	source_pinv_data = get_pinv_data(batch_nos)
 	source_reco_data = get_reco_data(batch_nos)
 
 	target_repack_data, target_raw_material_data, source_consumed_qty, repacked_batch_nos, target_batch_source_contribution = get_repack_entry_data(batch_nos)
@@ -44,8 +45,12 @@ def execute(filters=None):
 	out += target_sinv_data
 	out.append({})
 
-	out.append(get_total(source_prec_data, "Purchase Receipts"))
+	out.append(get_total(source_prec_data, "Unbilled Purchase Receipts"))
 	out += source_prec_data
+	out.append({})
+
+	out.append(get_total(source_pinv_data, "Purchase Invoices"))
+	out += source_pinv_data
 	out.append({})
 
 	out.append(get_total(source_lcv_data, "Landed Costs"))
@@ -94,6 +99,20 @@ def apply_source_repack_contribution(data, source_batch, target_batch_source_con
 		if d.cost is not None:
 			d.cost = d.cost * d.repack_contribution / 100
 
+def get_pinv_data(batch_nos, exclude_pinv=None):
+	if batch_nos:
+		exclude_pinv_cond = " and inv.name != '{0}'".format(frappe.db.escape(exclude_pinv)) if exclude_pinv else ""
+
+		return frappe.db.sql("""
+			select 'Purchase Invoice' as doctype, 'Supplier' as party_type, inv.supplier as party,
+				inv.name, item.item_code, item.batch_no, item.stock_qty as qty, item.stock_uom as uom,
+				item.base_net_amount as cost, item.base_net_rate * item.conversion_factor as rate, inv.update_stock
+			from `tabPurchase Invoice Item` item, `tabPurchase Invoice` inv
+			where inv.name = item.parent and inv.docstatus = 1 and item.batch_no in ({0}) {1}
+		""".format(", ".join(['%s'] * len(batch_nos)), exclude_pinv_cond), batch_nos, as_dict=1)
+	else:
+		return []
+
 def get_sinv_data(batch_nos):
 	if batch_nos:
 		return frappe.db.sql("""
@@ -124,9 +143,10 @@ def get_prec_data(batch_nos):
 		return frappe.db.sql("""
 			select 'Purchase Receipt' as doctype, 'Supplier' as party_type, prec.supplier as party, 1 as update_stock,
 				prec.name, item.item_code, item.batch_no, item.stock_qty as qty, item.stock_uom as uom,
-				item.base_net_amount as cost, item.base_net_rate * item.conversion_factor as rate
+				item.base_net_amount as cost, item.base_net_rate * item.conversion_factor as rate,
+				(item.qty - item.billed_qty) / item.qty * 100 as unbilled
 			from `tabPurchase Receipt Item` item, `tabPurchase Receipt` prec
-			where prec.name = item.parent and prec.docstatus = 1 and item.batch_no in ({0})
+			where prec.name = item.parent and prec.docstatus = 1 and item.billed_qty < item.qty and item.batch_no in ({0})
 		""".format(", ".join(['%s'] * len(batch_nos))), batch_nos, as_dict=1)
 	else:
 		return []
@@ -231,7 +251,7 @@ def get_repack_entry_data(batch_nos):
 
 
 @frappe.whitelist()
-def get_batch_cost_and_revenue(batch_nos):
+def get_batch_cost_and_revenue(batch_nos, exclude_pinv=None):
 	if isinstance(batch_nos, string_types):
 		batch_nos = json.loads(batch_nos)
 	batch_nos = list(set(batch_nos))
@@ -244,12 +264,13 @@ def get_batch_cost_and_revenue(batch_nos):
 	for batch_no in batch_nos:
 		out[batch_no] = frappe._dict({
 			"source_sales_revenue": 0, "source_sales_qty": 0, "source_actual_qty": 0, "source_reconciled_qty": 0,
-			"source_lcv_cost": 0, "source_repack_qty": 0,
+			"source_lcv_cost": 0, "source_repack_qty": 0, "source_purchase_cost": 0,
 			"repacked_sales_revenue": 0, "repacked_sales_qty": 0, "repacked_repack_qty": 0, "repacked_actual_qty": 0,
 			"repacked_reconciled_qty": 0, "repacked_additional_cost": 0,
 			"batch_revenue": 0,
 		})
 
+	source_pinv_data = get_pinv_data(batch_nos, exclude_pinv)
 	source_sinv_data = get_sinv_data(batch_nos)
 	source_lcv_data = get_lcv_data(batch_nos)
 	target_repack_data, target_raw_material_data, source_consumed_qty, repacked_batch_nos, target_batch_source_contribution = get_repack_entry_data(batch_nos)
@@ -258,6 +279,9 @@ def get_batch_cost_and_revenue(batch_nos):
 	target_reco_data = get_reco_data(repacked_batch_nos)
 	source_actual_qty = get_batch_actual_qty(batch_nos)
 	target_actual_qty = get_batch_actual_qty(repacked_batch_nos)
+
+	for d in source_pinv_data:
+		out[d.batch_no].source_purchase_cost += d.cost
 
 	for d in source_sinv_data:
 		out[d.batch_no].source_sales_revenue += d.revenue
@@ -316,7 +340,7 @@ def get_columns(filters):
 			"label": _("Document Type"),
 			"fieldname": "doctype",
 			"fieldtype": "Data",
-			"width": 180
+			"width": 190
 		},
 		{
 			"label": _("Document No"),
@@ -378,8 +402,14 @@ def get_columns(filters):
 			"width": 100
 		},
 		{
-			"label": _("Contribution"),
+			"label": _("% Contribution"),
 			"fieldname": "repack_contribution",
+			"fieldtype": "Percent",
+			"width": 100
+		},
+		{
+			"label": _("% Unbilled"),
+			"fieldname": "unbilled",
 			"fieldtype": "Percent",
 			"width": 100
 		},

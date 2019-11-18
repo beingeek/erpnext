@@ -636,27 +636,29 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 		this.frm.doc.total_cogs = 0;
 
 		var me = this;
-		$.each(this.frm.doc.items || [], function (i, item) {
-			item.source_batch_value = flt(item.base_net_amount) + flt(item.source_lcv_cost);
-			item.lc_rate = item.stock_qty ? flt(item.source_batch_value) / flt(item.stock_qty) : 0;
+		if (!this.frm.doc.is_return) {
+			$.each(this.frm.doc.items || [], function (i, item) {
+				item.source_batch_value = flt(item.source_purchase_cost) + flt(item.base_net_amount) + flt(item.source_lcv_cost);
+				item.lc_rate = item.stock_qty ? flt(item.source_batch_value) / flt(item.stock_qty) : 0;
 
-			item.repacked_batch_value = flt(item.lc_rate) * flt(item.source_repack_qty) + flt(item.repacked_additional_cost);
-			item.repacked_cost_rate = item.repacked_repack_qty ? flt(item.repacked_batch_value) / flt(item.repacked_repack_qty) : 0;
+				item.repacked_batch_value = flt(item.lc_rate) * flt(item.source_repack_qty) + flt(item.repacked_additional_cost);
+				item.repacked_cost_rate = item.repacked_repack_qty ? flt(item.repacked_batch_value) / flt(item.repacked_repack_qty) : 0;
 
-			item.batch_cogs = flt(item.lc_rate) * (flt(item.source_sales_qty) - flt(item.source_reconciled_qty));
-			item.batch_cogs += flt(item.repacked_cost_rate) * (flt(item.repacked_sales_qty) - flt(item.repacked_reconciled_qty));
+				item.batch_cogs = flt(item.lc_rate) * (flt(item.source_sales_qty) - flt(item.source_reconciled_qty));
+				item.batch_cogs += flt(item.repacked_cost_rate) * (flt(item.repacked_sales_qty) - flt(item.repacked_reconciled_qty));
 
-			item.gross_profit = flt(item.batch_revenue) - flt(item.batch_cogs);
-			item.per_gross_profit = item.batch_revenue ? flt(item.gross_profit) / flt(item.batch_revenue) * 100 : 0;
+				item.gross_profit = flt(item.batch_revenue) - flt(item.batch_cogs);
+				item.per_gross_profit = item.batch_revenue ? flt(item.gross_profit) / flt(item.batch_revenue) * 100 : 0;
 
-			item.repack_conversion_factor = item.repacked_repack_qty ? flt(item.source_repack_qty) / flt(item.repacked_repack_qty) : 0;
-			item.qty_used_for_gp = flt(item.source_sales_qty) - flt(item.source_reconciled_qty);
-			item.qty_used_for_gp += (flt(item.repacked_sales_qty) - flt(item.repacked_reconciled_qty)) * item.repack_conversion_factor;
-			item.gross_profit_per_unit = item.gross_profit / item.qty_used_for_gp;
+				item.repack_conversion_factor = item.repacked_repack_qty ? flt(item.source_repack_qty) / flt(item.repacked_repack_qty) : 0;
+				item.qty_used_for_gp = flt(item.source_sales_qty) - flt(item.source_reconciled_qty);
+				item.qty_used_for_gp += (flt(item.repacked_sales_qty) - flt(item.repacked_reconciled_qty)) * item.repack_conversion_factor;
+				item.gross_profit_per_unit = item.gross_profit / item.qty_used_for_gp;
 
-			me.frm.doc.total_revenue += item.batch_revenue;
-			me.frm.doc.total_cogs += item.batch_cogs;
-		});
+				me.frm.doc.total_revenue += item.batch_revenue;
+				me.frm.doc.total_cogs += item.batch_cogs;
+			});
+		}
 
 		this.frm.doc.total_gross_profit = this.frm.doc.total_revenue - this.frm.doc.total_cogs;
 		this.frm.doc.per_gross_profit = this.frm.doc.total_revenue ? this.frm.doc.total_gross_profit / this.frm.doc.total_revenue * 100 : 0;
