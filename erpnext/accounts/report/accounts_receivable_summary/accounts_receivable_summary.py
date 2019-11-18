@@ -207,7 +207,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 		cols += ["invoiced_amt", "credit_amt", "paid_amt",
 		"outstanding_amt", "range1", "range2", "range3", "range4", "currency", "pdc/lc_ref",
-		"pdc/lc_amount"]
+		"pdc/lc_amount", "remaining_balance"]
 
 		if args.get("party_type") == "Supplier":
 			cols += ["supplier_group", "remarks"]
