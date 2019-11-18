@@ -50,6 +50,18 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		$.each(this.gp_link_fields, function (i, f) {
 			$(".control-value", me.frm.fields_dict['selected_' + f].$input_wrapper).wrap("<a href='#' target='_blank'></a>");
 		});
+
+		if (me.frm.doc.docstatus !== 0) {
+			me.frm.fields_dict.items.grid.wrapper.on('click', '.grid-row-check', function(e) {
+				var checked = me.frm.fields_dict.items.grid.grid_rows.filter(row => row.doc.__checked);
+				if (checked.length === 1) {
+					me.selected_item_dn = checked[0].doc.name;
+				} else {
+					me.selected_item_dn = null;
+				}
+				me.update_selected_item_fields();
+			});
+		}
 	},
 
 	validate: function(doc) {

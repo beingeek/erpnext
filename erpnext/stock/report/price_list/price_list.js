@@ -156,23 +156,23 @@ frappe.query_reports["Price List"] = {
 
 			var item_price_field = "item_price_" + frappe.scrub(column.price_list);
 			if (data.hasOwnProperty(item_price_field) && data[item_price_field]) {
-				options.link_href = "desk#Form/Item Price/" + data[item_price_field];
+				options.link_href = encodeURI("desk#Form/Item Price/" + data[item_price_field]);
 			}
 		}
 
 		if (column.fieldname == 'valuation_rate') {
-			options.link_href = "desk#query-report/Stock Ledger?item_code=" + data['item_code'];
+			options.link_href = encodeURI("desk#query-report/Stock Ledger?item_code=" + data['item_code']);
 		}
 
 		if (column.fieldname == "po_qty") {
 			var po_from_date = frappe.query_report.get_filter_value("po_from_date");
 			var po_to_date = frappe.query_report.get_filter_value("po_to_date");
-			options.link_href = "desk#query-report/Purchase Order Items To Be Received?item_code=" + data.item_code;
+			options.link_href = encodeURI("desk#query-report/Purchase Order Items To Be Received?item_code=" + data.item_code);
 			if(po_from_date) {
-				options.link_href += "&from_date=" + po_from_date
+				options.link_href += encodeURI("&from_date=" + po_from_date);
 			}
 			if(po_to_date) {
-				options.link_href += "&to_date=" + po_to_date
+				options.link_href += encodeURI("&to_date=" + po_to_date);
 			}
 		}
 

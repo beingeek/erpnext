@@ -163,7 +163,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 
 	customer_outstanding_amount: function() {
 		$("a", this.frm.fields_dict.customer_outstanding_amount.$input_wrapper)
-			.attr("href", "desk#query-report/Accounts Receivable/?customer=" + this.frm.doc.customer);
+			.attr("href", encodeURI("desk#query-report/Accounts Receivable/?customer=" + this.frm.doc.customer));
 
 		$("a", this.frm.fields_dict.customer_outstanding_amount.$input_wrapper).css("color",
 			this.frm.doc.customer_credit_limit && flt(this.frm.doc.customer_outstanding_amount) >= flt(this.frm.doc.customer_credit_limit) ? "red" : "inherit");

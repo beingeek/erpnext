@@ -24,6 +24,14 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 		credit_debit_label = "Credit Note Amt" if args.get('party_type') == 'Customer' else "Debit Note Amt"
 
+		if args.get("party_type") == "Customer":
+			columns += [{
+				"label": _("Sales Person"),
+				"fieldtype": "Data",
+				"fieldname": "sales_person",
+				"width": 120,
+			}]
+
 		columns += [{
 			"label": _("Advance Amount"),
 			"fieldname": "advance_amount",
@@ -104,12 +112,6 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 				"fieldtype": "Link",
 				"options": "Customer Group",
 				"width": 80
-			},
-			{
-				"label": _("Sales Person"),
-				"fieldtype": "Data",
-				"fieldname": "sales_person",
-				"width": 120,
 			}]
 
 		if args.get("party_type") == "Supplier":
@@ -144,6 +146,9 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			if party_naming_by == "Naming Series":
 				row += [self.get_party_name(args.get("party_type"), party)]
 
+			if args.get("party_type") == "Customer":
+				row.append(", ".join(set(party_dict.sales_person)))
+
 			row += [partywise_advance_amount.get(party, 0)]
 
 			paid_amt = 0
@@ -156,7 +161,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			]
 
 			if args.get("party_type") == "Customer":
-				row += [self.get_territory(party), self.get_customer_group(party), ", ".join(set(party_dict.sales_person))]
+				row += [self.get_territory(party), self.get_customer_group(party)]
 			if args.get("party_type") == "Supplier":
 				row += [self.get_supplier_group(party)]
 
