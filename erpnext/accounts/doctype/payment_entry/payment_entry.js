@@ -134,6 +134,21 @@ frappe.ui.form.on('Payment Entry', {
 		frm.events.set_dynamic_labels(frm);
 		frm.events.show_general_ledger(frm);
 		frm.events.unallocated_advance_payments(frm);
+
+		var company_currency = frappe.get_doc(":Company", frm.doc.company).default_currency;
+		if (frm.doc.docstatus == 1 && frm.doc.payment_type == "Internal Transfer" && frm.doc.paid_to_account_currency != company_currency) {
+			frm.add_custom_button(__('Create Currency Exchange'), function () {
+				var values = {
+					"to_currency": frm.doc.paid_to_account_currency,
+					"exchange_rate": frm.doc.target_exchange_rate,
+					"date": frm.doc.posting_date
+				};
+
+				frappe.new_doc("Currency Exchange", values, (dialog) => {
+					dialog.set_values(values);
+				});
+			});
+		}
 	},
 
 	company: function(frm) {
