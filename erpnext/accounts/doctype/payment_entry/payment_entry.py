@@ -299,6 +299,10 @@ class PaymentEntry(AccountsController):
 
 	def set_amounts_in_company_currency(self):
 		self.base_paid_amount, self.base_received_amount, self.difference_amount = 0, 0, 0
+
+		self.paid_amount = flt(self.paid_amount, self.precision('paid_amount'))
+		self.received_amount = flt(self.received_amount, self.precision('received_amount'))
+
 		if self.paid_amount:
 			self.base_paid_amount = flt(flt(self.paid_amount) * flt(self.source_exchange_rate),
 				self.precision("base_paid_amount"))

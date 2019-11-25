@@ -255,7 +255,7 @@ frappe.ui.form.on('Payment Entry', {
 	payment_type: function(frm) {
 		frm.events.set_dynamic_labels(frm);
 		if(frm.doc.payment_type == "Internal Transfer") {
-			$.each(["party", "party_balance", "paid_from", "paid_to",
+			$.each(["party_type", "party", "party_balance", "paid_from", "paid_to",
 				"references", "total_allocated_amount"], function(i, field) {
 				frm.set_value(field, null);
 			});
@@ -425,13 +425,10 @@ frappe.ui.form.on('Payment Entry', {
 			frm.set_value("source_exchange_rate", 1);
 		} else if (frm.doc.paid_from){
 			if (in_list(["Internal Transfer", "Pay"], frm.doc.payment_type)) {
-				var company_currency = frappe.get_doc(":Company", frm.doc.company).default_currency;
 				frappe.call({
-					method: "erpnext.setup.utils.get_exchange_rate",
+					method: "erpnext.accounts.doctype.journal_entry.journal_entry.get_average_exchange_rate",
 					args: {
-						from_currency: frm.doc.paid_from_account_currency,
-						to_currency: company_currency,
-						transaction_date: frm.doc.posting_date
+						account: frm.doc.paid_from
 					},
 					callback: function(r, rt) {
 						frm.set_value("source_exchange_rate", r.message);
@@ -555,7 +552,7 @@ frappe.ui.form.on('Payment Entry', {
 			{
 				if(frm.doc.target_exchange_rate)
 				{
-					frm.set_value("received_amount", flt(frm.doc.base_paid_amount/frm.doc.target_exchange_rate));
+					frm.set_value("received_amount", flt(frm.doc.base_paid_amount/frm.doc.target_exchange_rate), precision("received_amount"));
 				}
 			}
 			if(frm.doc.paid_from_account_currency == "USD" && frm.doc.paid_to_account_currency == "CAD")
