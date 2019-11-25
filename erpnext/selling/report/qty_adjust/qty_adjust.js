@@ -59,9 +59,6 @@ frappe.query_reports["Qty Adjust"] = {
 					"?item_code=" + data.item_code + "&from_date=" + column.from_date + "&to_date=" + column.to_date);
 			}
 
-			if (column.fieldname == 'total_selected_so_qty' && flt(value) > 0) {
-				options.css['color'] = 'red';
-			}
 			if (column.fieldname == 'short_excess' && flt(value) < 0) {
 				options.css['color'] = 'red';
 			}
