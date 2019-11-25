@@ -101,37 +101,24 @@ class ExchangeRateRevaluation(Document):
 
 		journal_entry_accounts = []
 		for d in self.accounts:
-			dr_or_cr = "debit_in_account_currency" \
-				if d.get("balance_in_account_currency") > 0 else "credit_in_account_currency"
-
-			reverse_dr_or_cr = "debit_in_account_currency" \
-				if dr_or_cr=="credit_in_account_currency" else "credit_in_account_currency"
-
 			journal_entry_accounts.append({
 				"account": d.get("account"),
 				"party_type": d.get("party_type"),
 				"party": d.get("party"),
 				"account_currency": d.get("account_currency"),
 				"balance": d.get("balance_in_account_currency"),
-				dr_or_cr: abs(d.get("balance_in_account_currency")),
-				"exchange_rate":d.get("new_exchange_rate"),
+				"debit_in_account_currency": 0,
+				"credit_in_account_currency": 0,
+				"debit": d.gain_loss if d.gain_loss > 0 else 0,
+				"credit": abs(d.gain_loss) if d.gain_loss < 0 else 0,
+				"exchange_rate": 1,
 				"reference_type": "Exchange Rate Revaluation",
 				"reference_name": self.name,
-				})
-			journal_entry_accounts.append({
-				"account": d.get("account"),
-				"party_type": d.get("party_type"),
-				"party": d.get("party"),
-				"account_currency": d.get("account_currency"),
-				"balance": d.get("balance_in_account_currency"),
-				reverse_dr_or_cr: abs(d.get("balance_in_account_currency")),
-				"exchange_rate": d.get("current_exchange_rate"),
-				"reference_type": "Exchange Rate Revaluation",
-				"reference_name": self.name
 				})
 
 		journal_entry_accounts.append({
 			"account": unrealized_exchange_gain_loss_account,
+			"account_currency": frappe.get_cached_value("Account", unrealized_exchange_gain_loss_account, "account_currency"),
 			"balance": get_balance_on(unrealized_exchange_gain_loss_account),
 			"debit_in_account_currency": abs(self.total_gain_loss) if self.total_gain_loss < 0 else 0,
 			"credit_in_account_currency": self.total_gain_loss if self.total_gain_loss > 0 else 0,

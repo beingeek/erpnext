@@ -121,6 +121,18 @@ frappe.ui.form.on("Journal Entry", {
 });
 
 erpnext.accounts.JournalEntry = frappe.ui.form.Controller.extend({
+	setup: function() {
+		$(this.frm.wrapper).on('grid-row-render', function(e, grid_row) {
+			if(grid_row.doc.doctype == "Journal Entry Account") {
+				erpnext.journal_entry.toggle_editing_company_currency(grid_row);
+			}
+		});
+	},
+
+	accounts_on_form_rendered: function() {
+		erpnext.journal_entry.toggle_editing_company_currency(this.frm.open_grid_row());
+	},
+
 	onload: function() {
 		this.load_defaults();
 		this.setup_queries();
@@ -129,6 +141,10 @@ erpnext.accounts.JournalEntry = frappe.ui.form.Controller.extend({
 
 	onload_post_render: function() {
 		cur_frm.get_field("accounts").grid.set_multiple_add("account");
+
+		$.each(cur_frm.fields_dict.accounts.grid.grid_rows || [], function (i, grid_row) {
+			erpnext.journal_entry.toggle_editing_company_currency(grid_row);
+		});
 	},
 
 	load_defaults: function() {
@@ -425,6 +441,10 @@ cur_frm.cscript.voucher_type = function(doc, cdt, cdn) {
 			})
 		}
 	}
+
+	$.each(cur_frm.fields_dict.accounts.grid.grid_rows || [], function (i, grid_row) {
+		erpnext.journal_entry.toggle_editing_company_currency(grid_row);
+	});
 }
 
 frappe.ui.form.on("Journal Entry Account", {
@@ -508,14 +528,32 @@ $.extend(erpnext.journal_entry, {
 		})
 	},
 
+	toggle_editing_company_currency: function(grid_row) {
+		var company_currency = frappe.get_doc(":Company", cur_frm.doc.company).default_currency;
+		var company_currency_editable = cur_frm.doc.voucher_type == "Exchange Rate Revaluation" && grid_row.doc.account_currency != company_currency;
+
+		grid_row.toggle_editable("debit", company_currency_editable);
+		grid_row.toggle_editable("credit", company_currency_editable);
+		grid_row.toggle_editable("debit_in_account_currency", !company_currency_editable);
+		grid_row.toggle_editable("credit_in_account_currency", !company_currency_editable);
+	},
+
 	set_debit_credit_in_company_currency: function(frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
+		var company_currency = frappe.get_doc(":Company", frm.doc.company).default_currency;
 
-		frappe.model.set_value(cdt, cdn, "debit",
-			flt(flt(row.debit_in_account_currency)*row.exchange_rate, precision("debit", row)));
+		if (frm.doc.voucher_type == "Exchange Rate Revaluation" && row.account_currency != company_currency) {
+			row.debit_in_account_currency = 0;
+			row.credit_in_account_currency = 0;
+			row.exchange_rate = 1;
+			frm.fields_dict.accounts.grid.refresh_row(cdn);
+		} else {
+			frappe.model.set_value(cdt, cdn, "debit",
+				flt(flt(row.debit_in_account_currency) * row.exchange_rate, precision("debit", row)));
 
-		frappe.model.set_value(cdt, cdn, "credit",
-			flt(flt(row.credit_in_account_currency)*row.exchange_rate, precision("credit", row)));
+			frappe.model.set_value(cdt, cdn, "credit",
+				flt(flt(row.credit_in_account_currency) * row.exchange_rate, precision("credit", row)));
+		}
 
 		cur_frm.cscript.update_totals(frm.doc);
 	},

@@ -385,11 +385,16 @@ class JournalEntry(AccountsController):
 
 	def set_amounts_in_company_currency(self):
 		for d in self.get("accounts"):
-			d.debit_in_account_currency = flt(d.debit_in_account_currency, d.precision("debit_in_account_currency"))
-			d.credit_in_account_currency = flt(d.credit_in_account_currency, d.precision("credit_in_account_currency"))
+			if self.voucher_type == 'Exchange Rate Revaluation' and d.account_currency != self.company_currency:
+				d.debit_in_account_currency = 0
+				d.credit_in_account_currency = 0
+				d.exchange_rate = 1
+			else:
+				d.debit_in_account_currency = flt(d.debit_in_account_currency, d.precision("debit_in_account_currency"))
+				d.credit_in_account_currency = flt(d.credit_in_account_currency, d.precision("credit_in_account_currency"))
 
-			d.debit = flt(d.debit_in_account_currency * flt(d.exchange_rate), d.precision("debit"))
-			d.credit = flt(d.credit_in_account_currency * flt(d.exchange_rate), d.precision("credit"))
+				d.debit = flt(d.debit_in_account_currency * flt(d.exchange_rate), d.precision("debit"))
+				d.credit = flt(d.credit_in_account_currency * flt(d.exchange_rate), d.precision("credit"))
 
 	def set_exchange_rate(self):
 		for d in self.get("accounts"):
