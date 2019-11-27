@@ -13,6 +13,17 @@ from erpnext.accounts.doctype.journal_entry.journal_entry import get_balance_on
 
 class ExchangeRateRevaluation(Document):
 	def validate(self):
+		self.validate_mandatory()
+		self.update_accounts_data()
+
+	def validate_mandatory(self):
+		if not (self.company and self.posting_date):
+			frappe.throw(_("Please select Company and Posting Date to getting entries"))
+
+	def update_accounts_data(self):
+		for d in self.accounts:
+			d.update(get_account_details(d.account, self.company, self.posting_date, d.party_type, d.party))
+
 		self.set_total_gain_loss()
 
 	def set_total_gain_loss(self):
@@ -22,10 +33,6 @@ class ExchangeRateRevaluation(Document):
 				- flt(d.balance_in_base_currency, d.precision("balance_in_base_currency"))
 			total_gain_loss += flt(d.gain_loss, d.precision("gain_loss"))
 		self.total_gain_loss = flt(total_gain_loss, self.precision("total_gain_loss"))
-	
-	def validate_mandatory(self):
-		if not (self.company and self.posting_date):
-			frappe.throw(_("Please select Company and Posting Date to getting entries"))
 
 	def get_accounts_data(self, account=None):
 		accounts = []
@@ -33,8 +40,8 @@ class ExchangeRateRevaluation(Document):
 		company_currency = erpnext.get_company_currency(self.company)
 		precision = get_field_precision(frappe.get_meta("Exchange Rate Revaluation Account")
 			.get_field("new_balance_in_base_currency"), company_currency)
+
 		for d in self.get_accounts_from_gle():
-			
 			current_exchange_rate = d.balance / d.balance_in_account_currency \
 				if d.balance_in_account_currency else 0
 			new_exchange_rate = get_exchange_rate(d.account_currency, company_currency, self.posting_date)
@@ -141,9 +148,9 @@ def get_account_details(account, company, posting_date, party_type=None, party=N
 
 	account_details = {}
 	company_currency = erpnext.get_company_currency(company)
-	balance = get_balance_on(account, party_type=party_type, party=party, in_account_currency=False)
+	balance = get_balance_on(account, date=posting_date, party_type=party_type, party=party, in_account_currency=False)
 	if balance:
-		balance_in_account_currency = get_balance_on(account, party_type=party_type, party=party)
+		balance_in_account_currency = get_balance_on(account, date=posting_date, party_type=party_type, party=party)
 		current_exchange_rate = balance / balance_in_account_currency if balance_in_account_currency else 0
 		new_exchange_rate = get_exchange_rate(account_currency, company_currency, posting_date)
 		new_balance_in_base_currency = balance_in_account_currency * new_exchange_rate

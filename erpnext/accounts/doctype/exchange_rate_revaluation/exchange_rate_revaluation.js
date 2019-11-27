@@ -46,6 +46,16 @@ frappe.ui.form.on('Exchange Rate Revaluation', {
 		});
 	},
 
+	posting_date: function(frm) {
+		frappe.call({
+			method: "update_accounts_data",
+			doc: cur_frm.doc,
+			callback: function(r){
+				frm.refresh_fields();
+			}
+		});
+	},
+
 	get_total_gain_loss: function(frm) {
 		if(!(frm.doc.accounts && frm.doc.accounts.length)) return;
 
