@@ -22,7 +22,7 @@ class ExchangeRateRevaluation(Document):
 
 	def update_accounts_data(self):
 		for d in self.accounts:
-			d.update(get_account_details(d.account, self.company, self.posting_date, d.party_type, d.party))
+			d.update(get_account_details(d.account, self.company, self.posting_date, d.party_type, d.party, d.new_exchange_rate))
 
 		self.set_total_gain_loss()
 
@@ -140,7 +140,7 @@ class ExchangeRateRevaluation(Document):
 		return journal_entry.as_dict()
 
 @frappe.whitelist()
-def get_account_details(account, company, posting_date, party_type=None, party=None):
+def get_account_details(account, company, posting_date, party_type=None, party=None, new_exchange_rate=None):
 	account_currency, account_type = frappe.db.get_value("Account", account,
 		["account_currency", "account_type"])
 	if account_type in ["Receivable", "Payable"] and not (party_type and party):
@@ -152,7 +152,10 @@ def get_account_details(account, company, posting_date, party_type=None, party=N
 	if balance:
 		balance_in_account_currency = get_balance_on(account, date=posting_date, party_type=party_type, party=party)
 		current_exchange_rate = balance / balance_in_account_currency if balance_in_account_currency else 0
-		new_exchange_rate = get_exchange_rate(account_currency, company_currency, posting_date)
+
+		new_exchange_rate = flt(new_exchange_rate)
+		if not new_exchange_rate:
+			new_exchange_rate = get_exchange_rate(account_currency, company_currency, posting_date)
 		new_balance_in_base_currency = balance_in_account_currency * new_exchange_rate
 		account_details = {
 			"account_currency": account_currency,
