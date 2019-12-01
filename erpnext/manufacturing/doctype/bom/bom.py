@@ -9,6 +9,7 @@ from erpnext.setup.utils import get_exchange_rate
 from frappe.website.website_generator import WebsiteGenerator
 from erpnext.stock.get_item_details import get_conversion_factor
 from erpnext.stock.get_item_details import get_price_list_rate
+from erpnext.stock.doctype.item.item import convert_item_uom_for
 
 import functools
 
@@ -174,9 +175,13 @@ class BOM(WebsiteGenerator):
 			else:
 				if self.rm_cost_as_per == 'Valuation Rate':
 					rate = self.get_valuation_rate(arg)
+					rate = convert_item_uom_for(value=rate, item_code=arg.get("item_code"),
+						from_uom=arg.get("stock_uom"), to_uom=arg.get("uom"), conversion_factor=arg.get("conversion_factor") or 1)
 				elif self.rm_cost_as_per == 'Last Purchase Rate':
 					rate = arg.get('last_purchase_rate') \
 						or frappe.db.get_value("Item", arg['item_code'], "last_purchase_rate")
+					rate = convert_item_uom_for(value=rate, item_code=arg.get("item_code"),
+						from_uom=arg.get("stock_uom"), to_uom=arg.get("uom"), conversion_factor=arg.get("conversion_factor") or 1)
 				elif self.rm_cost_as_per == "Price List":
 					if not self.buying_price_list:
 						frappe.throw(_("Please select Price List"))
