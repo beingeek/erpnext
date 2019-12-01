@@ -98,10 +98,16 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 					freeze_message: __("Loading Gross Profit..."),
 					callback: function(r) {
 						if(!r.exc) {
-							$.each(me.frm.doc.items || [], function(i, item) {
+							$.each(me.frm.doc.items || [], function (i, item) {
 								me.set_item_cost_and_revenue(item, r.message[item.batch_no]);
 							});
-							me.calculate_taxes_and_totals();
+
+							if (me.frm.doc.docstatus == 1) {
+								me.calculate_gross_profit();
+								me.frm.refresh_fields();
+							} else {
+								me.calculate_taxes_and_totals();
+							}
 						}
 					}
 				});
