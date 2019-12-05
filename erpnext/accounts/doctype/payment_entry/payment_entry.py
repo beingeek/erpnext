@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe, erpnext, json
 from frappe import _, scrub, ValidationError
 from frappe.utils import flt, comma_or, nowdate, getdate
-from erpnext.accounts.utils import get_outstanding_invoices, get_account_currency, get_balance_on, get_balance_on_voucher,\
+from erpnext.accounts.utils import get_outstanding_invoices, get_account_currency, get_balance_on, get_balance_on_voucher, \
 	get_allow_cost_center_in_entry_of_bs_account
 from erpnext.accounts.party import get_party_account
 from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account, \
@@ -111,8 +111,15 @@ class PaymentEntry(AccountsController):
 
 	def validate_allocated_amount(self):
 		for d in self.get("references"):
-			if flt(d.allocated_amount) > flt(d.outstanding_amount) \
-					or (flt(d.outstanding_amount) < 0 and flt(d.allocated_amount, d.precision('outstanding_amount')) < flt(d.outstanding_amount, d.precision('outstanding_amount'))):
+			invalid = False
+			if flt(d.outstanding_amount) >= 0:
+				if flt(d.allocated_amount) > flt(d.outstanding_amount):
+					invalid = True
+			else:
+				if flt(d.allocated_amount) < flt(d.outstanding_amount):
+					invalid = True
+
+			if invalid:
 				frappe.throw(_("Row #{0}: Allocated Amount of {1} against {2} is greater than its Outstanding Amount {3}.")
 					.format(d.idx, flt(d.allocated_amount), d.reference_name, flt(d.outstanding_amount)))
 
@@ -280,7 +287,11 @@ class PaymentEntry(AccountsController):
 			frappe.throw(_("Row #{0}: Journal Entry {1} does not have account {2} or is already matched against a voucher")
 				.format(d.idx, d.reference_name, self.party_account))
 		else:
-			dr_or_cr = "debit" if self.payment_type == "Receive" else "credit"
+			if self.payment_type == "Receive":
+				dr_or_cr = "debit" if d.allocated_amount >= 0 else "credit"
+			else:
+				dr_or_cr = "credit" if d.allocated_amount >= 0 else "debit"
+
 			valid = False
 			for jvd in je_accounts:
 				if flt(jvd[dr_or_cr]) > 0:
