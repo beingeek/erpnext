@@ -235,6 +235,24 @@ def repost_all_stock_vouchers():
 	frappe.flags.do_not_update_reserved_qty = 1
 	frappe.db.auto_commit_on_many_writes = 1
 
+	print("Updating Purchase Valuation Rates")
+	precs = frappe.db.sql("select 'Purchase Receipt' as doctype, name from `tabPurchase Receipt` where docstatus=1")
+	pinvs = frappe.db.sql("select 'Purchase Invoice' as doctype, name from `tabPurchase Invoice` where docstatus=1")
+	for doctype, name in precs + pinvs:
+		doc = frappe.get_doc(doctype, name)
+
+		if doc.doctype == "Purchase Receipt":
+			doc.set_billed_valuation_amounts()
+			doc.set_landed_cost_voucher_amount()
+		doc.update_valuation_rate("items")
+
+		doc.db_update()
+		doc.clear_cache()
+	frappe.db.commit()
+
+	print("Updating Stock Entry Additional Cost Account to 5111 - Stock Entry additional Expenses - SP")
+	frappe.db.sql("update `tabStock Entry` set additional_cost_account = '5111 - Stock Entry additional Expenses - SP'")
+
 	print("Enabling Allow Negative Stock")
 	existing_allow_negative_stock = frappe.db.get_value("Stock Settings", None, "allow_negative_stock")
 	frappe.db.set_value("Stock Settings", None, "allow_negative_stock", 1)
