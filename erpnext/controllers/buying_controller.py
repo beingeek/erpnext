@@ -487,7 +487,8 @@ class BuyingController(StockController):
 					frappe.get_meta(item_row.doctype).get_label(fieldname), item_row['item_code'])))
 
 	def update_stock_ledger(self, allow_negative_stock=False, via_landed_cost_voucher=False):
-		self.update_ordered_and_reserved_qty()
+		if not frappe.flags.do_not_update_reserved_qty:
+			self.update_ordered_and_reserved_qty()
 
 		sl_entries = []
 		stock_items = self.get_stock_items()
@@ -502,19 +503,20 @@ class BuyingController(StockController):
 						"serial_no": cstr(d.serial_no).strip()
 					})
 					if self.is_return:
-						pass
-						'''if d.get('purchase_receipt'):
-							original_incoming_rate = frappe.db.get_value("Stock Ledger Entry",
-								{"voucher_type": "Purchase Receipt", "voucher_no": d.purchase_receipt,
+						if frappe.flags.purchase_return_set_outgoing_rate:
+							original_incoming_rate = 0
+							if d.get('purchase_receipt'):
+								original_incoming_rate = frappe.db.get_value("Stock Ledger Entry",
+									{"voucher_type": "Purchase Receipt", "voucher_no": d.purchase_receipt,
+										"item_code": d.item_code}, "incoming_rate")
+							elif self.return_against:
+								original_incoming_rate = frappe.db.get_value("Stock Ledger Entry",
+									{"voucher_type": self.doctype, "voucher_no": self.return_against,
 									"item_code": d.item_code}, "incoming_rate")
-						else:
-							original_incoming_rate = frappe.db.get_value("Stock Ledger Entry",
-								{"voucher_type": self.doctype, "voucher_no": self.return_against,
-								"item_code": d.item_code}, "incoming_rate
 
-						sle.update({
-							"outgoing_rate": original_incoming_rate
-						})'''
+							sle.update({
+								"outgoing_rate": original_incoming_rate
+							})
 					else:
 						val_rate_db_precision = 6 if cint(self.precision("valuation_rate", d)) <= 6 else 9
 						incoming_rate = flt(d.valuation_rate, val_rate_db_precision)
@@ -549,7 +551,7 @@ class BuyingController(StockController):
 			if po and po_item_rows:
 				po_obj = frappe.get_doc("Purchase Order", po)
 
-				if po_obj.status in ["Closed", "Cancelled"]:
+				if po_obj.status in ["Closed", "Cancelled"] and not frappe.flags.ignored_closed_or_disabled:
 					frappe.throw(_("{0} {1} is cancelled or closed").format(_("Purchase Order"), po),
 						frappe.InvalidStatusError)
 

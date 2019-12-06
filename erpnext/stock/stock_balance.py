@@ -228,28 +228,41 @@ def reset_serial_no_status_and_warehouse(serial_nos=None):
 				pass
 
 def repost_all_stock_vouchers():
-	warehouses_with_account = frappe.db.sql_list("""select warehouse from tabAccount
-		where ifnull(account_type, '') = 'Stock' and (warehouse is not null and warehouse != '')
-		and is_group=0""")
+	import datetime
 
+	frappe.flags.purchase_return_set_outgoing_rate = 1
+	frappe.flags.ignored_closed_or_disabled = 1
+	frappe.flags.do_not_update_reserved_qty = 1
+	frappe.db.auto_commit_on_many_writes = 1
+
+	print("Enabling Allow Negative Stock")
+	existing_allow_negative_stock = frappe.db.get_value("Stock Settings", None, "allow_negative_stock")
+	frappe.db.set_value("Stock Settings", None, "allow_negative_stock", 1)
+
+	print("Getting Stock Vouchers List")
 	vouchers = frappe.db.sql("""select distinct voucher_type, voucher_no
 		from `tabStock Ledger Entry` sle
-		where voucher_type != "Serial No" and sle.warehouse in (%s)
-		order by posting_date, posting_time, name""" %
-		', '.join(['%s']*len(warehouses_with_account)), tuple(warehouses_with_account))
+		order by posting_date, posting_time, name""")
+
+	print("Deleting SLEs")
+	frappe.db.sql("delete from `tabStock Ledger Entry`")
+
+	print("Deleting GLEs")
+	for voucher_type, voucher_no in vouchers:
+		frappe.db.sql("""delete from `tabGL Entry` where voucher_type=%s and voucher_no=%s""", (voucher_type, voucher_no))
+	print()
+
+	frappe.db.commit()
+
+	start_time = datetime.datetime.now()
+	print("Starting at: {0}".format(start_time))
 
 	rejected = []
 	i = 0
 	for voucher_type, voucher_no in vouchers:
-		i+=1
-		print(i, "/", len(vouchers), voucher_type, voucher_no)
 		try:
-			for dt in ["Stock Ledger Entry", "GL Entry"]:
-				frappe.db.sql("""delete from `tab%s` where voucher_type=%s and voucher_no=%s"""%
-					(dt, '%s', '%s'), (voucher_type, voucher_no))
-
 			doc = frappe.get_doc(voucher_type, voucher_no)
-			if voucher_type=="Stock Entry" and doc.purpose in ["Manufacture", "Repack"]:
+			if voucher_type == "Stock Entry" and doc.purpose in ["Manufacture", "Repack"]:
 				doc.calculate_rate_and_amount(force=1)
 			elif voucher_type=="Purchase Receipt" and doc.is_subcontracted == "Yes":
 				doc.validate()
@@ -257,9 +270,23 @@ def repost_all_stock_vouchers():
 			doc.update_stock_ledger()
 			doc.make_gl_entries(repost_future_gle=False)
 			frappe.db.commit()
+			doc.clear_cache()
+
+			i += 1
+			now_time = datetime.datetime.now()
+			total_duration = now_time - start_time
+			repost_rate = flt(i) / total_duration.seconds if total_duration.seconds else "Inf"
+			remaining_duration = datetime.timedelta(seconds=(len(vouchers) - i) / flt(repost_rate)) if flt(repost_rate) else "N/A"
+			print("{0} / {1}: Elapsed Time: {4} | Rate: {5:.2f} Vouchers/Sec | ETA: {6} | {2} {3}".format(i, len(vouchers), voucher_type, voucher_no,
+				total_duration, flt(repost_rate), remaining_duration))
 		except Exception:
 			print(frappe.get_traceback())
 			rejected.append([voucher_type, voucher_no])
 			frappe.db.rollback()
+			raise
 
 	print(rejected)
+
+	frappe.db.set_value("Stock Settings", None, "allow_negative_stock", existing_allow_negative_stock)
+	frappe.db.commit()
+	frappe.db.auto_commit_on_many_writes = 0
