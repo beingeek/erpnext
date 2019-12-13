@@ -30,6 +30,7 @@ class calculate_taxes_and_totals(object):
 
 	def _calculate(self):
 		self.validate_conversion_rate()
+		self.set_qty_as_per_stock_uom()
 		self.calculate_item_values()
 		self.initialize_taxes()
 		self.determine_exclusive_rate()
@@ -52,6 +53,11 @@ class calculate_taxes_and_totals(object):
 				self.doc.meta.get_label("conversion_rate"), self.doc.company)
 
 		self.doc.conversion_rate = flt(self.doc.conversion_rate)
+
+	def set_qty_as_per_stock_uom(self):
+		for d in self.doc.get("items"):
+			if d.meta.get_field("stock_qty"):
+				d.stock_qty = flt(d.qty) * flt(d.conversion_factor)
 
 	def calculate_item_values(self):
 		if not self.discount_amount_applied:
