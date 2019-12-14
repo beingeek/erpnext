@@ -229,53 +229,58 @@ def reset_serial_no_status_and_warehouse(serial_nos=None):
 
 def repost_all_stock_vouchers():
 	import datetime
+	import os
+	import json
 
 	frappe.flags.purchase_return_set_outgoing_rate = 1
 	frappe.flags.ignored_closed_or_disabled = 1
 	frappe.flags.do_not_update_reserved_qty = 1
 	frappe.db.auto_commit_on_many_writes = 1
 
-	print("Updating Purchase Valuation Rates")
-	precs = frappe.db.sql("select 'Purchase Receipt' as doctype, name from `tabPurchase Receipt` where docstatus=1")
-	pinvs = frappe.db.sql("select 'Purchase Invoice' as doctype, name from `tabPurchase Invoice` where docstatus=1")
-	for doctype, name in precs + pinvs:
-		doc = frappe.get_doc(doctype, name)
-
-		if doc.doctype == "Purchase Receipt":
-			doc.set_billed_valuation_amounts()
-			doc.set_landed_cost_voucher_amount()
-		doc.update_valuation_rate("items")
-
-		doc.db_update()
-		doc.clear_cache()
-	frappe.db.commit()
-
-	print("Updating Stock Entry Additional Cost Account to 5111 - Stock Entry additional Expenses - SP")
-	frappe.db.sql("update `tabStock Entry` set additional_cost_account = '5111 - Stock Entry additional Expenses - SP'")
-
 	print("Enabling Allow Negative Stock")
-	existing_allow_negative_stock = frappe.db.get_value("Stock Settings", None, "allow_negative_stock")
 	frappe.db.set_value("Stock Settings", None, "allow_negative_stock", 1)
 
-	print("Getting Stock Vouchers List")
-	vouchers = frappe.db.sql("""select distinct voucher_type, voucher_no
-		from `tabStock Ledger Entry` sle
-		order by posting_date, posting_time, name""")
+	filename = "repost_all_stock_vouchers_checkpoint.json"
+	if not os.path.isfile(filename):
+		print("Updating Purchase Valuation Rates")
+		precs = frappe.db.sql("select 'Purchase Receipt' as doctype, name from `tabPurchase Receipt` where docstatus=1")
+		pinvs = frappe.db.sql("select 'Purchase Invoice' as doctype, name from `tabPurchase Invoice` where docstatus=1")
+		for doctype, name in precs + pinvs:
+			doc = frappe.get_doc(doctype, name)
 
-	print("Deleting SLEs")
-	frappe.db.sql("delete from `tabStock Ledger Entry`")
+			if doc.doctype == "Purchase Receipt":
+				doc.set_billed_valuation_amounts()
+				doc.set_landed_cost_voucher_amount()
+			doc.update_valuation_rate("items")
 
-	print("Deleting GLEs")
-	for voucher_type, voucher_no in vouchers:
-		frappe.db.sql("""delete from `tabGL Entry` where voucher_type=%s and voucher_no=%s""", (voucher_type, voucher_no))
-	print()
+			doc.db_update()
+			doc.clear_cache()
+		frappe.db.commit()
 
-	frappe.db.commit()
+		print("Updating Stock Entry Additional Cost Account to 5111 - Stock Entry additional Expenses - SP")
+		frappe.db.sql("update `tabStock Entry` set additional_cost_account = '5111 - Stock Entry additional Expenses - SP'")
+
+		print("Getting Stock Vouchers List")
+		vouchers = frappe.db.sql("""select distinct voucher_type, voucher_no
+			from `tabStock Ledger Entry` sle
+			order by posting_date, posting_time, name""")
+
+		print("Deleting SLEs")
+		frappe.db.sql("delete from `tabStock Ledger Entry`")
+
+		print("Deleting GLEs")
+		for voucher_type, voucher_no in vouchers:
+			frappe.db.sql("""delete from `tabGL Entry` where voucher_type=%s and voucher_no=%s""", (voucher_type, voucher_no))
+		print()
+
+		frappe.db.commit()
+	else:
+		with open(filename, "r") as f:
+			vouchers = json.loads(f.read())
 
 	start_time = datetime.datetime.now()
 	print("Starting at: {0}".format(start_time))
 
-	rejected = []
 	i = 0
 	for voucher_type, voucher_no in vouchers:
 		try:
@@ -298,13 +303,12 @@ def repost_all_stock_vouchers():
 			print("{0} / {1}: Elapsed Time: {4} | Rate: {5:.2f} Vouchers/Sec | ETA: {6} | {2} {3}".format(i, len(vouchers), voucher_type, voucher_no,
 				total_duration, flt(repost_rate), remaining_duration))
 		except Exception:
-			print(frappe.get_traceback())
-			rejected.append([voucher_type, voucher_no])
+			with open(filename, "w") as f:
+				f.write(json.dumps(vouchers[i:]))
+
 			frappe.db.rollback()
 			raise
 
-	print(rejected)
-
-	frappe.db.set_value("Stock Settings", None, "allow_negative_stock", existing_allow_negative_stock)
+	frappe.db.set_value("Stock Settings", None, "allow_negative_stock", 0)
 	frappe.db.commit()
 	frappe.db.auto_commit_on_many_writes = 0
