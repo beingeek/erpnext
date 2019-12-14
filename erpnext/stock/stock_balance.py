@@ -242,6 +242,7 @@ def repost_all_stock_vouchers():
 
 	filename = "repost_all_stock_vouchers_checkpoint.json"
 	if not os.path.isfile(filename):
+		print("No checkpoint found")
 		print("Updating Purchase Valuation Rates")
 		precs = frappe.db.sql("select 'Purchase Receipt' as doctype, name from `tabPurchase Receipt` where docstatus=1")
 		pinvs = frappe.db.sql("select 'Purchase Invoice' as doctype, name from `tabPurchase Invoice` where docstatus=1")
@@ -275,6 +276,7 @@ def repost_all_stock_vouchers():
 
 		frappe.db.commit()
 	else:
+		print("Checkpoint found")
 		with open(filename, "r") as f:
 			vouchers = json.loads(f.read())
 
@@ -292,23 +294,26 @@ def repost_all_stock_vouchers():
 
 			doc.update_stock_ledger()
 			doc.make_gl_entries(repost_future_gle=False)
+
 			frappe.db.commit()
+			i += 1
 			doc.clear_cache()
 
-			i += 1
 			now_time = datetime.datetime.now()
 			total_duration = now_time - start_time
 			repost_rate = flt(i) / total_duration.seconds if total_duration.seconds else "Inf"
 			remaining_duration = datetime.timedelta(seconds=(len(vouchers) - i) / flt(repost_rate)) if flt(repost_rate) else "N/A"
 			print("{0} / {1}: Elapsed Time: {4} | Rate: {5:.2f} Vouchers/Sec | ETA: {6} | {2} {3}".format(i, len(vouchers), voucher_type, voucher_no,
 				total_duration, flt(repost_rate), remaining_duration))
-		except Exception:
+		except:
 			with open(filename, "w") as f:
+				print("Creating checkpoint")
 				f.write(json.dumps(vouchers[i:]))
 
 			frappe.db.rollback()
 			raise
 
+	print("Disabling Allow Negative Stock")
 	frappe.db.set_value("Stock Settings", None, "allow_negative_stock", 0)
 	frappe.db.commit()
 	frappe.db.auto_commit_on_many_writes = 0
