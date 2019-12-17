@@ -221,7 +221,7 @@ def get_repack_entry_data(batch_nos):
 	# Source Rows
 	target_batch_source_values = {}
 	for d in repack_entry_data:
-		if not d.t_warehouse:
+		if not d.t_warehouse and stock_entry_to_target_batch.get(d.name):
 			target_batch = stock_entry_to_target_batch[d.name]
 
 			if d.is_sales_item:
