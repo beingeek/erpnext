@@ -599,3 +599,4 @@ erpnext.patches.v11_1.set_variant_based_on
 erpnext.patches.v11_1.stock_reconciliation_enhancement
 erpnext.patches.v11_1.set_batch_item_details
 erpnext.patches.v11_0.update_billing_status
+erpnext.patches.v11_1.set_shipping_date_in_prec_pinv
