@@ -273,6 +273,14 @@ erpnext.bom.calculate_op_cost = function(doc) {
 		doc.operating_cost += operating_cost;
 		doc.base_operating_cost += base_operating_cost;
 	}
+
+	var additional_costs = doc.additional_costs || [];
+	for(var i = 0; i < additional_costs.length; ++i) {
+		var cost = flt(additional_costs[i].amount) * flt(doc.quantity);
+		doc.base_operating_cost += cost;
+		doc.operating_cost += cost / flt(doc.conversion_rate)
+	}
+
 	refresh_field(['operating_cost', 'base_operating_cost']);
 };
 
@@ -393,6 +401,11 @@ frappe.ui.form.on("BOM Item", "item_code", function(frm, cdt, cdn) {
 });
 
 frappe.ui.form.on("BOM Operation", "operations_remove", function(frm) {
+	erpnext.bom.calculate_op_cost(frm.doc);
+	erpnext.bom.calculate_total(frm.doc);
+});
+
+frappe.ui.form.on("Stock Entry Taxes and Charges", "amount", function(frm) {
 	erpnext.bom.calculate_op_cost(frm.doc);
 	erpnext.bom.calculate_total(frm.doc);
 });

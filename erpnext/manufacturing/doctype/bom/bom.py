@@ -458,6 +458,11 @@ class BOM(WebsiteGenerator):
 			self.operating_cost += flt(d.operating_cost)
 			self.base_operating_cost += flt(d.base_operating_cost)
 
+		for d in self.get('additional_costs'):
+			cost = flt(d.amount) * flt(self.quantity)
+			self.base_operating_cost += cost
+			self.operating_cost += cost / flt(self.conversion_rate)
+
 	def calculate_rm_cost(self):
 		"""Fetch RM rate as per today's valuation rate and calculate totals"""
 		total_rm_cost = 0

@@ -769,6 +769,13 @@ class StockEntry(StockController):
 			if self.purpose in ("Manufacture", "Repack"):
 				self.load_items_from_bom()
 
+			if self.purpose == "Repack" and not self.work_order:
+				costs = get_additional_costs(None, self.bom_no, self.fg_completed_qty)
+				if costs:
+					self.set('additional_costs', [])
+				for d in costs:
+					self.append("additional_costs", d)
+
 		self.set_actual_qty()
 		self.calculate_rate_and_amount(raise_error_if_no_rate=False)
 
