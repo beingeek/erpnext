@@ -7,7 +7,7 @@ from six import iteritems
 
 def execute():
 	frappe.reload_doc("stock", "doctype", "purchase_receipt")
-	frappe.reload_doc("stock", "doctype", "purchase_invoice")
+	frappe.reload_doc("accounts", "doctype", "purchase_invoice")
 
 	po_map = dict(frappe.db.sql("select name, shipping_date from `tabPurchase Order` where docstatus<2"))
 
