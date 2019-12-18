@@ -533,9 +533,9 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 											if(!d[k]) d[k] = v;
 										});
 
-										erpnext.show_serial_batch_selector(me.frm, d, (item) => {
+										/*erpnext.show_serial_batch_selector(me.frm, d, (item) => {
 											me.qty(item, item.doctype, item.name, true);
-										});
+										});*/
 									}
 								},
 								() => me.conversion_factor(doc, cdt, cdn, true, true),

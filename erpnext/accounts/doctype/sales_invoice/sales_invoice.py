@@ -17,7 +17,7 @@ from erpnext.stock.doctype.delivery_note.delivery_note import update_billed_amou
 from erpnext.projects.doctype.timesheet.timesheet import get_projectwise_timesheet_data
 from erpnext.assets.doctype.asset.depreciation \
 	import get_disposal_account_and_cost_center, get_gl_entries_on_asset_disposal
-from erpnext.stock.doctype.batch.batch import set_batch_nos
+from erpnext.stock.doctype.batch.batch import set_batch_nos, auto_split_batches
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos, get_delivery_note_serial_no
 from erpnext.setup.doctype.company.company import update_company_current_month_sales
 from erpnext.accounts.general_ledger import get_round_off_account_and_cost_center
@@ -188,8 +188,8 @@ class SalesInvoice(SellingController):
 		if not self.is_opening:
 			self.is_opening = 'No'
 
-		if self._action != 'submit' and self.update_stock and not self.is_return:
-			set_batch_nos(self, 'warehouse', True)
+		'''if self._action != 'submit' and self.update_stock and not self.is_return:
+			set_batch_nos(self, 'warehouse', True)'''
 
 		if self.redeem_loyalty_points:
 			lp = frappe.get_doc('Loyalty Program', self.loyalty_program)
@@ -273,6 +273,10 @@ class SalesInvoice(SellingController):
 
 		if "Healthcare" in active_domains:
 			manage_invoice_submit_cancel(self, "on_submit")
+
+	def auto_split_batches(self):
+		if self.update_stock and not self.is_return:
+			auto_split_batches(self, 'warehouse')
 
 	def validate_pos_paid_amount(self):
 		if len(self.payments) == 0 and self.is_pos:

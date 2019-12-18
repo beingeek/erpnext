@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname, revert_series_if_last
-from frappe.utils import flt, cint
+from frappe.utils import flt, cint, cstr
 from frappe.utils.jinja import render_template
 from frappe.utils.data import add_days
 
@@ -258,6 +258,80 @@ def set_batch_nos(doc, warehouse_field, throw=False):
 					frappe.throw(_("Row #{0}: The batch {1} has only {2} qty. Please select another batch which has {3} qty available or split the row into multiple rows, to deliver/issue from multiple batches").format(d.idx, d.batch_no, batch_qty, qty))
 
 
+def auto_split_batches(doc, warehouse_field):
+	iuw_qty_map = {}
+	iuw_boxes_map = {}
+	iw_qty_map = {}
+	for d in doc.items:
+		warehouse = d.get(warehouse_field)
+		if warehouse and frappe.get_cached_value("Item", d.item_code, "has_batch_no"):
+			iuw_key = (d.item_code, cstr(d.get('uom')), warehouse)
+			iw_key = (d.item_code, warehouse)
+
+			iuw_qty_map.setdefault(iuw_key, 0)
+			iuw_qty_map[iuw_key] += flt(d.get('qty'))
+
+			if d.meta.get_field('boxes'):
+				iuw_boxes_map.setdefault(iuw_key, 0)
+				iuw_boxes_map[iuw_key] += flt(d.get('boxes'))
+
+			iw_qty_map.setdefault(iw_key, 0)
+			iw_qty_map[iw_key] += flt(d.get('qty'))
+
+	visited = set()
+	to_remove = []
+	for d in doc.items:
+		warehouse = d.get(warehouse_field)
+		if warehouse and frappe.get_cached_value("Item", d.item_code, "has_batch_no"):
+			iuw_key = (d.item_code, cstr(d.get('uom')), warehouse)
+			if iuw_key not in visited:
+				visited.add(iuw_key)
+				d.batch_no = None
+				d.qty = flt(iuw_qty_map.get(iuw_key))
+
+				if d.meta.get_field('boxes'):
+					d.boxes = flt(iuw_boxes_map.get(iuw_key))
+			else:
+				to_remove.append(d)
+
+	for d in to_remove:
+		doc.remove(d)
+
+	updated_rows = []
+	batches_used = {}
+	for d in doc.items:
+		updated_rows.append(d)
+		warehouse = d.get(warehouse_field)
+		if warehouse and frappe.get_cached_value("Item", d.item_code, "has_batch_no"):
+			batches = get_sufficient_batch_or_fifo(d.item_code, warehouse, flt(d.qty), flt(d.conversion_factor),
+				batches_used=batches_used, include_empty_batch=True)
+
+			rows = [d]
+			total_qty = flt(d.qty)
+			total_boxes = flt(d.boxes) if d.meta.get_field('boxes') else 0
+
+			for i in range(1, len(batches)):
+				new_row = frappe.copy_doc(d)
+				rows.append(new_row)
+				updated_rows.append(new_row)
+
+			for row, batch in zip(rows, batches):
+				row.qty = batch.selected_qty
+				row.batch_no = batch.batch_no
+
+				if row.meta.get_field('boxes'):
+					row.boxes = total_boxes * row.qty / total_qty if total_qty else 0
+
+	# Replace with updated list
+	for i, row in enumerate(updated_rows):
+		row.idx = i + 1
+	doc.items = updated_rows
+
+	if doc.doctype == 'Stock Entry':
+		doc.run_method("set_transfer_qty")
+	else:
+		doc.run_method("calculate_taxes_and_totals")
+
 
 @frappe.whitelist()
 def get_batch_no(item_code, warehouse, qty=1, throw=False):
@@ -287,11 +361,18 @@ def get_batch_no(item_code, warehouse, qty=1, throw=False):
 	return batch_no
 
 @frappe.whitelist()
-def get_sufficient_batch_or_fifo(item_code, warehouse, qty=1, conversion_factor=1):
+def get_sufficient_batch_or_fifo(item_code, warehouse, qty=1, conversion_factor=1, batches_used=None, include_empty_batch=False):
 	if not warehouse or not qty:
 		return []
 
 	batches = get_batches(item_code, warehouse)
+
+	if batches_used:
+		for batch in batches:
+			if batch.name in batches_used:
+				batch.qty -= flt(batches_used.get(batch.name))
+
+		batches = [d for d in batches if d.qty > 0]
 
 	selected_batches = []
 
@@ -303,23 +384,34 @@ def get_sufficient_batch_or_fifo(item_code, warehouse, qty=1, conversion_factor=
 	for batch in batches:
 		if remaining_qty <= 0:
 			break
-		if stock_qty <= flt(batch.qty):
+		'''if stock_qty <= flt(batch.qty):
 			return [{
 				'batch_no': batch.name,
 				'available_qty': batch.qty / conversion_factor,
 				'selected_qty': qty
-			}]
+			}]'''
 
 		selected_qty = min(remaining_qty, batch.qty)
-		selected_batches.append({
+		selected_batches.append(frappe._dict({
 			'batch_no': batch.name,
 			'available_qty': batch.qty / conversion_factor,
 			'selected_qty': selected_qty / conversion_factor
-		})
+		}))
+
+		if isinstance(batches_used, dict):
+			batches_used.setdefault(batch.name, 0)
+			batches_used[batch.name] += batch.qty
 
 		remaining_qty -= selected_qty
 
 	if remaining_qty > 0:
+		if include_empty_batch:
+			selected_batches.append(frappe._dict({
+				'batch_no': None,
+				'available_qty': 0,
+				'selected_qty': remaining_qty
+			}))
+
 		total_selected_qty = stock_qty - remaining_qty
 		frappe.msgprint(_("Only {0} {1} found in {2}".format(total_selected_qty, item_code, warehouse)))
 

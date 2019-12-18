@@ -254,6 +254,16 @@ frappe.ui.form.on('Stock Entry', {
 		});
 	},
 
+	auto_split_batches: function(frm) {
+		return frappe.call({
+			method: 'auto_split_batches',
+			doc: frm.doc,
+			callback: function (r) {
+				frm.refresh_fields();
+			}
+		});
+	},
+
 	make_retention_stock_entry: function(frm) {
 		frappe.call({
 			method: "erpnext.stock.doctype.stock_entry.stock_entry.move_sample_to_retention_warehouse",

@@ -594,7 +594,9 @@ Customer Request`}
 	},
 
 	_set_batch_number: function(doc, show_dialog) {
-		var me = this;
+		return;
+
+		/*var me = this;
 
 		if (doc.has_batch_no && frappe.meta.get_docfield(doc.doctype, "batch_no", doc.name)) {
 			return frappe.call({
@@ -618,6 +620,19 @@ Customer Request`}
 							});
 						}
 					}
+				}
+			});
+		}*/
+	},
+
+	auto_split_batches: function() {
+		if (this.frm.doc.update_stock && !this.frm.doc.is_return) {
+			var me = this;
+			return frappe.call({
+				method: 'auto_split_batches',
+				doc: me.frm.doc,
+				callback: function (r) {
+					me.frm.refresh_fields();
 				}
 			});
 		}
