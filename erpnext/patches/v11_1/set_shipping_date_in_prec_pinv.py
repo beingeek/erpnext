@@ -6,6 +6,9 @@ import frappe
 from six import iteritems
 
 def execute():
+	frappe.reload_doc("stock", "doctype", "purchase_receipt")
+	frappe.reload_doc("stock", "doctype", "purchase_invoice")
+
 	po_map = dict(frappe.db.sql("select name, shipping_date from `tabPurchase Order` where docstatus<2"))
 
 	precs = frappe.db.sql("select distinct parent, purchase_order from `tabPurchase Receipt Item` where docstatus<2", as_dict=1)
