@@ -254,10 +254,11 @@ frappe.ui.form.on('Stock Entry', {
 		});
 	},
 
-	auto_split_batches: function(frm) {
+	auto_select_batches: function(frm) {
 		return frappe.call({
-			method: 'auto_split_batches',
+			method: 'auto_select_batches',
 			doc: frm.doc,
+			freeze: 1,
 			callback: function (r) {
 				frm.refresh_fields();
 			}

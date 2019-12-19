@@ -258,7 +258,7 @@ def set_batch_nos(doc, warehouse_field, throw=False):
 					frappe.throw(_("Row #{0}: The batch {1} has only {2} qty. Please select another batch which has {3} qty available or split the row into multiple rows, to deliver/issue from multiple batches").format(d.idx, d.batch_no, batch_qty, qty))
 
 
-def auto_split_batches(doc, warehouse_field):
+def auto_select_and_split_batches(doc, warehouse_field):
 	iuw_qty_map = {}
 	iuw_boxes_map = {}
 	iw_qty_map = {}

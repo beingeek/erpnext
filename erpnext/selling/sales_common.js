@@ -625,12 +625,13 @@ Customer Request`}
 		}*/
 	},
 
-	auto_split_batches: function() {
+	auto_select_batches: function() {
 		if (this.frm.doc.update_stock && !this.frm.doc.is_return) {
 			var me = this;
 			return frappe.call({
-				method: 'auto_split_batches',
+				method: 'auto_select_batches',
 				doc: me.frm.doc,
+				freeze: 1,
 				callback: function (r) {
 					me.frm.refresh_fields();
 				}
