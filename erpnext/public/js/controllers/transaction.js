@@ -1185,7 +1185,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			"base_discount_amount", "base_grand_total", "base_rounded_total", "base_in_words",
 			"base_taxes_and_charges_added", "base_taxes_and_charges_deducted", "total_amount_to_pay",
 			"base_paid_amount", "base_write_off_amount", "base_change_amount", "base_operating_cost",
-			"base_raw_material_cost", "base_total_cost", "base_scrap_material_cost",
+			"base_raw_material_cost", "base_total_cost", "base_cost_per_unit", "base_scrap_material_cost",
 			"base_rounding_adjustment", "base_tax_exclusive_total",
 			"base_total_before_discount", "base_tax_exclusive_total_before_discount",
 			"base_total_discount", "base_tax_exclusive_total_discount",
@@ -1195,7 +1195,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			"grand_total", "taxes_and_charges_added", "taxes_and_charges_deducted",
 			"rounded_total", "in_words", "paid_amount", "write_off_amount", "operating_cost",
 			"scrap_material_cost", "rounding_adjustment", "raw_material_cost",
-			"total_cost", "tax_exclusive_total",
+			"total_cost", "cost_per_unit", "tax_exclusive_total",
 			"total_before_discount", "tax_exclusive_total_before_discount",
 			"total_discount", "tax_exclusive_total_discount",
 			"total_taxes", "delivery_charges"], this.frm.doc.currency);
@@ -1216,7 +1216,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			"base_total_taxes_and_charges", "base_taxes_and_charges_added", "base_taxes_and_charges_deducted",
 			"base_grand_total", "base_rounded_total", "base_in_words", "base_discount_amount",
 			"base_paid_amount", "base_write_off_amount", "base_operating_cost", "base_raw_material_cost",
-			"base_total_cost", "base_scrap_material_cost", "base_rounding_adjustment",
+			"base_total_cost", "base_cost_per_unit", "base_scrap_material_cost", "base_rounding_adjustment",
 			"base_total_before_discount", "base_total_discount", "calculate_tax_on_company_currency",
 			"base_total_taxes", "base_delivery_charges"],
 		this.frm.doc.currency != company_currency);

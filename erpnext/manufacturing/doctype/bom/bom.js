@@ -126,6 +126,7 @@ frappe.ui.form.on("BOM", {
 			},
 			callback: function(r) {
 				refresh_field("items");
+				erpnext.bom.update_cost(frm.doc);
 				if(!r.exc) frm.refresh_fields();
 			}
 		});
@@ -338,6 +339,11 @@ erpnext.bom.calculate_total = function(doc) {
 
 	cur_frm.set_value("total_cost", total_cost);
 	cur_frm.set_value("base_total_cost", base_total_cost);
+
+	var cost_per_unit = total_cost / flt(doc.quantity);
+	var base_cost_per_unit = base_total_cost / flt(doc.quantity);
+	cur_frm.set_value("cost_per_unit", cost_per_unit);
+	cur_frm.set_value("base_cost_per_unit", base_cost_per_unit);
 };
 
 cur_frm.cscript.validate = function(doc) {

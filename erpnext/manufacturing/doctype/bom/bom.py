@@ -221,6 +221,9 @@ class BOM(WebsiteGenerator):
 		existing_bom_cost = self.total_cost
 
 		for d in self.get("items"):
+			if not d.item_code:
+				continue
+
 			rate = self.get_rm_rate({
 				"item_code": d.item_code,
 				"bom_no": d.bom_no,
@@ -439,6 +442,8 @@ class BOM(WebsiteGenerator):
 		self.calculate_sm_cost()
 		self.total_cost = self.operating_cost + self.raw_material_cost - self.scrap_material_cost
 		self.base_total_cost = self.base_operating_cost + self.base_raw_material_cost - self.base_scrap_material_cost
+		self.cost_per_unit = self.total_cost / self.quantity
+		self.base_cost_per_unit = self.base_total_cost / self.quantity
 
 	def calculate_op_cost(self):
 		"""Update workstation rate and calculates totals"""
