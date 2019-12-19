@@ -510,6 +510,9 @@ class BOM(WebsiteGenerator):
 		""" Get all raw materials including items from child bom"""
 		self.cur_exploded_items = {}
 		for d in self.get('items'):
+			if not d.item_code:
+				continue
+
 			if d.bom_no:
 				self.get_child_exploded_items(d.bom_no, d.stock_qty)
 			else:
