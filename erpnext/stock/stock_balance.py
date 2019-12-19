@@ -251,11 +251,15 @@ def repost_all_stock_vouchers():
 
 			if doc.doctype == "Purchase Receipt":
 				doc.set_billed_valuation_amounts()
-				doc.set_landed_cost_voucher_amount()
+
+			doc.set_landed_cost_voucher_amount()
 			doc.update_valuation_rate("items")
 
-			doc.db_update()
+			for d in doc.items:
+				d.db_update()
+
 			doc.clear_cache()
+
 		frappe.db.commit()
 
 		print("Updating Stock Entry Additional Cost Account to 5111 - Stock Entry additional Expenses - SP")
