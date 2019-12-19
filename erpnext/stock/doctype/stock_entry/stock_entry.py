@@ -534,7 +534,7 @@ class StockEntry(StockController):
 				frappe.throw(_("Quantity in row {0} ({1}) must be same as manufactured quantity {2}"). \
 					format(d.idx, d.transfer_qty, self.fg_completed_qty))
 
-			if self.work_order and self.purpose == "Manufacture" and d.t_warehouse:
+			if d.t_warehouse:
 				items_with_target_warehouse.append(d.item_code)
 
 		if self.work_order and self.purpose == "Manufacture":
@@ -549,6 +549,10 @@ class StockEntry(StockController):
 			if production_item not in items_with_target_warehouse:
 				frappe.throw(_("Finished Item {0} must be entered for Manufacture type entry")
 					.format(production_item))
+
+		if self.purpose == "Repack":
+			if len(items_with_target_warehouse) != 1:
+				frappe.throw(_("There must be exactly one Finished Item for Repack entry"))
 
 	def update_stock_ledger(self):
 		sl_entries = []
