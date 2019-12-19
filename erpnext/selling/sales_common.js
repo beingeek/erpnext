@@ -634,6 +634,7 @@ Customer Request`}
 				freeze: 1,
 				callback: function (r) {
 					me.frm.refresh_fields();
+					me.frm.dirty();
 				}
 			});
 		}

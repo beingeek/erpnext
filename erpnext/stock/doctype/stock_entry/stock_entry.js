@@ -261,6 +261,7 @@ frappe.ui.form.on('Stock Entry', {
 			freeze: 1,
 			callback: function (r) {
 				frm.refresh_fields();
+				frm.dirty();
 			}
 		});
 	},
