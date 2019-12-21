@@ -730,7 +730,7 @@ class SalesInvoice(SellingController):
 			make_gl_entries(gl_entries, cancel=(self.docstatus == 2), merge_entries=False, from_repost=from_repost)
 
 			if repost_future_gle and cint(self.update_stock) \
-				and cint(auto_accounting_for_stock):
+				and cint(auto_accounting_for_stock) and not frappe.flags.do_not_repost_future_gle:
 					items, warehouses = self.get_items_and_warehouses()
 					update_gl_entries_after(self.posting_date, self.posting_time,
 						warehouses, items, company = self.company)
