@@ -22,12 +22,9 @@ def execute(filters=None):
 	for sle in sl_entries:
 		item_detail = item_details[sle.item_code]
 
-		data.append([sle.date, sle.item_code, item_detail.item_name, item_detail.item_group,
-			item_detail.brand, sle.warehouse,
-			item_detail.stock_uom, sle.actual_qty, sle.qty_after_transaction,
-			(sle.incoming_rate if sle.actual_qty > 0 else 0.0),
-			sle.valuation_rate, sle.stock_value, sle.voucher_type, sle.voucher_no,
-			sle.batch_no, sle.serial_no, sle.project, sle.company])
+		sle.update(item_detail)
+		sle.trn_rate = sle.stock_value_difference / sle.actual_qty
+		data.append(sle)
 
 		if include_uom:
 			conversion_factors.append(item_detail.conversion_factor)
@@ -41,21 +38,26 @@ def get_columns():
 		{"label": _("Item Code"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 80},
 		{"label": _("Item Name"), "fieldname": "item_name", "width": 150},
 		{"label": _("Item Group"), "fieldname": "item_group", "fieldtype": "Link", "options": "Item Group", "width": 100},
-		{"label": _("Brand"), "fieldname": "brand", "fieldtype": "Link", "options": "Brand", "width": 100},
 		{"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 100},
-		{"label": _("Stock UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 85},
+		{"label": _("UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 60},
+		{"label": _("Batch"), "fieldname": "batch_no", "fieldtype": "Link", "options": "Batch", "width": 100},
 		{"label": _("Qty"), "fieldname": "actual_qty", "fieldtype": "Float", "width": 50, "convertible": "qty"},
+		{"label": _("Difference"), "fieldname": "stock_value_difference", "fieldtype": "Currency", "width": 110, "options": "Company:company:default_currency"},
+		{"label": _("Batch Qty"), "fieldname": "batch_qty_after_transaction", "fieldtype": "Float", "width": 100, "convertible": "qty"},
 		{"label": _("Balance Qty"), "fieldname": "qty_after_transaction", "fieldtype": "Float", "width": 100, "convertible": "qty"},
-		{"label": _("Incoming Rate"), "fieldname": "incoming_rate", "fieldtype": "Currency", "width": 110,
+		{"label": _("In/Out Rate"), "fieldname": "trn_rate", "fieldtype": "Currency", "width": 110,
+			"options": "Company:company:default_currency", "convertible": "rate"},
+		{"label": _("Batch Valuation"), "fieldname": "batch_valuation_rate", "fieldtype": "Currency", "width": 110,
 			"options": "Company:company:default_currency", "convertible": "rate"},
 		{"label": _("Valuation Rate"), "fieldname": "valuation_rate", "fieldtype": "Currency", "width": 110,
 			"options": "Company:company:default_currency", "convertible": "rate"},
+		{"label": _("Batch Value"), "fieldname": "batch_stock_value", "fieldtype": "Currency", "width": 110,
+			"options": "Company:company:default_currency"},
 		{"label": _("Balance Value"), "fieldname": "stock_value", "fieldtype": "Currency", "width": 110,
 			"options": "Company:company:default_currency"},
 		{"label": _("Voucher Type"), "fieldname": "voucher_type", "width": 110},
 		{"label": _("Voucher #"), "fieldname": "voucher_no", "fieldtype": "Dynamic Link", "options": "voucher_type", "width": 100},
-		{"label": _("Batch"), "fieldname": "batch_no", "fieldtype": "Link", "options": "Batch", "width": 100},
-		{"label": _("Serial #"), "fieldname": "serial_no", "fieldtype": "Link", "options": "Serial No", "width": 100},
+		{"label": _("Serial #"), "fieldname": "serial_no", "width": 100},
 		{"label": _("Project"), "fieldname": "project", "fieldtype": "Link", "options": "Project", "width": 100},
 		{"label": _("Company"), "fieldname": "company", "fieldtype": "Link", "options": "Company", "width": 110}
 	]
@@ -74,7 +76,8 @@ def get_stock_ledger_entries(filters, items):
 
 	return frappe.db.sql("""select concat_ws(" ", posting_date, posting_time) as date,
 			item_code, warehouse, actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
-			stock_value, voucher_type, voucher_no, batch_no, serial_no, company, project
+			stock_value, voucher_type, voucher_no, batch_no, serial_no, company, project,
+			batch_valuation_rate, batch_stock_value, batch_qty_after_transaction, stock_value_difference
 		from `tabStock Ledger Entry` sle
 		where company = %(company)s
 			{date_condition}
