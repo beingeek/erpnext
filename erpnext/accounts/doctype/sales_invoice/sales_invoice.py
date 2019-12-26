@@ -731,9 +731,9 @@ class SalesInvoice(SellingController):
 
 			if repost_future_gle and cint(self.update_stock) \
 				and cint(auto_accounting_for_stock) and not frappe.flags.do_not_repost_future_gle:
-					items, warehouses = self.get_items_and_warehouses()
+					iwb = self.get_items_and_warehouses()
 					update_gl_entries_after(self.posting_date, self.posting_time,
-						warehouses, items, company = self.company)
+						iwb, company = self.company)
 		elif self.docstatus == 2 and cint(self.update_stock) \
 			and cint(auto_accounting_for_stock):
 				from erpnext.accounts.general_ledger import delete_gl_entries
