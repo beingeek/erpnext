@@ -673,6 +673,10 @@ class StockEntry(StockController):
 			'has_batch_no'			: item.has_batch_no,
 			'sample_quantity'		: item.sample_quantity
 		})
+
+		if not ret["expense_account"]:
+			ret["expense_account"] = frappe.get_cached_value('Company',  self.company,  "stock_adjustment_account")
+
 		for d in [["Account", "expense_account", "default_expense_account"],
 			["Cost Center", "cost_center", "cost_center"]]:
 				company = frappe.db.get_value(d[0], ret.get(d[1]), "company")
@@ -682,9 +686,6 @@ class StockEntry(StockController):
 		# update uom
 		if args.get("uom") and for_update:
 			ret.update(get_uom_details(args.get('item_code'), args.get('uom'), args.get('qty')))
-
-		if not ret["expense_account"]:
-			ret["expense_account"] = frappe.get_cached_value('Company',  self.company,  "stock_adjustment_account")
 
 		args['posting_date'] = self.posting_date
 		args['posting_time'] = self.posting_time
@@ -1067,7 +1068,7 @@ class StockEntry(StockController):
 			se_child.uom = item_dict[d]["uom"] if item_dict[d].get("uom") else stock_uom
 			se_child.stock_uom = stock_uom
 			se_child.qty = flt(item_dict[d]["qty"], se_child.precision("qty"))
-			se_child.expense_account = item_dict[d].get("expense_account") or expense_account
+			se_child.expense_account = frappe.get_cached_value('Company', self.company, "stock_adjustment_account") or item_dict[d].get("expense_account") or expense_account
 			se_child.cost_center = item_dict[d].get("cost_center") or cost_center
 			se_child.allow_alternative_item = item_dict[d].get("allow_alternative_item", 0)
 			se_child.subcontracted_item = item_dict[d].get("main_item_code")
