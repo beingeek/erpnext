@@ -9,6 +9,7 @@ from frappe.model.naming import make_autoname, revert_series_if_last
 from frappe.utils import flt, cint, cstr
 from frappe.utils.jinja import render_template
 from frappe.utils.data import add_days
+import math
 
 class UnableToSelectBatchError(frappe.ValidationError):
 	pass
@@ -304,7 +305,7 @@ def auto_select_and_split_batches(doc, warehouse_field):
 		warehouse = d.get(warehouse_field)
 		if warehouse and frappe.get_cached_value("Item", d.item_code, "has_batch_no"):
 			batches = get_sufficient_batch_or_fifo(d.item_code, warehouse, flt(d.qty), flt(d.conversion_factor),
-				batches_used=batches_used, include_empty_batch=True)
+				batches_used=batches_used, include_empty_batch=True, precision=d.precision('qty'))
 
 			rows = [d]
 			total_qty = flt(d.qty)
@@ -360,10 +361,24 @@ def get_batch_no(item_code, warehouse, qty=1, throw=False):
 
 	return batch_no
 
+
+def round_down(value, decimals):
+	factor = 10 ** decimals
+	db_precision = 6 if decimals <= 6 else 9
+
+	value = math.floor(value * factor) / factor
+	value = flt(value, db_precision)
+	return value
+
+
 @frappe.whitelist()
-def get_sufficient_batch_or_fifo(item_code, warehouse, qty=1, conversion_factor=1, batches_used=None, include_empty_batch=False):
+def get_sufficient_batch_or_fifo(item_code, warehouse, qty=1, conversion_factor=1, batches_used=None,
+		include_empty_batch=False, precision=None):
 	if not warehouse or not qty:
 		return []
+
+	if not precision:
+		precision = cint(frappe.db.get_default("float_precision")) or 3
 
 	batches = get_batches(item_code, warehouse)
 
@@ -379,10 +394,10 @@ def get_sufficient_batch_or_fifo(item_code, warehouse, qty=1, conversion_factor=
 	qty = flt(qty)
 	conversion_factor = flt(conversion_factor or 1)
 	stock_qty = qty * conversion_factor
-	remaining_qty = stock_qty
+	remaining_stock_qty = stock_qty
 
 	for batch in batches:
-		if remaining_qty <= 0:
+		if remaining_stock_qty <= 0:
 			break
 		'''if stock_qty <= flt(batch.qty):
 			return [{
@@ -391,28 +406,30 @@ def get_sufficient_batch_or_fifo(item_code, warehouse, qty=1, conversion_factor=
 				'selected_qty': qty
 			}]'''
 
-		selected_qty = min(remaining_qty, batch.qty)
+		selected_stock_qty = min(remaining_stock_qty, batch.qty)
+		selected_qty = round_down(selected_stock_qty / conversion_factor, precision)
+		selected_stock_qty = selected_qty * conversion_factor
 		selected_batches.append(frappe._dict({
 			'batch_no': batch.name,
 			'available_qty': batch.qty / conversion_factor,
-			'selected_qty': selected_qty / conversion_factor
+			'selected_qty': selected_qty
 		}))
 
 		if isinstance(batches_used, dict):
 			batches_used.setdefault(batch.name, 0)
-			batches_used[batch.name] += batch.qty
+			batches_used[batch.name] += selected_stock_qty
 
-		remaining_qty -= selected_qty
+		remaining_stock_qty -= selected_stock_qty
 
-	if remaining_qty > 0:
+	if remaining_stock_qty > 0:
 		if include_empty_batch:
 			selected_batches.append(frappe._dict({
 				'batch_no': None,
 				'available_qty': 0,
-				'selected_qty': remaining_qty
+				'selected_qty': remaining_stock_qty
 			}))
 
-		total_selected_qty = stock_qty - remaining_qty
+		total_selected_qty = stock_qty - remaining_stock_qty
 		frappe.msgprint(_("Only {0} {1} found in {2}".format(total_selected_qty, item_code, warehouse)))
 
 	return selected_batches

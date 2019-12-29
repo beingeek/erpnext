@@ -498,7 +498,6 @@ frappe.ui.form.on('Stock Entry Detail', {
 							d[k] = v;
 						});
 						refresh_field("items");
-						erpnext.stock.select_batch_and_serial_no(frm, d);
 					}
 				}
 			});
