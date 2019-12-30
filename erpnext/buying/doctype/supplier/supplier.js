@@ -74,5 +74,33 @@ frappe.ui.form.on("Supplier", {
 		else {
 			frm.toggle_reqd("represents_company", false);
 		}
+	},
+
+	default_currency: function (frm) {
+		const default_company = frappe.defaults.get_default('company');
+		if (frm.doc.default_currency && default_company) {
+			frappe.db.get_list("Account", {
+				fields: 'name',
+				filters: {
+					account_type: "Payable",
+					account_currency: frm.doc.default_currency,
+					company: default_company,
+					is_group: 0
+				}
+			}).then(function (message) {
+				if (message && message.length == 1) {
+					var default_company_account = frm.doc.accounts.filter(d => d.company == default_company);
+
+					if (default_company_account.length) {
+						$.each(default_company_account || [], function (i, d) {
+							frappe.model.set_value(d.doctype, d.name, 'account', message[0].name);
+						});
+					} else {
+						frm.add_child('accounts', {'company': default_company, 'account': message[0].name});
+						frm.refresh_fields('accounts');
+					}
+				}
+			});
+		}
 	}
 });
