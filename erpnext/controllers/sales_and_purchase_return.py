@@ -218,7 +218,7 @@ def get_already_returned_items(doc):
 			`tab{1} Item` child, `tab{2}` par
 		where
 			child.parent = par.name and par.docstatus = 1
-			and par.is_return = 1 and par.return_against = %s
+			and par.is_return = 1 and par.return_against = %s and par.update_stock = 1
 		group by item_code
 	""".format(column, doc.doctype, doc.doctype), doc.return_against, as_dict=1)
 
