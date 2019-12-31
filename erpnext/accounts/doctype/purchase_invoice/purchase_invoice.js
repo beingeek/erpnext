@@ -193,13 +193,13 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 				this.frm.add_custom_button(
 					__('Unblock Invoice'),
 					function() {me.unblock_invoice()},
-					__('Make')
+					__('Hold Invoice')
 				);
 			} else if (!doc.on_hold) {
 				this.frm.add_custom_button(
 					__('Block Invoice'),
 					function() {me.block_invoice()},
-					__('Make')
+					__('Hold Invoice')
 				);
 			}
 		}

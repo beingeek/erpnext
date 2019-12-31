@@ -62,8 +62,11 @@ class PaymentEntry(AccountsController):
 		self.validate_allocated_amount()
 		self.ensure_supplier_is_not_blocked()
 
-	def on_submit(self):
+	def before_submit(self):
 		self.validate_date()
+		self.check_held_invoices()
+
+	def on_submit(self):
 		self.set_remarks()
 		self.setup_party_account_field()
 		if self.difference_amount:
@@ -80,6 +83,18 @@ class PaymentEntry(AccountsController):
 		self.update_expense_claim()
 		self.update_reference_details()
 		self.delink_advance_entry_references()
+
+	def check_held_invoices(self):
+		for d in self.references:
+			if d.reference_doctype == "Purchase Invoice":
+				on_hold, release_date = frappe.db.get_value("Purchase Invoice", d.reference_name, ['on_hold', 'release_date'])
+				if on_hold and (not release_date or release_date > getdate(nowdate())):
+					if release_date:
+						frappe.throw(_("Purchase Invoice {0} is on hold").format(d.reference_name))
+					else:
+						frappe.throw(_("Purchase Invoice {0} is on hold till {1}").format(d.reference_name,
+							frappe.utils.formatdate(release_date)))
+
 
 	def validate_date(self):
 		if self.mode_of_payment:
