@@ -25,6 +25,8 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import validate_inter_
 	unlink_inter_company_invoice
 from erpnext.accounts.doctype.tax_withholding_category.tax_withholding_category import get_party_tax_withholding_details
 from erpnext.accounts.deferred_revenue import validate_service_stop_date
+from six import string_types
+import json
 
 form_grid_templates = {
 	"items": "templates/form_grid/item_grid.html"
@@ -1064,3 +1066,22 @@ def block_invoice(name, hold_comment):
 def make_inter_company_sales_invoice(source_name, target_doc=None):
 	from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_company_invoice
 	return make_inter_company_invoice("Purchase Invoice", source_name, target_doc)
+
+@frappe.whitelist()
+def get_invoiceble_qty(pr_details):
+	if isinstance(pr_details, string_types):
+		pr_details = json.loads(pr_details)
+
+	pr_details = list(set(pr_details))
+
+	out = dict(frappe.db.sql("""
+		select name, qty - billed_qty - returned_qty
+		from `tabPurchase Receipt Item`
+		where name in ({0})
+	""".format(", ".join(["%s"] * len(pr_details))), pr_details))
+
+	for pr_detail in out.keys():
+		if out[pr_detail] < 0:
+			out[pr_detail] = 0
+
+	return out

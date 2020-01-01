@@ -293,6 +293,28 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		}
 	},
 
+	get_invoiceble_qty: function() {
+		var me = this;
+		var pr_details = this.frm.doc.items.filter(d => d.pr_detail).map(d => d.pr_detail);
+		if (pr_details && pr_details.length) {
+			frappe.call({
+				method: 'erpnext.accounts.doctype.purchase_invoice.purchase_invoice.get_invoiceble_qty',
+				args: {'pr_details': pr_details},
+				callback: function(r) {
+					if (r.message) {
+						$.each(me.frm.doc.items || [], function (i, d) {
+							if (d.pr_detail && r.message.hasOwnProperty(d.pr_detail)) {
+								d.qty = flt(r.message[d.pr_detail]);
+							}
+						});
+						me.calculate_taxes_and_totals();
+						me.frm.dirty();
+					}
+				}
+			});
+		}
+	},
+
 	unblock_invoice: function() {
 		const me = this;
 		frappe.call({
