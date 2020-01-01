@@ -972,6 +972,11 @@ class PurchaseInvoice(BuyingController):
 	def on_recurring(self, reference_doc, auto_repeat_doc):
 		self.due_date = None
 
+	def check_hold_permission(self):
+		df = self.meta.get_field("on_hold")
+		if (df.permlevel or 0) > 0 and not self.has_permlevel_access_to(df.fieldname, df):
+			frappe.throw(_("You do not have permission to block/unblock invoice"))
+
 	def block_invoice(self, hold_comment=None):
 		self.db_set('on_hold', 1)
 		self.db_set('hold_comment', cstr(hold_comment))
@@ -1036,6 +1041,7 @@ def make_stock_entry(source_name, target_doc=None):
 def change_release_date(name, release_date=None):
 	if frappe.db.exists('Purchase Invoice', name):
 		pi = frappe.get_doc('Purchase Invoice', name)
+		pi.check_hold_permission()
 		pi.db_set('release_date', release_date)
 
 
@@ -1043,6 +1049,7 @@ def change_release_date(name, release_date=None):
 def unblock_invoice(name):
 	if frappe.db.exists('Purchase Invoice', name):
 		pi = frappe.get_doc('Purchase Invoice', name)
+		pi.check_hold_permission()
 		pi.unblock_invoice()
 
 
@@ -1050,6 +1057,7 @@ def unblock_invoice(name):
 def block_invoice(name, hold_comment):
 	if frappe.db.exists('Purchase Invoice', name):
 		pi = frappe.get_doc('Purchase Invoice', name)
+		pi.check_hold_permission()
 		pi.block_invoice(hold_comment)
 
 @frappe.whitelist()
