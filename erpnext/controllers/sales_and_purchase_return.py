@@ -212,15 +212,18 @@ def get_already_returned_items(doc):
 		column += """, sum(abs(child.rejected_qty) * child.conversion_factor) as rejected_qty,
 			sum(abs(child.received_qty) * child.conversion_factor) as received_qty"""
 
+	extra_cond = " and par.update_stock = 1" if doc.doctype in ['Sales Invoice', 'Purchase Invoice'] else ""
+
 	data = frappe.db.sql("""
 		select {0}
 		from
 			`tab{1} Item` child, `tab{2}` par
 		where
 			child.parent = par.name and par.docstatus = 1
-			and par.is_return = 1 and par.return_against = %s and par.update_stock = 1
+			and par.is_return = 1 and par.return_against = %s
+			{3}
 		group by item_code
-	""".format(column, doc.doctype, doc.doctype), doc.return_against, as_dict=1)
+	""".format(column, doc.doctype, doc.doctype, extra_cond), doc.return_against, as_dict=1)
 
 	# Check previous or future document for returns
 	others_docs = None
@@ -235,11 +238,11 @@ def get_already_returned_items(doc):
 	elif doc.doctype == 'Delivery Note':
 		other_dt = 'Sales Invoice'
 		others_docs = [doc.return_against]
-		other_dt_condition = 'and child.delivery_note = %s'
+		other_dt_condition = 'and child.delivery_note = %s and par.update_stock = 1'
 	elif doc.doctype == 'Purchase Receipt':
 		other_dt = 'Purchase Invoice'
 		others_docs = [doc.return_against]
-		other_dt_condition = 'and child.purchase_receipt = %s'
+		other_dt_condition = 'and child.purchase_receipt = %s and par.update_stock = 1'
 
 	other_dt_data = []
 	if others_docs:
