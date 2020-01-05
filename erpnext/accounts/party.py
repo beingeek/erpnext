@@ -8,7 +8,7 @@ from frappe import _, msgprint, scrub
 from frappe.core.doctype.user_permission.user_permission import get_permitted_documents
 from frappe.model.utils import get_fetch_values
 from frappe.utils import (add_days, getdate, formatdate, date_diff,
-	add_years, get_timestamp, nowdate, flt, cstr, add_months, get_last_day)
+	add_years, get_timestamp, nowdate, flt, cstr, cint, add_months, get_last_day)
 from frappe.contacts.doctype.address.address import (get_address_display,
 	get_default_address, get_company_address)
 from frappe.contacts.doctype.contact.contact import get_contact_details, get_default_contact
@@ -79,6 +79,9 @@ def _get_party_details(party=None, account=None, party_type="Customer", letter_o
 	# supplier tax withholding category
 	if party_type == "Supplier" and party:
 		out["supplier_tds"] = frappe.get_value(party_type, party.name, "tax_withholding_category")
+
+	if doctype == "Purchase Invoice" and party_type == "Supplier":
+		out["on_hold"] = cint(party.get('hold_invoices_by_default'))
 
 	if doctype == "Sales Order":
 		from erpnext.selling.doctype.customer.customer import get_credit_limit, get_customer_outstanding
