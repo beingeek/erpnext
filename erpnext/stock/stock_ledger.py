@@ -307,8 +307,10 @@ class update_entries_after(object):
 						currency=erpnext.get_company_currency(sle.company), batch_wise_valuation=self.batch_wise_valuation)
 
 		self.qty_after_transaction += flt(sle.actual_qty)
+		self.qty_after_transaction = flt(self.qty_after_transaction, self.qty_db_precision)
 		if self.batch_wise_valuation:
 			self.batch_data.batch_qty_after_transaction += flt(sle.actual_qty)
+			self.batch_data.batch_qty_after_transaction = flt(self.batch_data.batch_qty_after_transaction, self.qty_db_precision)
 			self.batch_data.batch_valuation_rate = new_valuation_rate
 			self.batch_data.batch_stock_value = flt(self.batch_data.batch_qty_after_transaction) * flt(self.batch_data.batch_valuation_rate)
 
