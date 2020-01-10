@@ -282,6 +282,17 @@ erpnext.accounts.JournalEntry = frappe.ui.form.Controller.extend({
 			}
 		});
 
+		me.frm.set_query("return_against_pe", "accounts", function(doc, cdt, cdn) {
+			var d = frappe.get_doc(cdt, cdn);
+			return {
+				filters: {
+					"docstatus": 1,
+					"party_type": d.party_type,
+					"party": d.party
+				}
+			}
+		});
+
 	},
 
 	setup_balance_formatter: function() {

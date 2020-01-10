@@ -38,6 +38,7 @@ class JournalEntry(AccountsController):
 		self.validate_empty_accounts_table()
 		self.set_account_and_party_balance()
 		self.validate_inter_company_accounts()
+		self.validate_returned_cheque_entry()
 		if not self.title:
 			self.title = self.get_title()
 
@@ -82,6 +83,27 @@ class JournalEntry(AccountsController):
 		if self.voucher_type == "Inter Company Journal Entry" and self.inter_company_journal_entry_reference:
 			frappe.db.set_value("Journal Entry", self.inter_company_journal_entry_reference,\
 				"inter_company_journal_entry_reference", self.name)
+
+	def validate_returned_cheque_entry(self):
+		if self.voucher_type == "Returned Cheque":
+			for d in self.accounts:
+				if not d.party and d.return_against_pe:
+					d.return_against_pe = ""
+				if not d.return_against_pe and d.party:
+					frappe.throw(_("Row {0}: Returned Against Payment Entry is not set").format(d.idx))
+
+				if d.return_against_pe:
+					pe_details = frappe.db.get_value("Payment Entry", d.return_against_pe,
+						['docstatus', 'party_type', 'party'], as_dict=1)
+					if pe_details.docstatus != 1:
+						frappe.throw(_("Row {0}: Returned Against Payment Entry {1} is not submitted").format(d.idx, d.return_against_pe))
+					if pe_details.party_type != d.party_type or pe_details.party != d.party:
+						frappe.throw(_("Row {0}: Party does not match in Returned Against Payment Entry {1}").format(
+							d.idx, d.return_against_pe))
+		else:
+			for d in self.accounts:
+				if d.return_against_pe:
+					d.return_against_pe = ""
 
 	def on_cancel(self):
 		from erpnext.accounts.utils import unlink_ref_doc_from_payment_entries
@@ -145,7 +167,7 @@ class JournalEntry(AccountsController):
 				check_credit_limit(customer, self.company)
 
 	def validate_cheque_info(self):
-		if self.voucher_type in ['Bank Entry']:
+		if self.voucher_type in ['Bank Entry', 'Returned Cheque']:
 			if not self.cheque_no or not self.cheque_date:
 				msgprint(_("Reference No & Reference Date is required for {0}").format(self.voucher_type),
 					raise_exception=1)
