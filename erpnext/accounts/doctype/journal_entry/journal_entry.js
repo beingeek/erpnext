@@ -46,6 +46,18 @@ frappe.ui.form.on("Journal Entry", {
 				}
 			);
 		}
+
+		frm.events.set_naming_series(frm);
+	},
+
+	set_naming_series: function(frm) {
+		if (frm.doc.docstatus === 0) {
+			if (frm.doc.voucher_type == "Returned Cheque") {
+				frm.set_value('naming_series', 'RCHK-');
+			} else {
+				frm.set_value('naming_series', 'JV-');
+			}
+		}
 	},
 
 	make_inter_company_journal_entry: function(frm) {
@@ -456,6 +468,8 @@ cur_frm.cscript.voucher_type = function(doc, cdt, cdn) {
 	$.each(cur_frm.fields_dict.accounts.grid.grid_rows || [], function (i, grid_row) {
 		erpnext.journal_entry.toggle_editing_company_currency(grid_row);
 	});
+
+	cur_frm.events.set_naming_series(cur_frm);
 }
 
 frappe.ui.form.on("Journal Entry Account", {
