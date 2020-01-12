@@ -7,6 +7,7 @@ frappe.provide("erpnext.journal_entry");
 
 frappe.ui.form.on("Journal Entry", {
 	refresh: function(frm) {
+		erpnext.hide_company();
 		erpnext.toggle_naming_series();
 		frm.cscript.voucher_type(frm.doc);
 
