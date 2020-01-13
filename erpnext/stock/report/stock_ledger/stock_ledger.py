@@ -35,6 +35,8 @@ def execute(filters=None):
 def get_columns():
 	columns = [
 		{"label": _("Date"), "fieldname": "date", "fieldtype": "Datetime", "width": 95},
+		{"label": _("Party Type"), "fieldname": "party_type", "fieldtype": "Data", "width": 90},
+		{"label": _("Party"), "fieldname": "party", "fieldtype": "Dynamic Link", "options": "party_type", "width": 150},
 		{"label": _("Item Code"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 80},
 		{"label": _("Item Name"), "fieldname": "item_name", "width": 150},
 		{"label": _("Item Group"), "fieldname": "item_group", "fieldtype": "Link", "options": "Item Group", "width": 100},
@@ -77,7 +79,8 @@ def get_stock_ledger_entries(filters, items):
 	return frappe.db.sql("""select concat_ws(" ", posting_date, posting_time) as date,
 			item_code, warehouse, actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
 			stock_value, voucher_type, voucher_no, batch_no, serial_no, company, project,
-			batch_valuation_rate, batch_stock_value, batch_qty_after_transaction, stock_value_difference
+			batch_valuation_rate, batch_stock_value, batch_qty_after_transaction, stock_value_difference,
+			party_type, party
 		from `tabStock Ledger Entry` sle
 		where company = %(company)s
 			{date_condition}
@@ -148,6 +151,10 @@ def get_sle_conditions(filters):
 		conditions.append("batch_no=%(batch_no)s")
 	if filters.get("project"):
 		conditions.append("project=%(project)s")
+	if filters.get("party_type"):
+		conditions.append("party_type=%(party_type)s")
+	if filters.get("party"):
+		conditions.append("party=%(party)s")
 
 	return "and {}".format(" and ".join(conditions)) if conditions else ""
 

@@ -74,6 +74,18 @@ frappe.query_reports["Stock Ledger"] = {
 			"label": __("Include UOM"),
 			"fieldtype": "Link",
 			"options": "UOM"
+		},
+		{
+			"fieldname":"party_type",
+			"label": __("Party Type"),
+			"fieldtype": "Link",
+			"options": "Party Type"
+		},
+		{
+			"fieldname":"party",
+			"label": __("Party"),
+			"fieldtype": "Dynamic Link",
+			"options": "party_type"
 		}
 	]
 }
