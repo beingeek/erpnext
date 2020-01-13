@@ -150,34 +150,68 @@ frappe.ui.form.on('Payment Entry', {
 			});
 		}
 
+		frm.events.add_returned_cheque_button(frm);
+	},
+
+	add_returned_cheque_button: function(frm) {
 		if (frm.doc.docstatus == 1 && frm.doc.payment_type == "Receive") {
 			frm.add_custom_button(__('Create Return Entry'), function () {
-				var values = {
-					"return_against_pe": frm.doc.name,
-					"voucher_type": "Returned Cheque",
-					"cheque_no": frm.doc.reference_no,
-					"cheque_date": frm.doc.reference_date
+				var returned_cheque_charges_account = frappe.get_doc(":Company", frm.doc.company).returned_cheque_charges_account;
+
+				var create_journal_entry = function (returned_cheque_charges) {
+					var values = {
+						"return_against_pe": frm.doc.name,
+						"voucher_type": "Returned Cheque",
+						"cheque_no": frm.doc.reference_no,
+						"cheque_date": frm.doc.reference_date
+					};
+
+					returned_cheque_charges = flt(returned_cheque_charges);
+
+					frappe.new_doc("Journal Entry", values).then(r => {
+						cur_frm.doc.cheque_no = frm.doc.reference_no;
+						cur_frm.doc.cheque_date = frm.doc.reference_date;
+
+						cur_frm.doc.accounts = [];
+						var c1 = cur_frm.add_child('accounts', {
+							account: frm.doc.paid_from,
+							party_type: frm.doc.party_type,
+							party: frm.doc.party,
+							debit_in_account_currency: flt(frm.doc.received_amount) + returned_cheque_charges,
+							debit: frm.doc.base_received_amount
+						});
+						var c2 = cur_frm.add_child('accounts', {
+							account: frm.doc.paid_to,
+							credit_in_account_currency: frm.doc.received_amount,
+							credit: frm.doc.base_received_amount
+						});
+
+						if (returned_cheque_charges) {
+							var c3 = cur_frm.add_child('accounts', {
+								account: returned_cheque_charges_account,
+								credit_in_account_currency: returned_cheque_charges,
+								credit: returned_cheque_charges
+							});
+						}
+
+						cur_frm.refresh_fields();
+					});
 				};
 
-				frappe.new_doc("Journal Entry", values).then(r => {
-					cur_frm.doc.cheque_no = frm.doc.reference_no;
-					cur_frm.doc.cheque_date = frm.doc.reference_date;
-
-					cur_frm.doc.accounts = [];
-					var c1 = cur_frm.add_child('accounts', {
-						account: frm.doc.paid_from,
-						party_type: frm.doc.party_type,
-						party: frm.doc.party,
-						debit_in_account_currency: frm.doc.received_amount,
-						debit: frm.doc.base_received_amount
+				if (returned_cheque_charges_account) {
+					var dialog = new frappe.ui.Dialog({
+						title: __("Quick Journal Entry"),
+						fields: [
+							{fieldtype: "Currency", fieldname: "charges", label: __("Returned Cheque Charges"), "default": 25},
+						]
 					});
-					var c2 = cur_frm.add_child('accounts', {
-						account: frm.doc.paid_to,
-						credit_in_account_currency: frm.doc.received_amount,
-						credit: frm.doc.base_received_amount
+					dialog.set_primary_action(__("Create Returned Cheque"), function() {
+						create_journal_entry(dialog.get_value('charges'));
 					});
-					cur_frm.refresh_fields();
-				});
+					dialog.show()
+				} else {
+					create_journal_entry(0);
+				}
 			});
 		}
 	},
