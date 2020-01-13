@@ -149,6 +149,37 @@ frappe.ui.form.on('Payment Entry', {
 				});
 			});
 		}
+
+		if (frm.doc.docstatus == 1 && frm.doc.payment_type == "Receive") {
+			frm.add_custom_button(__('Create Return Entry'), function () {
+				var values = {
+					"return_against_pe": frm.doc.name,
+					"voucher_type": "Returned Cheque",
+					"cheque_no": frm.doc.reference_no,
+					"cheque_date": frm.doc.reference_date
+				};
+
+				frappe.new_doc("Journal Entry", values).then(r => {
+					cur_frm.doc.cheque_no = frm.doc.reference_no;
+					cur_frm.doc.cheque_date = frm.doc.reference_date;
+
+					cur_frm.doc.accounts = [];
+					var c1 = cur_frm.add_child('accounts', {
+						account: frm.doc.paid_from,
+						party_type: frm.doc.party_type,
+						party: frm.doc.party,
+						debit_in_account_currency: frm.doc.received_amount,
+						debit: frm.doc.base_received_amount
+					});
+					var c2 = cur_frm.add_child('accounts', {
+						account: frm.doc.paid_to,
+						credit_in_account_currency: frm.doc.received_amount,
+						credit: frm.doc.base_received_amount
+					});
+					cur_frm.refresh_fields();
+				});
+			});
+		}
 	},
 
 	company: function(frm) {
