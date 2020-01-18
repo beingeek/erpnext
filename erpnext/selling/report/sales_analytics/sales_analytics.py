@@ -92,7 +92,7 @@ class Analytics(object):
 
 		elif self.filters.tree_type in ["Customer Group", "Supplier Group", "Territory", "Item Group", "Sales Person"]:
 			if self.filters.tree_type == 'Customer Group':
-				entity_field = "s.customer_group"
+				entity_field = "cus.customer_group"
 			elif self.filters.tree_type == 'Supplier Group':
 				entity_field = "sup.supplier_group"
 			elif self.filters.tree_type == 'Territory':
@@ -114,6 +114,10 @@ class Analytics(object):
 		supplier_table = ", `tabSupplier` sup" if include_supplier else ""
 		supplier_condition = "and sup.name = s.supplier" if include_supplier else ""
 
+		include_customer = self.filters.tree_type == "Customer Group" or self.filters.customer_group
+		customer_table = ", `tabCustomer` cus" if include_customer else ""
+		customer_condition = "and cus.name = s.customer" if include_customer else ""
+
 		is_opening_condition = "and s.is_opening != 'Yes'" if self.filters.doctype in ['Sales Invoice', 'Purchase Invoice']\
 			else ""
 
@@ -130,8 +134,8 @@ class Analytics(object):
 				{value_field} as value_field,
 				s.{date_field}
 			from 
-				`tab{doctype} Item` i, `tab{doctype}` s {supplier_table} {sales_team_join}
-			where i.parent = s.name and s.docstatus = 1 {supplier_condition}
+				`tab{doctype} Item` i, `tab{doctype}` s {supplier_table} {customer_table} {sales_team_join}
+			where i.parent = s.name and s.docstatus = 1 {supplier_condition} {customer_condition}
 				and s.company = %(company)s and s.{date_field} between %(from_date)s and %(to_date)s
 				{is_opening_condition} {filter_conditions}
 		""".format(
@@ -143,6 +147,8 @@ class Analytics(object):
 			sales_team_join=sales_team_join,
 			supplier_table=supplier_table,
 			supplier_condition=supplier_condition,
+			customer_table=customer_table,
+			customer_condition=customer_condition,
 			is_opening_condition=is_opening_condition,
 			filter_conditions=self.get_conditions()
 		), self.filters, as_dict=1)
@@ -179,7 +185,7 @@ class Analytics(object):
 
 		if self.filters.get("customer_group"):
 			lft, rgt = frappe.db.get_value("Customer Group", self.filters.customer_group, ["lft", "rgt"])
-			conditions.append("""s.customer_group in (select name from `tabCustomer Group`
+			conditions.append("""cus.customer_group in (select name from `tabCustomer Group`
 					where lft>=%s and rgt<=%s and docstatus<2)""" % (lft, rgt))
 
 		if self.filters.get("supplier"):
