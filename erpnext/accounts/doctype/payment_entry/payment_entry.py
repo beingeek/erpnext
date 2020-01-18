@@ -93,11 +93,11 @@ class PaymentEntry(AccountsController):
 		for d in self.references:
 			if d.reference_doctype:
 				meta = frappe.get_meta(d.reference_doctype)
-				if meta.has_field('bill_date'):
+				if not d.get('bill_date') and meta.has_field('bill_date'):
 					d.bill_date = frappe.db.get_value(d.reference_doctype, d.reference_name, 'bill_date')
-				elif meta.has_field('posting_date'):
+				if not d.get('bill_date') and meta.has_field('posting_date'):
 					d.bill_date = frappe.db.get_value(d.reference_doctype, d.reference_name, 'posting_date')
-				elif meta.has_field('transaction_date'):
+				if not d.get('bill_date') and meta.has_field('transaction_date'):
 					d.bill_date = frappe.db.get_value(d.reference_doctype, d.reference_name, 'transaction_date')
 
 	def check_held_invoices(self):
