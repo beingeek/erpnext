@@ -84,12 +84,28 @@ class PaymentEntry(AccountsController):
 		self.update_reference_details()
 		self.delink_advance_entry_references()
 
+	def before_print(self):
+		from frappe.contacts.doctype.address.address import get_default_address, get_address_display
+		if self.party:
+			self.address_dict = get_default_address(self.party_type, self.party)
+			self.address_display = get_address_display(self.address_dict) if self.address_dict else ""
+
+		for d in self.references:
+			if d.reference_doctype:
+				meta = frappe.get_meta(d.reference_doctype)
+				if meta.has_field('bill_date'):
+					d.bill_date = frappe.db.get_value(d.reference_doctype, d.reference_name, 'bill_date')
+				elif meta.has_field('posting_date'):
+					d.bill_date = frappe.db.get_value(d.reference_doctype, d.reference_name, 'posting_date')
+				elif meta.has_field('transaction_date'):
+					d.bill_date = frappe.db.get_value(d.reference_doctype, d.reference_name, 'transaction_date')
+
 	def check_held_invoices(self):
 		for d in self.references:
 			if d.reference_doctype == "Purchase Invoice":
 				on_hold, release_date = frappe.db.get_value("Purchase Invoice", d.reference_name, ['on_hold', 'release_date'])
 				if on_hold and (not release_date or release_date > getdate(nowdate())):
-					if release_date:
+					if not release_date:
 						frappe.throw(_("Purchase Invoice {0} is on hold").format(d.reference_name))
 					else:
 						frappe.throw(_("Purchase Invoice {0} is on hold till {1}").format(d.reference_name,
