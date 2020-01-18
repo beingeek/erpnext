@@ -202,6 +202,9 @@ class PaymentEntry(AccountsController):
 			frappe.throw(_("Payment Type must be one of Receive, Pay and Internal Transfer"))
 
 	def validate_party_details(self):
+		if self.payment_type == "Internal Transfer":
+			self.party = self.party_type = None
+
 		if self.party:
 			if not frappe.db.exists(self.party_type, self.party):
 				frappe.throw(_("Invalid {0}: {1}").format(self.party_type, self.party))
