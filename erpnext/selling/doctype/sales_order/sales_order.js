@@ -212,10 +212,6 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		}
 	},
 
-	get_customer_default_items: function() {
-		this.get_party_default_items();
-	},
-
 	update_selected_item_fields: function() {
 		if (this.frm.doc.docstatus == 0) {
 			var me = this;

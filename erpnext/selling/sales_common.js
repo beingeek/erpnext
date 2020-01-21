@@ -153,6 +153,10 @@ Customer Request`}
 		this.set_item_warning_color(item);
 	},
 
+	get_customer_default_items: function() {
+		this.get_party_default_items();
+	},
+
 	set_item_warning_color: function(item) {
 		if (item) {
 			var color = 'inherit';

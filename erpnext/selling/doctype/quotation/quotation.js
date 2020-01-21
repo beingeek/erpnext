@@ -15,6 +15,15 @@ frappe.ui.form.on('Quotation', {
 		frm.trigger("set_label");
 	},
 
+	validate: function(frm) {
+		for (var i = frm.fields_dict['items'].grid.grid_rows.length - 1; i >= 0; --i) {
+			var grid_row = frm.fields_dict['items'].grid.grid_rows[i];
+			if (!grid_row.doc.qty) {
+				grid_row.remove();
+			}
+		}
+	},
+
 	quotation_to: function(frm) {
 		frm.trigger("set_label");
 	},
