@@ -88,7 +88,6 @@ class PaymentEntry(AccountsController):
 		from frappe.contacts.doctype.address.address import get_default_address, get_address_display
 		if self.party:
 			self.address_dict = get_default_address(self.party_type, self.party)
-			self.address_display = get_address_display(self.address_dict) if self.address_dict else ""
 
 		for d in self.references:
 			if d.reference_doctype:
