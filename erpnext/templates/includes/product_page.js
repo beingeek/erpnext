@@ -53,7 +53,7 @@ frappe.ready(function() {
 	$("#item-add-to-cart button").on("click", function() {
 		frappe.provide('erpnext.shopping_cart');
 
-		erpnext.shopping_cart.update_cart({
+		erpnext.shopping_cart.update_cart_item({
 			item_code: get_item_code(),
 			qty: $("#item-spinner .cart-qty").val(),
 			callback: function(r) {

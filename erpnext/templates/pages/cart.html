@@ -6,6 +6,27 @@
 
 {% block script %}
 <script>{% include "templates/includes/cart.js" %}</script>
+<script type="text/javascript" src="/assets/js/dialog.min.js"></script>
+<script type="text/javascript" src="/assets/js/control.min.js"></script>
+<script type="text/javascript" src="/assets/js/moment-bundle.min.js"></script>
+<script type="text/javascript" src="/assets/js/web-extended.min.js"></script>
+<script>
+$.extend(frappe, {
+	datepicker_format: 	"{{ frappe.date_format }}",
+	moment_date_format: "{{ frappe.date_format.upper() }}",
+	boot: {
+		user: {
+			can_read: '', can_write: '', can_create: ''
+		},
+		sysdefaults: {
+			float_precision: {{ frappe.get_system_settings('float_precision') or 3 }},
+			date_format: "{{ frappe.get_system_settings('date_format') or 'yyyy-mm-dd' }}",
+		},
+	}
+});
+frappe.sys_defaults = frappe.boot.sysdefaults;
+moment.defaultFormat = frappe.moment_date_format;
+</script>
 {% endblock %}
 
 
@@ -25,6 +46,8 @@
 	<div id="cart-container">
 			<div id="cart-error" class="alert alert-danger"
 		style="display: none;"></div>
+		<div id="cart-fields">
+		</div>
 		<div id="cart-items">
 			<div class="row cart-item-header text-muted">
 				<div class="col-sm-8 col-xs-6 h6 text-uppercase">

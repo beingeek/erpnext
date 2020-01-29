@@ -83,34 +83,39 @@ def place_order():
 	return sales_order.name
 
 @frappe.whitelist()
-def update_cart(item_code, qty, with_items=False):
+def update_cart_item(item_code, qty, with_items=False):
 	quotation = _get_cart_quotation()
 
-	empty_card = False
 	qty = flt(qty)
-	if qty == 0:
+	if not qty:
 		quotation_items = quotation.get("items", {"item_code": ["!=", item_code]})
-		if quotation_items:
-			quotation.set("items", quotation_items)
-		else:
-			empty_card = True
-
+		quotation.set("items", quotation_items)
 	else:
 		quotation_items = quotation.get("items", {"item_code": item_code})
 		if not quotation_items:
 			quotation.append("items", {
-				"doctype": "Quotation Item",
 				"item_code": item_code,
 				"qty": qty
 			})
 		else:
 			quotation_items[0].qty = qty
 
-	apply_cart_settings(quotation=quotation)
+	return update_cart(quotation, with_items)
 
+@frappe.whitelist()
+def update_cart_field(fieldname, value, with_items=False):
+	if fieldname not in ['delivery_date']:
+		frappe.throw(_("Invalid Fieldname {0}").format(fieldname))
+
+	quotation = _get_cart_quotation()
+	quotation.set(fieldname, value)
+	return update_cart(quotation, with_items)
+
+def update_cart(quotation, with_items=False):
+	apply_cart_settings(quotation=quotation)
 	quotation.flags.ignore_permissions = True
 	quotation.payment_schedule = []
-	if not empty_card:
+	if quotation.items:
 		quotation.save()
 	else:
 		quotation.delete()
@@ -150,7 +155,7 @@ def update_cart_address(address_fieldname, address_name):
 		quotation.shipping_address = address_display
 
 		if not quotation.customer_address:
-			address_fieldname == "customer_address"
+			address_fieldname = "customer_address"
 
 	if address_fieldname == "customer_address":
 		quotation.customer_address = address_name

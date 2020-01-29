@@ -13,11 +13,32 @@ $.extend(shopping_cart, {
 			title + '</h4><p class="text-muted">' + text + '</p></div>');
 	},
 
+	create_fields: function() {
+		shopping_cart.field_group = new frappe.ui.FieldGroup({
+			parent: $('#cart-fields'),
+			fields: [
+				{
+					label: 'Delivery Date',
+					fieldname: 'delivery_date',
+					fieldtype: 'Date',
+					reqd: 1,
+					onchange: shopping_cart.bind_change_delivery_date,
+				}
+			]
+		});
+		shopping_cart.field_group.make();
+	},
+
 	bind_events: function() {
 		shopping_cart.bind_address_select();
 		shopping_cart.bind_place_order();
 		shopping_cart.bind_change_qty();
 		shopping_cart.bind_dropdown_cart_buttons();
+	},
+
+	bind_change_delivery_date: function() {
+		var delivery_date = shopping_cart.field_group.get_value('delivery_date');
+		shopping_cart.shopping_cart_update_field('delivery_date', delivery_date);
 	},
 
 	bind_address_select: function() {
@@ -64,7 +85,7 @@ $.extend(shopping_cart, {
 		$(".cart-items").on("change", ".cart-qty", function() {
 			var item_code = $(this).attr("data-item-code");
 			var newVal = $(this).val();
-			shopping_cart.shopping_cart_update(item_code, newVal);
+			shopping_cart.shopping_cart_update_item(item_code, newVal);
 		});
 
 		$(".cart-items").on('click', '.number-spinner button', function () {
@@ -82,7 +103,7 @@ $.extend(shopping_cart, {
 			}
 			input.val(newVal);
 			var item_code = input.attr("data-item-code");
-			shopping_cart.shopping_cart_update(item_code, newVal);
+			shopping_cart.shopping_cart_update_item(item_code, newVal);
 		});
 	},
 
@@ -159,6 +180,7 @@ $.extend(shopping_cart, {
 
 frappe.ready(function() {
 	$(".cart-icon").hide();
+	shopping_cart.create_fields();
 	shopping_cart.bind_events();
 });
 

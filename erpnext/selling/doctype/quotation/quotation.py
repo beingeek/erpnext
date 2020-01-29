@@ -143,6 +143,9 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	doclist = get_mapped_doc("Quotation", source_name, {
 			"Quotation": {
 				"doctype": "Sales Order",
+				"field_map": {
+					"delivery_date": "delivery_date"
+				},
 				"validation": {
 					"docstatus": ["=", 1]
 				}
