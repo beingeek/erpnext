@@ -22,11 +22,24 @@ $.extend(shopping_cart, {
 					fieldname: 'delivery_date',
 					fieldtype: 'Date',
 					reqd: 1,
-					onchange: shopping_cart.bind_change_delivery_date,
+					onchange: shopping_cart.bind_change_delivery_date
 				}
 			]
 		});
 		shopping_cart.field_group.make();
+
+		let values = {};
+		$(`.cart-field-data`).each(function (i, e) {
+			let $this = $(this);
+			values[$this.data('fieldname')] = $this.text();
+		});
+		$.each(values, function (k, v) {
+			frappe.run_serially([
+				() => shopping_cart.ignore_update = true,
+				() => shopping_cart.field_group.set_value(k, v),
+				() => shopping_cart.ignore_update = false
+			]);
+		});
 	},
 
 	bind_events: function() {
