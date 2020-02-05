@@ -403,9 +403,25 @@ def set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, is_
 	return execute(filters)
 
 
+@frappe.whitelist()
+def set_multiple_item_pl_rate(effective_date, price_list, items):
+	if isinstance(items, string_types):
+		items = json.loads(items)
+
+	for item in items:
+		_set_item_pl_rate(effective_date, item.get('item_code'), price_list,
+			item.get('price_list_rate'), item.get('uom'), item.get('conversion_factor'))
+
+
 def _set_item_pl_rate(effective_date, item_code, price_list, price_list_rate, uom=None, conversion_factor=None):
 	from frappe.model.utils import get_fetch_values
 	from erpnext.stock.get_item_details import get_item_price
+
+	if not item_code:
+		frappe.throw(_("Item Code not provided to update price"))
+
+	if not price_list:
+		frappe.throw(_("Price List not provided to update price"))
 
 	if not price_list_rate:
 		frappe.msgprint(_("Rate for Item {0} is 0 in Price List {1}. Please confirm rate").format(item_code, price_list))

@@ -62,14 +62,16 @@ frappe.ui.form.on("Purchase Order", {
 	onload_post_render: function(frm) {
 		frm.fields_dict.items.grid.wrapper.on('click', '.grid-row-check', function(e) {
 			frm.cscript.show_hide_add_remove_default_items(frm);
+			frm.cscript.show_hide_add_update_item_prices(frm);
 		});
 
 		if (frm.doc.__onload && frm.doc.__onload.from_copy) {
 			frm.cscript.apply_price_list();
 		}
 
-		frm.fields_dict.items.grid.add_custom_button("Remove Supplier Default", frm.cscript.remove_selected_from_default_items);
-		frm.fields_dict.items.grid.add_custom_button("Add Supplier Default", frm.cscript.add_selected_to_default_items);
+		frm.fields_dict.items.grid.add_custom_button("Remove Supplier Default", frm.cscript.remove_selected_from_default_items).addClass('btn-set-default-items');
+		frm.fields_dict.items.grid.add_custom_button("Add Supplier Default", frm.cscript.add_selected_to_default_items).addClass('btn-set-default-items');
+		frm.fields_dict.items.grid.add_custom_button("Update Item Prices", frm.cscript.update_selected_item_prices).addClass('btn-update-item-prices');
 		frm.fields_dict.items.grid.clear_custom_buttons();
 	},
 
@@ -178,14 +180,56 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 		}
 	},
 
+	show_hide_add_update_item_prices: function() {
+		var has_checked = this.frm.fields_dict.items.grid.grid_rows.some(row => row.doc.__checked);
+		if (has_checked) {
+			$(".btn-update-item-prices", this.frm.fields_dict.items.grid.grid_buttons).removeClass("hidden");
+		} else {
+			$(".btn-update-item-prices", this.frm.fields_dict.items.grid.grid_buttons).addClass("hidden");
+		}
+	},
 
+	update_selected_item_prices: function() {
+		var frm = cur_frm;
+		var rows = frm.fields_dict.items.grid.grid_rows
+			.filter(row => row.doc.__checked && row.doc.item_code && row.doc.rate)
+			.map(function(row) { return {
+				item_code: row.doc.item_code,
+				price_list_rate: row.doc.rate,
+				uom: row.doc.uom,
+				conversion_factor: row.doc.conversion_factor
+			}});
+
+		var price_list = frm.doc.buying_price_list;
+		if (price_list && rows.length) {
+			var dialog = new frappe.ui.Dialog({
+				title: __("Update Price List {0}", [price_list]), fields: [
+					{"label": __("Effective Date"), "fieldname": "effective_date", "fieldtype": "Date", "reqd": 1}
+				]
+			});
+			dialog.show();
+			dialog.set_primary_action(__('Update Price List'), function() {
+				return frappe.call({
+					method: "erpnext.stock.report.price_list.price_list.set_multiple_item_pl_rate",
+					args: {
+						effective_date: dialog.get_value('effective_date'),
+						items: rows,
+						price_list: price_list
+					},
+					callback: function() {
+						dialog.hide();
+					}
+				});
+			});
+		}
+	},
 
 	show_hide_add_remove_default_items: function() {
 		var has_checked = this.frm.fields_dict.items.grid.grid_rows.some(row => row.doc.__checked);
 		if (has_checked) {
-			$(".btn-custom", this.frm.fields_dict.items.grid.grid_buttons).removeClass("hidden");
+			$(".btn-set-default-items", this.frm.fields_dict.items.grid.grid_buttons).removeClass("hidden");
 		} else {
-			$(".btn-custom", this.frm.fields_dict.items.grid.grid_buttons).addClass("hidden");
+			$(".btn-set-default-items", this.frm.fields_dict.items.grid.grid_buttons).addClass("hidden");
 		}
 	},
 	add_selected_to_default_items: function() {
