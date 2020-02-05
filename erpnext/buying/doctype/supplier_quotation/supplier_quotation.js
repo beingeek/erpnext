@@ -66,6 +66,17 @@ erpnext.buying.SupplierQuotationController = erpnext.buying.BuyingController.ext
 	}
 });
 
+frappe.ui.form.on('Supplier Quotation', {
+	validate: function (frm) {
+		for (var i = frm.fields_dict['items'].grid.grid_rows.length - 1; i >= 0; --i) {
+			var grid_row = frm.fields_dict['items'].grid.grid_rows[i];
+			if (!grid_row.doc.qty) {
+				grid_row.remove();
+			}
+		}
+	},
+});
+
 // for backward compatibility: combine new and previous states
 $.extend(cur_frm.cscript, new erpnext.buying.SupplierQuotationController({frm: cur_frm}));
 
