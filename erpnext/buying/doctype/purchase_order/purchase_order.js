@@ -72,7 +72,9 @@ frappe.ui.form.on("Purchase Order", {
 		frm.fields_dict.items.grid.add_custom_button("Remove Supplier Default", frm.cscript.remove_selected_from_default_items).addClass('btn-set-default-items');
 		frm.fields_dict.items.grid.add_custom_button("Add Supplier Default", frm.cscript.add_selected_to_default_items).addClass('btn-set-default-items');
 		frm.fields_dict.items.grid.add_custom_button("Update Item Prices", frm.cscript.update_selected_item_prices).addClass('btn-update-item-prices');
-		frm.fields_dict.items.grid.clear_custom_buttons();
+
+		frm.cscript.show_hide_add_remove_default_items(frm);
+		frm.cscript.show_hide_add_update_item_prices(frm);
 	},
 
 	validate: function(frm) {
