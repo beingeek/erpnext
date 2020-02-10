@@ -18,11 +18,32 @@ $.extend(shopping_cart, {
 			parent: $('#cart-fields'),
 			fields: [
 				{
-					label: 'Delivery Date',
+					label: __('Delivery Date'),
 					fieldname: 'delivery_date',
 					fieldtype: 'Date',
 					reqd: 1,
 					onchange: shopping_cart.bind_change_delivery_date
+				},
+				{
+					label: __('Customer Name'),
+					fieldname: 'customer_name',
+					fieldtype: 'Data',
+					read_only: 1
+				},
+				{
+					fieldtype: 'Column Break'
+				},
+				{
+					label: __('Credit Limit'),
+					fieldname: 'credit_limit',
+					fieldtype: 'Currency',
+					read_only: 1
+				},
+				{	
+					label: __('Balance Amount'),
+					fieldname: 'balance_limit',
+					fieldtype: 'Currency',
+					read_only: 1
 				}
 			]
 		});

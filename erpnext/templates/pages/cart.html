@@ -47,10 +47,14 @@ moment.defaultFormat = frappe.moment_date_format;
 			<div id="cart-error" class="alert alert-danger"
 		style="display: none;"></div>
 		<div id="cart-fields">
-			{% for f in fields %}
+			{% for f in quotation_fields %}
 			<div class="cart-field-data hidden" data-fieldname="{{ f }}">{{ doc.get(f) or '' }}</div>
 			{% endfor %}
+			{% for p in party_fields %}
+			<div class="cart-field-data hidden" data-fieldname="{{ p }}">{{ party.get(p) or '' }}</div>
+			{% endfor %}
 		</div>
+
 		<div id="cart-items">
 			<div class="row cart-item-header text-muted">
 				<div class="col-sm-8 col-xs-6 h6 text-uppercase">

@@ -16,7 +16,8 @@ from erpnext.utilities.product import get_qty_in_stock
 class WebsitePriceListMissingError(frappe.ValidationError):
 	pass
 
-cart_fieldnames = ['delivery_date']
+cart_quotation_fields = ['delivery_date']
+cart_party_fields = ['customer_name','credit_limit']
 
 def set_cart_count(quotation=None):
 	if cint(frappe.db.get_singles_value("Shopping Cart Settings", "enabled")):
@@ -43,12 +44,14 @@ def get_cart_quotation(doc=None):
 
 	return {
 		"doc": decorate_quotation_doc(doc),
+		"party": party,
 		"shipping_addresses": [{"name": address.name, "display": address.display}
 			for address in addresses],
 		"billing_addresses": [{"name": address.name, "display": address.display}
 			for address in addresses],
 		"shipping_rules": get_applicable_shipping_rules(party),
-		"fields": cart_fieldnames
+		"quotation_fields": cart_quotation_fields,
+		"party_fields": cart_party_fields
 	}
 
 @frappe.whitelist()
@@ -107,7 +110,7 @@ def update_cart_item(item_code, qty, with_items=False):
 
 @frappe.whitelist()
 def update_cart_field(fieldname, value, with_items=False):
-	if fieldname not in cart_fieldnames:
+	if fieldname not in cart_quotation_fields:
 		frappe.throw(_("Invalid Fieldname {0}").format(fieldname))
 
 	quotation = _get_cart_quotation()
@@ -137,7 +140,7 @@ def update_cart(quotation, with_items=False):
 				context),
 			"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
 				context),
-			"fields": fields_dict
+			"quotation_fields": qtn_fields_dict,
 		}
 	else:
 		return {
