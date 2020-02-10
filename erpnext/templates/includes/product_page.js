@@ -14,14 +14,14 @@ frappe.ready(function() {
 		callback: function(r) {
 			if(r.message) {
 				if(r.message.cart_settings.enabled) {
-					$(".item-cart, .item-price, .item-stock").toggleClass("hide", (!!!r.message.product_info.price || !!!r.message.product_info.in_stock));
+					$(".item-cart, .item-price, .item-stock").toggleClass("hide", (!!!r.message.product_info.price));
 				}
 				if(r.message.cart_settings.show_price) {
 					$(".item-price").toggleClass("hide", false);
 				}
-				if(r.message.cart_settings.show_stock_availability) {
-					$(".item-stock").toggleClass("hide", false);
-				}
+
+				$(".item-stock").toggleClass("hide", !r.message.cart_settings.show_stock_availability);
+				
 				if(r.message.product_info.price) {
 					$(".item-price")
 						.html(r.message.product_info.price.formatted_price_sales_uom + "<div style='font-size: small'>\
