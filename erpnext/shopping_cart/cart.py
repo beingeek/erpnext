@@ -130,9 +130,9 @@ def update_cart(quotation, with_items=False):
 	set_cart_count(quotation)
 
 	context = get_cart_quotation(quotation)
-	fields_dict = {}
-	for f in cart_fieldnames:
-		fields_dict[f] = context['doc'].get(f)
+	qtn_fields_dict = {}
+	for f in cart_quotation_fields:
+		qtn_fields_dict[f] = context['doc'].get(f)
 
 	if cint(with_items):
 		return {
