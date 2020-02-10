@@ -67,6 +67,7 @@ $.extend(shopping_cart, {
 		shopping_cart.bind_address_select();
 		shopping_cart.bind_place_order();
 		shopping_cart.bind_change_qty();
+		shopping_cart.bind_change_uom();
 		shopping_cart.bind_dropdown_cart_buttons();
 	},
 
@@ -119,7 +120,8 @@ $.extend(shopping_cart, {
 		$(".cart-items").on("change", ".cart-qty", function() {
 			var item_code = $(this).attr("data-item-code");
 			var newVal = $(this).val();
-			shopping_cart.shopping_cart_update_item(item_code, newVal);
+			var fieldname = 'qty'
+			shopping_cart.shopping_cart_update_item(item_code, fieldname, newVal);
 		});
 
 		$(".cart-items").on('click', '.number-spinner button', function () {
@@ -137,7 +139,16 @@ $.extend(shopping_cart, {
 			}
 			input.val(newVal);
 			var item_code = input.attr("data-item-code");
-			shopping_cart.shopping_cart_update_item(item_code, newVal);
+			shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
+		});
+	},
+
+	bind_change_uom: function() {
+		$(".cart-items").on("change", ".cart-uom", function() {
+			var item_code = $(this).attr("data-item-code");
+			var newVal = $(this).val();
+			var fieldname = 'uom'
+			shopping_cart.shopping_cart_update_item(item_code, fieldname, newVal);
 		});
 	},
 

@@ -89,11 +89,13 @@ def place_order():
 	return sales_order.name
 
 @frappe.whitelist()
-def update_cart_item(item_code, qty, with_items=False):
+def update_cart_item(item_code, fieldname, value, with_items=False):
+	from erpnext.stock.get_item_details import get_conversion_factor
 	quotation = _get_cart_quotation()
+	if fieldname not in ['qty', 'uom']:
+		frappe.throw(_("Invalid Fieldname"))
 
-	qty = flt(qty)
-	if not qty:
+	if fieldname == 'qty' and not flt(value):
 		quotation_items = quotation.get("items", {"item_code": ["!=", item_code]})
 		quotation.set("items", quotation_items)
 	else:
@@ -101,12 +103,15 @@ def update_cart_item(item_code, qty, with_items=False):
 		if not quotation_items:
 			quotation.append("items", {
 				"item_code": item_code,
-				"qty": qty
+				fieldname: value
 			})
 		else:
-			quotation_items[0].qty = qty
+			quotation_items[0].set(fieldname, value)
+			if fieldname == 'uom':
+				quotation_items[0].conversion_factor = get_conversion_factor(item_code, value).get('conversion_factor')
 
 	return update_cart(quotation, with_items)
+	
 
 @frappe.whitelist()
 def update_cart_field(fieldname, value, with_items=False):

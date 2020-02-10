@@ -814,10 +814,10 @@ def get_serial_no_batchwise(args, sales_order=None):
 
 @frappe.whitelist()
 def get_conversion_factor(item_code, uom):
-	variant_of = frappe.db.get_value("Item", item_code, "variant_of", cache=True)
 	filters = {"parent": item_code, "uom": uom}
+	'''variant_of = frappe.db.get_value("Item", item_code, "variant_of", cache=True)
 	if variant_of:
-		filters["parent"] = ("in", (item_code, variant_of))
+		filters["parent"] = ("in", (item_code, variant_of))'''
 	conversion_factor = frappe.db.get_value("UOM Conversion Detail",
 		filters, "conversion_factor")
 	if not conversion_factor:
