@@ -38,7 +38,9 @@
         <span class="text-muted small">{{d.alt_uom}}</span>
     </div>
     <div class="col-sm-1 text-right">
-        HST
+        {% if 'hst' in d.item_tax_template|lower %}
+        <i class="fa fa-check"></i>
+        {% endif %}
     </div>
     <div class="col-sm-1 text-right">
         {{ d.get_formatted("amount") }}
