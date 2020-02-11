@@ -11,6 +11,7 @@ from erpnext.shopping_cart.doctype.shopping_cart_settings.shopping_cart_settings
 from frappe.utils.nestedset import get_root_of
 from erpnext.accounts.utils import get_account_name
 from erpnext.utilities.product import get_qty_in_stock
+from erpnext.accounts.utils import get_balance_on
 
 
 class WebsitePriceListMissingError(frappe.ValidationError):
@@ -39,10 +40,13 @@ def get_cart_quotation(doc=None):
 
 	addresses = get_address_docs(party=party)
 
+	get_balance = get_balance_on(party=party.name, party_type='Customer')
+
 	if not doc.customer_address and addresses:
 		update_cart_address("customer_address", addresses[0].name)
 
 	return {
+		"customer_balance": get_balance,
 		"doc": decorate_quotation_doc(doc),
 		"party": party,
 		"shipping_addresses": [{"name": address.name, "display": address.display}

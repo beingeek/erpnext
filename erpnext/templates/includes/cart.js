@@ -41,7 +41,7 @@ $.extend(shopping_cart, {
 				},
 				{	
 					label: __('Balance Amount'),
-					fieldname: 'balance_limit',
+					fieldname: 'customer_balance',
 					fieldtype: 'Currency',
 					read_only: 1
 				}

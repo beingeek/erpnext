@@ -53,6 +53,7 @@ moment.defaultFormat = frappe.moment_date_format;
 			{% for p in party_fields %}
 			<div class="cart-field-data hidden" data-fieldname="{{ p }}">{{ party.get(p) or '' }}</div>
 			{% endfor %}
+			<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
 		</div>
 		<button class="btn btn-default btn-get-default-items btn-sm" type="button">
 			{{ _("Get Default Items") }}</button>
@@ -120,6 +121,5 @@ moment.defaultFormat = frappe.moment_date_format;
 		{% endif %}
 	</div>
 </div>
-
 
 {% endblock %}
