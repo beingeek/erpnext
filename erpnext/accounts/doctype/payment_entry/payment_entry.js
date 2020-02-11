@@ -228,7 +228,7 @@ frappe.ui.form.on('Payment Entry', {
 
 	unallocated_advance_payments: function(frm) {
 		$("a", frm.fields_dict.unallocated_advance_payments.$input_wrapper).attr("href",
-			"desk#Form/Payment Reconciliation/Payment Reconciliation?party_type="+frm.doc.party_type+"&party=" + frm.doc.party);
+			"desk#Form/Payment Reconciliation/Payment Reconciliation?company="+frm.doc.company+"&party_type="+frm.doc.party_type+"&party=" + frm.doc.party);
 		$("a", frm.fields_dict.unallocated_advance_payments.$input_wrapper).css("color",
 			flt(frm.doc.unallocated_advance_payments) >= 0.01 ? "red" : "inherit");
 	},

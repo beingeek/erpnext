@@ -115,7 +115,7 @@ frappe.query_reports["Accounts Receivable Summary"] = {
 		var link;
 		var filters = frappe.query_report.get_values();
 		if (data && column.fieldname == 'advance_amount' && flt(value)) {
-			link = encodeURI("desk#Form/Payment Reconciliation/Payment Reconciliation?party_type=Customer&party=" + data['Customer']);
+			link = encodeURI("desk#Form/Payment Reconciliation/Payment Reconciliation?company="+filters.company+"&party_type=Customer&party=" + data['Customer']);
 		}
 		if (data && column.fieldname == __("Customer")) {
 			link = encodeURI("desk#query-report/Accounts Receivable/Accounts Receivable?customer=" + data['Customer'] + "&report_date=" + filters.report_date);

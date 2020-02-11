@@ -89,7 +89,7 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 
 	party: function() {
 		var me = this
-		if(!me.frm.doc.receivable_payable_account && me.frm.doc.party_type && me.frm.doc.party) {
+		if(!me.frm.doc.receivable_payable_account && me.frm.doc.party_type && me.frm.doc.party && me.frm.doc.company) {
 			return frappe.call({
 				method: "erpnext.accounts.party.get_party_account",
 				args: {
