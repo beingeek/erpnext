@@ -138,7 +138,10 @@ def update_cart(quotation, with_items=False):
 	qtn_fields_dict = {}
 	for f in cart_quotation_fields:
 		qtn_fields_dict[f] = context['doc'].get(f)
+	for f in cart_party_fields:
+		qtn_fields_dict[f] = context['party'].get(f)
 
+	
 	if cint(with_items):
 		return {
 			"items": frappe.render_template("templates/includes/cart/cart_items.html",
@@ -504,3 +507,18 @@ def get_address_territory(address_name):
 
 def show_terms(doc):
 	return doc.tc_name
+
+@frappe.whitelist()
+def get_default_items(with_items=False):
+	quotation = _get_cart_quotation()
+	party = get_party()
+	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
+		filters={"parenttype": 'Customer', "parent": party.name})
+	default_item_codes = [d.item_code for d in default_items]
+	existing_item_codes = [d.item_code for d in quotation.items]
+
+	for item_code in default_item_codes:
+		if item_code not in existing_item_codes:
+			quotation.append("items", {"item_code": item_code})
+	
+	return update_cart(quotation, with_items)

@@ -54,6 +54,9 @@ moment.defaultFormat = frappe.moment_date_format;
 			<div class="cart-field-data hidden" data-fieldname="{{ p }}">{{ party.get(p) or '' }}</div>
 			{% endfor %}
 		</div>
+		<button class="btn btn-default btn-get-default-items btn-sm" type="button">
+			{{ _("Get Default Items") }}</button>
+
 
 		<div id="cart-items">
 			<div class="row cart-item-header text-muted">
@@ -89,9 +92,11 @@ moment.defaultFormat = frappe.moment_date_format;
 		{% if doc.items %}
 		<!-- taxes -->
 		<div class="row cart-taxes">
-			<div class="col-sm-6"><!-- empty --></div>
-			<div class="col-sm-6 text-right cart-tax-items">
-			{% include "templates/includes/order/order_taxes.html" %}
+			<div class="col-sm-12">
+				<!-- empty -->
+			</div>
+			<div class="col-sm-12 text-right cart-tax-items">
+				{% include "templates/includes/order/order_taxes.html" %}
 			</div>
 		</div>
 

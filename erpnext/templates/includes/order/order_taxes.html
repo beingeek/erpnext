@@ -10,7 +10,7 @@
 <div class="row tax-row">
     <div class="col-xs-6 text-right">{{ d.description }}</div>
     <div class="col-xs-6 text-right">
-        {{ d.get_formatted("base_tax_amount") }}</div>
+        {{ d.get_formatted("tax_amount_after_discount_amount") }}</div>
 </div>
 {% endif %}
 {% endfor %}

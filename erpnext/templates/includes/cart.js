@@ -63,12 +63,30 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	bind_events: function() {
+	bind_events: function () {
 		shopping_cart.bind_address_select();
 		shopping_cart.bind_place_order();
 		shopping_cart.bind_change_qty();
 		shopping_cart.bind_change_uom();
 		shopping_cart.bind_dropdown_cart_buttons();
+		shopping_cart.bind_get_default_items();
+	},
+
+	bind_get_default_items: function () {
+		$('.btn-get-default-items').click(function () {
+			return frappe.call({
+				type: "POST",
+				method: "erpnext.shopping_cart.cart.get_default_items",
+				freeze: true,
+				args: {
+					with_items: 1
+				},
+				callback: function (r) {
+					shopping_cart.shopping_cart_update_callback(r);
+				}
+			});
+		});
+
 	},
 
 	bind_change_delivery_date: function() {
