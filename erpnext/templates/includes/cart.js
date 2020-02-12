@@ -138,8 +138,7 @@ $.extend(shopping_cart, {
 		$(".cart-items").on("change", ".cart-qty", function() {
 			var item_code = $(this).attr("data-item-code");
 			var newVal = $(this).val();
-			var fieldname = 'qty'
-			shopping_cart.shopping_cart_update_item(item_code, fieldname, newVal);
+			shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
 		});
 
 		$(".cart-items").on('click', '.number-spinner button', function () {
@@ -165,8 +164,7 @@ $.extend(shopping_cart, {
 		$(".cart-items").on("change", ".cart-uom", function() {
 			var item_code = $(this).attr("data-item-code");
 			var newVal = $(this).val();
-			var fieldname = 'uom'
-			shopping_cart.shopping_cart_update_item(item_code, fieldname, newVal);
+			shopping_cart.shopping_cart_update_item(item_code, 'uom', newVal);
 		});
 	},
 
