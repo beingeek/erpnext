@@ -96,14 +96,11 @@ $.extend(shopping_cart, {
 				data: [],
 				title: __("Add Items"), fields: [
 					{label: __("Search"), fieldname: "search", fieldtype: "Data"},
-					{label: __("Search"), fieldname: "search_btn", fieldtype: "Button"},
-					{fieldtype: "Section Break"},
 					{fieldname: "body", fieldtype: "HTML"}
 				]
 			});
-
+			dialog.set_primary_action(__("Search"), () => shopping_cart.get_product_list.call(this, dialog));
 			dialog.show();
-			dialog.fields_dict.search_btn.$input.click(() => shopping_cart.get_product_list.call(this, dialog));
 		});
 	},
 
