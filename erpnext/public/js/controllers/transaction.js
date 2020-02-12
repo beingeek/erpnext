@@ -1617,7 +1617,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 				} else {
 					taxes_row = this.frm.add_child('taxes', {
 						charge_type: "Actual",
-						account_head: delivery_charges_account
+						account_head: delivery_charges_account,
+						description: __("Delivery Charges")
 					});
 				}
 
