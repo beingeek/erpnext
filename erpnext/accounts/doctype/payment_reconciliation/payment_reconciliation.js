@@ -25,6 +25,7 @@ frappe.ui.form.on("Payment Reconciliation Payment", {
 erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.extend({
 	setup: function() {
 		erpnext.hide_company();
+		this.frm.doc.company = get_url_arg("company");
 		this.frm.doc.party_type = get_url_arg("party_type");
 		this.frm.doc.party = get_url_arg("party");
 
