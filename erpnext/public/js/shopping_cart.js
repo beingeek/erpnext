@@ -171,7 +171,7 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	shopping_cart_update_field: function(fieldname, fieldname, value, cart_dropdown) {
+	shopping_cart_update_field: function(fieldname, value, cart_dropdown) {
 		shopping_cart.update_cart_field({
 			item_code: item_code,
 			fieldname: fieldname,

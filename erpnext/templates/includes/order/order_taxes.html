@@ -1,15 +1,15 @@
 {% if doc.taxes %}
 <div class="row tax-net-total-row">
-    <div class="col-xs-6 text-right">{{ _("Net Total") }}</div>
-    <div class="col-xs-6 text-right">
+    <div class="col-xs-10 text-right">{{ _("Sub Total") }}</div>
+    <div class="col-xs-2 text-right">
         {{ doc.get_formatted("net_total") }}</div>
 </div>
 {% endif %}
 {% for d in doc.taxes %}
 {% if d.base_tax_amount > 0 %}
 <div class="row tax-row">
-    <div class="col-xs-6 text-right">{{ d.description }}</div>
-    <div class="col-xs-6 text-right">
+    <div class="col-xs-10 text-right">{{ d.description }}</div>
+    <div class="col-xs-2 text-right">
         {{ d.get_formatted("tax_amount_after_discount_amount") }}</div>
 </div>
 {% endif %}
