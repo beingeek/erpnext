@@ -101,6 +101,8 @@ def update_cart_item(item_code, fieldname, value, with_items=False):
 
 	if fieldname == 'qty' and not flt(value):
 		quotation_items = quotation.get("items", {"item_code": ["!=", item_code]})
+		for i, d in enumerate(quotation_items):
+			d.idx = i + 1
 		quotation.set("items", quotation_items)
 	else:
 		quotation_items = quotation.get("items", {"item_code": item_code})
@@ -524,4 +526,14 @@ def get_default_items(with_items=False):
 		if item_code not in existing_item_codes:
 			quotation.append("items", {"item_code": item_code})
 	
+	return update_cart(quotation, with_items)
+
+@frappe.whitelist()
+def add_item(item_code, with_items=False):
+	quotation = _get_cart_quotation()
+	existing_item_codes = [d.item_code for d in quotation.items]
+
+	if item_code not in existing_item_codes:
+		quotation.append("items", {"item_code": item_code, "qty": 1})
+
 	return update_cart(quotation, with_items)

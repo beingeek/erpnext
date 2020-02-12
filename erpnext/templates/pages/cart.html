@@ -55,9 +55,18 @@ moment.defaultFormat = frappe.moment_date_format;
 			{% endfor %}
 			<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
 		</div>
-		<button class="btn btn-default btn-get-default-items btn-sm" type="button">
-			{{ _("Get Default Items") }}</button>
-
+		<div class="row">
+			<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+				<button class="btn btn-default btn-get-default-items btn-sm" type="button">
+					{{ _("Get Default Items") }}</button>
+			</div>
+			<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+				<button class="btn btn-default btn-add-items btn-sm" type="button">
+					{{ _("Add Items") }}</button>
+			</div>
+		</div>
+		
+		
 
 		<div id="cart-items">
 			<div class="row cart-item-header text-muted">
