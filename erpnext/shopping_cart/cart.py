@@ -515,9 +515,8 @@ def show_terms(doc):
 @frappe.whitelist()
 def get_default_items(with_items=False):
 	quotation = _get_cart_quotation()
-	party = get_party()
 	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
-		filters={"parenttype": 'Customer', "parent": party.name})
+		filters={"parenttype": 'Customer', "parent": quotation.customer})
 	default_item_codes = [d.item_code for d in default_items]
 	existing_item_codes = [d.item_code for d in quotation.items]
 
