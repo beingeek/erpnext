@@ -84,7 +84,6 @@ $.extend(shopping_cart, {
 				type: "POST",
 				method: "erpnext.shopping_cart.cart.update_cart_field",
 				args: {
-					item_code:opts.item_code,
 					fieldname: opts.fieldname,
 					value: opts.value,
 					with_items: opts.with_items || 0
@@ -173,7 +172,6 @@ $.extend(shopping_cart, {
 
 	shopping_cart_update_field: function(fieldname, value, cart_dropdown) {
 		shopping_cart.update_cart_field({
-			item_code: item_code,
 			fieldname: fieldname,
 			value: value,
 			with_items: 1,
