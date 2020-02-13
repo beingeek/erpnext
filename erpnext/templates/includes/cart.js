@@ -285,7 +285,7 @@ $.extend(shopping_cart, {
 						.html(msg || frappe._("Something went wrong!"))
 						.toggle(true);
 				} else {
-					window.location.href = "/orders/" + encodeURIComponent(r.message);
+					window.location.href = "/quotations/" + encodeURIComponent(r.message);
 				}
 			}
 		});
