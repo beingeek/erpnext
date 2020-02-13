@@ -55,7 +55,9 @@ frappe.ready(function() {
 
 		erpnext.shopping_cart.update_cart_item({
 			item_code: get_item_code(),
-			qty: $("#item-spinner .cart-qty").val(),
+			fieldname: 'qty',
+			value: $("#item-spinner .cart-qty").val(),
+
 			callback: function(r) {
 				if(!r.exc) {
 					toggle_update_cart(1);
