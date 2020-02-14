@@ -7,6 +7,9 @@ from erpnext.shopping_cart.cart import get_party
 
 
 def get_context(context):
+	if frappe.session.user == "Guest":
+		raise frappe.PermissionError, "Please login first"
+
 	party = get_party()
 	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
 		filters={"parenttype": 'Customer', "parent": party.name})
@@ -22,7 +25,7 @@ def get_context(context):
 def add_default_item(item_code):
 	if item_code:
 		party = get_party()
-		row = party.append("default_items_tbl", {"item_code": item_code})
+		party.append("default_items_tbl", {"item_code": item_code})
 		party.flags.ignore_permissions = True
 		party.save()
 
