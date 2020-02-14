@@ -92,39 +92,11 @@ $.extend(shopping_cart, {
 
 	bind_add_items: function () {
 		$('.btn-add-items').click(function () {
-			var dialog = new frappe.ui.Dialog({
-				data: [],
-				title: __("Add Items"), fields: [
-					{label: __("Search"), fieldname: "search", fieldtype: "Data"},
-					{fieldname: "body", fieldtype: "HTML"}
-				]
-			});
-			dialog.set_primary_action(__("Search"), () => shopping_cart.get_product_list.call(this, dialog));
-			dialog.show();
+			window.add_item_dialog(shopping_cart.add_item);
 		});
 	},
 
-	get_product_list: function(dialog) {
-		return frappe.call({
-			type: "POST",
-			method: "erpnext.templates.pages.product_search.get_product_list",
-			freeze: true,
-			args: {
-				search: dialog.get_value('search')
-			},
-			callback: function (r) {
-				dialog.set_df_property('body', 'options', r.message);
-				$('.product-link', dialog.$wrapper).click(function() {
-					shopping_cart.add_item.call(this, dialog);
-					return false;
-				});
-			}
-
-		});
-	},
-
-	add_item: function(dialog) {
-		var item_code = $(this).attr("data-item-code");
+	add_item: function(item_code) {
 		if (item_code) {
 			return frappe.call({
 				type: "POST",
@@ -136,7 +108,6 @@ $.extend(shopping_cart, {
 				},
 				callback: function (r){
 					shopping_cart.shopping_cart_update_callback(r);
-					dialog.hide();
 				}
 			})
 		}

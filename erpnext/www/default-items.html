@@ -1,0 +1,71 @@
+{% extends "templates/web.html" %}
+
+{% block title %} {{ _("Default Items")}} {% endblock %}
+
+{% from "erpnext/templates/includes/order/order_macros.html" import item_name_and_description %}
+
+{% block header %}<h2>{{ _("Default Items") }}</h2>{% endblock %}
+
+{% block script%}
+<script>{% include "templates/includes/product_list.js" %}</script>
+<script type="text/javascript" src="/assets/js/dialog.min.js"></script>
+<script type="text/javascript" src="/assets/js/control.min.js"></script>
+<script type="text/javascript" src="/assets/js/moment-bundle.min.js"></script>
+<script type="text/javascript" src="/assets/js/web-extended.min.js"></script>
+<script>
+    window.add_default_item = function(item_code) {
+        return frappe.call({
+            type: "POST",
+            method: "erpnext.www.default_items.add_default_item",
+            freeze: true,
+            args: {
+                item_code: item_code
+            },
+            callback: function(r) {
+                if (r.message) {
+                    $("#default-items").append(r.message);
+                }
+            }
+        })
+    };
+    frappe.ready(function() {
+        $('.btn-add-items').click(function() {
+            window.add_item_dialog(add_default_item);
+        });
+    });
+</script>
+{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-primary btn-sm btn-add-items" type="button">
+    {{ _("Add Items") }}
+</button>
+{% endblock %}
+
+{% block page_content %}
+<div class="default-container">
+    <div class="default-item-table" style="margin-top: 50px;">
+        <div class="default-item-header" style="border-bottom: 1px solid #d1d8dd;margin-bottom: 15px;">
+            <div class="row h6 text-uppercase text-muted">
+                <div class="col-sm-6">
+                    {{ _("Item") }}
+                </div>
+                <div class="col-sm-3 text-center">
+                    {{ _("UOM") }}
+                </div>
+                <div class="col-sm-3 text-right">
+                    {{ _("Per Unit") }}
+                </div>
+            </div>
+        </div>
+        <div id="default-items">
+            {% for item in default_items %}
+                {% include "erpnext/www/default-item-row.html" %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<button class="btn btn-primary btn-sm btn-add-items" type="button" style="float: right; margin-bottom: 15px;">
+    {{ _("Add Items") }}
+</button>
+{% endblock %}
