@@ -7,6 +7,8 @@ from erpnext.shopping_cart.cart import get_party
 
 
 def get_context(context):
+	context.no_cache = 1
+	
 	if frappe.session.user == "Guest":
 		raise frappe.PermissionError, "Please login first"
 
