@@ -71,13 +71,19 @@ window.product_list_dialog = function(dialog, callback) {
 			search: dialog.get_value('search')
 		},
 		callback: function (r) {
-			dialog.set_df_property('body', 'options', r.message);
-			$('.product-link', dialog.$wrapper).click(function() {
-				var item_code = $(this).attr('data-item-code');
-				callback(item_code);
-				dialog.hide();
-				return false;
-			});
+			if (r.message && r.message.length) {
+				dialog.fields_dict.body.$wrapper.html(r.message.join(""));
+
+				$('.product-link', dialog.$wrapper).click(function() {
+					var item_code = $(this).attr('data-item-code');
+					callback(item_code);
+					dialog.hide();
+					return false;
+				});
+			} else {
+				dialog.fields_dict.body.$wrapper.html("No items found");
+			}
+			
 		}
 
 	});
