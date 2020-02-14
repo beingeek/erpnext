@@ -8,32 +8,11 @@
 
 {% block script%}
 <script>{% include "templates/includes/product_list.js" %}</script>
+<script>{% include "www/default_items.js" %}</script>
 <script type="text/javascript" src="/assets/js/dialog.min.js"></script>
 <script type="text/javascript" src="/assets/js/control.min.js"></script>
 <script type="text/javascript" src="/assets/js/moment-bundle.min.js"></script>
 <script type="text/javascript" src="/assets/js/web-extended.min.js"></script>
-<script>
-    window.add_default_item = function(item_code) {
-        return frappe.call({
-            type: "POST",
-            method: "erpnext.www.default_items.add_default_item",
-            freeze: true,
-            args: {
-                item_code: item_code
-            },
-            callback: function(r) {
-                if (r.message) {
-                    $("#default-items").append(r.message);
-                }
-            }
-        })
-    };
-    frappe.ready(function() {
-        $('.btn-add-items').click(function() {
-            window.add_item_dialog(add_default_item);
-        });
-    });
-</script>
 {% endblock %}
 
 {% block header_actions %}
@@ -50,11 +29,13 @@
                 <div class="col-sm-6">
                     {{ _("Item") }}
                 </div>
-                <div class="col-sm-3 text-center">
+                <div class="col-sm-2 text-center">
                     {{ _("UOM") }}
                 </div>
-                <div class="col-sm-3 text-right">
+                <div class="col-sm-2 text-right">
                     {{ _("Per Unit") }}
+                </div>
+                <div class="col-sm-2">
                 </div>
             </div>
         </div>

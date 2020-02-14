@@ -8,7 +8,7 @@ from erpnext.shopping_cart.cart import get_party
 
 def get_context(context):
 	context.no_cache = 1
-	
+
 	if frappe.session.user == "Guest":
 		raise frappe.PermissionError, "Please login first"
 
@@ -34,3 +34,17 @@ def add_default_item(item_code):
 		context = {"item": frappe.get_cached_doc("Item", item_code)}
 
 		return frappe.get_template("www/default-item-row.html").render(context)
+
+@frappe.whitelist()
+def remove_default_item(item_code):
+	if item_code:
+		party = get_party()
+		row = party.get('default_items_tbl', filters={"item_code": item_code})
+
+		for d in row:
+			party.remove(d)
+
+		party.flags.ignore_permissions = True
+		party.save()
+
+	return True
