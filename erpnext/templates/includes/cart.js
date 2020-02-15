@@ -18,11 +18,32 @@ $.extend(shopping_cart, {
 			parent: $('#cart-fields'),
 			fields: [
 				{
-					label: 'Delivery Date',
+					label: __('Delivery Date'),
 					fieldname: 'delivery_date',
 					fieldtype: 'Date',
 					reqd: 1,
 					onchange: shopping_cart.bind_change_delivery_date
+				},
+				{
+					label: __('Customer Name'),
+					fieldname: 'customer_name',
+					fieldtype: 'Data',
+					read_only: 1
+				},
+				{
+					fieldtype: 'Column Break'
+				},
+				{
+					label: __('Credit Limit'),
+					fieldname: 'credit_limit',
+					fieldtype: 'Currency',
+					read_only: 1
+				},
+				{	
+					label: __('Balance Amount'),
+					fieldname: 'customer_balance',
+					fieldtype: 'Currency',
+					read_only: 1
 				}
 			]
 		});
@@ -42,11 +63,54 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	bind_events: function() {
+	bind_events: function () {
 		shopping_cart.bind_address_select();
 		shopping_cart.bind_place_order();
 		shopping_cart.bind_change_qty();
+		shopping_cart.bind_change_uom();
 		shopping_cart.bind_dropdown_cart_buttons();
+		shopping_cart.bind_get_default_items();
+		shopping_cart.bind_add_items();
+	},
+
+	bind_get_default_items: function () {
+		$('.btn-get-default-items').click(function () {
+			return frappe.call({
+				type: "POST",
+				method: "erpnext.shopping_cart.cart.get_default_items",
+				freeze: true,
+				args: {
+					with_items: 1
+				},
+				callback: function (r) {
+					shopping_cart.shopping_cart_update_callback(r);
+				}
+			});
+		});
+
+	},
+
+	bind_add_items: function () {
+		$('.btn-add-items').click(function () {
+			window.add_item_dialog(shopping_cart.add_item);
+		});
+	},
+
+	add_item: function(item_code) {
+		if (item_code) {
+			return frappe.call({
+				type: "POST",
+				method: "erpnext.shopping_cart.cart.add_item",
+				freeze: true,
+				args: {
+					item_code: item_code,
+					with_items: 1
+				},
+				callback: function (r){
+					shopping_cart.shopping_cart_update_callback(r);
+				}
+			})
+		}
 	},
 
 	bind_change_delivery_date: function() {
@@ -98,7 +162,7 @@ $.extend(shopping_cart, {
 		$(".cart-items").on("change", ".cart-qty", function() {
 			var item_code = $(this).attr("data-item-code");
 			var newVal = $(this).val();
-			shopping_cart.shopping_cart_update_item(item_code, newVal);
+			shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
 		});
 
 		$(".cart-items").on('click', '.number-spinner button', function () {
@@ -116,7 +180,15 @@ $.extend(shopping_cart, {
 			}
 			input.val(newVal);
 			var item_code = input.attr("data-item-code");
-			shopping_cart.shopping_cart_update_item(item_code, newVal);
+			shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
+		});
+	},
+
+	bind_change_uom: function() {
+		$(".cart-items").on("change", ".cart-uom", function() {
+			var item_code = $(this).attr("data-item-code");
+			var newVal = $(this).val();
+			shopping_cart.shopping_cart_update_item(item_code, 'uom', newVal);
 		});
 	},
 
@@ -184,7 +256,7 @@ $.extend(shopping_cart, {
 						.html(msg || frappe._("Something went wrong!"))
 						.toggle(true);
 				} else {
-					window.location.href = "/orders/" + encodeURIComponent(r.message);
+					window.location.href = "/quotations/" + encodeURIComponent(r.message);
 				}
 			}
 		});

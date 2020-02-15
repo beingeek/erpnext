@@ -14,7 +14,16 @@ def get_context(context):
 	context.show_search = True
 
 @frappe.whitelist(allow_guest=True)
-def get_product_list(search=None, start=0, limit=12):
+def get_product_list(search=None, start=0, limit=15):
+	data = get_product_data(search, start, limit)
+
+	for item in data:
+		set_product_info_for_website(item)
+
+	return [get_item_for_list_in_html(r) for r in data]
+
+@frappe.whitelist(allow_guest=True)
+def get_product_data(search=None, start=0, limit=15):
 	# limit = 12 because we show 12 items in the grid view
 
 	# base query
@@ -44,8 +53,6 @@ def get_product_list(search=None, start=0, limit=12):
 		"today": nowdate()
 	}, as_dict=1)
 
-	for item in data:
-		set_product_info_for_website(item)
+	return data
 
-	return [get_item_for_list_in_html(r) for r in data]
 
