@@ -54,7 +54,8 @@ $.extend(shopping_cart, {
 				method: "erpnext.shopping_cart.cart.update_cart_item",
 				args: {
 					item_code: opts.item_code,
-					qty: opts.qty,
+					fieldname: opts.fieldname,
+					value: opts.value,
 					with_items: opts.with_items || 0
 				},
 				btn: opts.btn,
@@ -155,10 +156,11 @@ $.extend(shopping_cart, {
 		}
 	},
 
-	shopping_cart_update_item: function(item_code, newVal, cart_dropdown) {
+	shopping_cart_update_item: function(item_code, fieldname, value, cart_dropdown) {
 		shopping_cart.update_cart_item({
 			item_code: item_code,
-			qty: newVal,
+			fieldname: fieldname,
+			value: value,
 			with_items: 1,
 			btn: this,
 			callback: function (r) {

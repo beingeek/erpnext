@@ -49,3 +49,42 @@ window.render_product_list = function(data) {
 	}
 	window.start += (data.length || 0);
 }
+
+window.add_item_dialog = function(callback) {
+	var dialog = new frappe.ui.Dialog({
+		data: [],
+		title: __("Add Items"), fields: [
+			{label: __("Search"), fieldname: "search", fieldtype: "Data"},
+			{fieldname: "body", fieldtype: "HTML"}
+		]
+	});
+	dialog.set_primary_action(__("Search"), () => window.product_list_dialog.call(this, dialog, callback));
+	dialog.show();
+}
+
+window.product_list_dialog = function(dialog, callback) {
+	return frappe.call({
+		type: "POST",
+		method: "erpnext.templates.pages.product_search.get_product_list",
+		freeze: true,
+		args: {
+			search: dialog.get_value('search')
+		},
+		callback: function (r) {
+			if (r.message && r.message.length) {
+				dialog.fields_dict.body.$wrapper.html(r.message.join(""));
+
+				$('.product-link', dialog.$wrapper).click(function() {
+					var item_code = $(this).attr('data-item-code');
+					callback(item_code);
+					dialog.hide();
+					return false;
+				});
+			} else {
+				dialog.fields_dict.body.$wrapper.html("No items found");
+			}
+			
+		}
+
+	});
+}

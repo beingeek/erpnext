@@ -6,6 +6,7 @@
 
 {% block script %}
 <script>{% include "templates/includes/cart.js" %}</script>
+<script>{% include "templates/includes/product_list.js" %}</script>
 <script type="text/javascript" src="/assets/js/dialog.min.js"></script>
 <script type="text/javascript" src="/assets/js/control.min.js"></script>
 <script type="text/javascript" src="/assets/js/moment-bundle.min.js"></script>
@@ -47,19 +48,47 @@ moment.defaultFormat = frappe.moment_date_format;
 			<div id="cart-error" class="alert alert-danger"
 		style="display: none;"></div>
 		<div id="cart-fields">
-			{% for f in fields %}
+			{% for f in quotation_fields %}
 			<div class="cart-field-data hidden" data-fieldname="{{ f }}">{{ doc.get(f) or '' }}</div>
 			{% endfor %}
+			{% for p in party_fields %}
+			<div class="cart-field-data hidden" data-fieldname="{{ p }}">{{ party.get(p) or '' }}</div>
+			{% endfor %}
+			<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
 		</div>
+		<div class="row">
+			<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+				<button class="btn btn-default btn-get-default-items btn-sm" type="button">
+					{{ _("Get Default Items") }}</button>
+			</div>
+			<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+				<button class="btn btn-default btn-add-items btn-sm" type="button">
+					{{ _("Add Items") }}</button>
+			</div>
+		</div>
+		
+		
+
 		<div id="cart-items">
 			<div class="row cart-item-header text-muted">
-				<div class="col-sm-8 col-xs-6 h6 text-uppercase">
-				{{ _("Item") }}
+				<div class="col-sm-1 text-center h6 text-uppercase">
 				</div>
-				<div class="col-sm-2 col-xs-3 text-center h6 text-uppercase">
+				<div class="col-sm-2 text-center h6 text-uppercase">
 				{{ _("Qty") }}
 				</div>
-				<div class="col-sm-2 col-xs-3 text-right h6 text-uppercase">
+				<div class="col-sm-4 h6 text-uppercase">
+				{{ _("Item") }}
+				</div>
+				<div class="col-sm-2 text-center h6 text-uppercase">
+				{{ _("UOM") }}
+				</div>
+				<div class="col-sm-1 text-right h6 text-uppercase">
+				{{ _("Per Unit") }}
+				</div>
+				<div class="col-sm-1 text-right h6 text-uppercase">
+				{{ _("HST") }}
+				</div>
+				<div class="col-sm-1 text-right h6 text-uppercase">
 				{{ _("Subtotal") }}
 				</div>
 			</div>
@@ -74,9 +103,11 @@ moment.defaultFormat = frappe.moment_date_format;
 		{% if doc.items %}
 		<!-- taxes -->
 		<div class="row cart-taxes">
-			<div class="col-sm-6"><!-- empty --></div>
-			<div class="col-sm-6 text-right cart-tax-items">
-			{% include "templates/includes/order/order_taxes.html" %}
+			<div class="col-sm-12">
+				<!-- empty -->
+			</div>
+			<div class="col-sm-12 text-right cart-tax-items">
+				{% include "templates/includes/order/order_taxes.html" %}
 			</div>
 		</div>
 
@@ -100,6 +131,5 @@ moment.defaultFormat = frappe.moment_date_format;
 		{% endif %}
 	</div>
 </div>
-
 
 {% endblock %}
