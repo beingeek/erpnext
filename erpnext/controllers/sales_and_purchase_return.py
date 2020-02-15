@@ -332,7 +332,6 @@ def make_return_doc(doctype, source_name, target_doc=None):
 			target_doc.rejected_warehouse = source_doc.rejected_warehouse
 		elif doctype == "Purchase Invoice":
 			target_doc.update_inventory=1
-			target_doc.received_box=-1*flt(source_doc.received_box)
 			target_doc.received_qty = -1* source_doc.received_qty
 			target_doc.rejected_qty = -1* source_doc.rejected_qty
 			target_doc.qty = -1* source_doc.qty
