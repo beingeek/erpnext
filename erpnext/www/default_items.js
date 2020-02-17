@@ -44,7 +44,6 @@ frappe.ready(function() {
     });
 
     $(".btn-remove-item").click(function() {
-        debugger;
         var item_code = $(this).attr('data-item-code');
         default_items.remove_default_item(item_code);
     });
