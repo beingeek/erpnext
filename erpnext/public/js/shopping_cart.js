@@ -200,7 +200,7 @@ $.extend(shopping_cart, {
 			}
 			input.val(newVal);
 			var item_code = input.attr("data-item-code");
-			shopping_cart.shopping_cart_update_item(item_code, newVal, true);
+			shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
 			return false;
 		});
 
