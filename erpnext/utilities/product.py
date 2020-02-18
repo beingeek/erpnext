@@ -68,15 +68,24 @@ def qty_from_all_warehouses(batch_info):
 	return qty
 
 def get_price(item_code, price_list, customer_group, company, qty=1):
-	template_item_code = frappe.db.get_value("Item", item_code, "variant_of")
+	from erpnext.stock.get_item_details import get_price_list_rate_for
+
+	item = frappe.get_cached_doc("Item", item_code)
+	price_list_currency = frappe.get_cached_value("Price List", price_list, "currency")
+	template_item_code = item.variant_of
+
+	args = frappe._dict({
+		"price_list": price_list,
+		"uom": item.sales_uom or item.stock_uom,
+		"transaction_date": frappe.utils.today(),
+		"qty": qty
+	})
 
 	if price_list:
-		price = frappe.get_all("Item Price", fields=["price_list_rate", "currency"],
-			filters={"price_list": price_list, "item_code": item_code})
+		price = get_price_list_rate_for(args, item_code)
 
 		if template_item_code and not price:
-			price = frappe.get_all("Item Price", fields=["price_list_rate", "currency"],
-				filters={"price_list": price_list, "item_code": template_item_code})
+			price = get_price_list_rate_for(args, template_item_code)
 
 		if price:
 			pricing_rule = get_pricing_rule_for_item(frappe._dict({
@@ -88,17 +97,21 @@ def get_price(item_code, price_list, customer_group, company, qty=1):
 				"company": company,
 				"conversion_rate": 1,
 				"for_shopping_cart": True,
-				"currency": frappe.db.get_value("Price List", price_list, "currency")
+				"currency": price_list_currency
 			}))
 
 			if pricing_rule:
 				if pricing_rule.pricing_rule_for == "Discount Percentage":
-					price[0].price_list_rate = flt(price[0].price_list_rate * (1.0 - (flt(pricing_rule.discount_percentage) / 100.0)))
+					price = flt(price * (1.0 - (flt(pricing_rule.discount_percentage) / 100.0)))
 
 				if pricing_rule.pricing_rule_for == "Rate":
-					price[0].price_list_rate = pricing_rule.price_list_rate
+					price = pricing_rule.price_list_rate
 
-			price_obj = price[0]
+			price_obj = frappe._dict({
+				"price_list_rate": price,
+				"currency": price_list_currency
+			})
+
 			if price_obj:
 				price_obj["formatted_price"] = fmt_money(price_obj["price_list_rate"], currency=price_obj["currency"])
 
@@ -106,13 +119,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1):
 					and (frappe.db.get_value("Currency", price_obj.currency, "symbol", cache=True) or price_obj.currency) \
 					or ""
 
-				uom_conversion_factor = frappe.db.sql("""select	C.conversion_factor
-					from `tabUOM Conversion Detail` C
-					inner join `tabItem` I on C.parent = I.name and C.uom = I.sales_uom
-					where I.name = %s""", item_code)
-
-				uom_conversion_factor = uom_conversion_factor[0][0] if uom_conversion_factor else 1
-				price_obj["formatted_price_sales_uom"] = fmt_money(price_obj["price_list_rate"] * uom_conversion_factor, currency=price_obj["currency"])
+				price_obj["formatted_price_sales_uom"] = fmt_money(price_obj["price_list_rate"], currency=price_obj["currency"])
 
 				if not price_obj["price_list_rate"]:
 					price_obj["price_list_rate"] = 0
