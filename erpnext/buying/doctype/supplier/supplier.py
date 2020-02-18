@@ -40,11 +40,24 @@ class Supplier(TransactionBase):
 
 	def validate(self):
 		# validation for Naming Series mandatory field...
+
+		self.validate_duplicate_default_item()
+
 		if frappe.defaults.get_global_default('supp_master_name') == 'Naming Series':
 			if not self.naming_series:
 				msgprint(_("Series is mandatory"), raise_exception=1)
 
 		validate_party_accounts(self)
+
+	def validate_duplicate_default_item(self):
+		item_codes = ()
+		for d in self.default_items_tbl:
+			if d.item_code not in item_codes:
+				item_code_list = list(item_codes)
+				item_code_list.append(d.item_code)
+				item_codes = tuple(item_code_list)
+			else:
+				frappe.throw(_("Default Item Code {0} is duplicate").format(d.item_code))
 
 	def on_trash(self):
 		delete_contact_and_address('Supplier', self.name)
