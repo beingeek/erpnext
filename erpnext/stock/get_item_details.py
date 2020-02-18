@@ -606,6 +606,7 @@ def get_price_list_rate_for(args, item_code):
         :param supplier: link to Supplier DocType
 		:param price_list: str (Standard Buying or Standard Selling)
 		:param item_code: str, Item Doctype field item_code
+		:param uom: str
 		:param qty: Derised Qty
 		:param transaction_date: Date of the price
 	"""
