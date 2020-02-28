@@ -110,6 +110,22 @@ class LandedCostVoucher(AccountsController):
 			return tax_amounts
 
 	def get_items_from_purchase_receipts(self):
+		def manual_distribution_key(cur_item):
+			if cur_item.purchase_order:
+				return cur_item.purchase_order, cur_item.purchase_order_item
+			elif cur_item.purchase_receipt:
+				return cur_item.purchase_receipt, cur_item.purchase_receipt_item
+			elif cur_item.purchase_invoice:
+				return cur_item.purchase_invoice, cur_item.purchase_invoice_item
+			else:
+				return None
+
+		old_manual_distribution = {}
+		for item in self.get('items', []):
+			key = manual_distribution_key(item)
+			if key:
+				old_manual_distribution[key] = item.manual_distribution
+
 		self.set("items", [])
 		for pr in self.get("purchase_receipts"):
 			if pr.receipt_document_type and pr.receipt_document:
@@ -154,6 +170,11 @@ class LandedCostVoucher(AccountsController):
 					elif pr.receipt_document_type == "Purchase Invoice":
 						item.purchase_invoice = pr.receipt_document
 						item.purchase_invoice_item = d.name
+
+		for item in self.items:
+			key = manual_distribution_key(item)
+			if key and key in old_manual_distribution:
+				item.manual_distribution = old_manual_distribution[key]
 
 	def purchase_order_to_purchase_receipt(self):
 		to_remove = []
