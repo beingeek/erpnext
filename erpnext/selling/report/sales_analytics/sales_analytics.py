@@ -61,6 +61,7 @@ class Analytics(object):
 			"width": 120
 		})
 
+		start_date = self.filters.from_date
 		for end_date in self.periodic_daterange:
 			period = self.get_period(end_date)
 			self.columns.append({
@@ -68,8 +69,11 @@ class Analytics(object):
 				"fieldname": scrub(period),
 				"fieldtype": "Float",
 				"period_column": True,
+				"start_date": cstr(start_date),
+				"end_date": cstr(end_date),
 				"width": 120
 			})
+			start_date = add_days(end_date, 1)
 
 	def get_data(self):
 		self.company_currency = frappe.get_cached_value('Company', self.filters.get("company"), "default_currency")
