@@ -237,7 +237,8 @@ frappe.query_reports["Sales Analytics"] = {
 			var dt = frappe.query_report.get_filter_value('doctype');
 			var link = `#List/${encodeURIComponent(dt)}/Report`;
 			var filters = {
-				posting_date: `["Between", ["${column.start_date}", "${column.end_date}"]]`
+				posting_date: `["Between", ["${column.start_date}", "${column.end_date}"]]`,
+				docstatus: 1
 			};
 
 			$.each(['item_code', 'customer', 'customer_group', 'item_group', 'brand', 'territory', 'sales_person', 'project'], function (i, fieldname) {
