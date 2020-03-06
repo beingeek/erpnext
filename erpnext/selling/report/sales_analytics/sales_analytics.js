@@ -235,7 +235,7 @@ frappe.query_reports["Sales Analytics"] = {
 
 		if (data && column.start_date && column.end_date) {
 			var dt = frappe.query_report.get_filter_value('doctype');
-			var link = `#List/${encodeURIComponent(dt)}/List`;
+			var link = `#List/${encodeURIComponent(dt)}/Report`;
 			var filters = {
 				posting_date: `["Between", ["${column.start_date}", "${column.end_date}"]]`
 			};
