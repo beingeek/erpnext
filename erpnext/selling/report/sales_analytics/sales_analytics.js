@@ -253,7 +253,7 @@ frappe.query_reports["Sales Analytics"] = {
 			var filter_list = [];
 			$.each(filters || {}, function (k, v) {
 				if (v) {
-					filter_list.push(`${k}=${v}`);
+					filter_list.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
 				}
 			});
 			var args = filter_list.join("&");
