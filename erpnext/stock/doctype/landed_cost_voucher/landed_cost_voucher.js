@@ -210,6 +210,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 				doc: me.frm.doc,
 				method: "get_items_from_purchase_receipts",
 				callback: function() {
+					me.load_manual_distribution_data();
 					me.update_manual_distribution();
 					me.calculate_taxes_and_totals();
 					me.frm.dirty();
@@ -227,6 +228,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 				doc: me.frm.doc,
 				method: "purchase_order_to_purchase_receipt",
 				callback: function() {
+					me.load_manual_distribution_data();
 					me.update_manual_distribution();
 					me.calculate_taxes_and_totals();
 					me.frm.dirty();

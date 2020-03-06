@@ -11,12 +11,14 @@ from erpnext.shopping_cart.doctype.shopping_cart_settings.shopping_cart_settings
 from frappe.utils.nestedset import get_root_of
 from erpnext.accounts.utils import get_account_name
 from erpnext.utilities.product import get_qty_in_stock
+from erpnext.accounts.utils import get_balance_on
 
 
 class WebsitePriceListMissingError(frappe.ValidationError):
 	pass
 
-cart_fieldnames = ['delivery_date']
+cart_quotation_fields = ['delivery_date']
+cart_party_fields = ['customer_name','credit_limit']
 
 def set_cart_count(quotation=None):
 	if cint(frappe.db.get_singles_value("Shopping Cart Settings", "enabled")):
@@ -38,17 +40,22 @@ def get_cart_quotation(doc=None):
 
 	addresses = get_address_docs(party=party)
 
+	get_balance = get_balance_on(party=party.name, party_type='Customer')
+
 	if not doc.customer_address and addresses:
 		update_cart_address("customer_address", addresses[0].name)
 
 	return {
+		"customer_balance": get_balance,
 		"doc": decorate_quotation_doc(doc),
+		"party": party,
 		"shipping_addresses": [{"name": address.name, "display": address.display}
 			for address in addresses],
 		"billing_addresses": [{"name": address.name, "display": address.display}
 			for address in addresses],
 		"shipping_rules": get_applicable_shipping_rules(party),
-		"fields": cart_fieldnames
+		"quotation_fields": cart_quotation_fields,
+		"party_fields": cart_party_fields
 	}
 
 @frappe.whitelist()
@@ -65,49 +72,41 @@ def place_order():
 		# company used to create customer accounts
 		frappe.defaults.set_user_default("company", quotation.company)
 
-	from erpnext.selling.doctype.quotation.quotation import _make_sales_order
-	sales_order = frappe.get_doc(_make_sales_order(quotation.name, ignore_permissions=True))
-	for item in sales_order.get("items"):
-		item.reserved_warehouse, is_stock_item = frappe.db.get_value("Item",
-			item.item_code, ["website_warehouse", "is_stock_item"])
-
-		if is_stock_item:
-			item_stock = get_qty_in_stock(item.item_code, "website_warehouse")
-			if item.qty > item_stock.stock_qty[0][0]:
-				throw(_("Only {0} in stock for item {1}").format(item_stock.stock_qty[0][0], item.item_code))
-
-	sales_order.flags.ignore_permissions = True
-	sales_order.insert()
-	sales_order.submit()
-
 	if hasattr(frappe.local, "cookie_manager"):
 		frappe.local.cookie_manager.delete_cookie("cart_count")
 
-	return sales_order.name
+	return quotation.name
 
 @frappe.whitelist()
-def update_cart_item(item_code, qty, with_items=False):
+def update_cart_item(item_code, fieldname, value, with_items=False):
+	from erpnext.stock.get_item_details import get_conversion_factor
 	quotation = _get_cart_quotation()
+	if fieldname not in ['qty', 'uom']:
+		frappe.throw(_("Invalid Fieldname"))
 
-	qty = flt(qty)
-	if not qty:
+	if fieldname == 'qty' and not flt(value):
 		quotation_items = quotation.get("items", {"item_code": ["!=", item_code]})
+		for i, d in enumerate(quotation_items):
+			d.idx = i + 1
 		quotation.set("items", quotation_items)
 	else:
 		quotation_items = quotation.get("items", {"item_code": item_code})
 		if not quotation_items:
 			quotation.append("items", {
 				"item_code": item_code,
-				"qty": qty
+				fieldname: value
 			})
 		else:
-			quotation_items[0].qty = qty
+			quotation_items[0].set(fieldname, value)
+			if fieldname == 'uom':
+				quotation_items[0].conversion_factor = get_conversion_factor(item_code, value).get('conversion_factor')
 
 	return update_cart(quotation, with_items)
+	
 
 @frappe.whitelist()
 def update_cart_field(fieldname, value, with_items=False):
-	if fieldname not in cart_fieldnames:
+	if fieldname not in cart_quotation_fields:
 		frappe.throw(_("Invalid Fieldname {0}").format(fieldname))
 
 	quotation = _get_cart_quotation()
@@ -127,17 +126,20 @@ def update_cart(quotation, with_items=False):
 	set_cart_count(quotation)
 
 	context = get_cart_quotation(quotation)
-	fields_dict = {}
-	for f in cart_fieldnames:
-		fields_dict[f] = context['doc'].get(f)
+	qtn_fields_dict = {}
+	for f in cart_quotation_fields:
+		qtn_fields_dict[f] = context['doc'].get(f)
+	for f in cart_party_fields:
+		qtn_fields_dict[f] = context['party'].get(f)
 
+	
 	if cint(with_items):
 		return {
 			"items": frappe.render_template("templates/includes/cart/cart_items.html",
 				context),
 			"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
 				context),
-			"fields": fields_dict
+			"quotation_fields": qtn_fields_dict,
 		}
 	else:
 		return {
@@ -496,3 +498,27 @@ def get_address_territory(address_name):
 
 def show_terms(doc):
 	return doc.tc_name
+
+@frappe.whitelist()
+def get_default_items(with_items=False):
+	quotation = _get_cart_quotation()
+	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
+		filters={"parenttype": 'Customer', "parent": quotation.customer})
+	default_item_codes = [d.item_code for d in default_items]
+	existing_item_codes = [d.item_code for d in quotation.items]
+
+	for item_code in default_item_codes:
+		if item_code not in existing_item_codes:
+			quotation.append("items", {"item_code": item_code})
+	
+	return update_cart(quotation, with_items)
+
+@frappe.whitelist()
+def add_item(item_code, with_items=False):
+	quotation = _get_cart_quotation()
+	existing_item_codes = [d.item_code for d in quotation.items]
+
+	if item_code not in existing_item_codes:
+		quotation.append("items", {"item_code": item_code, "qty": 1})
+
+	return update_cart(quotation, with_items)

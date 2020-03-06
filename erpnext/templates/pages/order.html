@@ -16,7 +16,6 @@
 {% endblock %}
 
 {% block page_content %}
-
 <div class="row transaction-subheading">
 	<div class="col-xs-6">
 
@@ -34,18 +33,31 @@
 	</div>
 </div>
 
-<p class='small' style='padding-top: 15px;'>
-{% if doc.doctype == 'Supplier Quotation' %}
-	<b>{{ doc.supplier_name}}</b>
-{% else %}
-	<b>{{ doc.customer_name}}</b>
-{% endif %}
-{% if doc.contact_display %}
-	<br>
-	{{ doc.contact_display }}
-{% endif %}
-</p>
 
+<div class="row" style="margin-top: 15px;">
+	<div class="col-sm-6">
+		<p class='small'>
+		{% if doc.doctype == 'Supplier Quotation' %}
+			<b>{{ doc.supplier_name}}</b>
+		{% else %}
+			<b>{{ doc.customer_name}}</b>
+		{% endif %}
+		{% if doc.contact_display %}
+			<br>
+			{{ doc.contact_display }}
+		{% endif %}
+		</p>
+	</div>
+	<div class="col-sm-6">
+		<p class="small" style="float: right;">
+			<b>{{_("Delivery Date")}}</b>
+			<!-- <span class="small">{{ doc.delivery_date }}</span> -->
+			<br>
+			{{ doc.delivery_date }}
+
+		</p>	
+	</div>
+</div>
 {% if doc._header %}
 {{ doc._header }}
 {% endif %}
@@ -55,28 +67,44 @@
 	<!-- items -->
 	<div class="order-item-table">
 		<div class="row order-items order-item-header text-muted">
-			<div class="col-sm-6 col-xs-6 h6 text-uppercase">
+			<div class="col-sm-5 h6 text-uppercase">
 				{{ _("Item") }}
 			</div>
-			<div class="col-sm-3 col-xs-3 text-right h6 text-uppercase">
+			<div class="col-sm-2 text-right h6 text-uppercase">
 				{{ _("Quantity") }}
 			</div>
-			<div class="col-sm-3 col-xs-3 text-right h6 text-uppercase">
+			<div class="col-sm-2 text-right h6 text-uppercase">
+				{{ _("Per Unit") }}
+			</div>
+			<div class="col-sm-1 text-right h6 text-uppercase">
+				{{ _("HST") }}
+			</div>
+			<div class="col-sm-2 text-right h6 text-uppercase">
 				{{ _("Amount") }}
 			</div>
 		</div>
 		{% for d in doc.items %}
 		<div class="row order-items">
-			<div class="col-sm-6 col-xs-6">
+			<div class="col-sm-5">
 				{{ item_name_and_description(d) }}
 			</div>
-			<div class="col-sm-3 col-xs-3 text-right">
+			<div class="col-sm-2 text-right">
 				{{ d.qty }}
+				<p class="text-muted small"> {{d.uom}}</p>
 				{% if d.delivered_qty is defined and d.delivered_qty != None %}
 				<p class="text-muted small">{{ _("Delivered") }}&nbsp;{{ d.delivered_qty }}</p>
 				{% endif %}
 			</div>
-			<div class="col-sm-3 col-xs-3 text-right">
+			<div class="col-sm-2 text-right">
+				{{ d.alt_uom_size}}
+				<span class="text-muted small">{{d.alt_uom}}</span>
+			</div>
+			<div class="col-sm-1 text-right">
+				{% if 'hst' in d.item_tax_template|lower %}
+				<i class="fa fa-check"></i>
+				{% endif %}
+			</div>
+			<div class="col-sm-2 text-right">
 				{{ d.get_formatted("amount")	 }}
 				<p class="text-muted small">{{ _("Rate:") }}&nbsp;{{ d.get_formatted("rate") }}</p>
 			</div>
@@ -86,8 +114,8 @@
 
 	<!-- taxes -->
 	<div class="order-taxes row">
-		<div class="col-sm-6"><!-- empty --></div>
-		<div class="col-sm-6 text-right">
+		<div class="col-sm-12"><!-- empty --></div>
+		<div class="col-sm-12 text-right">
 			{% include "erpnext/templates/includes/order/order_taxes.html" %}
 		</div>
 	</div>
