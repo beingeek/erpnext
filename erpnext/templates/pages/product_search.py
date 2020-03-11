@@ -14,8 +14,8 @@ def get_context(context):
 	context.show_search = True
 
 @frappe.whitelist(allow_guest=True)
-def get_product_list(search=None, start=0, limit=15):
-	data = get_product_data(search, start, limit)
+def get_product_list(search=None, start=0, limit=15, variants_only=False):
+	data = get_product_data(search, start, limit, variants_only)
 
 	for item in data:
 		set_product_info_for_website(item)
@@ -23,8 +23,13 @@ def get_product_list(search=None, start=0, limit=15):
 	return [get_item_for_list_in_html(r) for r in data]
 
 @frappe.whitelist(allow_guest=True)
-def get_product_data(search=None, start=0, limit=15):
+def get_product_data(search=None, start=0, limit=15, variants_only=False):
 	# limit = 12 because we show 12 items in the grid view
+
+	if not variants_only:
+		variant_condition = "I.show_in_website = 1"
+	else:
+		variant_condition = "I.show_variant_in_website = 1 or (I.show_in_website = 1 and I.has_variants = 0)"
 
 	# base query
 	query = """select I.name, I.item_name, I.item_code, I.route, I.image, I.website_image, I.thumbnail, I.item_group,
@@ -33,9 +38,9 @@ def get_product_data(search=None, start=0, limit=15):
 			I.has_batch_no
 		from `tabItem` I
 		left join tabBin S on I.item_code = S.item_code and I.website_warehouse = S.warehouse
-		where (I.show_in_website = 1)
+		where ({0})
 			and I.disabled = 0
-			and (I.end_of_life is null or I.end_of_life='0000-00-00' or I.end_of_life > %(today)s)"""
+			and (I.end_of_life is null or I.end_of_life='0000-00-00' or I.end_of_life > %(today)s)""".format(variant_condition)
 
 	# search term condition
 	if search:
