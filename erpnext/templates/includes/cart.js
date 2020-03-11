@@ -109,7 +109,7 @@ $.extend(shopping_cart, {
 				callback: function (r){
 					shopping_cart.shopping_cart_update_callback(r);
 				}
-			})
+			});
 		}
 	},
 

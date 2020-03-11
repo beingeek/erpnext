@@ -56,7 +56,12 @@ moment.defaultFormat = frappe.moment_date_format;
 			{% endfor %}
 			<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
 		</div>
-		<div class="row">
+
+		<div class="cart-addresses">
+		{% include "templates/includes/cart/cart_address.html" %}
+		</div>
+		
+		<div class="row" style="margin-top: 30px;">
 			<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
 				<button class="btn btn-default btn-get-default-items btn-sm" type="button">
 					{{ _("Get Default Items") }}</button>
@@ -92,15 +97,10 @@ moment.defaultFormat = frappe.moment_date_format;
 				{{ _("Subtotal") }}
 				</div>
 			</div>
-			{% if doc.items %}
 				<div class="cart-items">
 					{% include "templates/includes/cart/cart_items.html" %}
 				</div>
-			{% else %}
-				<p class="empty-cart">{{ _("Cart is Empty") }}</p>
-			{% endif %}
 		</div>
-		{% if doc.items %}
 		<!-- taxes -->
 		<div class="row cart-taxes">
 			<div class="col-sm-12 text-right cart-tax-items">
@@ -118,14 +118,9 @@ moment.defaultFormat = frappe.moment_date_format;
 			</div>
 		{% endif %}
 
-		<div class="cart-addresses">
-		{% include "templates/includes/cart/cart_address.html" %}
-		</div>
-
 		<p class="cart-footer text-right">
 		<button class="btn btn-primary btn-place-order btn-sm" type="button">
 		{{ _("Place Order") }}</button></p>
-		{% endif %}
 	</div>
 </div>
 
