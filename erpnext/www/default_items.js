@@ -43,7 +43,7 @@ frappe.ready(function() {
         window.add_item_dialog(default_items.add_default_item);
     });
 
-    $(".btn-remove-item").click(function() {
+    $("#default-item").on("click", ".btn-remove-item", function() {
         var item_code = $(this).attr('data-item-code');
         default_items.remove_default_item(item_code);
     });

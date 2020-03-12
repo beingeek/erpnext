@@ -15,6 +15,28 @@
 <script type="text/javascript" src="/assets/js/web-extended.min.js"></script>
 {% endblock %}
 
+{% block style %}
+<style>
+.form-control:focus{
+    outline: 0 !important;
+    box-shadow: none;
+}
+.form-section{
+	margin: 0;
+	padding: 0;
+}
+.default-item-image{
+	width: 100% !important;
+	height: 50px !important;
+	padding: 0 !important;
+	background-size: contain !important;
+}
+</style>
+<style>
+{% include "templates/includes/magnifier.css" %}
+</style>
+{% endblock %}
+
 {% block header_actions %}
 <button class="btn btn-primary btn-sm btn-add-items" type="button">
     {{ _("Add Items") }}
@@ -22,29 +44,23 @@
 {% endblock %}
 
 {% block page_content %}
-<div class="default-container">
-    <div class="default-item-table" style="margin-top: 50px;">
-        <div class="default-item-header" style="border-bottom: 1px solid #d1d8dd;margin-bottom: 15px;">
-            <div class="row h6 text-uppercase text-muted">
-                <div class="col-sm-6">
-                    {{ _("Item") }}
-                </div>
-                <div class="col-sm-2 text-center">
-                    {{ _("UOM") }}
-                </div>
-                <div class="col-sm-2 text-right">
-                    {{ _("Per Unit") }}
-                </div>
-                <div class="col-sm-2">
-                </div>
-            </div>
-        </div>
-        <div id="default-items">
+<div class="table-responsive margin-top">
+    <table class="table table-bordered tabel-condensed">
+        <thead>
+            <tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
+                <th scope="col" class="text-center">{{ _("Image") }}</th>
+                <th scope="col" class="text-center">{{ _("Item Name") }}</th>
+                <th scope="col" class="text-center">{{ _("UOM") }}</th>
+                <th scope="col" class="text-right">{{ _("Per Unit") }}</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody id="default-items" style="font-size: 12px !important;">
             {% for item in default_items %}
-                {% include "erpnext/www/default-item-row.html" %}
+            {% include "erpnext/www/default-item-row.html" %}
             {% endfor %}
-        </div>
-    </div>
+        </tbody>
+    </table>
 </div>
 <button class="btn btn-primary btn-sm btn-add-items" type="button" style="float: right; margin-bottom: 15px;">
     {{ _("Add Items") }}
