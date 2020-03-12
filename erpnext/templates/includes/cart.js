@@ -71,6 +71,7 @@ $.extend(shopping_cart, {
 		shopping_cart.bind_dropdown_cart_buttons();
 		shopping_cart.bind_get_default_items();
 		shopping_cart.bind_add_items();
+		shopping_cart.bind_remove_cart_item();
 	},
 
 	bind_get_default_items: function () {
@@ -181,6 +182,13 @@ $.extend(shopping_cart, {
 			input.val(newVal);
 			var item_code = input.attr("data-item-code");
 			shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
+		});
+	},
+
+	bind_remove_cart_item: function() {
+		$(".cart-items").on('click', '.remove-cart-item', function(){
+			var item_code = $(this).attr('data-item-code');
+			shopping_cart.shopping_cart_update_item(item_code, 'qty', 0);
 		});
 	},
 
