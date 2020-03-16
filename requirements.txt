@@ -3,7 +3,7 @@ unidecode
 pygithub
 googlemaps
 python-stdnum
-braintree
+braintree==3.57.1
 gocardless_pro
 woocommerce
 pandas
