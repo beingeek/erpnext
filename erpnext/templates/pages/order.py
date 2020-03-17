@@ -11,6 +11,20 @@ def get_context(context):
 	context.no_cache = 1
 	context.show_sidebar = True
 	context.doc = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.name)
+	if context.doc.doctype == "Quotation":
+		query = """select distinct parent from `tabSales Order Item` where (prevdoc_docname = %(name)s and docstatus<2)"""
+		so_ref = frappe.db.sql(query,{
+			"name":context.doc.name
+		},as_dict=1)
+
+	quotation_ref_list = []
+	if context.doc.doctype == "Sales Order":
+		for item in context.doc.items:
+			quotation_ref_list.append(item.get('prevdoc_docname'))
+		so_ref = list(set(quotation_ref_list))
+	
+	context["reference"] = so_ref
+ 
 	if hasattr(context.doc, "set_indicator"):
 		context.doc.set_indicator()
 

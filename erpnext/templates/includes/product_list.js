@@ -53,6 +53,7 @@ window.render_product_list = function(data) {
 window.add_item_dialog = function(callback) {
 	var dialog = new frappe.ui.Dialog({
 		data: [],
+		has_variant: 1,
 		title: __("Add Items"), fields: [
 			{label: __("Search"), fieldname: "search", fieldtype: "Data"},
 			{fieldname: "body", fieldtype: "HTML"}
@@ -68,7 +69,8 @@ window.product_list_dialog = function(dialog, callback) {
 		method: "erpnext.templates.pages.product_search.get_product_list",
 		freeze: true,
 		args: {
-			search: dialog.get_value('search')
+			search: dialog.get_value('search'),
+			variants_only: dialog.has_variant
 		},
 		callback: function (r) {
 			if (r.message && r.message.length) {
