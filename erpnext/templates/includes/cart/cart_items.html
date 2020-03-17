@@ -3,7 +3,7 @@
 {% from "erpnext/templates/includes/macros.html" import product_image_square %}
 
 {% for d in doc.items %}
-<tr data-item-code="{{d.item_code}}">
+<tr class="cart-items-row" data-item-code="{{d.item_code}}">
     <td class="text-center" style="vertical-align: middle;">
         {{d.idx}}
     </td>
@@ -12,21 +12,15 @@
                     data-item-code="{{ d.item_code }}" style="border:0;">
     </td>
     <td class="text-center">
-        <a class="" href="#{{d.item_code}}">
-            {{product_image_square(d.thumbnail,"cart-item-image")}}            
-        </a>
-        {% if d.thumbnail %}
-        <div class="lightbox-target" id="{{d.item_code}}">
-            <img src="{{d.thumbnail}}" alt="">
-            <a class="lightbox-close" href="#"></a>
+        <div class="cart-product-image">
+            {{product_image_square(d.thumbnail,"cart-item-image")}}
         </div>
-        {% endif %}
     </td>
     <td class="text-center" style="vertical-align: middle;">
         {{d.item_name}}
     </td>
     <td style="vertical-align: middle;">
-        <select class="form-control small cart-uom" data-item-code="{{ d.item_code }}" style="border:0;">
+        <select class="form-control small cart-uom" data-item-code="{{ d.item_code }}" style="border:0;cursor: pointer;">
             {% set item = frappe.get_cached_doc("Item", d.item_code) %}
             {% for p in item.uoms %}
                 <option value="{{ p.uom }}" {% if d.uom == p.uom %} selected="1"{% endif %}>{{ _(p.uom) }}</option>
@@ -45,7 +39,7 @@
     </td>
     <td style="vertical-align: middle;">
         {% if 'hst' in d.item_tax_template|lower %}
-        <i class="fa fa-check"></i>
+            <i class="fa fa-check"></i>
         {% endif %}
     </td>
     <td style="vertical-align: middle;">
