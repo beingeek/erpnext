@@ -3,12 +3,8 @@
 
 <tr class="default-item-row" data-item-code="{{ item.item_code }}">
     <td class="text-center">
-        <a class="" href="#{{item.item_code}}">
+        <div class="default-product-image">
         {{product_image_square(item.thumbnail,"default-item-image")}}
-        </a>
-        <div class="lightbox-target" id="{{item.item_code}}">
-            <img src="{{item.thumbnail}}" alt="">
-            <a class="lightbox-close" href="#"></a>
         </div>
     </td>
     <td class="text-center" style="vertical-align: middle;">
