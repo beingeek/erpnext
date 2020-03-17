@@ -121,7 +121,7 @@ $.extend(shopping_cart, {
 		var $badge = $cart.find("#cart-count");
 		if(parseInt(cart_count) === 0 || cart_count === undefined) {
 			$cart.css("display", "none");
-			$(".cart-items").html('<tr><td colspan=10 class="text-center">Cart is Empty</td></tr>');
+			$(".cart-items").html('<tr><td colspan="10" class="text-center">Cart is Empty</td></tr>');
 			$(".cart-tax-items").hide();
 			$(".btn-place-order").hide();
 		}
@@ -139,7 +139,7 @@ $.extend(shopping_cart, {
 	shopping_cart_update_callback: function(r, cart_dropdown) {
 		var cart_count = frappe.get_cookie("cart_count");
 		if(!r.exc) {
-			if (parseInt(cart_count) !== 0) {
+			if (parseInt(cart_count) !== 0 && cart_count !== undefined) {
 				$(".cart-items").html(r.message.items);
 				$(".cart-tax-items").show();
 				$(".cart-tax-items").html(r.message.taxes);
