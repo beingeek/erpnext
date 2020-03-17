@@ -72,7 +72,7 @@ $.extend(shopping_cart, {
 		shopping_cart.bind_get_default_items();
 		shopping_cart.bind_add_items();
 		shopping_cart.bind_remove_cart_item();
-		shopping_cart.bing_magnify_image();
+		shopping_cart.bind_magnify_image();
 	},
 
 	bind_get_default_items: function () {
@@ -193,7 +193,7 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	bing_magnify_image: function() {
+	bind_magnify_image: function() {
 		var modal = document.getElementsByClassName("zoom_modal")[0];
 		var modalImg = document.getElementById("img01");
 
