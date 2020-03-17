@@ -71,9 +71,8 @@
 	<div class="col-sm-6">
 		<p class="small" style="float: right;">
 			<b>{{_("Delivery Date")}}</b>
-			<!-- <span class="small">{{ doc.delivery_date }}</span> -->
 			<br>
-			{{ doc.delivery_date }}
+			{{ doc.get_formatted("delivery_date") }}
 
 		</p>	
 	</div>
@@ -97,7 +96,7 @@
 				<th scope="col" class="text-center" style="width: 5% !important;">{{ _("HST") }}</th>
 			</tr>
 		</thead>
-		<tbody class="cart-items" style="font-size: 12px !important;">
+		<tbody class="order-items" style="font-size: 12px !important;">
 			{% for d in doc.items %}
 			<tr data-item-code="{{d.item_code}}">
 				<td class="text-center" style="vertical-align: middle;">
@@ -108,9 +107,7 @@
 								data-item-code="{{ d.item_code }}" style="border:0;">
 				</td>
 				<td class="text-center">
-					<a class="" href="#{{d.item_code}}">
-						{{product_image_square(d.image,"order-item-image")}}     
-					</a>
+					{{product_image_square(d.image,"order-item-image")}}
 				</td>
 				<td class="text-center" style="vertical-align: middle;">
 					{{d.item_name}}
