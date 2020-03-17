@@ -106,7 +106,8 @@ def get_pinv_data(batch_nos, exclude_pinv=None):
 		return frappe.db.sql("""
 			select 'Purchase Invoice' as doctype, 'Supplier' as party_type, inv.supplier as party,
 				inv.name, item.item_code, item.batch_no, item.stock_qty as qty, item.stock_uom as uom,
-				item.base_net_amount as cost, item.base_net_rate * item.conversion_factor as rate, inv.update_stock
+				item.base_net_amount as cost, item.base_net_rate * item.conversion_factor as rate, inv.update_stock,
+				inv.posting_date
 			from `tabPurchase Invoice Item` item, `tabPurchase Invoice` inv
 			where inv.name = item.parent and inv.docstatus = 1 and item.batch_no in ({0}) {1}
 		""".format(", ".join(['%s'] * len(batch_nos)), exclude_pinv_cond), batch_nos, as_dict=1)
@@ -118,7 +119,8 @@ def get_sinv_data(batch_nos):
 		return frappe.db.sql("""
 			select 'Sales Invoice' as doctype, 'Customer' as party_type, inv.customer as party,
 				inv.name, item.item_code, item.batch_no, item.stock_qty as qty, item.stock_uom as uom,
-				item.base_net_amount as revenue, item.base_net_rate * item.conversion_factor as rate, inv.update_stock
+				item.base_net_amount as revenue, item.base_net_rate * item.conversion_factor as rate, inv.update_stock,
+				inv.posting_date
 			from `tabSales Invoice Item` item, `tabSales Invoice` inv
 			where inv.name = item.parent and inv.docstatus = 1 and item.batch_no in ({0})
 		""".format(", ".join(['%s'] * len(batch_nos))), batch_nos, as_dict=1)
@@ -130,7 +132,8 @@ def get_lcv_data(batch_nos):
 	if batch_nos:
 		return frappe.db.sql("""
 			select 'Landed Cost Voucher' as doctype, lcv.party_type, lcv.party, pri.stock_uom as uom,
-				lci.parent as name, lci.item_code, pri.batch_no, lci.applicable_charges as cost
+				lci.parent as name, lci.item_code, pri.batch_no, lci.applicable_charges as cost,
+				lcv.posting_date
 			from `tabLanded Cost Item` lci, `tabPurchase Receipt Item` pri, `tabLanded Cost Voucher` lcv
 			where pri.name = lci.purchase_receipt_item and lcv.name = lci.parent and lci.docstatus = 1 and pri.batch_no in ({0})
 		""".format(", ".join(['%s'] * len(batch_nos))), batch_nos, as_dict=1)
@@ -144,7 +147,8 @@ def get_prec_data(batch_nos):
 			select 'Purchase Receipt' as doctype, 'Supplier' as party_type, prec.supplier as party, 1 as update_stock,
 				prec.name, item.item_code, item.batch_no, item.stock_qty as qty, item.stock_uom as uom,
 				item.base_net_amount as cost, item.base_net_rate * item.conversion_factor as rate,
-				(item.qty - item.billed_qty) / item.qty * 100 as unbilled
+				(item.qty - item.billed_qty) / item.qty * 100 as unbilled,
+				prec.posting_date
 			from `tabPurchase Receipt Item` item, `tabPurchase Receipt` prec
 			where prec.name = item.parent and prec.docstatus = 1 and item.billed_qty < item.qty and item.batch_no in ({0})
 		""".format(", ".join(['%s'] * len(batch_nos))), batch_nos, as_dict=1)
@@ -159,7 +163,8 @@ def get_reco_data(batch_nos):
 				sle.voucher_no as name, sle.item_code, sle.batch_no, sle.actual_qty as qty, sle.stock_uom as uom,
 				if(sle.stock_value_difference > 0, sle.stock_value_difference, 0) as revenue,
 				if(sle.stock_value_difference < 0, -sle.stock_value_difference, 0) as cost,
-				sle.stock_value_difference / sle.actual_qty as rate
+				sle.stock_value_difference / sle.actual_qty as rate,
+				sle.posting_date
 			from `tabStock Ledger Entry` sle
 			left join `tabStock Entry` ste on ste.name = sle.voucher_no and sle.voucher_type = 'Stock Entry'
 				and ste.purpose in ('Material Receipt', 'Material Issue')
@@ -185,7 +190,8 @@ def get_repack_entry_data(batch_nos):
 	repack_entry_data = frappe.db.sql("""
 		select 'Stock Entry' as doctype, 1 as update_stock,
 			ste.name, item.item_code, item.batch_no, item.transfer_qty as qty, item.additional_cost as cost,
-			item.stock_uom as uom, item.t_warehouse, item.s_warehouse, item.amount, m.is_sales_item
+			item.stock_uom as uom, item.t_warehouse, item.s_warehouse, item.amount, m.is_sales_item,
+			ste.posting_date
 		from `tabStock Entry` ste, `tabStock Entry Detail` item, `tabItem` m
 		where ste.name = item.parent and m.name = item.item_code
 			and ste.docstatus = 1 and ste.purpose = 'Repack' and exists(
@@ -348,6 +354,12 @@ def get_columns(filters):
 			"fieldtype": "Dynamic Link",
 			"options": "doctype",
 			"width": 100
+		},
+		{
+			"label": _("Date"),
+			"fieldname": "posting_date",
+			"fieldtype": "Date",
+			"width": 80
 		},
 		{
 			"label": _("Party"),

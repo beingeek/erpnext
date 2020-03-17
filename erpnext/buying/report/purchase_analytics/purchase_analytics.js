@@ -166,5 +166,41 @@ frappe.query_reports["Purchase Analytics"] = {
 				},
 			}
 		});
+	},
+	formatter: function(value, row, column, data, default_formatter) {
+		var options = {
+			link_target: "_blank"
+		};
+
+		if (data && column.start_date && column.end_date) {
+			var dt = frappe.query_report.get_filter_value('doctype');
+			var link = `#List/${encodeURIComponent(dt)}/Report`;
+			var filters = {
+				posting_date: `["Between", ["${column.start_date}", "${column.end_date}"]]`,
+				docstatus: 1
+			};
+
+			$.each(['item_code', 'customer', 'customer_group', 'item_group', 'brand', 'territory', 'sales_person', 'project'], function (i, fieldname) {
+				filters[fieldname] = frappe.query_report.get_filter_value(fieldname);
+			});
+
+			var entity_type = frappe.query_report.get_filter_value('tree_type');
+			var entity = data.entity;
+			if (entity_type && entity) {
+				filters[frappe.model.scrub(entity_type)] = entity;
+			}
+
+			var filter_list = [];
+			$.each(filters || {}, function (k, v) {
+				if (v) {
+					filter_list.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+				}
+			});
+			var args = filter_list.join("&");
+			if (args) {
+				options.link_href = link + "?" + args;
+			}
+		}
+		return default_formatter(value, row, column, data, options);
 	}
 }

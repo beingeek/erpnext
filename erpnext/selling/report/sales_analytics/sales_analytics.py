@@ -58,6 +58,8 @@ class Analytics(object):
 			"label": _("Total"),
 			"fieldname": "total",
 			"fieldtype": "Float",
+			"start_date": cstr(self.filters.from_date),
+			"end_date": cstr(self.filters.to_date),
 			"width": 120
 		})
 

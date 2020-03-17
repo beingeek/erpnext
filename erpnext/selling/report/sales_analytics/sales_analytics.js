@@ -235,9 +235,10 @@ frappe.query_reports["Sales Analytics"] = {
 
 		if (data && column.start_date && column.end_date) {
 			var dt = frappe.query_report.get_filter_value('doctype');
-			var link = `#List/${encodeURIComponent(dt)}/List`;
+			var link = `#List/${encodeURIComponent(dt)}/Report`;
 			var filters = {
-				posting_date: `["Between", ["${column.start_date}", "${column.end_date}"]]`
+				posting_date: `["Between", ["${column.start_date}", "${column.end_date}"]]`,
+				docstatus: 1
 			};
 
 			$.each(['item_code', 'customer', 'customer_group', 'item_group', 'brand', 'territory', 'sales_person', 'project'], function (i, fieldname) {
@@ -253,7 +254,7 @@ frappe.query_reports["Sales Analytics"] = {
 			var filter_list = [];
 			$.each(filters || {}, function (k, v) {
 				if (v) {
-					filter_list.push(`${k}=${v}`);
+					filter_list.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
 				}
 			});
 			var args = filter_list.join("&");

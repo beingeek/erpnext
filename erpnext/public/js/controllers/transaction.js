@@ -951,7 +951,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 
 		if(!this.in_apply_price_list) {
-			this.apply_price_list(null, true);
+			this.apply_price_list();
 		}
 	},
 
@@ -1007,7 +1007,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 			if (!dont_fetch_price_list_rate &&
 				frappe.meta.has_field(doc.doctype, "price_list_currency")) {
-				this.apply_price_list(item, true);
+				this.apply_price_list(item);
 			}
 		}
 	},
@@ -1519,7 +1519,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	apply_price_list: function(item, reset_plc_conversion) {
 		// We need to reset plc_conversion_rate sometimes because the call to
 		// `erpnext.stock.get_item_details.apply_price_list` is sensitive to its value
-		if (!reset_plc_conversion) {
+		if (reset_plc_conversion) {
 			this.frm.set_value("plc_conversion_rate", "");
 		}
 
