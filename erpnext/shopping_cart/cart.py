@@ -332,7 +332,7 @@ def get_party(user=None):
 	if not user:
 		user = frappe.session.user
 
-	contact_name = frappe.db.get_value("Contact", {"email_id": user})
+	contact_name = get_contact_name(user)
 	party = None
 
 	if contact_name:
@@ -378,13 +378,24 @@ def get_party(user=None):
 		contact = frappe.new_doc("Contact")
 		contact.update({
 			"first_name": fullname,
-			"email_id": user
+			"email_id": user,
+			"user": user
 		})
 		contact.append('links', dict(link_doctype='Customer', link_name=customer.name))
 		contact.flags.ignore_mandatory = True
 		contact.insert(ignore_permissions=True)
 
 		return customer
+
+def get_contact_name(user):
+	contacts = frappe.db.sql_list("""
+		select c.name
+		from `tabContact` c
+		where (c.user = %(user)s or c.email_id = %(user)s) and exists(select l.name from `tabDynamic Link` l
+			where l.parent=c.name and l.parenttype='Contact' and l.link_doctype = 'Customer' and ifnull(l.link_name, '') != '')
+	""", {"user": user})
+
+	return contacts[0]
 
 def get_debtors_account(cart_settings):
 	payment_gateway_account_currency = \
