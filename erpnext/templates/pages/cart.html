@@ -86,7 +86,6 @@ moment.defaultFormat = frappe.moment_date_format;
 					{{ _("Get Default Items") }}</button>
 
 		<div class="table-responsive margin-top cart-header">
-		<div class="table-responsive margin-top">
 			<table class="table table-bordered">
 				<thead>
 					<tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
@@ -108,7 +107,13 @@ moment.defaultFormat = frappe.moment_date_format;
 			</table>
 		</div>
 
+        <div id="myModal" class="modal zoom_modal">
+            <span class="close">&times;</span>
+            <img class="modal-img-content" id="img01">
+		</div>
+
 		<div class="empty-cart margin-top margin-bottom"></div>
+
 		<button class="btn btn-default btn-add-items btn-sm" type="button">
 					{{ _("Add Items") }}</button>
 		<!-- taxes -->
