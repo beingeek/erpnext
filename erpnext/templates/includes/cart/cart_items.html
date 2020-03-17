@@ -1,50 +1,49 @@
 {% from "erpnext/templates/includes/order/order_macros.html" import item_name_and_description %}
 {% from "erpnext/templates/includes/order/order_macros.html" import item_name_and_description_cart %}
+{% from "erpnext/templates/includes/macros.html" import product_image_square %}
 
 {% for d in doc.items %}
-<div class="row checkout">
-    <div class="col-sm-1 text-right col-qty">
-        <p>{{d.idx}}</p>
-    </div>
-    <div class="col-sm-2 text-right col-qty">
-        <span style="display: inline-block">
-            <div class="input-group number-spinner">
-                <span class="input-group-btn">
-                    <button class="btn btn-default cart-btn" data-dir="dwn">
-                        –</button>
-                </span>
-                <input class="form-control text-right cart-qty" value="{{ d.get_formatted('qty') }}"
-                    data-item-code="{{ d.item_code }}">
-                <span class="input-group-btn">
-                    <button class="btn btn-default cart-btn" data-dir="up" style="margin-left:-2px;">
-                        +</button>
-                </span>
-            </div>
-        </span>
-    </div>
-    <div class="col-sm-4 col-name-description">
-        {{ item_name_and_description(d) }}
-    </div>
-    <div class="col-sm-2">
-        <select class="form-control small cart-uom" data-item-code="{{ d.item_code }}">
+<tr class="cart-items-row" data-item-code="{{d.item_code}}">
+    <td class="text-center" style="vertical-align: middle;">
+        {{d.idx}}
+    </td>
+    <td style="vertical-align: middle;">
+        <input class="form-control text-right cart-qty" value="{{ d.get_formatted('qty') }}"
+                    data-item-code="{{ d.item_code }}" style="border:0;">
+    </td>
+    <td class="text-center">
+        <div class="cart-product-image">
+            {{product_image_square(d.thumbnail,"cart-item-image")}}
+        </div>
+    </td>
+    <td class="text-center" style="vertical-align: middle;">
+        {{d.item_name}}
+    </td>
+    <td style="vertical-align: middle;">
+        <select class="form-control small cart-uom" data-item-code="{{ d.item_code }}" style="border:0;cursor: pointer;">
             {% set item = frappe.get_cached_doc("Item", d.item_code) %}
             {% for p in item.uoms %}
                 <option value="{{ p.uom }}" {% if d.uom == p.uom %} selected="1"{% endif %}>{{ _(p.uom) }}</option>
             {% endfor %}
         </select>
-    </div>
-    <div class="col-sm-1 text-right">
+    </td>
+    <td class="text-right" style="vertical-align: middle;">
         {{d.get_formatted("alt_uom_size")}}
         <span class="text-muted small">{{d.alt_uom}}</span>
-    </div>
-    <div class="col-sm-1 text-right">
-        {% if 'hst' in d.item_tax_template|lower %}
-        <i class="fa fa-check"></i>
-        {% endif %}
-    </div>
-    <div class="col-sm-1 text-right">
+    </td>
+    <td class="text-right" style="vertical-align: middle;">
+        {{ d.get_formatted("rate") }}
+    </td>
+    <td class="text-right" style="vertical-align: middle;">
         {{ d.get_formatted("amount") }}
-        <p class="text-muted small item-rate">{{ _("Rate") }}&nbsp;{{ d.get_formatted("rate") }}</p>
-    </div>
-</div>
+    </td>
+    <td style="vertical-align: middle;">
+        {% if 'hst' in d.item_tax_template|lower %}
+            <i class="fa fa-check"></i>
+        {% endif %}
+    </td>
+    <td style="vertical-align: middle;">
+        <i class="fa fa-close remove-cart-item" data-item-code="{{d.item_code}}" style="color:red;cursor: pointer;"></i>
+    </td>
+</tr>
 {% endfor %}

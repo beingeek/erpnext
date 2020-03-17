@@ -109,6 +109,9 @@
 					<div class="h6 text-uppercase">{{ _("Description") }}</div>
 					<div itemprop="description" class="item-desc">
 					{{ web_long_description or description or _("No description given") }}
+					<span>{{ _("Per Unit: ") }}</span>
+					{{ "%d" | format(alt_uom_size) }}
+					<span class="text-muted small">{{alt_uom}}</span>
 					</div>
 				</div>
 			</div>

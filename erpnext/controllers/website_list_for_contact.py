@@ -139,8 +139,8 @@ def get_customers_suppliers(doctype, user):
 			from 
 				`tabContact`, `tabDynamic Link`
 			where
-				`tabContact`.name=`tabDynamic Link`.parent and `tabContact`.email_id =%s
-			""", user, as_dict=1)
+				`tabContact`.name=`tabDynamic Link`.parent and (`tabContact`.email_id =%(user)s or `tabContact`.user = %(user)s)
+			""", {"user": user}, as_dict=1)
 		customers = [c.link_name for c in contacts if c.link_doctype == 'Customer'] \
 			if meta.get_field("customer") else None
 		suppliers = [c.link_name for c in contacts if c.link_doctype == 'Supplier'] \

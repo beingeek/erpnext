@@ -53,12 +53,23 @@ class Customer(TransactionBase):
 		self.validate_credit_limit_on_change()
 		self.set_loyalty_program()
 		self.check_customer_group_change()
+		self.validate_duplicate_default_item()
 
 		# set loyalty program tier
 		if frappe.db.exists('Customer', self.name):
 			customer = frappe.get_doc('Customer', self.name)
 			if self.loyalty_program == customer.loyalty_program and not self.loyalty_program_tier:
 				self.loyalty_program_tier = customer.loyalty_program_tier
+
+	def validate_duplicate_default_item(self):
+		item_codes = ()
+		for d in self.default_items_tbl:
+			if d.item_code not in item_codes:
+				item_code_list = list(item_codes)
+				item_code_list.append(d.item_code)
+				item_codes = tuple(item_code_list)
+			else:
+				frappe.throw(_("Default Item Code {0} is duplicate").format(d.item_code))
 
 	def check_customer_group_change(self):
 		frappe.flags.customer_group_changed = False

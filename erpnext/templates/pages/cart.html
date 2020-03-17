@@ -30,6 +30,27 @@ moment.defaultFormat = frappe.moment_date_format;
 </script>
 {% endblock %}
 
+{% block style %}
+<style>
+.form-control:focus {
+    outline: 0 !important;
+    box-shadow: none;
+}
+.form-section {
+	margin: 0;
+	padding: 0;
+}
+.cart-item-image {
+	width: 100% !important;
+	height: 50px !important;
+	padding: 0 !important;
+	background-size: contain !important;
+}
+</style>
+<style>
+{% include "templates/includes/magnifier.css" %}
+</style>
+{% endblock %}
 
 {% block header_actions %}
 {% if doc.items %}
@@ -56,56 +77,45 @@ moment.defaultFormat = frappe.moment_date_format;
 			{% endfor %}
 			<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
 		</div>
-		<div class="row">
-			<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-				<button class="btn btn-default btn-get-default-items btn-sm" type="button">
-					{{ _("Get Default Items") }}</button>
-			</div>
-			<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-				<button class="btn btn-default btn-add-items btn-sm" type="button">
-					{{ _("Add Items") }}</button>
-			</div>
-		</div>
-		
-		
 
-		<div id="cart-items">
-			<div class="row cart-item-header text-muted">
-				<div class="col-sm-1 text-center h6 text-uppercase">
-				</div>
-				<div class="col-sm-2 text-center h6 text-uppercase">
-				{{ _("Qty") }}
-				</div>
-				<div class="col-sm-4 h6 text-uppercase">
-				{{ _("Item") }}
-				</div>
-				<div class="col-sm-2 text-center h6 text-uppercase">
-				{{ _("UOM") }}
-				</div>
-				<div class="col-sm-1 text-right h6 text-uppercase">
-				{{ _("Per Unit") }}
-				</div>
-				<div class="col-sm-1 text-right h6 text-uppercase">
-				{{ _("HST") }}
-				</div>
-				<div class="col-sm-1 text-right h6 text-uppercase">
-				{{ _("Subtotal") }}
-				</div>
-			</div>
-			{% if doc.items %}
-				<div class="cart-items">
-					{% include "templates/includes/cart/cart_items.html" %}
-				</div>
-			{% else %}
-				<p class="empty-cart">{{ _("Cart is Empty") }}</p>
-			{% endif %}
+		<div class="cart-addresses">
+		{% include "templates/includes/cart/cart_address.html" %}
 		</div>
-		{% if doc.items %}
+		
+		<button class="btn btn-default btn-get-default-items btn-sm margin-top" type="button">
+					{{ _("Get Default Items") }}</button>
+
+		<div class="table-responsive margin-top">
+			<table class="table table-bordered">
+				<thead>
+					<tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
+						<th scope="col" style="width: 5% !important;"></th>
+						<th scope="col" class="text-center" style="width: 10% !important;">{{ _("Quantity") }}</th>
+						<th scope="col" class="text-center" style="width: 10% !important;">{{ _("Image") }}</th>
+						<th scope="col" class="text-center" style="width: 25% !important;">{{ _("Item Name") }}</th>
+						<th scope="col" class="text-center" style="width: 15% !important;">{{ _("UOM") }}</th>
+						<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Per Unit") }}</th>
+						<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Rate") }}</th>
+						<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Subtotal") }}</th>
+						<th scope="col" class="text-center" style="width: 5% !important;">{{ _("HST") }}</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody class="cart-items" style="font-size: 12px !important;">
+					{% include "templates/includes/cart/cart_items.html" %}
+				</tbody>
+			</table>
+		</div>
+
+        <div id="myModal" class="modal zoom_modal">
+            <span class="close">&times;</span>
+            <img class="modal-img-content" id="img01">
+		</div>
+
+		<button class="btn btn-default btn-add-items btn-sm" type="button">
+					{{ _("Add Items") }}</button>
 		<!-- taxes -->
 		<div class="row cart-taxes">
-			<div class="col-sm-12">
-				<!-- empty -->
-			</div>
 			<div class="col-sm-12 text-right cart-tax-items">
 				{% include "templates/includes/order/order_taxes.html" %}
 			</div>
@@ -121,14 +131,9 @@ moment.defaultFormat = frappe.moment_date_format;
 			</div>
 		{% endif %}
 
-		<div class="cart-addresses">
-		{% include "templates/includes/cart/cart_address.html" %}
-		</div>
-
 		<p class="cart-footer text-right">
 		<button class="btn btn-primary btn-place-order btn-sm" type="button">
 		{{ _("Place Order") }}</button></p>
-		{% endif %}
 	</div>
 </div>
 

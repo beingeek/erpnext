@@ -119,13 +119,11 @@ $.extend(shopping_cart, {
 
 		var $cart = $('.cart-icon');
 		var $badge = $cart.find("#cart-count");
-
 		if(parseInt(cart_count) === 0 || cart_count === undefined) {
 			$cart.css("display", "none");
-			$(".cart-items").html('Cart is Empty');
+			$(".cart-items").html('<tr><td colspan="10" class="text-center">Cart is Empty</td></tr>');
 			$(".cart-tax-items").hide();
 			$(".btn-place-order").hide();
-			$(".cart-addresses").hide();
 		}
 		else {
 			$cart.css("display", "inline");
@@ -139,9 +137,14 @@ $.extend(shopping_cart, {
 	},
 
 	shopping_cart_update_callback: function(r, cart_dropdown) {
+		var cart_count = frappe.get_cookie("cart_count");
 		if(!r.exc) {
-			$(".cart-items").html(r.message.items);
-			$(".cart-tax-items").html(r.message.taxes);
+			if (parseInt(cart_count) !== 0 && cart_count !== undefined) {
+				$(".cart-items").html(r.message.items);
+				$(".cart-tax-items").show();
+				$(".cart-tax-items").html(r.message.taxes);
+				$(".btn-place-order").show();
+			}
 			if (cart_dropdown != true) {
 				$(".cart-icon").hide();
 			}
@@ -200,7 +203,7 @@ $.extend(shopping_cart, {
 			}
 			input.val(newVal);
 			var item_code = input.attr("data-item-code");
-			shopping_cart.shopping_cart_update_item(item_code, newVal, true);
+			shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
 			return false;
 		});
 
