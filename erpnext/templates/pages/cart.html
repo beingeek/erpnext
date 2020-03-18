@@ -81,9 +81,10 @@ moment.defaultFormat = frappe.moment_date_format;
 		<div class="cart-addresses">
 		{% include "templates/includes/cart/cart_address.html" %}
 		</div>
-		
-		<button class="btn btn-default btn-get-default-items btn-sm margin-top" type="button">
-					{{ _("Get Default Items") }}</button>
+		{% for dig in default_item_groups_allow %}
+			<button class="btn btn-default btn-get-default-items btn-sm margin-top" data-item-group="{{ dig.get('name') }}" type="button">
+						Get {{ dig.get("name") }}</button>
+		{% endfor %}
 
 		<div class="table-responsive margin-top">
 			<table class="table table-bordered">
