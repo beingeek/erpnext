@@ -24,6 +24,9 @@
 	background-size: contain !important;
 }
 </style>
+<style>
+{% include "templates/includes/magnifier.css" %}
+</style>
 {% endblock %}
 
 {% block page_content %}
@@ -102,12 +105,13 @@
 				<td class="text-center" style="vertical-align: middle;">
 					{{d.idx}}
 				</td>
-				<td style="vertical-align: middle;">
-					<input class="form-control text-right cart-qty" value="{{ d.get_formatted('qty') }}"
-								data-item-code="{{ d.item_code }}" style="border:0;">
+				<td class="text-center" style="vertical-align: middle;">
+					{{ d.get_formatted('qty') }}
 				</td>
 				<td class="text-center">
-					{{product_image_square(d.image,"order-item-image")}}
+					<div class="order-item-image">
+					{{product_image_square(d.image, "order-item-image")}}
+					</div>
 				</td>
 				<td class="text-center" style="vertical-align: middle;">
 					{{d.item_name}}
@@ -134,6 +138,11 @@
 			{% endfor %}
 		</tbody>
 	</table>
+</div>
+
+<div id="myModal" class="modal zoom_modal">
+	<span class="close">&times;</span>
+	<img class="modal-img-content" id="img01">
 </div>
 
 	<!-- taxes -->
@@ -225,6 +234,23 @@
 			doctype_name: '{{ doc.name }}',
 			grand_total: '{{ doc.grand_total }}',
 			currency: '{{ doc.currency }}'
+		}
+	</script>
+	<script>
+		var modal = document.getElementsByClassName("zoom_modal")[0];
+		var modalImg = document.getElementById("img01");
+
+		$('.order-items').on('click','.order-item-image', function() {
+			var me = $('.product-image',this);
+			pro_img = me.context.style.backgroundImage;
+			if (pro_img) {
+				modal.style.display = "block";
+				modalImg.src = pro_img.split('"')[1];
+			}
+		});
+		var span = document.getElementsByClassName("close")[0];
+		span.onclick = function() {
+			modal.style.display = "none";
 		}
 	</script>
 {% endblock %}

@@ -77,12 +77,14 @@ $.extend(shopping_cart, {
 
 	bind_get_default_items: function () {
 		$('.btn-get-default-items').click(function () {
+			item_group = $(this).attr("data-item-group");
 			return frappe.call({
 				type: "POST",
 				method: "erpnext.shopping_cart.cart.get_default_items",
 				freeze: true,
 				args: {
-					with_items: 1
+					with_items: 1,
+					item_group: item_group
 				},
 				callback: function (r) {
 					shopping_cart.shopping_cart_update_callback(r);
