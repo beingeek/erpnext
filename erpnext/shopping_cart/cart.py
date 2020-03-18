@@ -55,7 +55,8 @@ def get_cart_quotation(doc=None):
 			for address in addresses],
 		"shipping_rules": get_applicable_shipping_rules(party),
 		"quotation_fields": cart_quotation_fields,
-		"party_fields": cart_party_fields
+		"party_fields": cart_party_fields,
+		"default_item_groups_allow": default_item_groups_allow()
 	}
 
 @frappe.whitelist()
@@ -511,10 +512,25 @@ def show_terms(doc):
 	return doc.tc_name
 
 @frappe.whitelist()
-def get_default_items(with_items=False):
+def get_default_items(with_items=False, item_group=None):
 	quotation = _get_cart_quotation()
 	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
 		filters={"parenttype": 'Customer', "parent": quotation.customer})
+
+	if item_group:
+		lft, rgt = frappe.get_cached_value("Item Group", item_group, ['lft', 'rgt'])
+		if lft and rgt:
+			item_groups = frappe.db.sql_list("select name from `tabItem Group` where lft >= %(lft)s and rgt <= %(rgt)s",
+			{'lft':lft,'rgt':rgt})
+
+			filtered_default_items = []
+			for d in default_items:
+				item_group_default_item = frappe.get_cached_value("Item", d.item_code, "item_group")
+				if item_group_default_item in item_groups:
+					filtered_default_items.append(d)
+
+			default_items = filtered_default_items
+
 	default_item_codes = [d.item_code for d in default_items]
 	existing_item_codes = [d.item_code for d in quotation.items]
 
@@ -523,6 +539,11 @@ def get_default_items(with_items=False):
 			quotation.append("items", {"item_code": item_code, "qty": 1})
 	
 	return update_cart(quotation, with_items)
+
+def default_item_groups_allow():
+	item_groups = frappe.get_all("Item Group", filters={"allow_getting_default_items":1})
+
+	return item_groups
 
 @frappe.whitelist()
 def add_item(item_code, with_items=False):
