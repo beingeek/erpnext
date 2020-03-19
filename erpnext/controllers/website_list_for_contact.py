@@ -28,7 +28,7 @@ def get_transaction_list(doctype, txt=None, filters=None, limit_start=0, limit_p
 	if doctype == 'Supplier Quotation':
 		filters.append((doctype, "docstatus", "<", 2))
 	else:
-		filters.append((doctype, "docstatus", "=", 1))
+		filters.append((doctype, "docstatus", "<", 2))
 
 	if (user != "Guest" and is_website_user()) or doctype == 'Request for Quotation':
 		parties_doctype = 'Request for Quotation Supplier' if doctype == 'Request for Quotation' else doctype
