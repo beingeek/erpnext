@@ -48,13 +48,17 @@
 </div>
 
 {% if doc.doctype == "Quotation" %}
-{% for ref in reference%}
-<a href="/orders/{{ref.parent}}" class="margin-top">{{ref.parent}}</a>
-{% endfor %}
+	{% for ref in reference%}
+		{% if ref.parent %}
+			<a href="/orders/{{ref.parent}}" class="margin-top">{{ref.parent}}</a>
+		{% endif %}
+	{% endfor %}
 {% else %}
-{% for ref in reference%}
-<a href="/quotations/{{ref}}" class="margin-top">{{ref}}</a>
-{% endfor %}
+	{% for ref in reference%}
+		{% if ref %}
+			<a href="/quotations/{{ref}}" class="margin-top">{{ref}}</a>
+		{% endif %}
+	{% endfor %}
 {% endif %}
 
 <div class="row" style="margin-top: 15px;">
@@ -75,7 +79,7 @@
 		<p class="small" style="float: right;">
 			<b>{{_("Delivery Date")}}</b>
 			<br>
-			{{ doc.get_formatted("delivery_date") }}
+			{{ frappe.utils.global_date_format(doc.get_formatted("delivery_date")) }}
 
 		</p>	
 	</div>
