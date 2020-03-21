@@ -14,6 +14,9 @@
 
 {% block header_actions %}
 <a class='btn btn-xs btn-default' href='/printview?doctype={{ doc.doctype}}&name={{ doc.name }}&format={{ print_format }}' target="_blank" rel="noopener noreferrer">{{ _("Print") }}</a>
+{% if doc.get('indicator_title') == "Sent to Sundine" %}
+<a class='btn btn-xs btn-default' href='/cart'>{{ _("Edit") }}</a>
+{% endif %}
 {% endblock %}
 {% block style %}
 <style>
