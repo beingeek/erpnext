@@ -38,6 +38,9 @@ def get_cart_quotation(doc=None):
 		doc = quotation
 		set_cart_count(quotation)
 
+	if hasattr(doc, "set_indicator"):
+		doc.set_indicator()
+
 	addresses = get_address_docs(party=party)
 
 	get_balance = get_balance_on(party=party.name, party_type='Customer')
@@ -65,9 +68,10 @@ def place_order():
 	quotation.company = frappe.db.get_value("Shopping Cart Settings", None, "company")
 	if not quotation.get("customer_address"):
 		throw(_("{0} is required").format(_(quotation.meta.get_label("customer_address"))))
+	quotation.confirmed_by_customer = 1
 
 	quotation.flags.ignore_permissions = True
-	quotation.submit()
+	quotation.save()
 
 	if quotation.lead:
 		# company used to create customer accounts
