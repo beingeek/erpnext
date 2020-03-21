@@ -2,7 +2,16 @@
 
 {% block title %} {{ _("Shopping Cart") }} {% endblock %}
 
-{% block header %}<h2>{{ _("My Cart") }}</h2>{% endblock %}
+{% block header %}
+<h2>{{ _("My Cart") }}</h2>
+{% if doc.confirmed_by_customer %}
+<div style='margin-top: -3px;'>
+	<span class="indicator {{ doc.indicator_color or ("blue" if doc.docstatus==1 else "darkgrey") }}">
+		{{ _(doc.get('indicator_title')) or _(doc.status) or _("Submitted") }}
+	</span>
+</div>
+{% endif %}
+{% endblock %}
 
 {% block script %}
 <script>{% include "templates/includes/cart.js" %}</script>
