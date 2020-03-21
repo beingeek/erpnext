@@ -22,12 +22,14 @@ class Quotation(SellingController):
 			else:
 				self.indicator_color = 'orange'
 				self.indicator_title = 'Received by Sundine'
-		if self.valid_till and getdate(self.valid_till) < getdate(nowdate()):
-			self.indicator_color = 'darkgrey'
-			self.indicator_title = 'Expired'
-		if self.confirmed_by_customer:
-			self.indicator_color = 'red'
-			self.indicator_title = 'Sent to Sundine'
+
+			if self.valid_till and getdate(self.valid_till) < getdate(nowdate()):
+				self.indicator_color = 'darkgrey'
+				self.indicator_title = 'Expired'
+		else:
+			if self.confirmed_by_customer:
+				self.indicator_color = 'red'
+				self.indicator_title = 'Sent to Sundine'
 
 	def validate(self):
 		super(Quotation, self).validate()
