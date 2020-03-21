@@ -1116,7 +1116,10 @@ def get_item_defaults(item_code, company):
 		if d.company == company:
 			row = copy.deepcopy(d.as_dict())
 			row.pop("name")
-			out.update(row)
+			for key, val in iteritems(row):
+				if val:
+					out[key] = val
+
 	return out
 
 def set_item_default(item_code, company, fieldname, value):
