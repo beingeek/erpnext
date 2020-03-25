@@ -98,7 +98,7 @@ def get_product_list_for_group(product_group=None, start=0, limit=10, search=Non
 		where I.show_in_website = 1
 			and I.disabled = 0
 			and (I.end_of_life is null or I.end_of_life='0000-00-00' or I.end_of_life > %(today)s)
-			and (I.variant_of = '' or I.variant_of is null)
+			and I.variant_of != ''
 			and (I.item_group in ({child_groups})
 			or I.name in (select parent from `tabWebsite Item Group` where item_group in ({child_groups})))
 			""".format(child_groups=child_groups)
