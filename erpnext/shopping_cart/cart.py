@@ -63,12 +63,15 @@ def get_cart_quotation(doc=None):
 	}
 
 @frappe.whitelist()
-def place_order():
+def place_order(confirmed):
 	quotation = _get_cart_quotation()
 	quotation.company = frappe.db.get_value("Shopping Cart Settings", None, "company")
 	if not quotation.get("customer_address"):
 		throw(_("{0} is required").format(_(quotation.meta.get_label("customer_address"))))
-	quotation.confirmed_by_customer = 1
+	if cint(confirmed):
+		quotation.confirmed_by_customer = 1
+	else:
+		quotation.confirmed_by_customer = 0
 
 	quotation.flags.ignore_permissions = True
 	quotation.save()
