@@ -30,6 +30,10 @@ class Quotation(SellingController):
 			if self.confirmed_by_customer:
 				self.indicator_color = 'red'
 				self.indicator_title = 'Sent to Sundine'
+			else:
+				self.indicator_color = 'yellow'
+				self.indicator_title = 'Draft'
+
 
 	def validate(self):
 		super(Quotation, self).validate()
