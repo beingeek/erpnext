@@ -4,11 +4,14 @@
 
 {% block header %}
 <h2>{{ _("My Cart") }}</h2>
-{% if doc.confirmed_by_customer %}
+{% if doc.docstatus == 0 %}
 <div style='margin-top: -3px;'>
-	<span class="indicator {{ doc.indicator_color or ("blue" if doc.docstatus==1 else "darkgrey") }}">
-		{{ _(doc.get('indicator_title')) or _(doc.status) or _("Submitted") }}
-	</span>
+	<a href="/quotations/{{doc.name}}" class="margin-top">
+		<span class="indicator {{ doc.indicator_color }}">
+			{{ _(doc.get('indicator_title')) }}
+		</span>
+		({{doc.name}})
+	</a>
 </div>
 {% endif %}
 {% endblock %}
@@ -54,6 +57,7 @@ moment.defaultFormat = frappe.moment_date_format;
 	height: 50px !important;
 	padding: 0 !important;
 	background-size: contain !important;
+	cursor: pointer;
 }
 </style>
 <style>
@@ -62,7 +66,11 @@ moment.defaultFormat = frappe.moment_date_format;
 {% endblock %}
 
 {% block header_actions %}
-{% if doc.items %}
+{% if doc.confirmed_by_customer %}
+<button class="btn btn-primary btn-cancel-order btn-sm"
+    type="button">
+    {{ _("Cancel Order") }}</button>
+{% else %}
 <button class="btn btn-primary btn-place-order btn-sm"
     type="button">
     {{ _("Place Order") }}</button>
@@ -142,8 +150,16 @@ moment.defaultFormat = frappe.moment_date_format;
 		{% endif %}
 
 		<p class="cart-footer text-right">
-		<button class="btn btn-primary btn-place-order btn-sm" type="button">
-		{{ _("Place Order") }}</button></p>
+			{% if doc.confirmed_by_customer %}
+			<button class="btn btn-primary btn-cancel-order btn-sm"
+				type="button">
+				{{ _("Cancel Order") }}</button>
+			{% else %}
+			<button class="btn btn-primary btn-place-order btn-sm"
+				type="button">
+				{{ _("Place Order") }}</button>
+			{% endif %}
+		</p>
 	</div>
 </div>
 

@@ -157,7 +157,10 @@ $.extend(shopping_cart, {
 
 	bind_place_order: function() {
 		$(".btn-place-order").on("click", function() {
-			shopping_cart.place_order(this);
+			shopping_cart.place_order(this, 1);
+		});
+		$(".btn-cancel-order").on("click", function() {
+			shopping_cart.place_order(this, 0);
 		});
 	},
 
@@ -267,24 +270,29 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	place_order: function(btn) {
+	place_order: function(btn,confirmed) {
 		return frappe.call({
 			type: "POST",
 			method: "erpnext.shopping_cart.cart.place_order",
 			btn: btn,
+			args:{ confirmed: confirmed },
 			callback: function(r) {
-				if(r.exc) {
-					var msg = "";
-					if(r._server_messages) {
-						msg = JSON.parse(r._server_messages || []).join("<br>");
-					}
+				if (confirmed) {
+					if(r.exc) {
+						var msg = "";
+						if(r._server_messages) {
+							msg = JSON.parse(r._server_messages || []).join("<br>");
+						}
 
-					$("#cart-error")
-						.empty()
-						.html(msg || frappe._("Something went wrong!"))
-						.toggle(true);
+						$("#cart-error")
+							.empty()
+							.html(msg || frappe._("Something went wrong!"))
+							.toggle(true);
+					} else {
+						window.location.href = "/quotations/" + encodeURIComponent(r.message);
+					}
 				} else {
-					window.location.href = "/quotations/" + encodeURIComponent(r.message);
+					window.location.href = "/cart";
 				}
 			}
 		});
