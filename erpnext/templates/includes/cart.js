@@ -200,11 +200,10 @@ $.extend(shopping_cart, {
 		var modalImg = document.getElementById("img01");
 
 		$('.cart-items').on('click','.cart-product-image', function() {
-			var me = $('.product-image',this);
-			pro_img = me[0].style.backgroundImage;
+			pro_img = $(this).attr("data-cart-image");
 			if (pro_img) {
 				modal.style.display = "block";
-				modalImg.src = pro_img.split('"')[1];
+				modalImg.src = pro_img;
 			}
 		});
 		var span = document.getElementsByClassName("close")[0];
