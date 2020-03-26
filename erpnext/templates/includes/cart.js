@@ -73,6 +73,7 @@ $.extend(shopping_cart, {
 		shopping_cart.bind_add_items();
 		shopping_cart.bind_remove_cart_item();
 		shopping_cart.bind_magnify_image();
+		shopping_cart.cart_indicator();
 	},
 
 	bind_get_default_items: function () {
@@ -114,6 +115,27 @@ $.extend(shopping_cart, {
 					shopping_cart.shopping_cart_update_callback(r);
 				}
 			});
+		}
+	},
+
+	cart_indicator: function() {
+		var delivery_date = shopping_cart.field_group.get_value('delivery_date');
+		var cart_count = frappe.get_cookie("cart_count");
+
+		if ((delivery_date && delivery_date !== undefined) || (parseInt(cart_count) !== 0 && cart_count !== undefined)) {
+			return frappe.call({
+				type: "POST",
+				method: "erpnext.shopping_cart.cart.get_quotation_name",
+				freeze: true,
+				callback: function(r) {
+					var a = document.getElementsByClassName("indicator-link")[0];
+					a.href = "/quotations/" + encodeURIComponent(r.message);
+					$('.quotation-name').html("("+r.message+")");
+					$('.cart-indicator').show();
+				}
+			});
+		} else {
+			$('.cart-indicator').hide();
 		}
 	},
 

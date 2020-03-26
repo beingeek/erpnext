@@ -4,16 +4,16 @@
 
 {% block header %}
 <h2>{{ _("My Cart") }}</h2>
-{% if doc.docstatus == 0 %}
-<div style='margin-top: -3px;'>
-	<a href="/quotations/{{doc.name}}" class="margin-top">
+<div class="cart-indicator" style='margin-top: -3px;'>
+	{% if doc.docstatus == 0 %}
+	<a href="/quotations/{{doc.name}}" class="margin-top indicator-link">
 		<span class="indicator {{ doc.indicator_color }}">
 			{{ _(doc.get('indicator_title')) }}
 		</span>
-		({{doc.name}})
+		<span class="quotation-name"></span>
 	</a>
+	{% endif %}
 </div>
-{% endif %}
 {% endblock %}
 
 {% block script %}
@@ -67,7 +67,7 @@ moment.defaultFormat = frappe.moment_date_format;
 
 {% block header_actions %}
 {% if doc.confirmed_by_customer %}
-<button class="btn btn-primary btn-cancel-order btn-sm"
+<button class="btn btn-cancel-order btn-sm"
     type="button">
     {{ _("Cancel Order") }}</button>
 {% else %}
@@ -151,7 +151,7 @@ moment.defaultFormat = frappe.moment_date_format;
 
 		<p class="cart-footer text-right">
 			{% if doc.confirmed_by_customer %}
-			<button class="btn btn-primary btn-cancel-order btn-sm"
+			<button class="btn btn-cancel-order btn-sm"
 				type="button">
 				{{ _("Cancel Order") }}</button>
 			{% else %}

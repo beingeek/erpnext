@@ -62,6 +62,7 @@ $.extend(shopping_cart, {
 				freeze: opts.freeze,
 				callback: function(r) {
 					shopping_cart.set_cart_count();
+					shopping_cart.cart_indicator();
 					if (r.message.shopping_cart_menu) {
 						$('.shopping-cart-menu').html(r.message.shopping_cart_menu);
 					}
@@ -92,6 +93,7 @@ $.extend(shopping_cart, {
 				freeze: opts.freeze,
 				callback: function(r) {
 					shopping_cart.set_cart_count();
+					shopping_cart.cart_indicator();
 					if (r.message.shopping_cart_menu) {
 						$('.shopping-cart-menu').html(r.message.shopping_cart_menu);
 					}
@@ -148,7 +150,7 @@ $.extend(shopping_cart, {
 			if (cart_dropdown != true) {
 				$(".cart-icon").hide();
 			}
-
+			shopping_cart.cart_indicator();
 			$.each(r.message.fields || {}, function (k, v) {
 				frappe.run_serially([
 					() => shopping_cart.ignore_update = true,
