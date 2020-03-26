@@ -86,6 +86,11 @@ def place_order(confirmed):
 	return quotation.name
 
 @frappe.whitelist()
+def get_quotation_name():
+	quotation = _get_cart_quotation()
+	return quotation.name
+
+@frappe.whitelist()
 def update_cart_item(item_code, fieldname, value, with_items=False):
 	from erpnext.stock.get_item_details import get_conversion_factor
 	quotation = _get_cart_quotation()
