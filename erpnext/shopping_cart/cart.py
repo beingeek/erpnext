@@ -130,11 +130,11 @@ def update_cart(quotation, with_items=False):
 	apply_cart_settings(quotation=quotation)
 	quotation.flags.ignore_permissions = True
 	quotation.payment_schedule = []
-	if quotation.items:
-		quotation.save()
-	else:
+	if not quotation.items and not quotation.delivery_date:
 		quotation.delete()
 		quotation = None
+	else:
+		quotation.save()
 
 	set_cart_count(quotation)
 
