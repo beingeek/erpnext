@@ -132,7 +132,7 @@ $.extend(shopping_cart, {
 	},
 
 	bind_change_delivery_date: function() {
-		var delivery_date = shopping_cart.field_group.get_value('delivery_date');
+		var delivery_date = shopping_cart.field_group.get_value('delivery_date') || "";
 		shopping_cart.shopping_cart_update_field('delivery_date', delivery_date);
 	},
 
