@@ -109,9 +109,9 @@
 					<div class="h6 text-uppercase">{{ _("Description") }}</div>
 					<div itemprop="description" class="item-desc">
 					{{ web_long_description or description or _("No description given") }}
-					<!-- {% if country_of_origin %}
+					{% if country_of_origin %}
 					<p>Country: {{ country_of_origin }}</p>
-					{% endif %} -->
+					{% endif %}
 					<span>{{ _("Per Unit: ") }}</span>
 					{% if has_variants %}
 						{{ "%d" | format(variant.alt_uom_size) }}
