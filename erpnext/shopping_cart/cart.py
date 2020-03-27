@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import throw, _
 import frappe.defaults
-from frappe.utils import cint, flt, get_fullname, cstr
+from frappe.utils import cint, flt, get_fullname, cstr, today
 from frappe.contacts.doctype.address.address import get_address_display
 from erpnext.shopping_cart.doctype.shopping_cart_settings.shopping_cart_settings import get_shopping_cart_settings
 from frappe.utils.nestedset import get_root_of
@@ -73,6 +73,7 @@ def place_order(confirmed):
 	else:
 		quotation.confirmed_by_customer = 0
 
+	quotation.transaction_date = today()
 	quotation.flags.ignore_permissions = True
 	quotation.save()
 
@@ -83,11 +84,6 @@ def place_order(confirmed):
 	if hasattr(frappe.local, "cookie_manager"):
 		frappe.local.cookie_manager.delete_cookie("cart_count")
 
-	return quotation.name
-
-@frappe.whitelist()
-def get_quotation_name():
-	quotation = _get_cart_quotation()
 	return quotation.name
 
 @frappe.whitelist()
@@ -129,12 +125,9 @@ def update_cart_field(fieldname, value, with_items=False):
 def update_cart(quotation, with_items=False):
 	apply_cart_settings(quotation=quotation)
 	quotation.flags.ignore_permissions = True
+	quotation.flags.ignore_mandatory = True
 	quotation.payment_schedule = []
-	if not quotation.items and not quotation.delivery_date:
-		quotation.delete()
-		quotation = None
-	else:
-		quotation.save()
+	quotation.save()
 
 	set_cart_count(quotation)
 
@@ -188,6 +181,7 @@ def update_cart_address(address_fieldname, address_name):
 	apply_cart_settings(quotation=quotation)
 
 	quotation.flags.ignore_permissions = True
+	quotation.flags.ignore_mandatory = True
 	quotation.save()
 
 	context = get_cart_quotation(quotation)
@@ -466,6 +460,7 @@ def apply_shipping_rule(shipping_rule):
 	apply_cart_settings(quotation=quotation)
 
 	quotation.flags.ignore_permissions = True
+	quotation.flags.ignore_mandatory = True
 	quotation.save()
 
 	return get_cart_quotation(quotation)
