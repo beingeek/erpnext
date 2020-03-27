@@ -6,7 +6,7 @@
 				{{ doc.name }}</span>
 			</div>
 			<div class="col-sm-3">
-				{{ frappe.utils.global_date_format(doc.transaction_date) }}
+				{{ frappe.utils.global_date_format(doc.transaction_date or doc.posting_date) }}
 			</div>
 			<div class="col-sm-3">
 				{{ frappe.utils.global_date_format(doc.delivery_date) }}
