@@ -118,22 +118,14 @@ $.extend(shopping_cart, {
 		}
 	},
 
-	cart_indicator: function() {
-		var delivery_date = shopping_cart.field_group.get_value('delivery_date');
-		var cart_count = frappe.get_cookie("cart_count");
-
-		if ((delivery_date && delivery_date !== undefined) || (parseInt(cart_count) !== 0 && cart_count !== undefined)) {
-			return frappe.call({
-				type: "POST",
-				method: "erpnext.shopping_cart.cart.get_quotation_name",
-				freeze: true,
-				callback: function(r) {
-					var a = document.getElementsByClassName("indicator-link")[0];
-					a.href = "/quotations/" + encodeURIComponent(r.message);
-					$('.quotation-name').html("("+r.message+")");
-					$('.cart-indicator').show();
-				}
-			});
+	cart_indicator: function(name) {
+		var quotation_name = $('.indicator-link').attr('data-quotation-name');
+		var quot_name = name || quotation_name
+		if (quot_name && quot_name !== undefined && quot_name !== "None") {
+			var a = document.getElementsByClassName("indicator-link")[0];
+			a.href = "/quotations/" + encodeURIComponent(quot_name);
+			$('.quotation-name').html("("+quot_name+")");
+			$('.cart-indicator').show();
 		} else {
 			$('.cart-indicator').hide();
 		}

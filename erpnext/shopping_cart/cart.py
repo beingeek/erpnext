@@ -153,6 +153,7 @@ def update_cart(quotation, with_items=False):
 			"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
 				context),
 			"quotation_fields": qtn_fields_dict,
+			"name": quotation.name
 		}
 	else:
 		return {
