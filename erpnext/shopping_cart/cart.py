@@ -188,6 +188,7 @@ def update_cart_address(address_fieldname, address_name):
 	return {
 		"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
 			context),
+		"name": quotation.name
 		}
 
 def guess_territory():
