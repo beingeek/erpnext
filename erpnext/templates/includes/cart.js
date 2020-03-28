@@ -158,6 +158,7 @@ $.extend(shopping_cart, {
 					},
 					callback: function(r) {
 						if(!r.exc) {
+							shopping_cart.cart_indicator(r.message.name);
 							$(".cart-tax-items").html(r.message.taxes);
 						}
 					}
