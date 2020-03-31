@@ -148,7 +148,7 @@ $.extend(shopping_cart, {
 			if (cart_dropdown != true) {
 				$(".cart-icon").hide();
 			}
-
+			shopping_cart.cart_indicator(r.message.name);
 			$.each(r.message.fields || {}, function (k, v) {
 				frappe.run_serially([
 					() => shopping_cart.ignore_update = true,

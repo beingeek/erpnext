@@ -2,7 +2,19 @@
 
 {% block title %} {{ _("Shopping Cart") }} {% endblock %}
 
-{% block header %}<h2>{{ _("My Cart") }}</h2>{% endblock %}
+{% block header %}
+<h2>{{ _("My Cart") }}</h2>
+<div class="cart-indicator" style='margin-top: -3px;'>
+	{% if doc.docstatus == 0 %}
+	<a href="" class="margin-top indicator-link" data-quotation-name="{{doc.name}}">
+		<span class="indicator {{ doc.indicator_color }}">
+			{{ _(doc.get('indicator_title')) }}
+		</span>
+		<span class="quotation-name"></span>
+	</a>
+	{% endif %}
+</div>
+{% endblock %}
 
 {% block script %}
 <script>{% include "templates/includes/cart.js" %}</script>
@@ -45,6 +57,7 @@ moment.defaultFormat = frappe.moment_date_format;
 	height: 50px !important;
 	padding: 0 !important;
 	background-size: contain !important;
+	cursor: pointer;
 }
 </style>
 <style>
@@ -53,7 +66,11 @@ moment.defaultFormat = frappe.moment_date_format;
 {% endblock %}
 
 {% block header_actions %}
-{% if doc.items %}
+{% if doc.confirmed_by_customer %}
+<button class="btn btn-cancel-order btn-sm"
+    type="button">
+    {{ _("Cancel Order") }}</button>
+{% else %}
 <button class="btn btn-primary btn-place-order btn-sm"
     type="button">
     {{ _("Place Order") }}</button>
@@ -133,8 +150,16 @@ moment.defaultFormat = frappe.moment_date_format;
 		{% endif %}
 
 		<p class="cart-footer text-right">
-		<button class="btn btn-primary btn-place-order btn-sm" type="button">
-		{{ _("Place Order") }}</button></p>
+			{% if doc.confirmed_by_customer %}
+			<button class="btn btn-cancel-order btn-sm"
+				type="button">
+				{{ _("Cancel Order") }}</button>
+			{% else %}
+			<button class="btn btn-primary btn-place-order btn-sm"
+				type="button">
+				{{ _("Place Order") }}</button>
+			{% endif %}
+		</p>
 	</div>
 </div>
 

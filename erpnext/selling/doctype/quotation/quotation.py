@@ -18,13 +18,22 @@ class Quotation(SellingController):
 		if self.docstatus==1:
 			if self.status == "Ordered":
 				self.indicator_color = 'green'
-				self.indicator_title = 'Ordered'
+				self.indicator_title = 'Confirmed'
 			else:
 				self.indicator_color = 'orange'
-				self.indicator_title = 'Unordered'
-		if self.valid_till and getdate(self.valid_till) < getdate(nowdate()):
-			self.indicator_color = 'darkgrey'
-			self.indicator_title = 'Expired'
+				self.indicator_title = 'Received by Sundine'
+
+			if self.valid_till and getdate(self.valid_till) < getdate(nowdate()):
+				self.indicator_color = 'darkgrey'
+				self.indicator_title = 'Expired'
+		else:
+			if self.confirmed_by_customer:
+				self.indicator_color = 'red'
+				self.indicator_title = 'Sent to Sundine'
+			else:
+				self.indicator_color = 'yellow'
+				self.indicator_title = 'Draft'
+
 
 	def validate(self):
 		super(Quotation, self).validate()
@@ -91,6 +100,13 @@ class Quotation(SellingController):
 		#update enquiry status
 		self.update_opportunity()
 		self.update_lead()
+
+	def before_submit(self):
+		self.validate_confirmed_by_customer()
+
+	def validate_confirmed_by_customer(self):
+		if self.order_type == "Shopping Cart" and not self.confirmed_by_customer:
+			frappe.throw(_("Order not yet confirmed by customer"))
 
 	def on_cancel(self):
 		#update enquiry status

@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import throw, _
 import frappe.defaults
-from frappe.utils import cint, flt, get_fullname, cstr
+from frappe.utils import cint, flt, get_fullname, cstr, today
 from frappe.contacts.doctype.address.address import get_address_display
 from erpnext.shopping_cart.doctype.shopping_cart_settings.shopping_cart_settings import get_shopping_cart_settings
 from frappe.utils.nestedset import get_root_of
@@ -38,6 +38,9 @@ def get_cart_quotation(doc=None):
 		doc = quotation
 		set_cart_count(quotation)
 
+	if hasattr(doc, "set_indicator"):
+		doc.set_indicator()
+
 	addresses = get_address_docs(party=party)
 
 	get_balance = get_balance_on(party=party.name, party_type='Customer')
@@ -60,14 +63,19 @@ def get_cart_quotation(doc=None):
 	}
 
 @frappe.whitelist()
-def place_order():
+def place_order(confirmed):
 	quotation = _get_cart_quotation()
 	quotation.company = frappe.db.get_value("Shopping Cart Settings", None, "company")
 	if not quotation.get("customer_address"):
 		throw(_("{0} is required").format(_(quotation.meta.get_label("customer_address"))))
+	if cint(confirmed):
+		quotation.confirmed_by_customer = 1
+	else:
+		quotation.confirmed_by_customer = 0
 
+	quotation.transaction_date = today()
 	quotation.flags.ignore_permissions = True
-	quotation.submit()
+	quotation.save()
 
 	if quotation.lead:
 		# company used to create customer accounts
@@ -117,12 +125,9 @@ def update_cart_field(fieldname, value, with_items=False):
 def update_cart(quotation, with_items=False):
 	apply_cart_settings(quotation=quotation)
 	quotation.flags.ignore_permissions = True
+	quotation.flags.ignore_mandatory = True
 	quotation.payment_schedule = []
-	if quotation.items:
-		quotation.save()
-	else:
-		quotation.delete()
-		quotation = None
+	quotation.save()
 
 	set_cart_count(quotation)
 
@@ -141,6 +146,7 @@ def update_cart(quotation, with_items=False):
 			"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
 				context),
 			"quotation_fields": qtn_fields_dict,
+			"name": quotation.name
 		}
 	else:
 		return {
@@ -175,12 +181,14 @@ def update_cart_address(address_fieldname, address_name):
 	apply_cart_settings(quotation=quotation)
 
 	quotation.flags.ignore_permissions = True
+	quotation.flags.ignore_mandatory = True
 	quotation.save()
 
 	context = get_cart_quotation(quotation)
 	return {
 		"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
 			context),
+		"name": quotation.name
 		}
 
 def guess_territory():
@@ -453,6 +461,7 @@ def apply_shipping_rule(shipping_rule):
 	apply_cart_settings(quotation=quotation)
 
 	quotation.flags.ignore_permissions = True
+	quotation.flags.ignore_mandatory = True
 	quotation.save()
 
 	return get_cart_quotation(quotation)

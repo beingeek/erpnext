@@ -15,7 +15,8 @@ def get_list_context(context=None):
 		"currency_symbols": json.dumps(dict(frappe.db.sql("""select name, symbol
 			from tabCurrency where enabled=1"""))),
 		"row_template": "templates/includes/transaction_row.html",
-		"get_list": get_transaction_list
+		"get_list": get_transaction_list,
+		"result_heading_template": "templates/includes/transaction_header.html"
 	}
 
 
@@ -25,7 +26,7 @@ def get_transaction_list(doctype, txt=None, filters=None, limit_start=0, limit_p
 
 	if not filters: filters = []
 
-	if doctype == 'Supplier Quotation':
+	if doctype in ['Supplier Quotation', 'Quotation', 'Sales Order']:
 		filters.append((doctype, "docstatus", "<", 2))
 	else:
 		filters.append((doctype, "docstatus", "=", 1))

@@ -333,7 +333,7 @@ class Item(WebsiteGenerator):
 				context.variant = frappe.get_doc("Item", variant)
 
 				for fieldname in ("website_image", "web_long_description", "description",
-										"website_specifications"):
+										"website_specifications", "country_of_origin"):
 					if context.variant.get(fieldname):
 						value = context.variant.get(fieldname)
 						if isinstance(value, list):
@@ -781,9 +781,9 @@ class Item(WebsiteGenerator):
 	def update_template_item(self):
 		"""Set Show in Website for Template Item if True for its Variant"""
 		if self.variant_of:
-			if self.show_in_website:
+			'''if self.show_in_website:
 				self.show_variant_in_website = 1
-				self.show_in_website = 0
+				self.show_in_website = 0'''
 
 			if self.show_variant_in_website:
 				# show template
@@ -1116,7 +1116,10 @@ def get_item_defaults(item_code, company):
 		if d.company == company:
 			row = copy.deepcopy(d.as_dict())
 			row.pop("name")
-			out.update(row)
+			for key, val in iteritems(row):
+				if val:
+					out[key] = val
+
 	return out
 
 def set_item_default(item_code, company, fieldname, value):

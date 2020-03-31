@@ -346,6 +346,10 @@ class SalesOrder(SellingController):
 			self.indicator_color = "green"
 			self.indicator_title = _("Closed")
 
+		elif self.status == 'Draft':
+			self.indicator_color = "yellow"
+			self.indicator_title = _("Draft")
+
 		elif self.per_delivered < 100 and getdate(self.delivery_date) < getdate(nowdate()):
 			self.indicator_color = "red"
 			self.indicator_title = _("Overdue")

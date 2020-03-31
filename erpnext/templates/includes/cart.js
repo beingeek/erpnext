@@ -73,6 +73,7 @@ $.extend(shopping_cart, {
 		shopping_cart.bind_add_items();
 		shopping_cart.bind_remove_cart_item();
 		shopping_cart.bind_magnify_image();
+		shopping_cart.cart_indicator();
 	},
 
 	bind_get_default_items: function () {
@@ -117,8 +118,21 @@ $.extend(shopping_cart, {
 		}
 	},
 
+	cart_indicator: function(name) {
+		var quotation_name = $('.indicator-link').attr('data-quotation-name');
+		var quot_name = name || quotation_name
+		if (quot_name && quot_name !== undefined && quot_name !== "None") {
+			var a = document.getElementsByClassName("indicator-link")[0];
+			a.href = "/quotations/" + encodeURIComponent(quot_name);
+			$('.quotation-name').html("("+quot_name+")");
+			$('.cart-indicator').show();
+		} else {
+			$('.cart-indicator').hide();
+		}
+	},
+
 	bind_change_delivery_date: function() {
-		var delivery_date = shopping_cart.field_group.get_value('delivery_date');
+		var delivery_date = shopping_cart.field_group.get_value('delivery_date') || "";
 		shopping_cart.shopping_cart_update_field('delivery_date', delivery_date);
 	},
 
@@ -144,6 +158,7 @@ $.extend(shopping_cart, {
 					},
 					callback: function(r) {
 						if(!r.exc) {
+							shopping_cart.cart_indicator(r.message.name);
 							$(".cart-tax-items").html(r.message.taxes);
 						}
 					}
@@ -157,7 +172,10 @@ $.extend(shopping_cart, {
 
 	bind_place_order: function() {
 		$(".btn-place-order").on("click", function() {
-			shopping_cart.place_order(this);
+			shopping_cart.place_order(this, 1);
+		});
+		$(".btn-cancel-order").on("click", function() {
+			shopping_cart.place_order(this, 0);
 		});
 	},
 
@@ -200,11 +218,10 @@ $.extend(shopping_cart, {
 		var modalImg = document.getElementById("img01");
 
 		$('.cart-items').on('click','.cart-product-image', function() {
-			var me = $('.product-image',this);
-			pro_img = me[0].style.backgroundImage;
+			pro_img = $(this).attr("data-cart-image");
 			if (pro_img) {
 				modal.style.display = "block";
-				modalImg.src = pro_img.split('"')[1];
+				modalImg.src = pro_img;
 			}
 		});
 		var span = document.getElementsByClassName("close")[0];
@@ -268,24 +285,29 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	place_order: function(btn) {
+	place_order: function(btn,confirmed) {
 		return frappe.call({
 			type: "POST",
 			method: "erpnext.shopping_cart.cart.place_order",
 			btn: btn,
+			args:{ confirmed: confirmed },
 			callback: function(r) {
-				if(r.exc) {
-					var msg = "";
-					if(r._server_messages) {
-						msg = JSON.parse(r._server_messages || []).join("<br>");
-					}
+				if (confirmed) {
+					if(r.exc) {
+						var msg = "";
+						if(r._server_messages) {
+							msg = JSON.parse(r._server_messages || []).join("<br>");
+						}
 
-					$("#cart-error")
-						.empty()
-						.html(msg || frappe._("Something went wrong!"))
-						.toggle(true);
+						$("#cart-error")
+							.empty()
+							.html(msg || frappe._("Something went wrong!"))
+							.toggle(true);
+					} else {
+						window.location.href = "/quotations/" + encodeURIComponent(r.message);
+					}
 				} else {
-					window.location.href = "/quotations/" + encodeURIComponent(r.message);
+					window.location.href = "/cart";
 				}
 			}
 		});
