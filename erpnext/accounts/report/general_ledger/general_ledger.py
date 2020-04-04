@@ -304,7 +304,8 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
 
 			update_value_in_dict(gle_map[gle.get(group_by)].totals, 'closing', gle)
 			update_value_in_dict(totals, 'closing', gle)
-
+	totals.opening.debit = 0
+	totals.opening.credit = 0
 	return totals, entries
 
 def get_result_as_list(data, filters):
