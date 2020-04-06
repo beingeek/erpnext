@@ -9,7 +9,7 @@ frappe.query_reports["Purchase Analytics"] = {
 			label: __("Tree Type"),
 			fieldtype: "Select",
 			options: ["Supplier Group","Supplier","Item Group","Item","Brand"],
-			default: "Supplier",
+			default: "Item",
 			reqd: 1
 		},
 		{
@@ -17,7 +17,7 @@ frappe.query_reports["Purchase Analytics"] = {
 			label: __("Based On"),
 			fieldtype: "Select",
 			options: ["Purchase Order","Purchase Receipt","Purchase Invoice"],
-			default: "Purchase Invoice",
+			default: "Purchase Receipt",
 			reqd: 1
 		},
 		{
@@ -25,7 +25,7 @@ frappe.query_reports["Purchase Analytics"] = {
 			label: __("Amount Or Qty"),
 			fieldtype: "Select",
 			options: ["Net Amount", "Amount", "Stock Qty", "Contents Qty", "Transaction Qty"],
-			default: "Net Amount",
+			default: "Stock Qty",
 			reqd: 1
 		},
 		{
@@ -39,7 +39,7 @@ frappe.query_reports["Purchase Analytics"] = {
 			fieldname:"to_date",
 			label: __("To Date"),
 			fieldtype: "Date",
-			default: frappe.defaults.get_user_default("year_end_date"),
+			default: frappe.datetime.get_today(),
 			reqd: 1
 		},
 		{
@@ -60,7 +60,7 @@ frappe.query_reports["Purchase Analytics"] = {
 				{ "value": "Quarterly", "label": __("Quarterly") },
 				{ "value": "Yearly", "label": __("Yearly") }
 			],
-			default: "Monthly",
+			default: "Weekly",
 			reqd: 1
 		},
 		{
