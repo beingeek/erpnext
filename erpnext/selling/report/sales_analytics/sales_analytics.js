@@ -9,7 +9,7 @@ frappe.query_reports["Sales Analytics"] = {
 			label: __("Tree Type"),
 			fieldtype: "Select",
 			options: ["Customer Group","Customer","Item Group","Item","Brand","Territory","Sales Person"],
-			default: "Customer",
+			default: "Item",
 			reqd: 1
 		},
 		{
@@ -25,7 +25,7 @@ frappe.query_reports["Sales Analytics"] = {
 			label: __("Amount Or Qty"),
 			fieldtype: "Select",
 			options: ["Net Amount", "Amount", "Stock Qty", "Contents Qty", "Transaction Qty"],
-			default: "Net Amount",
+			default: "Stock Qty",
 			reqd: 1
 		},
 		{
@@ -39,7 +39,7 @@ frappe.query_reports["Sales Analytics"] = {
 			fieldname:"to_date",
 			label: __("To Date"),
 			fieldtype: "Date",
-			default: frappe.defaults.get_user_default("year_end_date"),
+			default: frappe.datetime.get_today(),
 			reqd: 1
 		},
 		{
@@ -60,7 +60,7 @@ frappe.query_reports["Sales Analytics"] = {
 				{ "value": "Quarterly", "label": __("Quarterly") },
 				{ "value": "Yearly", "label": __("Yearly") }
 			],
-			default: "Monthly",
+			default: "Weekly",
 			reqd: 1
 		},
 		{
