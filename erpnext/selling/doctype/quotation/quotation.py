@@ -144,7 +144,7 @@ def make_sales_order(source_name, target_doc=None):
 	if quotation.valid_till and (quotation.valid_till < quotation.transaction_date or quotation.valid_till < getdate(nowdate())):
 		frappe.throw(_("Validity period of this quotation has ended."))
 
-	sales_order = frappe.get_all("Sales Order Item", fields='distinct parent', filters={"prevdoc_docname": source_name})
+	sales_order = frappe.get_all("Sales Order Item", fields='distinct parent', filters={"prevdoc_docname": source_name, "docstatus": ['<', 2]})
 	if sales_order:
 		sales_order_name = [frappe.get_desk_link("Sales Order", d.parent) for d in sales_order]
 		frappe.throw(_("Sales Order already exists: {0}").format(", ".join(sales_order_name)))
