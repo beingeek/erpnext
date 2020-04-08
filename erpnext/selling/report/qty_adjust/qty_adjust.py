@@ -84,6 +84,7 @@ def get_order_qty_data(from_date, to_date, filters, item_conditions, get_daily):
 			sum((i.qty - ifnull(i.received_qty, 0)) * i.conversion_factor) as qty
 		from `tabPurchase Order Item` i
 		inner join `tabPurchase Order` p on p.name = i.parent
+		inner join `tabItem` im on im.name = i.item_code and im.is_sales_item = 1
 		where p.docstatus < 2 and p.status != 'Closed' and ifnull(i.received_qty, 0) < ifnull(i.qty, 0)
 			and p.schedule_date between %(from_date)s and %(to_date)s {0}
 		group by i.item_code {1}
@@ -95,6 +96,7 @@ def get_order_qty_data(from_date, to_date, filters, item_conditions, get_daily):
 			sum((i.qty - ifnull(i.delivered_qty, 0)) * i.conversion_factor) as qty
 		from `tabSales Order Item` i
 		inner join `tabSales Order` s on s.name = i.parent
+		inner join `tabItem` im on im.name = i.item_code and im.is_sales_item = 1
 		where s.docstatus < 2 and ifnull(i.delivered_qty, 0) < ifnull(i.qty, 0) and s.status != 'Closed'
 			and s.delivery_date between %(from_date)s and %(to_date)s {0}
 		group by i.item_code {1}
@@ -106,6 +108,7 @@ def get_order_qty_data(from_date, to_date, filters, item_conditions, get_daily):
 			sum(i.stock_qty) as qty
 		from `tabSales Invoice Item` i
 		inner join `tabSales Invoice` s on s.name = i.parent
+		inner join `tabItem` im on im.name = i.item_code and im.is_sales_item = 1
 		where s.docstatus = 0 and ifnull(i.sales_order, '') = ''
 			and s.delivery_date between %(from_date)s and %(to_date)s {0}
 		group by i.item_code {1}
@@ -132,7 +135,7 @@ def get_item_conditions(filters):
 		if filters.get("brand"):
 			conditions.append("i.brand=%(brand)s")
 		if filters.get("item_group"):
-			conditions.append(get_item_group_condition(filters.get("item_group")).replace("item.", "i."))
+			conditions.append(get_item_group_condition(filters.get("item_group")).replace("item.", "im."))
 
 	conditions = " and ".join(conditions)
 	return "and {0}".format(conditions) if conditions else ""
