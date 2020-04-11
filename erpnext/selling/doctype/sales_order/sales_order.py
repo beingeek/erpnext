@@ -453,7 +453,7 @@ def get_list_context(context=None):
 	from erpnext.controllers.website_list_for_contact import get_list_context
 	list_context = get_list_context(context)
 	list_context.update({
-		'show_sidebar': True,
+		'show_sidebar': False,
 		'show_search': True,
 		'no_breadcrumbs': True,
 		'title': _('Orders'),
