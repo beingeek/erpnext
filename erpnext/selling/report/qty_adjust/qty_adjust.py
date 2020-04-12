@@ -119,9 +119,9 @@ def get_order_qty_data(from_date, to_date, filters, item_conditions, get_daily):
 
 def get_bin_data(filters, item_conditions):
 	return frappe.db.sql("""
-		select bin.item_code, sum(bin.actual_qty) as actual_qty, i.item_name
-		from tabBin bin, tabItem i
-		where i.name = bin.item_code and i.is_sales_item=1 {0}
+		select bin.item_code, sum(bin.actual_qty) as actual_qty, im.item_name
+		from tabBin bin, tabItem im
+		where im.name = bin.item_code and im.is_sales_item=1 {0}
 		group by bin.item_code
 		having actual_qty != 0
 	""".format(item_conditions), filters, as_dict=1)
