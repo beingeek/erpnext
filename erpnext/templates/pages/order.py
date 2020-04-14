@@ -9,7 +9,7 @@ from erpnext.shopping_cart.doctype.shopping_cart_settings.shopping_cart_settings
 
 def get_context(context):
 	context.no_cache = 1
-	context.show_sidebar = True
+	context.show_sidebar = False
 	context.doc = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.name)
 	if context.doc.doctype == "Quotation":
 		query = """select distinct parent from `tabSales Order Item` where (prevdoc_docname = %(name)s and docstatus<2)"""
@@ -31,7 +31,8 @@ def get_context(context):
 	if show_attachments():
 		context.attachments = get_attachments(frappe.form_dict.doctype, frappe.form_dict.name)
 
-	context.parents = frappe.form_dict.parents
+	context.parents = [{"route":"/", "title":_("Home")}]
+	context.parents.append(frappe.form_dict.parents[0])
 	context.title = frappe.form_dict.name
 	context.payment_ref = frappe.db.get_value("Payment Request",
 		{"reference_name": frappe.form_dict.name}, "name")

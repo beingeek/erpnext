@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 import frappe
+from frappe.website.context import add_sidebar_data
+from frappe.website.doctype.website_slideshow.website_slideshow import get_slideshow
 
 no_cache = 1
 no_sitemap = 1
@@ -27,3 +29,6 @@ def get_context(context):
 			})
 
 	context.homepage = homepage
+	add_sidebar_data(context)
+	context.slideshow = "Home Slides"
+	context.update(get_slideshow(context))

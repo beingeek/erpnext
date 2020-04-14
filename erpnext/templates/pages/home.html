@@ -2,8 +2,24 @@
 {% from "erpnext/templates/includes/macros.html" import product_image_square %}
 
 {% block page_content %}
-
-<div class="row">
+<div class="slide-show">
+	{% include "templates/includes/slideshow.html" %}
+</div>
+<div class="row" style="margin-top: 30px;">
+	{% for item in sidebar_items %}
+	<div class="col-sm-3">
+		<a href="{{ item.route }}" style="text-decoration: none;">
+			<div class="panel panel-default text-center">
+				<div class="panel-body">
+					<i class="{{item.icon}}" aria-hidden="true" style="font-size: 50px;"></i>
+				</div>
+				<div class="panel-footer" style="background-color: white !important;">{{ item.title }}</div>
+			</div>
+		</a>
+	</div>
+	{% endfor %}
+</div>
+<!-- <div class="row">
 	<div class="col-sm-12">
 		<div class="hero">
 			<h1 class="text-center">{{ homepage.tag_line or '' }}</h1>
@@ -17,9 +33,9 @@
 					{% for item in homepage.products %}
 					<a class="product-link" href="{{ item.route|abs_url }}">
 						<div class="col-sm-4 col-xs-4 product-image-wrapper">
-							<div class="product-image-img">
+							<div class="product-image-img"> -->
 								<!-- thumbnail not updated, and used as background image in item card -->
-								{{ product_image_square(item.image) }}
+								<!-- {{ product_image_square(item.image) }}
 							<div class="product-text" itemprop="name">{{ item.item_name }}</div>
 							</div>
 						</div>
@@ -33,11 +49,11 @@
 		</div>
 		{% endif %}
 	</div>
-</div>
+</div> -->
 {% endblock %}
 
 {% block style %}
-<style>
+<!-- <style>
 	.hero {
 		padding-top: 50px;
 		padding-bottom: 100px;
@@ -71,5 +87,5 @@
 	}
 
 
-</style>
+</style> -->
 {% endblock %}
