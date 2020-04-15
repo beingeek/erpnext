@@ -134,10 +134,12 @@ def qty_adjust_so_item(sales_order_name, so_detail, adjusted_qty, backorder_qty=
 	so_item.boxes = flt(so_item.stock_qty, so_item.precision('boxes'))
 
 	sales_order.save()
-	create_qty_adjust_log(sales_order, so_item, ordered_qty, adjusted_qty, backorder_qty)
 
+	backorder = backorder_item = None
 	if backorder_qty > 0 and backorder_date:
-		create_backorder(sales_order, so_item, backorder_qty, backorder_date)
+		backorder, backorder_item = create_backorder(sales_order, so_item, backorder_qty, backorder_date)
+
+	create_qty_adjust_log(sales_order, so_item, ordered_qty, adjusted_qty, backorder_qty, backorder, backorder_item)
 
 
 def create_backorder(sales_order, so_item, backorder_qty, backorder_date):
@@ -150,7 +152,7 @@ def create_backorder(sales_order, so_item, backorder_qty, backorder_date):
 	else:
 		backorder = frappe.new_doc("Sales Order")
 		backorder.update({
-			"order_type": "Sales",
+			"order_type": sales_order.order_type,
 			"company": sales_order.company,
 			"customer": sales_order.customer,
 			"transaction_date": frappe.utils.nowdate(),
@@ -165,7 +167,8 @@ def create_backorder(sales_order, so_item, backorder_qty, backorder_date):
 
 	backorder_item = filter(lambda d: d.item_code == so_item.item_code and d.uom == so_item.uom\
 		and flt(d.alt_uom_size, d.precision('alt_uom_size')) == flt(d.alt_uom_size_std, d.precision('alt_uom_size'))
-		and not cint(d.override_price_list_rate), backorder.items)
+		and not cint(d.override_price_list_rate)
+		and d.prevdoc_docname == so_item.prevdoc_docname, backorder.items)
 
 	if backorder_item:
 		backorder_item = backorder_item[0]
@@ -174,7 +177,8 @@ def create_backorder(sales_order, so_item, backorder_qty, backorder_date):
 			"item_code": so_item.item_code,
 			"item_name": so_item.item_name,
 			"uom": so_item.uom,
-			"qty": 0
+			"qty": 0,
+			"prevdoc_docname": so_item.prevdoc_docname
 		})
 
 	backorder_item.qty += backorder_qty
@@ -184,8 +188,10 @@ def create_backorder(sales_order, so_item, backorder_qty, backorder_date):
 
 	backorder.save()
 
+	return backorder, backorder_item
 
-def create_qty_adjust_log(sales_order, so_item, ordered_qty, allocated_qty, backorder_qty):
+
+def create_qty_adjust_log(sales_order, so_item, ordered_qty, allocated_qty, backorder_qty, backorder, backorder_item):
 	ordered_qty = flt(ordered_qty * so_item.conversion_factor, so_item.precision('qty'))
 	allocated_qty = flt(allocated_qty * so_item.conversion_factor, so_item.precision('qty'))
 	backorder_qty = flt(backorder_qty * so_item.conversion_factor, so_item.precision('qty'))
@@ -199,7 +205,10 @@ def create_qty_adjust_log(sales_order, so_item, ordered_qty, allocated_qty, back
 		"ordered_qty": ordered_qty,
 		"allocated_qty": allocated_qty,
 		"sales_order": sales_order.name,
+		"sales_order_item": so_item.name,
 		"back_qty": backorder_qty,
 		"customer": sales_order.customer,
-		"qty_surplus_and_shortage": flt(ordered_qty) - flt(allocated_qty)
+		"qty_surplus_and_shortage": flt(ordered_qty) - flt(allocated_qty),
+		"back_order": backorder.name if backorder else None,
+		"back_order_item": backorder_item.name if backorder_item else None
 	}).insert()
