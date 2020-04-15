@@ -193,7 +193,7 @@ def get_parent_item_groups(item_group_name):
 		and show_in_website=1
 		order by lft asc""", (item_group.lft, item_group.rgt), as_dict=True)
 
-	return 	[{"name": frappe._("Home"), "route":"/"}] + parent_groups
+	return 	parent_groups
 
 def invalidate_cache_for(doc, item_group=None):
 	if not item_group:

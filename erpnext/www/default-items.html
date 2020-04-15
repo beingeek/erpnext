@@ -4,6 +4,10 @@
 
 {% from "erpnext/templates/includes/order/order_macros.html" import item_name_and_description %}
 
+{% block breadcrumbs %}
+	{% include "templates/includes/breadcrumbs.html" %}
+{% endblock %}
+
 {% block header %}<h2>{{ _("Default Items") }}</h2>{% endblock %}
 
 {% block script%}
