@@ -48,6 +48,12 @@ frappe.query_reports["Batch-Wise Balance History"] = {
 			"fieldtype": "Link",
 			"options": "Batch"
 		},
+		{
+			"fieldname":"hide_empty_batches",
+			"label": __("Hide Empty Batches"),
+			"fieldtype": "Check",
+			"default": 1
+		},
 
 	]
 }
