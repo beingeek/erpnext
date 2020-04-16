@@ -130,10 +130,10 @@ def get_item_conditions(filters):
 	conditions = []
 
 	if filters.get("item_code"):
-		conditions.append("i.item_code = %(item_code)s")
+		conditions.append("im.name = %(item_code)s")
 	else:
 		if filters.get("brand"):
-			conditions.append("i.brand=%(brand)s")
+			conditions.append("im.brand=%(brand)s")
 		if filters.get("item_group"):
 			conditions.append(get_item_group_condition(filters.get("item_group")).replace("item.", "im."))
 

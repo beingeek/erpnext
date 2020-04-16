@@ -9,7 +9,7 @@ from frappe.utils import flt, cint, getdate
 def execute(filters=None):
 	if not filters: filters = {}
 
-	float_precision = cint(frappe.db.get_default("float_precision")) or 3
+	db_qty_precision = 6 if cint(frappe.db.get_default("float_precision")) <= 6 else 9
 
 	columns = get_columns(filters)
 	item_map = get_item_details(filters)
@@ -20,12 +20,13 @@ def execute(filters=None):
 		for wh in sorted(iwb_map[item]):
 			for batch in sorted(iwb_map[item][wh]):
 				qty_dict = iwb_map[item][wh][batch]
-				if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
-					data.append([item, item_map[item]["item_name"], item_map[item]["description"], wh, batch,
-						flt(qty_dict.opening_qty, float_precision), flt(qty_dict.in_qty, float_precision),
-						flt(qty_dict.out_qty, float_precision), flt(qty_dict.bal_qty, float_precision),
-						 item_map[item]["stock_uom"]
-					])
+				if flt(qty_dict.bal_qty, db_qty_precision) or not filters.get('hide_empty_batches'):
+					if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
+						data.append([item, item_map[item]["item_name"], item_map[item]["description"], wh, batch,
+							flt(qty_dict.opening_qty, db_qty_precision), flt(qty_dict.in_qty, db_qty_precision),
+							flt(qty_dict.out_qty, db_qty_precision), flt(qty_dict.bal_qty, db_qty_precision),
+							 item_map[item]["stock_uom"]
+						])
 
 	return columns, data
 
