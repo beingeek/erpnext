@@ -455,7 +455,7 @@ def get_list_context(context=None):
 	list_context.update({
 		'show_sidebar': False,
 		'show_search': True,
-		'no_breadcrumbs': True,
+		'no_breadcrumbs': False,
 		'title': _('Orders'),
 	})
 
