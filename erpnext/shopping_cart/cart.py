@@ -342,7 +342,7 @@ def get_party(user=None):
 		user = frappe.session.user
 
 	contact_name = get_contact_name(user)
-	party = None
+	party_doctype = party = None
 
 	if contact_name:
 		contact = frappe.get_doc('Contact', contact_name)
@@ -404,7 +404,7 @@ def get_contact_name(user):
 			where l.parent=c.name and l.parenttype='Contact' and l.link_doctype = 'Customer' and ifnull(l.link_name, '') != '')
 	""", {"user": user})
 
-	return contacts[0]
+	return contacts[0] if contacts else None
 
 def get_debtors_account(cart_settings):
 	payment_gateway_account_currency = \
