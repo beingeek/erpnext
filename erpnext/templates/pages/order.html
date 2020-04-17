@@ -121,7 +121,7 @@
 					{{ d.get_formatted('qty') }}
 				</td>
 				<td class="text-center">
-					<div class="order-item-image">
+					<div class="order-item-image-wrapper" data-item-image="{{ d.website_image or d.image }}">
 					{{ product_image_square(d.thumbnail or d.website_image or d.image, "order-item-image") }}
 					</div>
 				</td>
@@ -257,12 +257,11 @@
 		var modal = document.getElementsByClassName("zoom_modal")[0];
 		var modalImg = document.getElementById("img01");
 
-		$('.order-items').on('click','.order-item-image', function() {
-			var me = $('.product-image',this);
-			pro_img = me.context.style.backgroundImage;
+		$('.order-items').on('click', '.order-item-image-wrapper', function() {
+			var pro_img = $(this).attr("data-item-image");
 			if (pro_img) {
 				modal.style.display = "block";
-				modalImg.src = pro_img.split('"')[1];
+				modalImg.src = pro_img;
 			}
 		});
 		var span = document.getElementsByClassName("close")[0];

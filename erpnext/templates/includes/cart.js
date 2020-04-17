@@ -218,7 +218,7 @@ $.extend(shopping_cart, {
 		var modalImg = document.getElementById("img01");
 
 		$('.cart-items').on('click','.cart-product-image', function() {
-			pro_img = $(this).attr("data-cart-image");
+			var pro_img = $(this).attr("data-item-image");
 			if (pro_img) {
 				modal.style.display = "block";
 				modalImg.src = pro_img;
