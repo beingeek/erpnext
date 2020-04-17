@@ -3,8 +3,8 @@
 
 <tr class="default-item-row" data-item-code="{{ item.item_code }}">
     <td class="text-center">
-        <div class="default-product-image" data-order-image="{{item.website_image}}">
-        {{product_image_square(item.thumbnail,"default-item-image")}}
+        <div class="default-product-image" data-item-image="{{ item.website_image or item.image }}">
+            {{product_image_square(item.thumbnail or item.website_image or item.image, "default-item-image")}}
         </div>
     </td>
     <td class="" style="vertical-align: middle;">

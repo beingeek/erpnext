@@ -155,6 +155,9 @@ def get_customers_suppliers(doctype, user):
 	return customers, suppliers
 
 def has_website_permission(doc, ptype, user, verbose=False):
+	if user == "Administrator":
+		return True
+
 	doctype = doc.doctype
 	customers, suppliers = get_customers_suppliers(doctype, user)
 	if customers:

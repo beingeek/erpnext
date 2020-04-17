@@ -43,7 +43,7 @@ default_items.magnify_default_items = function() {
     var modalImg = document.getElementById("img01");
 
     $('#default-items').on('click', '.default-product-image', function() {
-        pro_img = $(this).attr("data-order-image");
+        var pro_img = $(this).attr("data-item-image");
         if (pro_img) {
             modal.style.display = "block";
             modalImg.src = pro_img;
