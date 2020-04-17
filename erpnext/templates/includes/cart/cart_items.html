@@ -13,7 +13,7 @@
     </td>
     <td class="text-center">
         <div class="cart-product-image" data-cart-image="{{d.website_image}}">
-            {{product_image_square(d.thumbnail,"cart-item-image")}}
+            {{product_image_square(d.thumbnail or d.website_image or d.image, "cart-item-image")}}
         </div>
     </td>
     <td class="" style="vertical-align: middle;">

@@ -122,7 +122,7 @@
 				</td>
 				<td class="text-center">
 					<div class="order-item-image">
-					{{product_image_square(d.image, "order-item-image")}}
+					{{ product_image_square(d.thumbnail or d.website_image or d.image, "order-item-image") }}
 					</div>
 				</td>
 				<td class="" style="vertical-align: middle;">
