@@ -160,6 +160,9 @@ def create_backorder(sales_order, so_item, backorder_qty, backorder_date):
 			"selling_price_list": sales_order.selling_price_list,
 			"payment_terms_template": sales_order.payment_terms_template,
 			"currency": sales_order.currency,
+			"customer_address": sales_order.customer_address,
+			"shipping_address_name": sales_order.shipping_address_name,
+			"contact_person": sales_order.contact_person,
 			"items": []
 		})
 
