@@ -12,6 +12,7 @@ default_items.add_default_item = function(item_code) {
             if (r.message) {
                 $("#default-items").append(r.message);
             }
+            default_items.empty_default_items();
         }
     })
 };
@@ -30,7 +31,8 @@ default_items.remove_default_item = function(item_code) {
                         callback: function(r) {
                             if (r.message) {
                                 $(`.default-item-row[data-item-code='${item_code}']`).remove();
-                            }                    
+                            }
+                            default_items.empty_default_items();
                         }
                 });
             }
@@ -59,6 +61,15 @@ default_items.magnify_default_items = function() {
         }
     });
 };
+
+default_items.empty_default_items = function() {
+    debugger;
+    var tbody = document.getElementById("default-items");
+    if (tbody.childElementCount === 0) {
+        $("#default-items").html('<tr class="empty-items"><td colspan="10" class="text-center">No Default Items</td></tr>');
+    } else {
+        $(".empty-items").remove();
+    }
 };
 
 frappe.ready(function() {
@@ -72,5 +83,5 @@ frappe.ready(function() {
     });
 
     default_items.magnify_default_items();
-
+    default_items.empty_default_items();
 });
