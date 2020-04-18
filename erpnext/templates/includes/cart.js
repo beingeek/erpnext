@@ -219,7 +219,7 @@ $.extend(shopping_cart, {
 
 		$('.cart-items').on('click','.cart-product-image', function() {
 			pro_img = $(this).attr("data-cart-image");
-			if (pro_img) {
+			if (pro_img && pro_img != "None") {
 				modal.style.display = "block";
 				modalImg.src = pro_img;
 			}
@@ -228,6 +228,11 @@ $.extend(shopping_cart, {
 		span.onclick = function() {
 			modal.style.display = "none";
 		}
+		$(document).on('keydown', function(e) {
+			if (e.keyCode === 27) {
+				modal.style.display = "none";
+			}
+		});
 	},
 
 	bind_change_uom: function() {

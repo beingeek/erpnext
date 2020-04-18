@@ -44,7 +44,7 @@ default_items.magnify_default_items = function() {
 
     $('#default-items').on('click', '.default-product-image', function() {
         pro_img = $(this).attr("data-order-image");
-        if (pro_img) {
+        if (pro_img && pro_img != "None") {
             modal.style.display = "block";
             modalImg.src = pro_img;
         }
@@ -53,6 +53,12 @@ default_items.magnify_default_items = function() {
     span.onclick = function() {
         modal.style.display = "none";
     }
+    $(document).on('keydown', function(e) {
+        if (e.keyCode === 27) {
+            modal.style.display = "none";
+        }
+    });
+};
 };
 
 frappe.ready(function() {

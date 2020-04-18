@@ -260,7 +260,7 @@
 		$('.order-items').on('click','.order-item-image', function() {
 			var me = $('.product-image',this);
 			pro_img = me.context.style.backgroundImage;
-			if (pro_img) {
+			if (pro_img && pro_img != "None") {
 				modal.style.display = "block";
 				modalImg.src = pro_img.split('"')[1];
 			}
@@ -269,5 +269,10 @@
 		span.onclick = function() {
 			modal.style.display = "none";
 		}
+		$(document).on('keydown', function(e) {
+			if (e.keyCode === 27) {
+				modal.style.display = "none";
+			}
+		});
 	</script>
 {% endblock %}
