@@ -134,6 +134,7 @@ def get_list_context(context=None):
 		'show_search': True,
 		'no_breadcrumbs': False,
 		'title': _('Quotations'),
+		'order_by': 'transaction_date desc'
 	})
 
 	return list_context
