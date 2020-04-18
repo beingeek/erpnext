@@ -553,6 +553,9 @@ def make_purchase_invoice(source_name, target_doc=None):
 		doc.run_method("set_missing_values")
 		doc.run_method("calculate_taxes_and_totals")
 
+		if doc.supplier:
+			doc.on_hold = cint(frappe.get_cached_value("Supplier", doc.supplier, 'hold_invoices_by_default'))
+
 	def update_item(source_doc, target_doc, source_parent):
 		target_doc.qty = source_doc.qty - source_doc.billed_qty - source_doc.returned_qty
 		target_doc.received_qty = target_doc.qty

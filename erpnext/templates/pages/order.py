@@ -22,9 +22,11 @@ def get_context(context):
 		for item in context.doc.items:
 			quotation_ref_list.append(item.get('prevdoc_docname'))
 		so_ref = list(set(quotation_ref_list))
+
+	decorate_doc(context.doc)
 	
 	context["reference"] = so_ref
- 
+
 	if hasattr(context.doc, "set_indicator"):
 		context.doc.set_indicator()
 
@@ -54,7 +56,16 @@ def get_context(context):
 		loyalty_program_details = get_loyalty_program_details_with_points(context.doc.customer, customer_loyalty_program)
 		context.available_loyalty_points = int(loyalty_program_details.get("loyalty_points"))
 
+
+def decorate_doc(doc):
+	for d in doc.get('items', []):
+		d.update(frappe.get_cached_value("Item", d.item_code,
+			["thumbnail", "website_image", "description", "route"], as_dict=True))
+
+	return doc
+
+
 def get_attachments(dt, dn):
-        return frappe.get_all("File",
-			fields=["name", "file_name", "file_url", "is_private"],
-			filters = {"attached_to_name": dn, "attached_to_doctype": dt, "is_private":0})
+	return frappe.get_all("File",
+		fields=["name", "file_name", "file_url", "is_private"],
+		filters={"attached_to_name": dn, "attached_to_doctype": dt, "is_private": 0})

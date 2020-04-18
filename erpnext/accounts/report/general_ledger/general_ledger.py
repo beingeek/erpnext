@@ -242,18 +242,19 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
 	return data
 
 def get_totals_dict():
-	def _get_debit_credit_dict(label):
+	def _get_debit_credit_dict(label, total_type):
 		return _dict(
 			account="'{0}'".format(label),
 			debit=0.0,
 			credit=0.0,
 			debit_in_account_currency=0.0,
-			credit_in_account_currency=0.0
+			credit_in_account_currency=0.0,
+			total_type=total_type
 		)
 	return _dict(
-		opening = _get_debit_credit_dict(_('Opening')),
-		total = _get_debit_credit_dict(_('Total')),
-		closing = _get_debit_credit_dict(_('Closing (Opening + Total)'))
+		opening = _get_debit_credit_dict(_('Opening'), 'opening'),
+		total = _get_debit_credit_dict(_('Total'), 'total'),
+		closing = _get_debit_credit_dict(_('Closing (Opening + Total)'), 'closing')
 	)
 
 def group_by_field(group_by):
@@ -304,8 +305,7 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
 
 			update_value_in_dict(gle_map[gle.get(group_by)].totals, 'closing', gle)
 			update_value_in_dict(totals, 'closing', gle)
-	totals.opening.debit = 0
-	totals.opening.credit = 0
+
 	return totals, entries
 
 def get_result_as_list(data, filters):
@@ -318,6 +318,9 @@ def get_result_as_list(data, filters):
 
 		balance = get_balance(d, balance, 'debit', 'credit')
 		d['balance'] = balance
+
+		if d.get('total_type') in ['opening', 'closing']:
+			d['debit'] = d['credit'] = 0
 
 		d['account_currency'] = filters.account_currency
 		d['bill_no'] = inv_details.get(d.get('against_voucher'), '')

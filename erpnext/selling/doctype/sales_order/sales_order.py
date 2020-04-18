@@ -356,7 +356,7 @@ class SalesOrder(SellingController):
 
 		elif self.per_billed < 100 and self.per_delivered < 100:
 			self.indicator_color = "orange"
-			self.indicator_title = _("Not Delivered")
+			self.indicator_title = _("Partially Delivered") if self.per_delivered else _("Not Delivered")
 
 		else:
 			self.indicator_color = "green"

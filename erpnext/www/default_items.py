@@ -19,7 +19,7 @@ def get_context(context):
 	items = []
 	for d in default_items:
 		items.append(frappe.get_cached_doc("Item", d.item_code))
-   
+
 	context["default_items"] = items
 
 

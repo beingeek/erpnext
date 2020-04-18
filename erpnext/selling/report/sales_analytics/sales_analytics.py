@@ -104,7 +104,7 @@ class Analytics(object):
 			elif self.filters.tree_type == 'Territory':
 				entity_field = "s.territory"
 			elif self.filters.tree_type == 'Item Group':
-				entity_field = "i.item_group"
+				entity_field = "im.item_group"
 			else:
 				entity_field = "sp.sales_person"
 			self.get_entries(entity_field)
@@ -124,6 +124,10 @@ class Analytics(object):
 		customer_table = ", `tabCustomer` cus" if include_customer else ""
 		customer_condition = "and cus.name = s.customer" if include_customer else ""
 
+		include_item = self.filters.tree_type == "Item Group" or self.filters.item_group
+		item_table = ", `tabItem` im" if include_item else ""
+		item_condition = "and im.name = i.item_code" if include_item else ""
+
 		is_opening_condition = "and s.is_opening != 'Yes'" if self.filters.doctype in ['Sales Invoice', 'Purchase Invoice']\
 			else ""
 
@@ -140,8 +144,8 @@ class Analytics(object):
 				{value_field} as value_field,
 				s.{date_field}
 			from 
-				`tab{doctype} Item` i, `tab{doctype}` s {supplier_table} {customer_table} {sales_team_join}
-			where i.parent = s.name and s.docstatus = 1 {supplier_condition} {customer_condition}
+				`tab{doctype} Item` i, `tab{doctype}` s {supplier_table} {customer_table} {sales_team_join} {item_table}
+			where i.parent = s.name and s.docstatus = 1 {supplier_condition} {customer_condition} {item_condition}
 				and s.company = %(company)s and s.{date_field} between %(from_date)s and %(to_date)s
 				{is_opening_condition} {filter_conditions}
 		""".format(
@@ -155,6 +159,8 @@ class Analytics(object):
 			supplier_condition=supplier_condition,
 			customer_table=customer_table,
 			customer_condition=customer_condition,
+			item_table=item_table,
+			item_condition=item_condition,
 			is_opening_condition=is_opening_condition,
 			filter_conditions=self.get_conditions()
 		), self.filters, as_dict=1)
@@ -207,7 +213,7 @@ class Analytics(object):
 
 		if self.filters.get("item_group"):
 			lft, rgt = frappe.db.get_value("Item Group", self.filters.item_group, ["lft", "rgt"])
-			conditions.append("""i.item_group in (select name from `tabItem Group`
+			conditions.append("""im.item_group in (select name from `tabItem Group`
 					where lft>=%s and rgt<=%s and docstatus<2)""" % (lft, rgt))
 
 		if self.filters.get("brand"):

@@ -9,18 +9,18 @@
     </td>
     <td style="vertical-align: middle;">
         <input class="form-control text-right cart-qty" value="{{ d.get_formatted('qty') }}"
-                    data-item-code="{{ d.item_code }}" style="border:0;">
+                    data-item-code="{{ d.item_code }}">
     </td>
     <td class="text-center">
-        <div class="cart-product-image" data-cart-image="{{d.website_image}}">
-            {{product_image_square(d.thumbnail,"cart-item-image")}}
+        <div class="cart-product-image" data-item-image="{{ d.website_image or d.image or '' }}">
+            {{product_image_square(d.thumbnail or d.website_image or d.image, "cart-item-image")}}
         </div>
     </td>
     <td class="" style="vertical-align: middle;">
         {{d.item_name}}
     </td>
     <td style="vertical-align: middle;">
-        <select class="form-control small cart-uom" data-item-code="{{ d.item_code }}" style="border:0;cursor: pointer;">
+        <select class="form-control small cart-uom" data-item-code="{{ d.item_code }}" style="cursor: pointer;">
             {% set item = frappe.get_cached_doc("Item", d.item_code) %}
             {% for p in item.uoms %}
                 <option value="{{ p.uom }}" {% if d.uom == p.uom %} selected="1"{% endif %}>{{ _(p.uom) }}</option>
