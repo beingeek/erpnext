@@ -12,6 +12,7 @@ default_items.add_default_item = function(item_code) {
             if (r.message) {
                 $("#default-items").append(r.message);
             }
+            default_items.empty_default_items();
         }
     })
 };
@@ -30,7 +31,8 @@ default_items.remove_default_item = function(item_code) {
                         callback: function(r) {
                             if (r.message) {
                                 $(`.default-item-row[data-item-code='${item_code}']`).remove();
-                            }                    
+                            }
+                            default_items.empty_default_items();
                         }
                 });
             }
@@ -38,20 +40,12 @@ default_items.remove_default_item = function(item_code) {
     }
 };
 
-default_items.magnify_default_items = function() {
-    var modal = document.getElementById("myModal");
-    var modalImg = document.getElementById("img01");
-
-    $('#default-items').on('click', '.default-product-image', function() {
-        var pro_img = $(this).attr("data-item-image");
-        if (pro_img) {
-            modal.style.display = "block";
-            modalImg.src = pro_img;
-        }
-    });
-    var span = document.getElementsByClassName("close")[0];
-    span.onclick = function() {
-        modal.style.display = "none";
+default_items.empty_default_items = function() {
+    var tbody = document.getElementById("default-items");
+    if (tbody.childElementCount === 0) {
+        $("#default-items").html('<tr class="empty-items"><td colspan="10" class="text-center">No Default Items</td></tr>');
+    } else {
+        $(".empty-items").remove();
     }
 };
 
@@ -65,6 +59,6 @@ frappe.ready(function() {
         default_items.remove_default_item(item_code);
     });
 
-    default_items.magnify_default_items();
-
+    window.zoom_item_image("#default-items",".default-product-image");
+    default_items.empty_default_items();
 });

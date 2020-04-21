@@ -90,3 +90,31 @@ window.product_list_dialog = function(dialog, callback) {
 
 	});
 }
+window.zoom_item_image = function(parent,child) {
+    var modal = document.getElementById("myModal");
+    var modalImg = document.getElementById("img01");
+
+    $(parent).on('click', child, function() {
+        var pro_img = $(this).attr("data-item-image");
+        if (pro_img) {
+            modal.style.display = "block";
+            modalImg.src = pro_img;
+        }
+    });
+    var span = document.getElementsByClassName("close")[0];
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+	$(document).on('keydown', function(e) {
+        if (e.keyCode === 27) {
+            modal.style.display = "none";
+        }
+	});
+
+    $(document).click(function (e) {
+        if ($(e.target).is('.zoom_modal')) {
+            modal.style.display = "none";
+        }
+    });
+};

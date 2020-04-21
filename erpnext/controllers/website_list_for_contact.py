@@ -20,7 +20,7 @@ def get_list_context(context=None):
 	}
 
 
-def get_transaction_list(doctype, txt=None, filters=None, limit_start=0, limit_page_length=20, order_by="modified"):
+def get_transaction_list(doctype, txt=None, filters=None, limit_start=0, limit_page_length=20, order_by=None):
 	user = frappe.session.user
 	key = None
 
@@ -49,12 +49,12 @@ def get_transaction_list(doctype, txt=None, filters=None, limit_start=0, limit_p
 			return post_process(doctype, get_list_for_transactions(doctype, txt,
 				filters=filters, fields="name",limit_start=limit_start,
 				limit_page_length=limit_page_length,ignore_permissions=True,
-				order_by="modified desc"))
+				order_by=order_by))
 		else:
 			return []
 
 	return post_process(doctype, get_list_for_transactions(doctype, txt, filters, limit_start, limit_page_length,
-		fields="name", order_by="modified desc"))
+		fields="name", order_by=order_by))
 
 def get_list_for_transactions(doctype, txt, filters, limit_start, limit_page_length=20,
 	ignore_permissions=False,fields=None, order_by=None):
@@ -65,7 +65,7 @@ def get_list_for_transactions(doctype, txt, filters, limit_start, limit_page_len
 	or_filters = []
 
 	for d in get_list(doctype, txt, filters=filters, fields="name", limit_start=limit_start,
-		limit_page_length=limit_page_length, ignore_permissions=ignore_permissions, order_by="modified desc"):
+		limit_page_length=limit_page_length, ignore_permissions=ignore_permissions, order_by=order_by):
 		data.append(d)
 
 	if txt:

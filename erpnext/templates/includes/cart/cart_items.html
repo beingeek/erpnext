@@ -12,7 +12,7 @@
                     data-item-code="{{ d.item_code }}">
     </td>
     <td class="text-center">
-        <div class="cart-product-image" data-item-image="{{ d.website_image or d.image }}">
+        <div class="cart-product-image" data-item-image="{{ d.website_image or d.image or '' }}">
             {{product_image_square(d.thumbnail or d.website_image or d.image, "cart-item-image")}}
         </div>
     </td>
