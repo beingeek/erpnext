@@ -5,7 +5,12 @@ product.change_qty = function() {
     $(".product-items").on("change", ".product-qty", function() {
         var item_code = $(this).attr("data-item-code");
         var newVal = $(this).val();
-        shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
+
+        shopping_cart.update_cart_item({
+            item_code: item_code,
+            fieldname: 'qty',
+            value: newVal
+        });
     });
 }
 

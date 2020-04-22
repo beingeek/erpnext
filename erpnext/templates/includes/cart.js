@@ -73,22 +73,25 @@ $.extend(shopping_cart, {
 		shopping_cart.bind_add_items();
 		shopping_cart.bind_remove_cart_item();
 		shopping_cart.cart_indicator();
+		shopping_cart.toggle_cart_count_buttons();
+	},
+
+	toggle_cart_count_buttons() {
+		var cart_count = frappe.get_cookie("cart_count");
+		if (parseInt(cart_count) !== 0 && cart_count !== undefined) {
+			$(".btn-place-order").show();
+		} else {
+			$(".btn-place-order").hide();
+		}
 	},
 
 	bind_get_default_items: function () {
 		$('.btn-get-default-items').click(function () {
-			item_group = $(this).attr("data-item-group");
-			return frappe.call({
-				type: "POST",
-				method: "erpnext.shopping_cart.cart.get_default_items",
-				freeze: true,
-				args: {
-					with_items: 1,
-					item_group: item_group
-				},
-				callback: function (r) {
-					shopping_cart.shopping_cart_update_callback(r);
-				}
+			var item_group = $(this).attr("data-item-group");
+			shopping_cart.add_default_items(item_group, {
+				callback: shopping_cart.cart_page_update_callback,
+				with_items: 1,
+				btn: this
 			});
 		});
 
@@ -96,30 +99,35 @@ $.extend(shopping_cart, {
 
 	bind_add_items: function () {
 		$('.btn-add-items').click(function () {
-			window.add_item_dialog(shopping_cart.add_item);
+			window.add_item_dialog(item_code => shopping_cart.add_item(item_code, {
+				callback: shopping_cart.cart_page_update_callback,
+				with_items: 1
+			}));
 		});
 	},
 
-	add_item: function(item_code) {
-		if (item_code) {
-			return frappe.call({
-				type: "POST",
-				method: "erpnext.shopping_cart.cart.add_item",
-				freeze: true,
-				args: {
-					item_code: item_code,
-					with_items: 1
-				},
-				callback: function (r){
-					shopping_cart.shopping_cart_update_callback(r);
-				}
+	cart_page_update_callback: function(r) {
+		if(!r.exc) {
+			$(".cart-items").html(r.message.items);
+			$(".cart-tax-items").html(r.message.taxes);
+			$(".cart-icon").hide();
+
+			shopping_cart.toggle_cart_count_buttons();
+			shopping_cart.cart_indicator(r.message.name);
+
+			$.each(r.message.fields || {}, function (k, v) {
+				frappe.run_serially([
+					() => shopping_cart.ignore_update = true,
+					() => shopping_cart.field_group.set_value(k, v),
+					() => shopping_cart.ignore_update = false,
+				]);
 			});
 		}
 	},
 
 	cart_indicator: function(name) {
 		var quotation_name = $('.indicator-link').attr('data-quotation-name');
-		var quot_name = name || quotation_name
+		var quot_name = name || quotation_name;
 		if (quot_name && quot_name !== undefined && quot_name !== "None") {
 			var a = document.getElementsByClassName("indicator-link")[0];
 			a.href = "/quotations/" + encodeURIComponent(quot_name);
@@ -132,7 +140,15 @@ $.extend(shopping_cart, {
 
 	bind_change_delivery_date: function() {
 		var delivery_date = shopping_cart.field_group.get_value('delivery_date') || "";
-		shopping_cart.shopping_cart_update_field('delivery_date', delivery_date);
+		shopping_cart.update_cart_field({
+			fieldname: 'delivery_date',
+			value: delivery_date,
+			with_items: 1,
+			callback: function (r) {
+				shopping_cart.cart_page_update_callback(r);
+			},
+			freeze: 1
+		});
 	},
 
 	bind_address_select: function() {
@@ -183,32 +199,33 @@ $.extend(shopping_cart, {
 		$(".cart-items").on("change", ".cart-qty", function() {
 			var item_code = $(this).attr("data-item-code");
 			var newVal = $(this).val();
-			shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
-		});
 
-		$(".cart-items").on('click', '.number-spinner button', function () {
-			var btn = $(this),
-				input = btn.closest('.number-spinner').find('input'),
-				oldValue = input.val().trim(),
-				newVal = 0;
-
-			if (btn.attr('data-dir') == 'up') {
-				newVal = parseInt(oldValue) + 1;
-			} else {
-				if (oldValue > 1) {
-					newVal = parseInt(oldValue) - 1;
-				}
-			}
-			input.val(newVal);
-			var item_code = input.attr("data-item-code");
-			shopping_cart.shopping_cart_update_item(item_code, 'qty', newVal);
+			shopping_cart.update_cart_item({
+				item_code: item_code,
+				fieldname: 'qty',
+				value: newVal,
+				with_items: 1,
+				callback: function (r) {
+					shopping_cart.cart_page_update_callback(r);
+				},
+				freeze: 1
+			});
 		});
 	},
 
 	bind_remove_cart_item: function() {
 		$(".cart-items").on('click', '.remove-cart-item', function(){
 			var item_code = $(this).attr('data-item-code');
-			shopping_cart.shopping_cart_update_item(item_code, 'qty', 0);
+			shopping_cart.update_cart_item({
+				item_code: item_code,
+				fieldname: 'qty',
+				value: 0,
+				with_items: 1,
+				callback: function (r) {
+					shopping_cart.cart_page_update_callback(r);
+				},
+				freeze: 1
+			});
 		});
 	},
 
@@ -216,7 +233,17 @@ $.extend(shopping_cart, {
 		$(".cart-items").on("change", ".cart-uom", function() {
 			var item_code = $(this).attr("data-item-code");
 			var newVal = $(this).val();
-			shopping_cart.shopping_cart_update_item(item_code, 'uom', newVal);
+
+			shopping_cart.update_cart_item({
+				item_code: item_code,
+				fieldname: 'uom',
+				value: newVal,
+				with_items: 1,
+				callback: function (r) {
+					shopping_cart.cart_page_update_callback(r);
+				},
+				freeze: 1
+			});
 		});
 	},
 
