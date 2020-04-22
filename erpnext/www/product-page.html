@@ -78,7 +78,7 @@
                             <span class="text-muted small">{{item.alt_uom}}</span>
                         </td>
                         <td class="text-right" style="vertical-align: middle;">
-                            {{item.valuation_rate}}
+                            {{ item.formatted_price or '0.00' }}
                         </td>
                     </tr>
                 {% endfor %}
