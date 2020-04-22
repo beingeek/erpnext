@@ -58,12 +58,28 @@
 			<a href="/orders/{{ref.parent}}" class="margin-top">{{ref.parent}}</a>
 		{% endif %}
 	{% endfor %}
-{% else %}
-	{% for ref in reference%}
-		{% if ref %}
-			<a href="/quotations/{{ref}}" class="margin-top">{{ref}}</a>
-		{% endif %}
-	{% endfor %}
+{% elif doc.doctype == "Sales Order" %}
+	{% if reference %}
+	<div>
+		<b>Source Document: </b>
+		{% for ref in reference%}
+			{% if ref %}
+				<a href="/quotations/{{ref}}" class="margin-top">{{ref}}</a>
+			{% endif %}
+		{% endfor %}
+	</div>
+	{% endif %}
+
+	{% if bo_reference %}
+	<div>
+		<b>Back Orders: </b>
+		{% for ref in bo_reference%}
+			{% if ref %}
+				<a href="/orders/{{ref.back_order}}" class="margin-top">{{ref.back_order}}</a>
+			{% endif %}
+		{% endfor %}
+	</div>
+	{% endif %}
 {% endif %}
 
 <div class="row" style="margin-top: 15px;">
@@ -98,14 +114,16 @@
 		<thead>
 			<tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
 				<th scope="col" style="width: 5% !important;"></th>
-				<th scope="col" class="text-center" style="width: 10% !important;">{{ _("Quantity") }}</th>
+				{% if doc.doctype == 'Sales Order' %}
+					<th scope="col" class="text-center" style="width: 10% !important;">{{ _("Qty Ordered") }}</th>
+					<th scope="col" class="text-right" style="width: 10% !important;white-space: nowrap;">{{ _("Qty Delivered") }}</th>
+				{% else %}
+					<th scope="col" class="text-center" style="width: 10% !important;">{{ _("Quantity") }}</th>
+				{% endif %}
 				<th scope="col" class="text-center" style="width: 10% !important;">{{ _("Image") }}</th>
 				<th scope="col" class="" style="width: 25% !important;">{{ _("Item Name") }}</th>
 				<th scope="col" class="text-center" style="width: 15% !important;">{{ _("UOM") }}</th>
 				<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Per Unit") }}</th>
-				{% if doc.doctype == 'Sales Order' %}
-					<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Delivered") }}</th>
-				{% endif %}
 				<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Rate") }}</th>
 				<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Subtotal") }}</th>
 				<th scope="col" class="text-center" style="width: 5% !important;">{{ _("HST") }}</th>
@@ -120,6 +138,11 @@
 				<td class="text-center" style="vertical-align: middle;">
 					{{ d.get_formatted('qty') }}
 				</td>
+				{% if doc.doctype == 'Sales Order' %}
+					<td class="text-center" style="vertical-align: middle;">
+						{{ d.get_formatted("delivered_qty") }}
+					</td>
+				{% endif %}
 				<td class="text-center">
 					<div class="order-item-image-wrapper" data-item-image="{{ d.website_image or d.image or '' }}">
 					{{ product_image_square(d.thumbnail or d.website_image or d.image, "order-item-image") }}
@@ -135,11 +158,6 @@
 					{{d.get_formatted("alt_uom_size")}}
 					<span class="text-muted small">{{d.alt_uom}}</span>
 				</td>
-				{% if doc.doctype == 'Sales Order' %}
-					<td class="text-right" style="vertical-align: middle;">
-						{{ d.get_formatted("delivered_qty") }}
-					</td>
-				{% endif %}
 				<td class="text-right" style="vertical-align: middle;">
 					{{ d.get_formatted("rate") }}
 				</td>

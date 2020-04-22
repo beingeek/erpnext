@@ -19,13 +19,22 @@ def get_context(context):
 
 	quotation_ref_list = []
 	if context.doc.doctype == "Sales Order":
+		query_back_order = """
+							select distinct back_order
+							from `tabQty Adjustment Log`
+							where sales_order = %(so_name)s and ifnull(back_order, '') != ''
+							"""
 		for item in context.doc.items:
 			quotation_ref_list.append(item.get('prevdoc_docname'))
 		so_ref = list(set(quotation_ref_list))
+		bo_ref = frappe.db.sql(query_back_order,{
+			"so_name": context.doc.name
+		},as_dict=1)
 
 	decorate_doc(context.doc)
 	
 	context["reference"] = so_ref
+	context["bo_reference"] = bo_ref
 
 	if hasattr(context.doc, "set_indicator"):
 		context.doc.set_indicator()

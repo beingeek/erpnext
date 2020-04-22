@@ -37,8 +37,12 @@
 
 {% block page_content %}
 <div class="table-responsive margin-top">
+    {% for item_group in item_group_map.keys() %}
     <table class="table table-bordered">
         <thead>
+            <tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
+                <th scope="col" class="text-center" colspan="7">{{ item_group }}</th>
+            </tr>
             <tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
                 <th scope="col" style="width: 5% !important;"></th>
                 <th scope="col" class="text-center" style="width: 10% !important;">{{ _("Quantity") }}</th>
@@ -50,10 +54,6 @@
             </tr>
         </thead>
         <tbody class="product-items" style="font-size: 12px !important;">
-            {% for item_group in item_group_map.keys() %}
-                <tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
-                    <th scope="col" class="text-center" colspan="7">{{ item_group }}</th>
-                </tr>
                 {% for item in item_group_map.get(item_group) %}
                     <tr class="product-items-row">
                         <td class="text-center" style="vertical-align: middle;">
@@ -78,13 +78,13 @@
                             <span class="text-muted small">{{item.alt_uom}}</span>
                         </td>
                         <td class="text-right" style="vertical-align: middle;">
-                            {{item.valuation_rate}}
+                            {{ item.formatted_price or '0.00' }}
                         </td>
                     </tr>
                 {% endfor %}
-            {% endfor %}
         </tbody>
     </table>
+    {% endfor %}
 </div>
 <div id="myModal" class="modal zoom_modal">
     <span class="close">&times;</span>
