@@ -2,6 +2,10 @@
 {% from "erpnext/templates/includes/order/order_macros.html" import item_name_and_description_cart %}
 {% from "erpnext/templates/includes/macros.html" import product_image_square %}
 
+{% if not doc.items %}
+<tr><td colspan="10" class="text-center">Cart is Empty</td></tr>
+{% endif %}
+
 {% for d in doc.items %}
 <tr class="cart-items-row" data-item-code="{{d.item_code}}">
     <td class="text-center" style="vertical-align: middle;">

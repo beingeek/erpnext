@@ -5,6 +5,7 @@
         {{ doc.get_formatted("net_total") }}</div>
 </div>
 {% endif %}
+
 {% for d in doc.taxes %}
 {% if d.base_tax_amount > 0 %}
 <div class="row tax-row">
@@ -14,6 +15,7 @@
 </div>
 {% endif %}
 {% endfor %}
+
 <div class="row tax-grand-total-row">
     <div class="col-xs-2 text-right text-uppercase h6 text-muted small" style="margin-top: 2.5px;"><span>{{ _("Total Quantity") }}</span></div>
     <div class="col-xs-2 text-right">
@@ -35,5 +37,4 @@
         </span>
     </div>
     {% endif %}
-
 </div>

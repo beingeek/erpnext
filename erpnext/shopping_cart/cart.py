@@ -138,21 +138,20 @@ def update_cart(quotation, with_items=False):
 	for f in cart_party_fields:
 		qtn_fields_dict[f] = context['party'].get(f)
 
-	
+	out = {
+		'name': quotation.name,
+		'shopping_cart_menu': get_shopping_cart_menu(context)
+	}
 	if cint(with_items):
-		return {
+		out.update({
 			"items": frappe.render_template("templates/includes/cart/cart_items.html",
 				context),
 			"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
 				context),
-			"quotation_fields": qtn_fields_dict,
-			"name": quotation.name
-		}
-	else:
-		return {
-			'name': quotation.name,
-			'shopping_cart_menu': get_shopping_cart_menu(context)
-		}
+			"quotation_fields": qtn_fields_dict
+		})
+
+	return out
 
 @frappe.whitelist()
 def get_shopping_cart_menu(context=None):
