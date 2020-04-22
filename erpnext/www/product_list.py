@@ -38,14 +38,15 @@ def get_context(context):
 		item_group_unsorted.setdefault(d.item_group, []).append(d)
 
 	item_group_sorted = OrderedDict()
-	for item_group_order in stock_settings.price_list_order or []:
-		if item_group_order.item_group in item_group_unsorted:
-			item_group_sorted.setdefault(item_group_order.item_group, [])
-			item_group_sorted[item_group_order.item_group] = sorted(item_group_unsorted[item_group_order.item_group], key=lambda d: d.item_name)
-			del item_group_unsorted[item_group_order.item_group]
+	for item_group in [d.item_group for d in stock_settings.price_list_order or []]:
+		if item_group in item_group_unsorted:
+			items = item_group_unsorted[item_group]
+			item_group_sorted.setdefault(item_group, [])
+			item_group_sorted[item_group] = sorted(items, key=lambda d: d.item_name)
+			del item_group_unsorted[item_group]
 
-	for items in item_group_unsorted.values():
-		item_group_sorted[item_group_order.item_group] = sorted(items, key=lambda d: d.item_name)
+	for item_group, items in iteritems(item_group_unsorted):
+		item_group_sorted[item_group] = sorted(items, key=lambda d: d.item_name)
 
 	party = get_party()
 	quotation = _get_cart_quotation(party)
