@@ -25,11 +25,11 @@ def get_context(context):
 	}
 
 	item_data = frappe.db.sql("""
-		select item.name as item_code, item.item_name, upper(c.code) as origin, item.item_group, item.print_in_price_list,
-			item.stock_uom, item.sales_uom, item.alt_uom, item.alt_uom_size, item.thumbnail, item.website_image, item.image, item.valuation_rate
+		select item.name as item_code, item.item_name, upper(c.code) as origin, item.item_group,
+			item.stock_uom, item.sales_uom, item.alt_uom, item.alt_uom_size, item.thumbnail, item.website_image, item.image
 		from tabItem item
 		left join tabCountry c on c.name = item.country_of_origin
-		where item.disabled != 1 and item.is_sales_item = 1 and item.show_in_website = 1
+		where item.disabled != 1 and item.is_sales_item = 1 and item.show_in_website = 1 and item.print_in_price_list = 1
 		and (ifnull(item.end_of_life, '0000-00-00') = '0000-00-00' or item.end_of_life > %(today)s) and {0}
 	""".format(" and ".join(item_conditions)), filters, as_dict=1)
 
@@ -48,14 +48,15 @@ def get_context(context):
 	for item_group, items in iteritems(item_group_unsorted):
 		item_group_sorted[item_group] = sorted(items, key=lambda d: d.item_name)
 
-	party = get_party()
-	quotation = _get_cart_quotation(party)
+	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
 
 	price_list = party.default_price_list or cart_settings.price_list or selling_settings.selling_price_list
 	customer_group = party.customer_group or cart_settings.default_customer_group or selling_settings.customer_group
-
-	set_quotation_item_details(item_group_sorted, quotation)
 	set_item_prices(item_data, price_list, customer_group, cart_settings.company)
+
+	if party:
+		quotation = _get_cart_quotation(party)
+		set_quotation_item_details(item_group_sorted, quotation)
 
 	context.item_group_map = item_group_sorted
 
