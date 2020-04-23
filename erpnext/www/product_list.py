@@ -8,6 +8,7 @@ from six import iteritems
 from collections import OrderedDict
 from erpnext.shopping_cart.cart import _get_cart_quotation, get_party
 from erpnext.utilities.product import get_price
+from erpnext.stock.doctype.item.item import convert_item_uom_for
 
 
 def get_context(context):
@@ -39,6 +40,7 @@ def get_context(context):
 	price_list = party.default_price_list or cart_settings.price_list or selling_settings.selling_price_list
 	customer_group = party.customer_group or cart_settings.default_customer_group or selling_settings.customer_group
 	set_item_prices(item_data, price_list, customer_group, cart_settings.company)
+	set_uom_details(item_data)
 
 	if party:
 		quotation = _get_cart_quotation(party)
@@ -47,7 +49,7 @@ def get_context(context):
 	context.item_group_map = item_group_map
 
 
-def get_items(stock_settings, item_group=None, item_code=None):
+def get_items(stock_settings, item_group=None, item_code=None, uom=None):
 	conditions = []
 	filters = frappe._dict({
 		'today': nowdate()
@@ -79,7 +81,7 @@ def get_items(stock_settings, item_group=None, item_code=None):
 			conditions.append("item.item_group in %(filtered_item_groups)s")
 			filters['filtered_item_groups'] = filtered_item_groups
 
-	return frappe.db.sql("""
+	item_data =  frappe.db.sql("""
 		select item.name as item_code, item.item_name, item.item_group, item.route,
 			item.stock_uom, item.sales_uom, item.alt_uom, item.alt_uom_size,
 			item.thumbnail, item.website_image, item.image,
@@ -88,6 +90,11 @@ def get_items(stock_settings, item_group=None, item_code=None):
 		where item.disabled = 0 and item.is_sales_item = 1 and (item.show_in_website = 1 or item.show_variant_in_website = 1)
 		and (ifnull(item.end_of_life, '0000-00-00') = '0000-00-00' or item.end_of_life > %(today)s) and {0}
 	""".format(" and ".join(conditions)), filters, as_dict=1)
+
+	if item_data and item_code and uom:
+		item_data[0].selected_uom = uom
+
+	return item_data
 
 
 def group_by_item_code(item_data):
@@ -122,6 +129,17 @@ def set_quotation_item_details(item_map, quotation):
 		item = item_map.get(d.item_code)
 		if item:
 			item['qty'] = d.qty
+			item['selected_uom'] = d.uom
+			item['alt_uom_size'] = d.alt_uom_size
+
+
+def set_uom_details(item_data):
+	for d in item_data:
+		d['selected_uom'] = d.get('selected_uom') or d.sales_uom or d.stock_uom
+		d['alt_uom_size'] = convert_item_uom_for(d.alt_uom_size, d.item_code, d.stock_uom, d.selected_uom)
+		item_uom = frappe.get_cached_doc("Item", d.item_code)
+		if item_uom:
+			d['uoms'] = item_uom.uoms
 
 
 def set_item_prices(item_data, price_list, customer_group, company):
