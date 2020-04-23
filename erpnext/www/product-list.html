@@ -1,7 +1,5 @@
 {% extends "templates/web.html" %}
 
-{% block title %} {{ _("Products")}} {% endblock %}
-
 {% from "erpnext/templates/includes/order/order_macros.html" import item_name_and_description %}
 {% from "erpnext/templates/includes/macros.html" import product_image_square %}
 
@@ -9,7 +7,7 @@
 	{% include "templates/includes/breadcrumbs.html" %}
 {% endblock %}
 
-{% block header %}<h2>{{ _("Products") }}</h2>{% endblock %}
+{% block header %}<h2>{{ title }}</h2>{% endblock %}
 
 {% block script%}
 <script>{% include "templates/includes/product_list.js" %}</script>
