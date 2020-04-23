@@ -13,20 +13,34 @@ def get_context(context):
 	stock_settings = frappe.get_single("Stock Settings")
 	selling_settings = frappe.get_single("Selling Settings")
 	cart_settings = frappe.get_single("Shopping Cart Settings")
-	
-	item_groups_excluded = [d.item_group for d in stock_settings.price_list_excluded or []]
 
 	item_conditions = []
+
+	item_groups_excluded = [d.item_group for d in stock_settings.price_list_excluded or []]
 	if item_groups_excluded:
 		item_conditions.append("item.item_group not in ('{}')".format("', '".join([frappe.db.escape(d) for d in item_groups_excluded])))
 
-	filters = {
+	item_groups_filter = []
+	item_group_arg = frappe.form_dict.item_group
+	if item_group_arg:
+		lft_rgt = frappe.db.get_value("Item Group", item_group_arg, ['lft', 'rgt'])
+		if lft_rgt:
+			lft, rgt = lft_rgt
+			item_groups_filter = frappe.db.sql_list("select name from `tabItem Group` where lft >= %s and rgt <= %s",
+				[lft, rgt])
+
+	if item_groups_filter:
+		item_conditions.append("item.item_group in ('{}')".format("', '".join([frappe.db.escape(d) for d in item_groups_filter])))
+
+	filters = frappe._dict({
 		'today': nowdate()
-	}
+	})
 
 	item_data = frappe.db.sql("""
-		select item.name as item_code, item.item_name, upper(c.code) as origin, item.item_group, item.route,
-			item.stock_uom, item.sales_uom, item.alt_uom, item.alt_uom_size, item.thumbnail, item.website_image, item.image
+		select item.name as item_code, item.item_name, item.item_group, item.route,
+			item.stock_uom, item.sales_uom, item.alt_uom, item.alt_uom_size,
+			item.thumbnail, item.website_image, item.image,
+			item.country_of_origin
 		from tabItem item
 		left join tabCountry c on c.name = item.country_of_origin
 		where item.disabled != 1 and item.is_sales_item = 1 and item.show_in_website = 1 and item.print_in_price_list = 1
