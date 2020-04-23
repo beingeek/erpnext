@@ -47,8 +47,8 @@
                 <th scope="col" style="width: 5% !important;"></th>
                 <th scope="col" class="text-center" style="width: 10% !important;">{{ _("Quantity") }}</th>
                 <th scope="col" class="text-center" style="width: 10% !important;">{{ _("Image") }}</th>
-                <th scope="col" class="" style="width: 25% !important;">{{ _("Item Name") }}</th>
-                <th scope="col" class="text-center" style="width: 15% !important;">{{ _("UOM") }}</th>
+                <th scope="col" class="" style="width: 30% !important;">{{ _("Item Name") }}</th>
+                <th scope="col" class="text-center" style="width: 10% !important;">{{ _("UOM") }}</th>
                 <th scope="col" class="text-right" style="width: 10% !important;">{{ _("Per Unit") }}</th>
                 <th scope="col" class="text-right" style="width: 10% !important;">{{ _("Rate") }}</th>
             </tr>
@@ -56,10 +56,9 @@
         <tbody class="product-items" style="font-size: 12px !important;">
                 {% for item in item_group_map.get(item_group) %}
                     <tr class="product-items-row">
-                        <td class="text-center" style="vertical-align: middle;">
-                        </td>
+                        <td class="text-center" style="vertical-align: middle;">{{ loop.index }}</td>
                         <td style="vertical-align: middle;">
-                            <input class="form-control text-center product-qty" value="{{frappe.format(item.get('qty')) or 0}}"
+                            <input class="form-control text-center product-qty" value="{{ frappe.format(item.get('qty') or 0) }}"
                             data-item-code="{{ item.item_code }}">
                         </td>
                         <td class="text-center">
