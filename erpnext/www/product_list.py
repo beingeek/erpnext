@@ -37,14 +37,15 @@ def get_context(context):
 
 	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
 
-	price_list = party.default_price_list or cart_settings.price_list or selling_settings.selling_price_list
-	customer_group = party.customer_group or cart_settings.default_customer_group or selling_settings.customer_group
-	set_item_prices(item_data, price_list, customer_group, cart_settings.company)
-	set_uom_details(item_data)
+	price_list = determine_price_list(party, cart_settings, selling_settings)
+	customer_group = determine_customer_group(party, cart_settings, selling_settings)
 
 	if party:
 		quotation = _get_cart_quotation(party)
 		set_quotation_item_details(item_code_map, quotation)
+
+	set_item_prices(item_data, price_list, customer_group, cart_settings.company)
+	set_uom_details(item_data)
 
 	context.item_group_map = item_group_map
 
@@ -124,10 +125,19 @@ def group_by_item_group(item_data, stock_settings):
 	return item_group_sorted
 
 
+def determine_price_list(party, cart_settings, selling_settings):
+	return party.default_price_list or cart_settings.price_list or selling_settings.selling_price_list
+	
+
+def determine_customer_group(party, cart_settings, selling_settings):
+	return party.customer_group or cart_settings.default_customer_group or selling_settings.customer_group
+
+
 def set_quotation_item_details(item_map, quotation):
 	for d in quotation.items:
 		item = item_map.get(d.item_code)
 		if item:
+			item['in_cart'] = 1
 			item['qty'] = d.qty
 			item['selected_uom'] = d.uom
 			item['alt_uom_size'] = d.alt_uom_size
@@ -136,14 +146,44 @@ def set_quotation_item_details(item_map, quotation):
 def set_uom_details(item_data):
 	for d in item_data:
 		d['selected_uom'] = d.get('selected_uom') or d.sales_uom or d.stock_uom
-		d['alt_uom_size'] = convert_item_uom_for(d.alt_uom_size, d.item_code, d.stock_uom, d.selected_uom)
-		item_uom = frappe.get_cached_doc("Item", d.item_code)
-		if item_uom:
-			d['uoms'] = item_uom.uoms
+		item = frappe.get_cached_doc("Item", d.item_code)
+		if item:
+			d['uoms'] = item.uoms
+
+		if not d.get('in_cart'):
+			d['alt_uom_size'] = convert_item_uom_for(d.alt_uom_size, d.item_code, d.stock_uom, d.selected_uom)
 
 
 def set_item_prices(item_data, price_list, customer_group, company):
 	for d in item_data:
-		price_obj = get_price(d.item_code, price_list, customer_group, company)
+		price_obj = get_price(d.item_code, price_list, customer_group, company,
+			qty=d.get('qty') or 1, uom=d.get('selected_uom') or d.sales_uom or d.stock_uom)
 		if price_obj:
 			d.update(price_obj)
+
+@frappe.whitelist()
+def change_product_uom(item_code, uom):
+	stock_settings = frappe.get_single("Stock Settings")
+	selling_settings = frappe.get_single("Selling Settings")
+	cart_settings = frappe.get_single("Shopping Cart Settings")
+
+	item_data = get_items(stock_settings, item_code=item_code, uom=uom)
+	item_code_map = group_by_item_code(item_data)
+	
+	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
+
+	price_list = determine_price_list(party, cart_settings, selling_settings)
+	customer_group = determine_customer_group(party, cart_settings, selling_settings)
+
+	if party:
+		quotation = _get_cart_quotation(party)
+		set_quotation_item_details(item_code_map, quotation)
+
+	set_item_prices(item_data, price_list, customer_group, cart_settings.company)
+	set_uom_details(item_data)
+
+	context = {}
+	context['item'] = item_data[0]
+	return {
+		"item": frappe.render_template("erpnext/www/product-list-row.html", context)
+	}

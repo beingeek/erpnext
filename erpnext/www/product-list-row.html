@@ -1,4 +1,6 @@
-<tr class="product-items-row">
+{% from "erpnext/templates/includes/macros.html" import product_image_square %}
+
+<tr class="product-items-row" data-item-code="{{ item.item_code }}">
     <td class="text-center" style="vertical-align: middle;"></td>
     <td class="text-center">
         <div class="product-page-image" data-item-image="{{ item.website_image or item.image or '' }}">
@@ -16,9 +18,9 @@
         data-item-code="{{ item.item_code }}">
     </td>
     <td style="vertical-align: middle;">
-        <select class="form-control small cart-uom" data-item-code="{{ item.item_code }}" style="cursor: pointer;">
+        <select class="form-control small product-uom" data-item-code="{{ item.item_code }}" data-item-group="{{ item.item_group }}" style="cursor: pointer;">
             {% for p in item.uoms %}
-                <option value="{{ p.uom }}" {% if p.uom == (item.sales_uom or item.stock_uom) %} selected="1"{% endif %}>{{ _(p.uom) }}</option>
+                <option value="{{ p.uom }}" {% if p.uom == (item.selected_uom or item.sales_uom or item.stock_uom) %} selected="1"{% endif %}>{{ _(p.uom) }}</option>
             {% endfor %}
         </select>
     </td>
