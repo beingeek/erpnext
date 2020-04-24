@@ -522,8 +522,13 @@ def show_terms(doc):
 @frappe.whitelist()
 def get_default_items(with_items=False, item_group=None):
 	quotation = _get_cart_quotation()
-	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
-		filters={"parenttype": 'Customer', "parent": quotation.customer})
+
+	default_items = frappe.db.sql("""
+		select cdi.item_code
+		from `tabCustomer Default Item` cdi
+		inner join `tabItem` i on i.name = cdi.item_code
+		where i.disabled = 0 and cdi.parenttype = 'Customer' and cdi.parent = %s
+	""", quotation.customer, as_dict=1)
 
 	if item_group:
 		lft, rgt = frappe.get_cached_value("Item Group", item_group, ['lft', 'rgt'])
