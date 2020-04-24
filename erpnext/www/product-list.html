@@ -10,7 +10,7 @@
 {% block header %}<h2>{{ title }}</h2>{% endblock %}
 
 {% block script%}
-<script>{% include "templates/includes/product_list.js" %}</script>
+<script>{% include "templates/includes/zoom.js" %}</script>
 <script>{% include "erpnext/www/product_list.js" %}</script>
 {% endblock %}
 
@@ -29,7 +29,7 @@
 }
 </style>
 <style>
-{% include "templates/includes/magnifier.css" %}
+{% include "templates/includes/zoom.css" %}
 </style>
 {% endblock %}
 
@@ -91,8 +91,4 @@
     </table>
     {% endfor %}
 </div>
-<div id="myModal" class="modal zoom_modal">
-    <span class="close">&times;</span>
-    <img class="modal-img-content" id="img01">
-</div> 
 {% endblock %}

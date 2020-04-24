@@ -59,6 +59,6 @@ frappe.ready(function() {
         default_items.remove_default_item(item_code);
     });
 
-    window.zoom_item_image("#default-items",".default-product-image");
+    window.zoom_item_image("#default-items",".default-product-image", "data-item-image");
     default_items.empty_default_items();
 });

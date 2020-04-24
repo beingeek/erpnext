@@ -16,5 +16,5 @@ product.change_qty = function() {
 
 frappe.ready(function() {
     product.change_qty();
-    window.zoom_item_image(".product-items",".product-page-image");
+    window.zoom_item_image(".product-items",".product-page-image", "data-item-image");
 });

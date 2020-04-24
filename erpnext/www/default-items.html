@@ -12,6 +12,7 @@
 
 {% block script%}
 <script>{% include "templates/includes/product_list.js" %}</script>
+<script>{% include "templates/includes/zoom.js" %}</script>
 <script>{% include "www/default_items.js" %}</script>
 <script type="text/javascript" src="/assets/js/dialog.min.js"></script>
 <script type="text/javascript" src="/assets/js/control.min.js"></script>
@@ -38,7 +39,7 @@
 }
 </style>
 <style>
-{% include "templates/includes/magnifier.css" %}
+{% include "templates/includes/zoom.css" %}
 </style>
 {% endblock %}
 
@@ -66,11 +67,6 @@
             {% endfor %}
         </tbody>
     </table>
-</div>
-
-<div id="myModal" class="modal zoom_modal">
-    <span class="close">&times;</span>
-    <img class="modal-img-content" id="img01">
 </div>
 
 <button class="btn btn-primary btn-sm btn-add-items" type="button" style="float: right; margin-bottom: 15px;">

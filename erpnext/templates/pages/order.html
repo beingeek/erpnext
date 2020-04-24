@@ -31,7 +31,7 @@
 }
 </style>
 <style>
-{% include "templates/includes/magnifier.css" %}
+{% include "templates/includes/zoom.css" %}
 </style>
 {% endblock %}
 
@@ -175,11 +175,6 @@
 	</table>
 </div>
 
-<div id="myModal" class="modal zoom_modal">
-	<span class="close">&times;</span>
-	<img class="modal-img-content" id="img01">
-</div>
-
 	<!-- taxes -->
 	<div class="order-taxes row">
 		<div class="col-sm-12 text-right">
@@ -262,7 +257,7 @@
 
 {% block script %}
 	<script> {% include "templates/pages/order.js" %} </script>
-	<script>{% include "templates/includes/product_list.js" %}</script>
+	<script>{% include "templates/includes/zoom.js" %}</script>
 	<script>
 		window.doc_info = {
 			customer: '{{doc.customer}}',
@@ -271,6 +266,6 @@
 			grand_total: '{{ doc.grand_total }}',
 			currency: '{{ doc.currency }}'
 		}
-		window.zoom_item_image(".order-items",".order-item-image-wrapper");
+		window.zoom_item_image(".order-items",".order-item-image-wrapper", "data-item-image");
 	</script>
 {% endblock %}
