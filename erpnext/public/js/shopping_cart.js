@@ -173,23 +173,18 @@ $.extend(shopping_cart, {
 	},
 
 	set_cart_count: function() {
-		var cart_count = frappe.get_cookie("cart_count");
-		if(frappe.session.user==="Guest") {
-			cart_count = 0;
-		}
-
-		if(cart_count) {
-			$(".shopping-cart").toggleClass('hidden', false);
-		}
-
 		var $cart = $('.cart-icon');
 		var $badge = $cart.find("#cart-count");
-		if(parseInt(cart_count) === 0 || cart_count === undefined) {
-			$cart.css("display", "none");
+		var cart_count = frappe.get_cookie("cart_count");
+		var to_show = true;
+
+		if(frappe.session.user==="Guest") {
+			cart_count = 0;
+			to_show = false;
 		}
-		else {
-			$cart.css("display", "inline");
-		}
+
+		$(".shopping-cart").toggleClass('hidden', !to_show);
+		$cart.css("display", to_show ? "inline" : "none");
 
 		if(cart_count) {
 			$badge.html(cart_count);
