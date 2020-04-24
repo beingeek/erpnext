@@ -166,12 +166,15 @@ def set_item_prices(item_data, price_list, customer_group, company):
 			d.update(price_obj)
 
 @frappe.whitelist()
-def change_product_uom(item_code, uom):
+def change_product_uom(item_code, uom=None):
 	stock_settings = frappe.get_single("Stock Settings")
 	selling_settings = frappe.get_single("Selling Settings")
 	cart_settings = frappe.get_single("Shopping Cart Settings")
 
 	item_data = get_items(stock_settings, item_code=item_code, uom=uom)
+	if not item_data:
+		frappe.throw(_("Item {0} is not available").format(item_code))
+
 	item_code_map = group_by_item_code(item_data)
 	
 	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
