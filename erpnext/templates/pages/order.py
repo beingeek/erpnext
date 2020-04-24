@@ -11,30 +11,9 @@ def get_context(context):
 	context.no_cache = 1
 	context.show_sidebar = False
 	context.doc = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.name)
-	if context.doc.doctype == "Quotation":
-		query = """select distinct parent from `tabSales Order Item` where (prevdoc_docname = %(name)s and docstatus<2)"""
-		so_ref = frappe.db.sql(query,{
-			"name":context.doc.name
-		},as_dict=1)
 
-	quotation_ref_list = []
-	if context.doc.doctype == "Sales Order":
-		query_back_order = """
-							select distinct back_order
-							from `tabQty Adjustment Log`
-							where sales_order = %(so_name)s and ifnull(back_order, '') != ''
-							"""
-		for item in context.doc.items:
-			quotation_ref_list.append(item.get('prevdoc_docname'))
-		so_ref = list(set(quotation_ref_list))
-		bo_ref = frappe.db.sql(query_back_order,{
-			"so_name": context.doc.name
-		},as_dict=1)
-
+	add_linked_documents(context)
 	decorate_doc(context.doc)
-	
-	context["reference"] = so_ref
-	context["bo_reference"] = bo_ref
 
 	if hasattr(context.doc, "set_indicator"):
 		context.doc.set_indicator()
@@ -64,6 +43,28 @@ def get_context(context):
 		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
 		loyalty_program_details = get_loyalty_program_details_with_points(context.doc.customer, customer_loyalty_program)
 		context.available_loyalty_points = int(loyalty_program_details.get("loyalty_points"))
+
+
+def add_linked_documents(context):
+	if context.doc.doctype == "Quotation":
+		sales_orders = frappe.db.sql_list("""
+			select distinct parent
+			from `tabSales Order Item`
+			where prevdoc_docname = %s and docstatus < 2
+		""", context.doc.name)
+
+		context["sales_orders"] = sales_orders
+
+	if context.doc.doctype == "Sales Order":
+		quotations = list(set([item.prevdoc_docname for item in context.doc.items if item.prevdoc_docname]))
+		context["quotations"] = quotations
+
+		back_orders = frappe.db.sql_list("""
+			select distinct back_order
+			from `tabQty Adjustment Log`
+			where sales_order = %s and ifnull(back_order, '') != ''
+		""", context.doc.name)
+		context["back_orders"] = back_orders
 
 
 def decorate_doc(doc):
