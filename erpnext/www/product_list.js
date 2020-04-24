@@ -40,7 +40,6 @@ product.change_uom_item_row = function(item_code, uom) {
             uom: uom
         },
         callback: function(r) {
-            debugger;
             $(`.product-items-row[data-item-code="${item_code}"]`).replaceWith(r.message.item);
         }
     });
