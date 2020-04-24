@@ -203,7 +203,10 @@ def guess_territory():
 def decorate_quotation_doc(doc):
 	for d in doc.get("items", []):
 		d.update(frappe.get_cached_value("Item", d.item_code,
-			["thumbnail", "website_image", "description", "route"], as_dict=True))
+			["thumbnail", "website_image", "description", "route", "country_of_origin"], as_dict=True))
+
+		if d.country_of_origin:
+			d.country_code = cstr(frappe.get_cached_value("Country", d.country_of_origin, 'code')).upper()
 
 	return doc
 

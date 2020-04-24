@@ -11,10 +11,6 @@
     <td class="text-center" style="vertical-align: middle;">
         {{d.idx}}
     </td>
-    <td style="vertical-align: middle;">
-        <input class="form-control text-right cart-qty" value="{{ d.get_formatted('qty') }}"
-                    data-item-code="{{ d.item_code }}">
-    </td>
     <td class="text-center">
         <div class="cart-product-image" data-item-image="{{ d.website_image or d.image or '' }}">
             {{product_image_square(d.thumbnail or d.website_image or d.image, "cart-item-image")}}
@@ -22,6 +18,13 @@
     </td>
     <td class="" style="vertical-align: middle;">
         {{d.item_name}}
+    </td>
+    <td style="vertical-align: middle;">
+        {{ d.country_code or '' }}
+    </td>
+    <td style="vertical-align: middle;">
+        <input class="form-control text-right cart-qty" value="{{ d.get_formatted('qty') }}"
+               data-item-code="{{ d.item_code }}">
     </td>
     <td style="vertical-align: middle;">
         <select class="form-control small cart-uom" data-item-code="{{ d.item_code }}" style="cursor: pointer;">
@@ -37,14 +40,6 @@
     </td>
     <td class="text-right" style="vertical-align: middle;">
         {{ d.get_formatted("rate") }}
-    </td>
-    <td class="text-right" style="vertical-align: middle;">
-        {{ d.get_formatted("amount") }}
-    </td>
-    <td style="vertical-align: middle;">
-        {% if 'hst' in d.item_tax_template|lower %}
-            <i class="fa fa-check"></i>
-        {% endif %}
     </td>
     <td style="vertical-align: middle;">
         <i class="fa fa-close remove-cart-item" data-item-code="{{d.item_code}}" style="color:red;cursor: pointer;"></i>

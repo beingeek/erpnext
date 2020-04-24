@@ -89,8 +89,9 @@ def get_items(stock_settings, item_group=None, item_code=None, uom=None):
 		select item.name as item_code, item.item_name, item.item_group, item.route,
 			item.stock_uom, item.sales_uom, item.alt_uom, item.alt_uom_size,
 			item.thumbnail, item.website_image, item.image,
-			item.country_of_origin
+			upper(c.code) as country_code
 		from tabItem item
+		left join `tabCountry` c on c.name = item.country_of_origin
 		where item.disabled = 0 and item.is_sales_item = 1 and item.show_in_website = 1
 		and (ifnull(item.end_of_life, '0000-00-00') = '0000-00-00' or item.end_of_life > %(today)s) and {0}
 	""".format(" and ".join(conditions)), filters, as_dict=1)
