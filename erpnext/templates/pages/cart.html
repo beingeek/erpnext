@@ -23,6 +23,7 @@
 {% block script %}
 <script>{% include "templates/includes/cart.js" %}</script>
 <script>{% include "templates/includes/product_list.js" %}</script>
+<script>{% include "templates/includes/zoom.js" %}</script>
 <script type="text/javascript" src="/assets/js/dialog.min.js"></script>
 <script type="text/javascript" src="/assets/js/control.min.js"></script>
 <script type="text/javascript" src="/assets/js/moment-bundle.min.js"></script>
@@ -65,7 +66,7 @@ moment.defaultFormat = frappe.moment_date_format;
 }
 </style>
 <style>
-{% include "templates/includes/magnifier.css" %}
+{% include "templates/includes/zoom.css" %}
 </style>
 {% endblock %}
 
@@ -127,11 +128,6 @@ moment.defaultFormat = frappe.moment_date_format;
 					{% include "templates/includes/cart/cart_items.html" %}
 				</tbody>
 			</table>
-		</div>
-
-        <div id="myModal" class="modal zoom_modal">
-            <span class="close">&times;</span>
-            <img class="modal-img-content" id="img01" style="height: 420px;">
 		</div>
 
 		<button class="btn btn-default btn-add-items btn-sm" type="button">

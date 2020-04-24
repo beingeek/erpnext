@@ -31,7 +31,7 @@
 }
 </style>
 <style>
-{% include "templates/includes/magnifier.css" %}
+{% include "templates/includes/zoom.css" %}
 </style>
 {% endblock %}
 
@@ -53,30 +53,28 @@
 </div>
 
 {% if doc.doctype == "Quotation" %}
-	{% for ref in reference%}
-		{% if ref.parent %}
-			<a href="/orders/{{ref.parent}}" class="margin-top">{{ref.parent}}</a>
-		{% endif %}
-	{% endfor %}
-{% elif doc.doctype == "Sales Order" %}
-	{% if reference %}
+	{% if sales_orders %}
 	<div>
-		<b>Source Document: </b>
-		{% for ref in reference%}
-			{% if ref %}
-				<a href="/quotations/{{ref}}" class="margin-top">{{ref}}</a>
-			{% endif %}
+		<b>Orders: </b>
+		{% for sales_order in sales_orders %}
+			<a href="/orders/{{ sales_order }}" class="margin-top">{{ sales_order }}</a>
 		{% endfor %}
 	</div>
 	{% endif %}
-
-	{% if bo_reference %}
+{% elif doc.doctype == "Sales Order" %}
+	{% if quotations %}
+	<div>
+		<b>Quotations: </b>
+		{% for quotation in quotations %}
+			<a href="/quotations/{{ quotation }}" class="margin-top">{{ quotation }}</a>
+		{% endfor %}
+	</div>
+	{% endif %}
+	{% if back_orders %}
 	<div>
 		<b>Back Orders: </b>
-		{% for ref in bo_reference%}
-			{% if ref %}
-				<a href="/orders/{{ref.back_order}}" class="margin-top">{{ref.back_order}}</a>
-			{% endif %}
+		{% for back_order in back_orders %}
+			<a href="/orders/{{ back_order }}" class="margin-top">{{ back_order }}</a>
 		{% endfor %}
 	</div>
 	{% endif %}
@@ -175,11 +173,6 @@
 	</table>
 </div>
 
-<div id="myModal" class="modal zoom_modal">
-	<span class="close">&times;</span>
-	<img class="modal-img-content" id="img01">
-</div>
-
 	<!-- taxes -->
 	<div class="order-taxes row">
 		<div class="col-sm-12 text-right">
@@ -262,7 +255,7 @@
 
 {% block script %}
 	<script> {% include "templates/pages/order.js" %} </script>
-	<script>{% include "templates/includes/product_list.js" %}</script>
+	<script>{% include "templates/includes/zoom.js" %}</script>
 	<script>
 		window.doc_info = {
 			customer: '{{doc.customer}}',
@@ -271,6 +264,6 @@
 			grand_total: '{{ doc.grand_total }}',
 			currency: '{{ doc.currency }}'
 		}
-		window.zoom_item_image(".order-items",".order-item-image-wrapper");
+		window.zoom_item_image(".order-items",".order-item-image-wrapper", "data-item-image");
 	</script>
 {% endblock %}

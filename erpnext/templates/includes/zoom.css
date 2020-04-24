@@ -2,8 +2,8 @@
 .zoom_modal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
-    padding-top: 100px; /* Location of the box */
+    z-index: 99999; /* Sit on top */
+    padding-top: 5vh; /* Location of the box */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
@@ -17,8 +17,8 @@
   .modal-img-content {
     margin: auto;
     display: block;
-    width: 50%;
-    max-width: 700px;
+    max-height: 90vh;
+    max-width: 90vw;
   }
   
   /* Caption of Modal Image */

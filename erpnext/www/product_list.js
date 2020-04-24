@@ -49,5 +49,5 @@ product.change_uom_item_row = function(item_code, uom) {
 frappe.ready(function() {
     product.change_qty();
     product.change_uom();
-    window.zoom_item_image(".product-items",".product-page-image");
+    window.zoom_item_image(".product-items",".product-page-image", "data-item-image");
 });

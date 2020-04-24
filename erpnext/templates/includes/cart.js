@@ -327,7 +327,7 @@ frappe.ready(function() {
 	$(".cart-icon").hide();
 	shopping_cart.create_fields();
 	shopping_cart.bind_events();
-	window.zoom_item_image(".cart-items",".cart-product-image");
+	window.zoom_item_image(".cart-items",".cart-product-image", "data-item-image");
 });
 
 function show_terms() {

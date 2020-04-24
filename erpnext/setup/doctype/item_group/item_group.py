@@ -58,6 +58,9 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 			frappe.throw(frappe._("An item exists with same name ({0}), please change the item group name or rename the item").format(self.name), frappe.NameError)
 
 	def get_context(self, context):
+		if frappe.session.user == "Guest":
+			raise frappe.PermissionError, "Please login first"
+
 		context.show_search=True
 		context.page_length = cint(frappe.db.get_single_value('Products Settings', 'products_per_page')) or 6
 		context.search_link = '/product_search'

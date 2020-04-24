@@ -522,24 +522,23 @@ def show_terms(doc):
 @frappe.whitelist()
 def get_default_items(with_items=False, item_group=None):
 	quotation = _get_cart_quotation()
-	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
-		filters={"parenttype": 'Customer', "parent": quotation.customer})
 
+	item_group_join = ""
 	if item_group:
-		lft, rgt = frappe.get_cached_value("Item Group", item_group, ['lft', 'rgt'])
-		if lft and rgt:
-			item_groups = frappe.db.sql_list("select name from `tabItem Group` where lft >= %(lft)s and rgt <= %(rgt)s",
-			{'lft':lft,'rgt':rgt})
+		lft_rgt = frappe.get_cached_value("Item Group", item_group, ['lft', 'rgt'])
+		if not lft_rgt:
+			frappe.throw(_("Invalid Item Group, cannot get default items"))
 
-			filtered_default_items = []
-			for d in default_items:
-				item_group_default_item = frappe.get_cached_value("Item", d.item_code, "item_group")
-				if item_group_default_item in item_groups:
-					filtered_default_items.append(d)
+		lft, rgt = lft_rgt
+		item_group_join = "inner join `tabItem Group` ig on ig.name = i.item_group and ig.lft >= {0} and ig.rgt <= {1}".format(lft, rgt)
 
-			default_items = filtered_default_items
+	default_item_codes = frappe.db.sql_list("""
+		select cdi.item_code
+		from `tabCustomer Default Item` cdi
+		inner join `tabItem` i on i.name = cdi.item_code {0}
+		where i.disabled = 0 and cdi.parenttype = 'Customer' and cdi.parent = %s
+	""".format(item_group_join), quotation.customer	)
 
-	default_item_codes = [d.item_code for d in default_items]
 	existing_item_codes = [d.item_code for d in quotation.items]
 
 	for item_code in default_item_codes:
