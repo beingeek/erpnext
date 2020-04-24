@@ -14,6 +14,9 @@ def get_context(context):
 	context.no_cache = True
 	context.parents = [{'title': _('Products'), 'route': 'product-list'}]
 
+	if frappe.session.user == "Guest":
+		raise frappe.PermissionError, "Please login first"
+
 	item_group = frappe.form_dict.item_group
 
 	if not item_group:

@@ -303,6 +303,9 @@ class Item(WebsiteGenerator):
 				self.item_code))
 
 	def get_context(self, context):
+		if frappe.session.user == "Guest":
+			raise frappe.PermissionError, "Please login first"
+
 		context.show_search = True
 		context.search_link = '/product_search'
 
