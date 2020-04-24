@@ -1,7 +1,6 @@
 {% extends "templates/web.html" %}
 
 {% from "erpnext/templates/includes/order/order_macros.html" import item_name_and_description %}
-{% from "erpnext/templates/includes/macros.html" import product_image_square %}
 
 {% block breadcrumbs %}
 	{% include "templates/includes/breadcrumbs.html" %}
@@ -22,10 +21,6 @@
 	padding: 0 !important;
 	background-size: contain !important;
     cursor: pointer;
-}
-
-.product-items-row:has(>input.product-qty) {
-    background-color: yellow;
 }
 </style>
 <style>
@@ -57,36 +52,9 @@
             </tr>
         </thead>
         <tbody class="product-items" style="font-size: 12px !important;">
-                {% for item in item_group_map.get(item_group) %}
-                    <tr class="product-items-row">
-                        <td class="text-center" style="vertical-align: middle;">{{ loop.index }}</td>
-                        <td class="text-center">
-                            <div class="product-page-image" data-item-image="{{ item.website_image or item.image or '' }}">
-                                {{product_image_square(item.thumbnail or item.website_image or item.image, "product-item-image")}}
-                            </div>
-                        </td>
-                        <td class="" style="vertical-align: middle;">
-                            <a href="{{ item.route }}">{{item.item_name}}</a>
-                        </td>
-                        <td style="vertical-align: middle;">
-                            {{ item.country_of_origin or '' }}
-                        </td>
-                        <td style="vertical-align: middle;">
-                            <input class="form-control text-center product-qty" value="{{ frappe.format(item.get('qty') or 0) }}"
-                            data-item-code="{{ item.item_code }}">
-                        </td>
-                        <td style="vertical-align: middle;">
-                            {{item.stock_uom}}
-                        </td>
-                        <td class="text-right" style="vertical-align: middle;">
-                            {{frappe.format(item.alt_uom_size)}}
-                            <span class="text-muted small">{{item.alt_uom}}</span>
-                        </td>
-                        <td class="text-right" style="vertical-align: middle;">
-                            {{ item.formatted_price or '0.00' }}
-                        </td>
-                    </tr>
-                {% endfor %}
+            {% for item in item_group_map.get(item_group) %}
+                {% include 'erpnext/www/product-list-row.html' %}
+            {% endfor %}
         </tbody>
     </table>
     {% endfor %}
