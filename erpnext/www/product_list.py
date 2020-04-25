@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import throw, _
 import frappe.defaults
-from frappe.utils import nowdate
+from frappe.utils import nowdate, formatdate, cstr
 from six import iteritems
 from collections import OrderedDict
 from erpnext.shopping_cart.cart import _get_cart_quotation, get_party
@@ -30,6 +30,9 @@ def get_context(context):
 
 	context.title = item_group
 
+	context.item_group_map, context['delivery_date'] = get_item_group_map(item_group)
+
+def get_item_group_map(item_group, delivery_date=None):
 	stock_settings = frappe.get_single("Stock Settings")
 	selling_settings = frappe.get_single("Selling Settings")
 	cart_settings = frappe.get_single("Shopping Cart Settings")
@@ -46,11 +49,13 @@ def get_context(context):
 	if party:
 		quotation = _get_cart_quotation(party)
 		set_quotation_item_details(item_code_map, quotation)
+		if not delivery_date:
+			delivery_date = quotation.delivery_date
 
-	set_item_prices(item_data, price_list, customer_group, cart_settings.company)
+	set_item_prices(item_data, price_list, customer_group, cart_settings.company, date=delivery_date)
 	set_uom_details(item_data)
 
-	context.item_group_map = item_group_map
+	return item_group_map, cstr(delivery_date)
 
 
 def get_items(stock_settings, item_group=None, item_code=None, uom=None):
@@ -158,9 +163,9 @@ def set_uom_details(item_data):
 			d['alt_uom_size'] = convert_item_uom_for(d.alt_uom_size, d.item_code, d.stock_uom, d.selected_uom)
 
 
-def set_item_prices(item_data, price_list, customer_group, company):
+def set_item_prices(item_data, price_list, customer_group, company, date=None):
 	for d in item_data:
-		price_obj = get_price(d.item_code, price_list, customer_group, company,
+		price_obj = get_price(d.item_code, price_list, customer_group, company, date=date,
 			qty=d.get('qty') or 1, uom=d.get('selected_uom') or d.sales_uom or d.stock_uom)
 		if price_obj:
 			d.update(price_obj)
@@ -182,15 +187,27 @@ def change_product_uom(item_code, uom=None):
 	price_list = determine_price_list(party, cart_settings, selling_settings)
 	customer_group = determine_customer_group(party, cart_settings, selling_settings)
 
+	delivery_date = None
 	if party:
 		quotation = _get_cart_quotation(party)
 		set_quotation_item_details(item_code_map, quotation)
+		delivery_date = quotation.delivery_date
 
-	set_item_prices(item_data, price_list, customer_group, cart_settings.company)
+	set_item_prices(item_data, price_list, customer_group, cart_settings.company, date=delivery_date)
 	set_uom_details(item_data)
 
 	context = {}
 	context['item'] = item_data[0]
 	return {
 		"item": frappe.render_template("erpnext/www/product-list-row.html", context)
+	}
+
+@frappe.whitelist()
+def get_delivery_date_prices(delivery_date):
+	item_group = frappe.form_dict.item_group
+
+	context = {}
+	context['item_group_map'], context['delivery_date'] = get_item_group_map(item_group, delivery_date)
+	return {
+		"items": frappe.render_template("erpnext/www/product-list-table.html", context)
 	}

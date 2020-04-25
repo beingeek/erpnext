@@ -67,7 +67,7 @@ def qty_from_all_warehouses(batch_info):
 
 	return qty
 
-def get_price(item_code, price_list, customer_group, company, qty=1, uom=None):
+def get_price(item_code, price_list, customer_group, company, qty=1, uom=None, date=None):
 	from erpnext.stock.get_item_details import get_price_list_rate_for
 
 	item = frappe.get_cached_doc("Item", item_code)
@@ -77,7 +77,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, uom=None):
 	args = frappe._dict({
 		"price_list": price_list,
 		"uom": uom or item.sales_uom or item.stock_uom,
-		"transaction_date": frappe.utils.today(),
+		"transaction_date": date or frappe.utils.today(),
 		"qty": qty,
 		"price_list_uom_dependant": 1
 	})

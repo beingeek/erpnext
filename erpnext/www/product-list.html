@@ -11,6 +11,27 @@
 {% block script%}
 <script>{% include "templates/includes/zoom.js" %}</script>
 <script>{% include "erpnext/www/product_list.js" %}</script>
+<script type="text/javascript" src="/assets/js/dialog.min.js"></script>
+<script type="text/javascript" src="/assets/js/control.min.js"></script>
+<script type="text/javascript" src="/assets/js/moment-bundle.min.js"></script>
+<script type="text/javascript" src="/assets/js/web-extended.min.js"></script>
+<script>
+$.extend(frappe, {
+	datepicker_format: 	"{{ frappe.date_format }}",
+	moment_date_format: "{{ frappe.date_format.upper() }}",
+	boot: {
+		user: {
+			can_read: '', can_write: '', can_create: ''
+		},
+		sysdefaults: {
+			float_precision: {{ frappe.get_system_settings('float_precision') or 3 }},
+			date_format: "{{ frappe.get_system_settings('date_format') or 'yyyy-mm-dd' }}",
+		},
+	}
+});
+frappe.sys_defaults = frappe.boot.sysdefaults;
+moment.defaultFormat = frappe.moment_date_format;
+</script>
 {% endblock %}
 
 {% block style %}
@@ -33,29 +54,8 @@
 {% endblock %}
 
 {% block page_content %}
-<div class="table-responsive margin-top">
-    {% for item_group in item_group_map.keys() %}
-    <table class="table table-bordered">
-        <thead>
-            <tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
-                <th scope="col" class="text-center" colspan="8">{{ item_group }}</th>
-            </tr>
-            <tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
-                <th scope="col" class="text-center" style="width: 10% !important;">{{ _("Image") }}</th>
-                <th scope="col" class="" style="width: 35% !important;">{{ _("Item Name") }}</th>
-                <th scope="col" class="text-center" style="width: 10% !important;">{{ _("Country") }}</th>
-                <th scope="col" class="text-center" style="width: 10% !important;">{{ _("Quantity") }}</th>
-                <th scope="col" class="text-center" style="width: 15% !important;">{{ _("UOM") }}</th>
-                <th scope="col" class="text-right" style="width: 10% !important;">{{ _("Per Unit") }}</th>
-                <th scope="col" class="text-right" style="width: 10% !important;">{{ _("Rate") }}</th>
-            </tr>
-        </thead>
-        <tbody class="product-items" style="font-size: 12px !important;">
-            {% for item in item_group_map.get(item_group) %}
-                {% include 'erpnext/www/product-list-row.html' %}
-            {% endfor %}
-        </tbody>
-    </table>
-    {% endfor %}
+<div id="product-field">
+    <div class="product-field-data hidden" data-fieldname="delivery_date">{{ delivery_date }}</div>
 </div>
+{% include 'erpnext/www/product-list-table.html' %}
 {% endblock %}
