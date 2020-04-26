@@ -69,6 +69,10 @@ product.handle_delivery_date_changed = function() {
 }
 
 product.handle_item_changed = function(r, opts) {
+    if (!opts || !opts.item_code || !$(`.product-items-row[data-item-code='${opts.item_code}']`).length) {
+        return;
+    }
+
     var uom;
     if (opts.fieldname == 'uom' && opts.value) {
         uom = opts.value;
