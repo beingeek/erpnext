@@ -88,7 +88,8 @@ $.extend(shopping_cart, {
 	bind_get_default_items: function () {
 		$('.btn-get-default-items').click(function () {
 			var item_group = $(this).attr("data-item-group");
-			shopping_cart.add_default_items(item_group, {
+			shopping_cart.add_default_items({
+				item_group: item_group,
 				callback: shopping_cart.cart_page_update_callback,
 				with_items: 1,
 				btn: this
@@ -99,7 +100,8 @@ $.extend(shopping_cart, {
 
 	bind_add_items: function () {
 		$('.btn-add-items').click(function () {
-			window.add_item_dialog(item_code => shopping_cart.add_item(item_code, {
+			window.add_item_dialog(item_code => shopping_cart.add_item({
+				item_code: item_code,
 				callback: shopping_cart.cart_page_update_callback,
 				with_items: 1
 			}));

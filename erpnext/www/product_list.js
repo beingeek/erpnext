@@ -10,7 +10,7 @@ product.create_fields = function() {
                 fieldname: 'delivery_date',
                 fieldtype: 'Date',
                 reqd: 1,
-                onchange: product.delivery_date_changed
+                onchange: product.handle_delivery_date_changed
             },
         ]
     });
@@ -27,21 +27,6 @@ product.create_fields = function() {
             () => product.field_group.set_value(k, v),
             () => product.ignore_update = false
         ]);
-    });
-}
-
-product.delivery_date_changed = function() {
-    if (product.ignore_update) {
-        return;
-    }
-
-    var delivery_date = product.field_group.get_value('delivery_date') || "";
-    shopping_cart.update_cart_field({
-        fieldname: 'delivery_date',
-        value: delivery_date,
-        callback: function() {
-            product.get_items_table();
-        }
     });
 }
 
@@ -66,12 +51,33 @@ product.bind_change_uom = function() {
         shopping_cart.update_cart_item({
             item_code: item_code,
             fieldname: 'uom',
-            value: newVal,
-            callback: function(r) {
-                product.get_item_row(item_code, newVal);
-            }
+            value: newVal
         });
     });
+}
+
+product.handle_delivery_date_changed = function() {
+    if (product.ignore_update) {
+        return;
+    }
+
+    var delivery_date = product.field_group.get_value('delivery_date') || "";
+    shopping_cart.update_cart_field({
+        fieldname: 'delivery_date',
+        value: delivery_date,
+    });
+}
+
+product.handle_item_changed = function(r, opts) {
+    var uom;
+    if (opts.fieldname == 'uom' && opts.value) {
+        uom = opts.value;
+    }
+    product.get_item_row(opts.item_code, uom);
+}
+
+product.handle_qoutation_changed = function() {
+    product.get_items_table();
 }
 
 product.get_item_row = function(item_code, uom) {
@@ -84,7 +90,9 @@ product.get_item_row = function(item_code, uom) {
             uom: uom
         },
         callback: function(r) {
-            $(`.product-items-row[data-item-code="${item_code}"]`).replaceWith(r.message);
+            if (r && r.message) {
+                $(`.product-items-row[data-item-code="${item_code}"]`).replaceWith(r.message);
+            }
         }
     });
 };
@@ -97,13 +105,18 @@ product.get_items_table = function() {
             item_group: product.item_group
         },
         callback: function(r) {
-            $(".product-items-table").replaceWith(r.message);
+            if (r && r.message) {
+                $(".product-items-table").replaceWith(r.message);
+            }
         }
     });
 }
 
 frappe.ready(function() {
     product.item_group = frappe.utils.get_url_arg("item_group");
+
+    shopping_cart.cart_update_item_callbacks.push(product.handle_item_changed);
+    shopping_cart.cart_update_doc_callbacks.push(product.handle_qoutation_changed);
 
     product.create_fields();
     product.bind_change_qty();

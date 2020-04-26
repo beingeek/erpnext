@@ -20,6 +20,10 @@ frappe.ready(function() {
 });
 
 $.extend(shopping_cart, {
+	cart_update_callbacks: [],
+	cart_update_doc_callbacks: [],
+	cart_update_item_callbacks: [],
+
 	show_shoppingcart_dropdown: function() {
 		$(".shopping-cart").on('shown.bs.dropdown', function() {
 			if (!$('.shopping-cart-menu .cart-container').length) {
@@ -50,14 +54,25 @@ $.extend(shopping_cart, {
 		return true;
 	},
 
-	update_cart_callback: function(r) {
+	update_cart_callback: function(r, opts) {
 		shopping_cart.set_cart_count();
 		if (r.message.shopping_cart_menu) {
 			shopping_cart.set_shopping_cart_menu(r.message.shopping_cart_menu);
 		}
+
+		$.each(shopping_cart.cart_update_callbacks || [], callback => callback(r, opts));
+		if (opts.item_code) {
+			$.each(shopping_cart.cart_update_item_callbacks || [], (i, callback) => callback(r, opts));
+		} else {
+			$.each(shopping_cart.cart_update_doc_callbacks || [], (i, callback) => callback(r, opts));
+		}
 	},
 
 	update_cart_item: function(opts) {
+		if (!opts || !opts.item_code || !opts.fieldname || opts.value == null) {
+			return;
+		}
+
 		if(!shopping_cart.in_update && !shopping_cart.ignore_update && shopping_cart.check_if_logged_in()) {
 			shopping_cart.in_update = true;
 			return frappe.call({
@@ -72,7 +87,7 @@ $.extend(shopping_cart, {
 				btn: opts.btn,
 				freeze: opts.freeze || 1,
 				callback: function(r) {
-					shopping_cart.update_cart_callback(r);
+					shopping_cart.update_cart_callback(r, opts);
 					if(opts.callback)
 						opts.callback(r);
 				},
@@ -99,7 +114,7 @@ $.extend(shopping_cart, {
 				btn: opts.btn,
 				freeze: opts.freeze || 1,
 				callback: function(r) {
-					shopping_cart.update_cart_callback(r);
+					shopping_cart.update_cart_callback(r, opts);
 					if(opts.callback)
 						opts.callback(r);
 				},
@@ -112,23 +127,23 @@ $.extend(shopping_cart, {
 		}
 	},
 
-	add_item: function(item_code, opts) {
-		if (!opts) {
-			opts = {};
+	add_item: function(opts) {
+		if (!opts || !opts.item_code) {
+			return;
 		}
 
-		if (item_code && !shopping_cart.in_update && !shopping_cart.ignore_update && shopping_cart.check_if_logged_in()) {
+		if (!shopping_cart.in_update && !shopping_cart.ignore_update && shopping_cart.check_if_logged_in()) {
 			shopping_cart.in_update = true;
 			return frappe.call({
 				type: "POST",
 				method: "erpnext.shopping_cart.cart.add_item",
 				freeze: opts.freeze || 1,
 				args: {
-					item_code: item_code,
+					item_code: opts.item_code,
 					with_items: opts.with_items || 0
 				},
 				callback: function (r){
-					shopping_cart.update_cart_callback(r);
+					shopping_cart.update_cart_callback(r, opts);
 					if (opts.callback) {
 						opts.callback(r);
 					}
@@ -142,23 +157,23 @@ $.extend(shopping_cart, {
 		}
 	},
 
-	add_default_items: function(item_group, opts) {
+	add_default_items: function(opts) {
 		if (!opts) {
 			opts = {};
 		}
 
-		if (item_group && !shopping_cart.in_update && !shopping_cart.ignore_update && shopping_cart.check_if_logged_in()) {
+		if (!shopping_cart.in_update && !shopping_cart.ignore_update && shopping_cart.check_if_logged_in()) {
 			shopping_cart.in_update = true;
 			return frappe.call({
 				type: "POST",
 				method: "erpnext.shopping_cart.cart.get_default_items",
 				freeze: opts.freeze || 1,
 				args: {
-					item_group: item_group,
+					item_group: opts.item_group || "",
 					with_items: opts.with_items || 0
 				},
 				callback: function (r) {
-					shopping_cart.update_cart_callback(r);
+					shopping_cart.update_cart_callback(r, opts);
 					if (opts.callback) {
 						opts.callback(r);
 					}
