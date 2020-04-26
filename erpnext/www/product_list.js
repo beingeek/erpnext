@@ -31,7 +31,7 @@ product.create_fields = function() {
 }
 
 product.bind_change_qty = function() {
-    $(".product-items").on("change", ".product-qty", function() {
+    $(".products-wrapper").on("change", ".product-qty", function() {
         var item_code = $(this).attr("data-item-code");
         var newVal = $(this).val();
 
@@ -44,7 +44,7 @@ product.bind_change_qty = function() {
 }
 
 product.bind_change_uom = function() {
-    $(".product-items").on("change", ".product-uom", function() {
+    $(".products-wrapper").on("change", ".product-uom", function() {
         var item_code = $(this).attr("data-item-code");
         var newVal = $(this).val();
 
@@ -121,5 +121,5 @@ frappe.ready(function() {
     product.create_fields();
     product.bind_change_qty();
     product.bind_change_uom();
-    window.zoom_item_image(".product-items",".product-page-image", "data-item-image");
+    window.zoom_item_image(".products-wrapper",".product-page-image", "data-item-image");
 });
