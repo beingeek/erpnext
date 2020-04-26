@@ -29,33 +29,45 @@ def get_context(context):
 		raise frappe.DoesNotExistError
 
 	context.title = item_group
-
-	context.item_group_map, context['delivery_date'] = get_item_group_map(item_group)
-
-def get_item_group_map(item_group, delivery_date=None):
 	stock_settings = frappe.get_single("Stock Settings")
-	selling_settings = frappe.get_single("Selling Settings")
-	cart_settings = frappe.get_single("Shopping Cart Settings")
 
 	item_data = get_items(stock_settings, item_group=item_group)
-	item_group_map = group_by_item_group(item_data, stock_settings)
-	item_code_map = group_by_item_code(item_data)
+	context.update(process_item_data(item_data))
+	context.item_group_map = group_by_item_group(item_data, stock_settings)
 
-	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
 
-	price_list = determine_price_list(party, cart_settings, selling_settings)
-	customer_group = determine_customer_group(party, cart_settings, selling_settings)
+@frappe.whitelist()
+def get_items_table(item_group):
+	if frappe.session.user == "Guest":
+		raise frappe.PermissionError, "Please login first"
 
-	if party:
-		quotation = _get_cart_quotation(party)
-		set_quotation_item_details(item_code_map, quotation)
-		if not delivery_date:
-			delivery_date = quotation.delivery_date
+	if not frappe.db.get_value("Item Group", item_group, 'show_in_website'):
+		frappe.throw("Item Group {0} is not available".format(item_group))
 
-	set_item_prices(item_data, price_list, customer_group, cart_settings.company, date=delivery_date)
-	set_uom_details(item_data)
+	context = frappe._dict()
+	stock_settings = frappe.get_single("Stock Settings")
 
-	return item_group_map, cstr(delivery_date)
+	item_data = get_items(stock_settings, item_group=item_group)
+	context.update(process_item_data(item_data))
+	context.item_group_map = group_by_item_group(item_data, stock_settings)
+
+	return frappe.render_template("erpnext/www/product-list-table.html", context)
+
+
+@frappe.whitelist()
+def get_item_row(item_code, uom=None):
+	stock_settings = frappe.get_single("Stock Settings")
+
+	item_data = get_items(stock_settings, item_code=item_code, uom=uom)
+	if not item_data:
+		frappe.throw(_("Item {0} is not available").format(item_code))
+
+	process_item_data(item_data)
+
+	context = {
+		'item': item_data[0]
+	}
+	return frappe.render_template("erpnext/www/product-list-row.html", context)
 
 
 def get_items(stock_settings, item_group=None, item_code=None, uom=None):
@@ -90,7 +102,7 @@ def get_items(stock_settings, item_group=None, item_code=None, uom=None):
 			conditions.append("item.item_group in %(filtered_item_groups)s")
 			filters['filtered_item_groups'] = filtered_item_groups
 
-	item_data =  frappe.db.sql("""
+	item_data = frappe.db.sql("""
 		select item.name as item_code, item.item_name, item.item_group, item.route,
 			item.stock_uom, item.sales_uom, item.alt_uom, item.alt_uom_size,
 			item.thumbnail, item.website_image, item.image,
@@ -105,6 +117,32 @@ def get_items(stock_settings, item_group=None, item_code=None, uom=None):
 		item_data[0].selected_uom = uom
 
 	return item_data
+
+
+def process_item_data(item_data, delivery_date=None):
+	selling_settings = frappe.get_single("Selling Settings")
+	cart_settings = frappe.get_single("Shopping Cart Settings")
+
+	item_code_map = group_by_item_code(item_data)
+
+	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
+
+	price_list = determine_price_list(party, cart_settings, selling_settings)
+	customer_group = determine_customer_group(party, cart_settings, selling_settings)
+
+	if party:
+		quotation = _get_cart_quotation(party)
+		set_quotation_item_details(item_code_map, quotation)
+		if not delivery_date:
+			delivery_date = quotation.delivery_date
+
+	set_item_prices(item_data, price_list, customer_group, cart_settings.company, date=delivery_date)
+	set_uom_details(item_data)
+
+	out = frappe._dict({
+		"delivery_date": cstr(delivery_date)
+	})
+	return out
 
 
 def group_by_item_code(item_data):
@@ -169,45 +207,3 @@ def set_item_prices(item_data, price_list, customer_group, company, date=None):
 			qty=d.get('qty') or 1, uom=d.get('selected_uom') or d.sales_uom or d.stock_uom)
 		if price_obj:
 			d.update(price_obj)
-
-@frappe.whitelist()
-def change_product_uom(item_code, uom=None):
-	stock_settings = frappe.get_single("Stock Settings")
-	selling_settings = frappe.get_single("Selling Settings")
-	cart_settings = frappe.get_single("Shopping Cart Settings")
-
-	item_data = get_items(stock_settings, item_code=item_code, uom=uom)
-	if not item_data:
-		frappe.throw(_("Item {0} is not available").format(item_code))
-
-	item_code_map = group_by_item_code(item_data)
-	
-	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
-
-	price_list = determine_price_list(party, cart_settings, selling_settings)
-	customer_group = determine_customer_group(party, cart_settings, selling_settings)
-
-	delivery_date = None
-	if party:
-		quotation = _get_cart_quotation(party)
-		set_quotation_item_details(item_code_map, quotation)
-		delivery_date = quotation.delivery_date
-
-	set_item_prices(item_data, price_list, customer_group, cart_settings.company, date=delivery_date)
-	set_uom_details(item_data)
-
-	context = {}
-	context['item'] = item_data[0]
-	return {
-		"item": frappe.render_template("erpnext/www/product-list-row.html", context)
-	}
-
-@frappe.whitelist()
-def get_delivery_date_prices(delivery_date):
-	item_group = frappe.form_dict.item_group
-
-	context = {}
-	context['item_group_map'], context['delivery_date'] = get_item_group_map(item_group, delivery_date)
-	return {
-		"items": frappe.render_template("erpnext/www/product-list-table.html", context)
-	}

@@ -10,7 +10,7 @@ product.create_fields = function() {
                 fieldname: 'delivery_date',
                 fieldtype: 'Date',
                 reqd: 1,
-                onchange: product.bind_change_delivery_date
+                onchange: product.delivery_date_changed
             },
         ]
     });
@@ -30,21 +30,17 @@ product.create_fields = function() {
     });
 }
 
-product.bind_change_delivery_date = function() {
+product.delivery_date_changed = function() {
+    if (product.ignore_update) {
+        return;
+    }
+
     var delivery_date = product.field_group.get_value('delivery_date') || "";
     shopping_cart.update_cart_field({
         fieldname: 'delivery_date',
-        value: delivery_date
-    });
-    return frappe.call({
-        type: "POST",
-        method: "erpnext.www.product_list.get_delivery_date_prices",
-        freeze: true,
-        args: {
-            delivery_date: delivery_date
-        },
-        callback: function(r) {
-            $(".product-items-table").replaceWith(r.message.items);
+        value: delivery_date,
+        callback: function() {
+            product.get_items_table();
         }
     });
 }
@@ -81,19 +77,34 @@ product.bind_change_uom = function() {
 product.get_item_row = function(item_code, uom) {
     return frappe.call({
         type: "POST",
-        method: "erpnext.www.product_list.change_product_uom",
+        method: "erpnext.www.product_list.get_item_row",
         freeze: true,
         args: {
             item_code: item_code,
             uom: uom
         },
         callback: function(r) {
-            $(`.product-items-row[data-item-code="${item_code}"]`).replaceWith(r.message.item);
+            $(`.product-items-row[data-item-code="${item_code}"]`).replaceWith(r.message);
+        }
+    });
+};
+
+product.get_items_table = function() {
+    return frappe.call({
+        method: "erpnext.www.product_list.get_items_table",
+        freeze: true,
+        args: {
+            item_group: product.item_group
+        },
+        callback: function(r) {
+            $(".product-items-table").replaceWith(r.message);
         }
     });
 }
 
 frappe.ready(function() {
+    product.item_group = frappe.utils.get_url_arg("item_group");
+
     product.create_fields();
     product.bind_change_qty();
     product.bind_change_uom();
