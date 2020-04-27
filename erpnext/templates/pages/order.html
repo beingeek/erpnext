@@ -123,8 +123,10 @@
 				<th scope="col" class="text-center" style="width: 15% !important;">{{ _("UOM") }}</th>
 				<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Per Unit") }}</th>
 				<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Rate") }}</th>
+				{% if doc.doctype == 'Sales Order' %}
 				<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Subtotal") }}</th>
 				<th scope="col" class="text-center" style="width: 5% !important;">{{ _("HST") }}</th>
+				{% endif %}
 			</tr>
 		</thead>
 		<tbody class="order-items" style="font-size: 12px !important;">
@@ -159,6 +161,7 @@
 				<td class="text-right" style="vertical-align: middle;">
 					{{ d.get_formatted("rate") }}
 				</td>
+				{% if doc.doctype == 'Sales Order' %}
 				<td class="text-right" style="vertical-align: middle;">
 					{{ d.get_formatted("amount") }}
 				</td>
@@ -167,6 +170,7 @@
 					<i class="fa fa-check"></i>
 					{% endif %}
 				</td>
+				{% endif %}
 			</tr>
 			{% endfor %}
 		</tbody>
