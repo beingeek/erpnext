@@ -140,7 +140,7 @@ def get_list_context(context=None):
 		'show_sidebar': False,
 		'show_search': True,
 		'no_breadcrumbs': False,
-		'title': _('Quotations'),
+		'title': _('Purchase Orders'),
 		'order_by': 'transaction_date desc'
 	})
 

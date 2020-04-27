@@ -456,7 +456,7 @@ def get_list_context(context=None):
 		'show_sidebar': False,
 		'show_search': True,
 		'no_breadcrumbs': False,
-		'title': _('Orders'),
+		'title': _('Sales Orders'),
 		'order_by': 'transaction_date desc'
 	})
 

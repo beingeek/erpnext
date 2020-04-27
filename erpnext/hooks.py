@@ -79,11 +79,11 @@ website_context = {
 }
 
 website_route_rules = [
-	{"from_route": "/orders", "to_route": "Sales Order"},
-	{"from_route": "/orders/<path:name>", "to_route": "order",
+	{"from_route": "/sales-orders", "to_route": "Sales Order"},
+	{"from_route": "/sales-orders/<path:name>", "to_route": "order",
 		"defaults": {
 			"doctype": "Sales Order",
-			"parents": [{"label": _("Orders"), "route": "orders"}]
+			"parents": [{"label": _("Sales Orders"), "route": "sales-orders"}]
 		}
 	},
 	{"from_route": "/invoices", "to_route": "Sales Invoice"},
@@ -100,11 +100,11 @@ website_route_rules = [
 			"parents": [{"label": _("Supplier Quotation"), "route": "supplier-quotations"}]
 		}
 	},
-	{"from_route": "/quotations", "to_route": "Quotation"},
-	{"from_route": "/quotations/<path:name>", "to_route": "order",
+	{"from_route": "/purchase-orders", "to_route": "Quotation"},
+	{"from_route": "/purchase-orders/<path:name>", "to_route": "order",
 		"defaults": {
 			"doctype": "Quotation",
-			"parents": [{"label": _("Quotations"), "route": "quotations"}]
+			"parents": [{"label": _("Purchase Orders"), "route": "purchase-orders"}]
 		}
 	},
 	{"from_route": "/shipments", "to_route": "Delivery Note"},
