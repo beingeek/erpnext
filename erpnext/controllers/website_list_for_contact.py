@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import json
 import frappe
 from frappe import _
-from frappe.utils import flt, has_common
+from frappe.utils import flt, has_common, today, add_months
 from frappe.utils.user import is_website_user
 
 def get_list_context(context=None):
@@ -44,6 +44,16 @@ def get_transaction_list(doctype, txt=None, filters=None, limit_start=0, limit_p
 			return rfq_transaction_list(parties_doctype, doctype, parties, limit_start, limit_page_length)
 
 		filters.append((doctype, key, "in", parties))
+
+		meta = frappe.get_meta(doctype)
+		if meta.has_field("posting_date"):
+			date_field = "Posting_date"
+		elif meta.has_field("transaction_date"):
+			date_field = "transaction_date"
+		else:
+			date_field = "creation"
+
+		filters.append((doctype, date_field, "between", [add_months(today(), -1), today()]))
 
 		if key:
 			return post_process(doctype, get_list_for_transactions(doctype, txt,
