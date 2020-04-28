@@ -31,5 +31,21 @@
         <div class="col-sm-2 text-right">
             {{ _("Total Amount") }}
         </div>
+    {% else %}
+        <div class="col-sm-2 ">
+            {{ _("Name") }}
+        </div>
+        <div class="col-sm-3 font-size">
+            {{ _("Date") }}
+        </div>
+        <div class="col-sm-3">
+            {{ _("Delivery Date") }}
+        </div>
+        <div class="col-sm-2 text-right">
+            {{ _("Total Qty") }}
+        </div>
+        <div class="col-sm-2 text-right">
+            {{ _("Total Amount") }}
+        </div>
     {% endif %}
 </div>
