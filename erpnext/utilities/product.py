@@ -71,7 +71,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, uom=None, d
 	from erpnext.stock.get_item_details import get_price_list_rate_for
 
 	item = frappe.get_cached_doc("Item", item_code)
-	price_list_currency = frappe.get_cached_value("Price List", price_list, "currency")
+	price_list_doc = frappe.get_cached_doc("Price List", price_list)
 	template_item_code = item.variant_of
 
 	args = frappe._dict({
@@ -79,7 +79,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, uom=None, d
 		"uom": uom or item.sales_uom or item.stock_uom,
 		"transaction_date": date or frappe.utils.today(),
 		"qty": qty,
-		"price_list_uom_dependant": 1
+		"price_list_uom_dependant": not cint(price_list_doc.price_not_uom_dependant)
 	})
 
 	if price_list:
@@ -89,6 +89,10 @@ def get_price(item_code, price_list, customer_group, company, qty=1, uom=None, d
 			price = get_price_list_rate_for(args, template_item_code)
 
 		if price:
+			uom_margin = item.get("uom_additional_cost", {"uom": args.uom, "company": company})
+			if not price_list_doc.get("prices_independent_of_additional_uom_cost") and uom_margin:
+				price += flt(uom_margin[0].margin_rate)
+
 			pricing_rule = get_pricing_rule_for_item(frappe._dict({
 				"item_code": item_code,
 				"qty": qty,
@@ -98,7 +102,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, uom=None, d
 				"company": company,
 				"conversion_rate": 1,
 				"for_shopping_cart": True,
-				"currency": price_list_currency
+				"currency": price_list_doc.currency
 			}))
 
 			if pricing_rule:
@@ -110,7 +114,7 @@ def get_price(item_code, price_list, customer_group, company, qty=1, uom=None, d
 
 			price_obj = frappe._dict({
 				"price_list_rate": price,
-				"currency": price_list_currency
+				"currency": price_list_doc.currency
 			})
 
 			if price_obj:
