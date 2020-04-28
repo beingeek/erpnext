@@ -115,6 +115,9 @@ frappe.ui.form.on("Item", {
 		['is_stock_item', 'has_serial_no', 'has_batch_no', 'batch_wise_valuation'].forEach((fieldname) => {
 			frm.set_df_property(fieldname, 'read_only', stock_exists);
 		});
+
+		frm.fields_dict.uoms.grid.cannot_add_rows = true;
+		$('.grid-footer', frm.fields_dict.uoms.$wrapper).hide();
 	},
 
 	validate: function(frm){

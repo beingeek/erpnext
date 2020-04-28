@@ -505,18 +505,18 @@ class Item(WebsiteGenerator):
 			graph.add_edge(dest, src, w)
 
 		# Get paths from all UOMs to stock UOM
-		conv_factors = []
-		for i in range(1, len(uoms)):
-			uom = uoms[i]
-			paths = graph.get_all_paths(i, 0)
+		uom_conversion_factors = {}
+		for uom_idx in range(1, len(uoms)):
+			uom = uoms[uom_idx]
+			paths = graph.get_all_paths(uom_idx, 0)
 			if not paths:
 				frappe.throw(_("No conversion factor can be found from {0} to {1}").format(uom, self.stock_uom))
 
 			# calculate the net conversion factor for each uom considering all paths
 			weights = [1] * len(paths)
-			for i, path in enumerate(paths):
+			for path_idx, path in enumerate(paths):
 				for d in path:
-					weights[i] *= d[1]
+					weights[path_idx] *= d[1]
 
 			# if there are multiple paths, make sure their conversion_factors are the same
 			conv = weights[0]
@@ -528,24 +528,27 @@ class Item(WebsiteGenerator):
 			if not conv:
 				frappe.throw(_("Conversion factor for UOM {0} is 0").format(uom))
 
-			conv_factors.append({
-				"uom": uom,
-				"conversion_factor": conv
-			})
+			uom_conversion_factors[uom] = conv
 
 		# Set Stock UOM's conversion_factor 1
-		if self.stock_uom not in [d['uom'] for d in conv_factors]:
-			conv_factors.append({
-				"uom": self.stock_uom,
-				"conversion_factor": 1.0
-			})
+		if self.stock_uom not in uom_conversion_factors:
+			uom_conversion_factors[self.stock_uom] = 1.0
 
 		# Only update conversion factors if something has changed
-		old_conv_factors = [{"uom": d.uom, "conversion_factor": d.conversion_factor} for d in self.uoms]
-		if cmp(conv_factors, old_conv_factors) != 0:
-			self.set("uoms", [])
-			for d in conv_factors:
-				self.append("uoms", d)
+		to_remove = []
+		for d in self.uoms:
+			if d.uom in uom_conversion_factors:
+				d.conversion_factor = uom_conversion_factors[d.uom]
+			else:
+				to_remove.append(d)
+
+		for d in to_remove:
+			self.remove(d)
+
+		existing_uoms = [d.uom for d in self.uoms]
+		for uom, conversion_factor in iteritems(uom_conversion_factors):
+			if uom not in existing_uoms:
+				self.append('uoms', {'uom': uom, 'conversion_factor': conversion_factor})
 
 	def add_alt_uom_in_conversion_table(self):
 		if self.alt_uom and self.alt_uom != self.stock_uom:

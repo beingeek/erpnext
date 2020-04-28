@@ -30,7 +30,9 @@
         <select class="form-control small cart-uom" data-item-code="{{ d.item_code }}" style="cursor: pointer;">
             {% set item = frappe.get_cached_doc("Item", d.item_code) %}
             {% for p in item.uoms %}
+                {% if p.show_in_website or d.uom == p.uom %}
                 <option value="{{ p.uom }}" {% if d.uom == p.uom %} selected="1"{% endif %}>{{ _(p.uom) }}</option>
+                {% endif %}
             {% endfor %}
         </select>
     </td>

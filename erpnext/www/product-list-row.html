@@ -19,7 +19,9 @@
     <td style="vertical-align: middle;">
         <select class="form-control small product-uom" data-item-code="{{ item.item_code }}" data-item-group="{{ item.item_group }}" style="cursor: pointer;">
             {% for p in item.uoms %}
+                {% if p.show_in_website or p.uom == (item.selected_uom or item.sales_uom or item.stock_uom) %}
                 <option value="{{ p.uom }}" {% if p.uom == (item.selected_uom or item.sales_uom or item.stock_uom) %} selected="1"{% endif %}>{{ _(p.uom) }}</option>
+                {% endif %}
             {% endfor %}
         </select>
     </td>
