@@ -57,7 +57,7 @@
 	<div>
 		<b>Orders: </b>
 		{% for sales_order in sales_orders %}
-			<a href="/orders/{{ sales_order }}" class="margin-top">{{ sales_order }}</a>
+			<a href="/sales-orders/{{ sales_order }}" class="margin-top">{{ sales_order }}</a>
 		{% endfor %}
 	</div>
 	{% endif %}
@@ -66,7 +66,7 @@
 	<div>
 		<b>Quotations: </b>
 		{% for quotation in quotations %}
-			<a href="/quotations/{{ quotation }}" class="margin-top">{{ quotation }}</a>
+			<a href="/purchase-orders/{{ quotation }}" class="margin-top">{{ quotation }}</a>
 		{% endfor %}
 	</div>
 	{% endif %}
@@ -74,7 +74,7 @@
 	<div>
 		<b>Back Orders: </b>
 		{% for back_order in back_orders %}
-			<a href="/orders/{{ back_order }}" class="margin-top">{{ back_order }}</a>
+			<a href="/sales-orders/{{ back_order }}" class="margin-top">{{ back_order }}</a>
 		{% endfor %}
 	</div>
 	{% endif %}
@@ -123,8 +123,10 @@
 				<th scope="col" class="text-center" style="width: 15% !important;">{{ _("UOM") }}</th>
 				<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Per Unit") }}</th>
 				<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Rate") }}</th>
+				{% if doc.doctype != 'Quotation' %}
 				<th scope="col" class="text-right" style="width: 10% !important;">{{ _("Subtotal") }}</th>
 				<th scope="col" class="text-center" style="width: 5% !important;">{{ _("HST") }}</th>
+				{% endif %}
 			</tr>
 		</thead>
 		<tbody class="order-items" style="font-size: 12px !important;">
@@ -159,6 +161,7 @@
 				<td class="text-right" style="vertical-align: middle;">
 					{{ d.get_formatted("rate") }}
 				</td>
+				{% if doc.doctype != 'Quotation' %}
 				<td class="text-right" style="vertical-align: middle;">
 					{{ d.get_formatted("amount") }}
 				</td>
@@ -167,6 +170,7 @@
 					<i class="fa fa-check"></i>
 					{% endif %}
 				</td>
+				{% endif %}
 			</tr>
 			{% endfor %}
 		</tbody>
