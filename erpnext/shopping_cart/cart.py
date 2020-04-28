@@ -32,9 +32,10 @@ def set_cart_count(quotation=None):
 @frappe.whitelist()
 def get_cart_quotation(doc=None):
 	party = get_party()
+	name = frappe.form_dict.name
 
 	if not doc:
-		quotation = _get_cart_quotation(party)
+		quotation = _get_cart_quotation(party, name)
 		doc = quotation
 		set_cart_count(quotation)
 
@@ -63,8 +64,8 @@ def get_cart_quotation(doc=None):
 	}
 
 @frappe.whitelist()
-def place_order(confirmed):
-	quotation = _get_cart_quotation()
+def place_order(confirmed, name):
+	quotation = _get_cart_quotation(name=name)
 	quotation.company = frappe.db.get_value("Shopping Cart Settings", None, "company")
 	if not quotation.get("customer_address"):
 		throw(_("{0} is required").format(_(quotation.meta.get_label("customer_address"))))
@@ -87,9 +88,14 @@ def place_order(confirmed):
 	return quotation.name
 
 @frappe.whitelist()
-def update_cart_item(item_code, fieldname, value, with_items=False):
+def update_cart_item(item_code, fieldname, value, with_items=False, name=None):
 	from erpnext.stock.get_item_details import get_conversion_factor
-	quotation = _get_cart_quotation()
+
+	if name:
+		quotation = _get_cart_quotation(name=name)
+	else:
+		quotation = _get_cart_quotation()
+
 	if fieldname not in ['qty', 'uom']:
 		frappe.throw(_("Invalid Fieldname"))
 
@@ -114,11 +120,15 @@ def update_cart_item(item_code, fieldname, value, with_items=False):
 	
 
 @frappe.whitelist()
-def update_cart_field(fieldname, value, with_items=False):
+def update_cart_field(fieldname, value, with_items=False, name=None):
 	if fieldname not in cart_quotation_fields:
 		frappe.throw(_("Invalid Fieldname {0}").format(fieldname))
 
-	quotation = _get_cart_quotation()
+	if name:
+		quotation = _get_cart_quotation(name=name)
+	else:
+		quotation = _get_cart_quotation()
+
 	quotation.set(fieldname, value)
 	return update_cart(quotation, with_items)
 
@@ -161,8 +171,13 @@ def get_shopping_cart_menu(context=None):
 	return frappe.render_template('templates/includes/cart/cart_dropdown.html', context)
 
 @frappe.whitelist()
-def update_cart_address(address_fieldname, address_name):
-	quotation = _get_cart_quotation()
+def update_cart_address(address_fieldname, address_name, name=None):
+
+	if name:
+		quotation = _get_cart_quotation(name=name)
+	else:
+		quotation = _get_cart_quotation()
+
 	address_display = get_address_display(frappe.get_doc("Address", address_name).as_dict())
 
 	if address_fieldname == "shipping_address_name":
@@ -211,17 +226,27 @@ def decorate_quotation_doc(doc):
 	return doc
 
 
-def _get_cart_quotation(party=None):
+def _get_cart_quotation(party=None, name=None):
 	'''Return the open Quotation of type "Shopping Cart" or make a new one'''
 	if not party:
 		party = get_party()
 
-	quotation = frappe.get_all("Quotation", fields=["name"], filters=
-		{party.doctype.lower(): party.name, "order_type": "Shopping Cart", "docstatus": 0},
-		order_by="modified desc", limit_page_length=1)
+	if not name:
+		quotation = frappe.get_all("Quotation", fields=["name"], filters=
+			{party.doctype.lower(): party.name, "order_type": "Shopping Cart", "docstatus": 0,
+			"confirmed_by_customer": 0},
+			order_by="modified desc", limit_page_length=1)
 
-	if quotation:
-		qdoc = frappe.get_doc("Quotation", quotation[0].name)
+		quotation_name = quotation[0].name if quotation else None
+	else:
+		quotation_name = name
+
+	qdoc = None
+	if quotation_name:
+		qdoc = frappe.get_doc("Quotation", quotation_name)
+	
+	if (qdoc and not qdoc.confirmed_by_customer) or name:
+		return qdoc
 	else:
 		qdoc = frappe.get_doc({
 			"doctype": "Quotation",
@@ -242,7 +267,7 @@ def _get_cart_quotation(party=None):
 		qdoc.run_method("set_missing_values")
 		apply_cart_settings(party, qdoc)
 
-	return qdoc
+		return qdoc
 
 def update_party(fullname, company_name=None, mobile_no=None, phone=None):
 	party = get_party()
@@ -523,8 +548,12 @@ def show_terms(doc):
 	return doc.tc_name
 
 @frappe.whitelist()
-def get_default_items(with_items=False, item_group=None):
-	quotation = _get_cart_quotation()
+def get_default_items(with_items=False, item_group=None, name=None):
+
+	if name:
+		quotation = _get_cart_quotation(name=name)
+	else:
+		quotation = _get_cart_quotation()
 
 	item_group_join = ""
 	if item_group:
@@ -556,8 +585,11 @@ def default_item_groups_allow():
 	return item_groups
 
 @frappe.whitelist()
-def add_item(item_code, with_items=False):
-	quotation = _get_cart_quotation()
+def add_item(item_code, with_items=False, name=None):
+	if name:
+		quotation = _get_cart_quotation(name=name)
+	else:
+		quotation = _get_cart_quotation()
 	existing_item_codes = [d.item_code for d in quotation.items]
 
 	if item_code not in existing_item_codes:

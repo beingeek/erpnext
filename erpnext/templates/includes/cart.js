@@ -63,15 +63,15 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	bind_events: function () {
-		shopping_cart.bind_address_select();
-		shopping_cart.bind_place_order();
-		shopping_cart.bind_change_qty();
-		shopping_cart.bind_change_uom();
+	bind_events: function (quotation_name) {
+		shopping_cart.bind_address_select(quotation_name);
+		shopping_cart.bind_place_order(quotation_name);
+		shopping_cart.bind_change_qty(quotation_name);
+		shopping_cart.bind_change_uom(quotation_name);
 		shopping_cart.bind_dropdown_cart_buttons();
-		shopping_cart.bind_get_default_items();
-		shopping_cart.bind_add_items();
-		shopping_cart.bind_remove_cart_item();
+		shopping_cart.bind_get_default_items(quotation_name);
+		shopping_cart.bind_add_items(quotation_name);
+		shopping_cart.bind_remove_cart_item(quotation_name);
 		shopping_cart.cart_indicator();
 		shopping_cart.toggle_cart_count_buttons();
 	},
@@ -85,25 +85,27 @@ $.extend(shopping_cart, {
 		}
 	},
 
-	bind_get_default_items: function () {
+	bind_get_default_items: function (quotation_name) {
 		$('.btn-get-default-items').click(function () {
 			var item_group = $(this).attr("data-item-group");
 			shopping_cart.add_default_items({
 				item_group: item_group,
 				callback: shopping_cart.cart_page_update_callback,
 				with_items: 1,
+				name: quotation_name,
 				btn: this
 			});
 		});
 
 	},
 
-	bind_add_items: function () {
+	bind_add_items: function (quotation_name) {
 		$('.btn-add-items').click(function () {
 			window.add_item_dialog(item_code => shopping_cart.add_item({
 				item_code: item_code,
 				callback: shopping_cart.cart_page_update_callback,
-				with_items: 1
+				with_items: 1,
+				name: quotation_name
 			}));
 		});
 	},
@@ -132,7 +134,7 @@ $.extend(shopping_cart, {
 		var quot_name = name || quotation_name;
 		if (quot_name && quot_name !== undefined && quot_name !== "None") {
 			var a = document.getElementsByClassName("indicator-link")[0];
-			a.href = "/quotations/" + encodeURIComponent(quot_name);
+			a.href = "/purchase-orders/" + encodeURIComponent(quot_name);
 			$('.quotation-name').html("("+quot_name+")");
 			$('.cart-indicator').show();
 		} else {
@@ -140,12 +142,14 @@ $.extend(shopping_cart, {
 		}
 	},
 
-	bind_change_delivery_date: function() {
+	bind_change_delivery_date: function(quotation_name) {
 		var delivery_date = shopping_cart.field_group.get_value('delivery_date') || "";
+		var quotation_name = $('.indicator-link').attr('data-quotation-name') || "";
 		shopping_cart.update_cart_field({
 			fieldname: 'delivery_date',
 			value: delivery_date,
 			with_items: 1,
+			name: quotation_name,
 			callback: function (r) {
 				shopping_cart.cart_page_update_callback(r);
 			},
@@ -153,7 +157,7 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	bind_address_select: function() {
+	bind_address_select: function(quotation_name) {
 		$(".cart-addresses").find('input[data-address-name]').on("click", function() {
 			if($(this).prop("checked")) {
 				var me = this;
@@ -171,7 +175,8 @@ $.extend(shopping_cart, {
 					freeze: true,
 					args: {
 						address_fieldname: $(this).attr("data-fieldname"),
-						address_name: $(this).attr("data-address-name")
+						address_name: $(this).attr("data-address-name"),
+						name: quotation_name
 					},
 					callback: function(r) {
 						if(!r.exc) {
@@ -187,16 +192,16 @@ $.extend(shopping_cart, {
 
 	},
 
-	bind_place_order: function() {
+	bind_place_order: function(quotation_name) {
 		$(".btn-place-order").on("click", function() {
-			shopping_cart.place_order(this, 1);
+			shopping_cart.place_order(this, 1, quotation_name);
 		});
 		$(".btn-cancel-order").on("click", function() {
-			shopping_cart.place_order(this, 0);
+			shopping_cart.place_order(this, 0, quotation_name);
 		});
 	},
 
-	bind_change_qty: function() {
+	bind_change_qty: function(quotation_name) {
 		// bind update button
 		$(".cart-items").on("change", ".cart-qty", function() {
 			var item_code = $(this).attr("data-item-code");
@@ -207,6 +212,7 @@ $.extend(shopping_cart, {
 				fieldname: 'qty',
 				value: newVal,
 				with_items: 1,
+				name: quotation_name,
 				callback: function (r) {
 					shopping_cart.cart_page_update_callback(r);
 				},
@@ -215,7 +221,7 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	bind_remove_cart_item: function() {
+	bind_remove_cart_item: function(quotation_name) {
 		$(".cart-items").on('click', '.remove-cart-item', function(){
 			var item_code = $(this).attr('data-item-code');
 			shopping_cart.update_cart_item({
@@ -223,6 +229,7 @@ $.extend(shopping_cart, {
 				fieldname: 'qty',
 				value: 0,
 				with_items: 1,
+				name: quotation_name,
 				callback: function (r) {
 					shopping_cart.cart_page_update_callback(r);
 				},
@@ -231,7 +238,7 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	bind_change_uom: function() {
+	bind_change_uom: function(quotation_name) {
 		$(".cart-items").on("change", ".cart-uom", function() {
 			var item_code = $(this).attr("data-item-code");
 			var newVal = $(this).val();
@@ -241,6 +248,7 @@ $.extend(shopping_cart, {
 				fieldname: 'uom',
 				value: newVal,
 				with_items: 1,
+				name: quotation_name,
 				callback: function (r) {
 					shopping_cart.cart_page_update_callback(r);
 				},
@@ -296,12 +304,15 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	place_order: function(btn,confirmed) {
+	place_order: function(btn,confirmed,quotation_name) {
 		return frappe.call({
 			type: "POST",
 			method: "erpnext.shopping_cart.cart.place_order",
 			btn: btn,
-			args:{ confirmed: confirmed },
+			args:{ 
+				confirmed: confirmed,
+				name: quotation_name
+			},
 			callback: function(r) {
 				if (confirmed) {
 					if(r.exc) {
@@ -315,7 +326,7 @@ $.extend(shopping_cart, {
 							.html(msg || frappe._("Something went wrong!"))
 							.toggle(true);
 					} else {
-						window.location.href = "/quotations/" + encodeURIComponent(r.message);
+						window.location.href = "/purchase-orders/" + encodeURIComponent(r.message);
 					}
 				} else {
 					window.location.href = "/cart";
@@ -326,9 +337,10 @@ $.extend(shopping_cart, {
 });
 
 frappe.ready(function() {
+	var quotation_name = $('.indicator-link').attr('data-quotation-name');
 	$(".cart-icon").hide();
 	shopping_cart.create_fields();
-	shopping_cart.bind_events();
+	shopping_cart.bind_events(quotation_name);
 	window.zoom_item_image(".cart-items",".cart-product-image", "data-item-image");
 });
 

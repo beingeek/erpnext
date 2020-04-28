@@ -10,7 +10,7 @@
 <h2>{{ _("My Cart") }}</h2>
 <div class="cart-indicator" style='margin-top: -3px;'>
 	{% if doc.docstatus == 0 %}
-	<a href="" class="margin-top indicator-link" data-quotation-name="{{doc.name}}">
+	<a href="" class="margin-top indicator-link" data-quotation-name="{{doc.name or ''}}">
 		<span class="indicator {{ doc.indicator_color }}">
 			{{ _(doc.get('indicator_title')) }}
 			<span class="quotation-name"></span>

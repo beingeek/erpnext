@@ -16,7 +16,7 @@
 <a class='btn btn-xs btn-default' href='/printview?doctype={{ doc.doctype}}&name={{ doc.name }}&format={{ print_format }}' target="_blank" rel="noopener noreferrer">{{ _("Print") }}</a>
 {% if doc.doctype == "Quotation" %}
 	{% if doc.docstatus == 0 %}
-		<a class='btn btn-xs btn-default' href='/cart'>{{ _("Edit") }}</a>
+		<a class='btn btn-xs btn-default' href='/cart?name={{ doc.name }}'>{{ _("Edit") }}</a>
 	{% endif %}
 {% endif %}
 {% endblock %}
