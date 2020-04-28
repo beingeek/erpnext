@@ -47,7 +47,7 @@ def get_transaction_list(doctype, txt=None, filters=None, limit_start=0, limit_p
 
 		meta = frappe.get_meta(doctype)
 		if meta.has_field("posting_date"):
-			date_field = "Posting_date"
+			date_field = "posting_date"
 		elif meta.has_field("transaction_date"):
 			date_field = "transaction_date"
 		else:
