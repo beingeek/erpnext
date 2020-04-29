@@ -22,7 +22,7 @@ $.extend(shopping_cart, {
 					fieldname: 'delivery_date',
 					fieldtype: 'Date',
 					reqd: 1,
-					onchange: shopping_cart.bind_change_delivery_date
+					onchange: shopping_cart.handle_change_delivery_date
 				},
 				{
 					label: __('Customer Name'),
@@ -92,6 +92,7 @@ $.extend(shopping_cart, {
 				item_group: item_group,
 				callback: shopping_cart.cart_page_update_callback,
 				with_items: 1,
+				name: shopping_cart.quotation_name,
 				btn: this
 			});
 		});
@@ -103,7 +104,8 @@ $.extend(shopping_cart, {
 			window.add_item_dialog(item_code => shopping_cart.add_item({
 				item_code: item_code,
 				callback: shopping_cart.cart_page_update_callback,
-				with_items: 1
+				with_items: 1,
+				name: shopping_cart.quotation_name
 			}));
 		});
 	},
@@ -128,24 +130,24 @@ $.extend(shopping_cart, {
 	},
 
 	cart_indicator: function(name) {
-		var quotation_name = $('.indicator-link').attr('data-quotation-name');
-		var quot_name = name || quotation_name;
-		if (quot_name && quot_name !== undefined && quot_name !== "None") {
+		var quotation_name = name || $('.indicator-link').attr('data-quotation-name');
+		if (quotation_name && quotation_name !== "None") {
 			var a = document.getElementsByClassName("indicator-link")[0];
-			a.href = "/quotations/" + encodeURIComponent(quot_name);
-			$('.quotation-name').html("("+quot_name+")");
+			a.href = "/purchase-orders/" + encodeURIComponent(quotation_name);
+			$('.quotation-name').html("("+quotation_name+")");
 			$('.cart-indicator').show();
 		} else {
 			$('.cart-indicator').hide();
 		}
 	},
 
-	bind_change_delivery_date: function() {
+	handle_change_delivery_date: function() {
 		var delivery_date = shopping_cart.field_group.get_value('delivery_date') || "";
 		shopping_cart.update_cart_field({
 			fieldname: 'delivery_date',
 			value: delivery_date,
 			with_items: 1,
+			name: shopping_cart.quotation_name,
 			callback: function (r) {
 				shopping_cart.cart_page_update_callback(r);
 			},
@@ -171,7 +173,8 @@ $.extend(shopping_cart, {
 					freeze: true,
 					args: {
 						address_fieldname: $(this).attr("data-fieldname"),
-						address_name: $(this).attr("data-address-name")
+						address_name: $(this).attr("data-address-name"),
+						name: shopping_cart.quotation_name
 					},
 					callback: function(r) {
 						if(!r.exc) {
@@ -207,6 +210,7 @@ $.extend(shopping_cart, {
 				fieldname: 'qty',
 				value: newVal,
 				with_items: 1,
+				name: shopping_cart.quotation_name,
 				callback: function (r) {
 					shopping_cart.cart_page_update_callback(r);
 				},
@@ -223,6 +227,7 @@ $.extend(shopping_cart, {
 				fieldname: 'qty',
 				value: 0,
 				with_items: 1,
+				name: shopping_cart.quotation_name,
 				callback: function (r) {
 					shopping_cart.cart_page_update_callback(r);
 				},
@@ -241,6 +246,7 @@ $.extend(shopping_cart, {
 				fieldname: 'uom',
 				value: newVal,
 				with_items: 1,
+				name: shopping_cart.quotation_name,
 				callback: function (r) {
 					shopping_cart.cart_page_update_callback(r);
 				},
@@ -287,7 +293,10 @@ $.extend(shopping_cart, {
 			btn: btn,
 			type: "POST",
 			method: "erpnext.shopping_cart.cart.apply_shipping_rule",
-			args: { shipping_rule: rule },
+			args: {
+				shipping_rule: rule,
+				name: shopping_cart.quotation_name
+			},
 			callback: function(r) {
 				if(!r.exc) {
 					shopping_cart.render(r.message);
@@ -301,7 +310,10 @@ $.extend(shopping_cart, {
 			type: "POST",
 			method: "erpnext.shopping_cart.cart.place_order",
 			btn: btn,
-			args:{ confirmed: confirmed },
+			args:{ 
+				confirmed: confirmed,
+				name: shopping_cart.quotation_name
+			},
 			callback: function(r) {
 				if (confirmed) {
 					if(r.exc) {
@@ -315,7 +327,7 @@ $.extend(shopping_cart, {
 							.html(msg || frappe._("Something went wrong!"))
 							.toggle(true);
 					} else {
-						window.location.href = "/quotations/" + encodeURIComponent(r.message);
+						window.location.href = "/purchase-orders/" + encodeURIComponent(r.message);
 					}
 				} else {
 					window.location.href = "/cart";
@@ -326,6 +338,7 @@ $.extend(shopping_cart, {
 });
 
 frappe.ready(function() {
+	shopping_cart.quotation_name = frappe.utils.get_url_arg("name");
 	$(".cart-icon").hide();
 	shopping_cart.create_fields();
 	shopping_cart.bind_events();
