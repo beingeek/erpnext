@@ -99,7 +99,7 @@ moment.defaultFormat = frappe.moment_date_format;
 			{% endfor %}
 			<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
 		</div>
-
+		{% if doc.delivery_date %}
 		<div class="cart-addresses">
 		{% include "templates/includes/cart/cart_address.html" %}
 		</div>
@@ -159,6 +159,7 @@ moment.defaultFormat = frappe.moment_date_format;
 				{{ _("Place Order") }}</button>
 			{% endif %}
 		</p>
+		{% endif %}
 	</div>
 </div>
 

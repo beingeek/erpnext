@@ -66,6 +66,7 @@ product.handle_delivery_date_changed = function() {
         fieldname: 'delivery_date',
         value: delivery_date,
     });
+    window.location.href = "/product-list?item_group=" + product.item_group;
 }
 
 product.handle_item_changed = function(r, opts) {

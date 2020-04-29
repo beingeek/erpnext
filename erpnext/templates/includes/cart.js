@@ -150,6 +150,11 @@ $.extend(shopping_cart, {
 			name: shopping_cart.quotation_name,
 			callback: function (r) {
 				shopping_cart.cart_page_update_callback(r);
+				if (shopping_cart.quotation_name) {
+					window.location.href = "/cart?name=" + shopping_cart.quotation_name;
+				} else {
+					window.location.href = "/cart";
+				}
 			},
 			freeze: 1
 		});

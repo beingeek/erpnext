@@ -57,7 +57,9 @@ moment.defaultFormat = frappe.moment_date_format;
 <div id="product-field">
     <div class="product-field-data hidden" data-fieldname="delivery_date">{{ delivery_date }}</div>
 </div>
+{% if delivery_date %} 
 <div class="products-wrapper">
 {% include 'erpnext/www/product-list-table.html' %}
 </div>
+{% endif %}
 {% endblock %}
