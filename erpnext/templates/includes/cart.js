@@ -293,7 +293,10 @@ $.extend(shopping_cart, {
 			btn: btn,
 			type: "POST",
 			method: "erpnext.shopping_cart.cart.apply_shipping_rule",
-			args: { shipping_rule: rule },
+			args: {
+				shipping_rule: rule,
+				name: shopping_cart.quotation_name
+			},
 			callback: function(r) {
 				if(!r.exc) {
 					shopping_cart.render(r.message);
