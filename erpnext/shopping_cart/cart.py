@@ -148,9 +148,9 @@ def update_cart(quotation, with_items=False):
 	if cint(with_items):
 		out.update({
 			"items": frappe.render_template("templates/includes/cart/cart_items.html",
-				context),
+				context) if quotation.delivery_date else "",
 			"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
-				context),
+				context) if quotation.delivery_date else "",
 			"quotation_fields": qtn_fields_dict
 		})
 

@@ -116,10 +116,16 @@ $.extend(shopping_cart, {
 			$(".cart-tax-items").html(r.message.taxes);
 			$(".cart-icon").hide();
 
+			if (r.message.quotation_fields.delivery_date) {
+				$("#cart-body").removeClass('hidden');
+			} else {
+				$("#cart-body").addClass('hidden');
+			}
+
 			shopping_cart.toggle_cart_count_buttons();
 			shopping_cart.cart_indicator(r.message.name);
 
-			$.each(r.message.fields || {}, function (k, v) {
+			$.each(r.message.quotation_fields || {}, function (k, v) {
 				frappe.run_serially([
 					() => shopping_cart.ignore_update = true,
 					() => shopping_cart.field_group.set_value(k, v),
@@ -150,11 +156,6 @@ $.extend(shopping_cart, {
 			name: shopping_cart.quotation_name,
 			callback: function (r) {
 				shopping_cart.cart_page_update_callback(r);
-				if (shopping_cart.quotation_name) {
-					window.location.href = "/cart?name=" + shopping_cart.quotation_name;
-				} else {
-					window.location.href = "/cart";
-				}
 			},
 			freeze: 1
 		});

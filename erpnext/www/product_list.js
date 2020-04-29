@@ -66,7 +66,6 @@ product.handle_delivery_date_changed = function() {
         fieldname: 'delivery_date',
         value: delivery_date,
     });
-    window.location.href = "/product-list?item_group=" + product.item_group;
 }
 
 product.handle_item_changed = function(r, opts) {
@@ -110,8 +109,8 @@ product.get_items_table = function() {
             item_group: product.item_group
         },
         callback: function(r) {
-            if (r && r.message) {
-                $(".product-items-table").replaceWith(r.message);
+            if (r) {
+                $(".products-wrapper").html(r.message);
             }
         }
     });
