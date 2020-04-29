@@ -14,4 +14,4 @@ def get_context(context):
 	if frappe.session.user == "Guest":
 		raise frappe.PermissionError, "Please login first"
 	
-	context.update(get_cart_quotation())
+	context.update(get_cart_quotation(name=frappe.form_dict.name))
