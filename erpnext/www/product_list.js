@@ -109,8 +109,8 @@ product.get_items_table = function() {
             item_group: product.item_group
         },
         callback: function(r) {
-            if (r && r.message) {
-                $(".product-items-table").replaceWith(r.message);
+            if (r) {
+                $(".products-wrapper").html(r.message);
             }
         }
     });
