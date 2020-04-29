@@ -51,7 +51,10 @@ def get_items_table(item_group):
 	context.update(process_item_data(item_data))
 	context.item_group_map = group_by_item_group(item_data, stock_settings)
 
-	return frappe.render_template("erpnext/www/product-list-table.html", context)
+	if context.delivery_date:
+		return frappe.render_template("erpnext/www/product-list-table.html", context)
+	else:
+		return ""
 
 
 @frappe.whitelist()
@@ -130,18 +133,20 @@ def process_item_data(item_data, delivery_date=None):
 	price_list = determine_price_list(party, cart_settings, selling_settings)
 	customer_group = determine_customer_group(party, cart_settings, selling_settings)
 
+	out = frappe._dict()
+
 	if party:
 		quotation = _get_cart_quotation(party)
 		set_quotation_item_details(item_code_map, quotation)
 		if not delivery_date:
 			delivery_date = quotation.delivery_date
 
+		out.quotation = quotation
+
 	set_item_prices(item_data, price_list, customer_group, cart_settings.company, date=delivery_date)
 	set_uom_details(item_data)
 
-	out = frappe._dict({
-		"delivery_date": cstr(delivery_date)
-	})
+	out.delivery_date = cstr(delivery_date)
 	return out
 
 

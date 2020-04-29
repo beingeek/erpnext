@@ -16,7 +16,7 @@
 <a class='btn btn-xs btn-default' href='/printview?doctype={{ doc.doctype}}&name={{ doc.name }}&format={{ print_format }}' target="_blank" rel="noopener noreferrer">{{ _("Print") }}</a>
 {% if doc.doctype == "Quotation" %}
 	{% if doc.docstatus == 0 %}
-		<a class='btn btn-xs btn-default' href='/cart'>{{ _("Edit") }}</a>
+		<a class='btn btn-xs btn-default' href='/cart?name={{ doc.name }}'>{{ _("Edit") }}</a>
 	{% endif %}
 {% endif %}
 {% endblock %}
@@ -55,7 +55,7 @@
 {% if doc.doctype == "Quotation" %}
 	{% if sales_orders %}
 	<div>
-		<b>Orders: </b>
+		<b>Sales Orders: </b>
 		{% for sales_order in sales_orders %}
 			<a href="/sales-orders/{{ sales_order }}" class="margin-top">{{ sales_order }}</a>
 		{% endfor %}
@@ -64,7 +64,7 @@
 {% elif doc.doctype == "Sales Order" %}
 	{% if quotations %}
 	<div>
-		<b>Quotations: </b>
+		<b>Purchase Orders: </b>
 		{% for quotation in quotations %}
 			<a href="/purchase-orders/{{ quotation }}" class="margin-top">{{ quotation }}</a>
 		{% endfor %}

@@ -82,7 +82,8 @@ $.extend(shopping_cart, {
 					item_code: opts.item_code,
 					fieldname: opts.fieldname,
 					value: opts.value,
-					with_items: opts.with_items || 0
+					with_items: opts.with_items || 0,
+					name: opts.name
 				},
 				btn: opts.btn,
 				freeze: opts.freeze || 1,
@@ -109,7 +110,8 @@ $.extend(shopping_cart, {
 				args: {
 					fieldname: opts.fieldname,
 					value: opts.value,
-					with_items: opts.with_items || 0
+					with_items: opts.with_items || 0,
+					name: opts.name
 				},
 				btn: opts.btn,
 				freeze: opts.freeze || 1,
@@ -140,7 +142,8 @@ $.extend(shopping_cart, {
 				freeze: opts.freeze || 1,
 				args: {
 					item_code: opts.item_code,
-					with_items: opts.with_items || 0
+					with_items: opts.with_items || 0,
+					name: opts.name
 				},
 				callback: function (r){
 					shopping_cart.update_cart_callback(r, opts);
@@ -170,7 +173,8 @@ $.extend(shopping_cart, {
 				freeze: opts.freeze || 1,
 				args: {
 					item_group: opts.item_group || "",
-					with_items: opts.with_items || 0
+					with_items: opts.with_items || 0,
+					name: opts.name
 				},
 				callback: function (r) {
 					shopping_cart.update_cart_callback(r, opts);

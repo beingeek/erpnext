@@ -10,7 +10,7 @@
 <h2>{{ _("My Cart") }}</h2>
 <div class="cart-indicator" style='margin-top: -3px;'>
 	{% if doc.docstatus == 0 %}
-	<a href="" class="margin-top indicator-link" data-quotation-name="{{doc.name}}">
+	<a href="" class="margin-top indicator-link" data-quotation-name="{{doc.name or ''}}">
 		<span class="indicator {{ doc.indicator_color }}">
 			{{ _(doc.get('indicator_title')) }}
 			<span class="quotation-name"></span>
@@ -88,8 +88,7 @@ moment.defaultFormat = frappe.moment_date_format;
 
 <div class="cart-container">
 	<div id="cart-container">
-			<div id="cart-error" class="alert alert-danger"
-		style="display: none;"></div>
+		<div id="cart-error" class="alert alert-danger" style="display: none;"></div>
 		<div id="cart-fields">
 			{% for f in quotation_fields %}
 			<div class="cart-field-data hidden" data-fieldname="{{ f }}">{{ doc.get(f) or '' }}</div>
@@ -99,6 +98,8 @@ moment.defaultFormat = frappe.moment_date_format;
 			{% endfor %}
 			<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
 		</div>
+
+		<div id="cart-body" {% if not doc.delivery_date %}class="hidden"{% endif %}>
 
 		<div class="cart-addresses">
 		{% include "templates/includes/cart/cart_address.html" %}
@@ -159,6 +160,7 @@ moment.defaultFormat = frappe.moment_date_format;
 				{{ _("Place Order") }}</button>
 			{% endif %}
 		</p>
+		</div>
 	</div>
 </div>
 
