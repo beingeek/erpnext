@@ -457,7 +457,7 @@ def get_list_context(context=None):
 		'show_search': True,
 		'no_breadcrumbs': False,
 		'title': _('Sales Orders'),
-		'order_by': 'transaction_date desc'
+		'order_by': 'delivery_date desc, transaction_date desc'
 	})
 
 	return list_context
