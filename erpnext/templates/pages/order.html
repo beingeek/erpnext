@@ -255,6 +255,15 @@
 	<hr><p>{{ doc.terms }}</p>
 </div>
 {% endif %}
+{% if doc.doctype == 'Quotation' %}
+{% if doc.docstatus == 1 or (doc.docstatus == 0 and doc.confirmed_by_customer) %}
+<p class="text-right">
+	<button class="btn btn-primary btn-duplicate-items btn-sm"
+					type="button">
+					{{ _("Duplicate Order") }}</button>
+</p>
+{% endif %}
+{% endif %}
 {% endblock %}
 
 {% block script %}

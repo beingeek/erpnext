@@ -563,7 +563,7 @@ def get_default_items(with_items=False, item_group=None, name=None):
 
 	for item_code in default_item_codes:
 		if item_code not in existing_item_codes:
-			quotation.append("items", {"item_code": item_code, "qty": 1})
+			quotation.append("items", {"item_code": item_code, "qty": 0})
 	
 	return update_cart(quotation, with_items)
 
