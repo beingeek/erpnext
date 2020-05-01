@@ -9,7 +9,7 @@
 				{{ frappe.utils.global_date_format(doc.transaction_date or doc.posting_date) }}
 			</div>
 			<div class="col-sm-3">
-				{{ frappe.utils.global_date_format(doc.delivery_date) }}
+				{{ frappe.format_date(doc.delivery_date, "EEE, MMMM d, Y") }}
 			</div>
 			<div class="col-sm-2 text-right">
 				{{doc.get_formatted("total_qty")}}
