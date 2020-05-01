@@ -30,6 +30,7 @@ def get_context(context):
 
 	context.title = item_group
 	stock_settings = frappe.get_single("Stock Settings")
+	context.price_list_note = stock_settings.price_list_note
 
 	item_data = get_items(stock_settings, item_group=item_group)
 	context.update(process_item_data(item_data))
