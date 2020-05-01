@@ -88,7 +88,6 @@ moment.defaultFormat = frappe.moment_date_format;
 
 <div class="cart-container">
 	<div id="cart-container">
-		<div id="cart-error" class="alert alert-danger" style="display: none;"></div>
 		<div id="cart-fields">
 			{% for f in quotation_fields %}
 			<div class="cart-field-data hidden" data-fieldname="{{ f }}">{{ doc.get(f) or '' }}</div>
@@ -99,6 +98,8 @@ moment.defaultFormat = frappe.moment_date_format;
 			<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
 		</div>
 
+		<div class="cart-error">{% include "templates/includes/cart/cart_errors.html" %}</div>
+		<div class="cart-warning">{% include "templates/includes/cart/cart_warnings.html" %}</div>
 		{% if price_list_note %}<div class="alert alert-info">{{ price_list_note }}</div>{% endif %}
 
 		<div id="cart-body" {% if not doc.delivery_date %}class="hidden"{% endif %}>

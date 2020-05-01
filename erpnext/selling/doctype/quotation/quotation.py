@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.mapper import get_mapped_doc
-from frappe.utils import flt, nowdate, getdate
+from frappe.utils import flt, nowdate, getdate, formatdate
 from frappe import _
 
 from erpnext.controllers.selling_controller import SellingController
@@ -14,6 +14,11 @@ form_grid_templates = {
 }
 
 class Quotation(SellingController):
+	def __setup__(self):
+		super(Quotation, self).__setup__()
+		self.cart_warnings = []
+		self.cart_errors = []
+
 	def set_indicator(self):
 		if self.docstatus==1:
 			if self.status == "Ordered":
@@ -46,16 +51,55 @@ class Quotation(SellingController):
 		self.validate_delivery_date()
 		if self.items:
 			self.with_items = 1
+
+	def get_cart_warnings(self):
+		if self.delivery_date:
+			same_date_quotations = frappe.get_all("Quotation", filters={
+				"name": ['!=', self.name],
+				"docstatus": ['<', 2],
+				"quotation_to": "Customer",
+				"customer": self.customer,
+				"delivery_date": self.delivery_date,
+			})
+			if same_date_quotations:
+				links = ["<b><a href='/purchase-orders/{0}' target='_blank'>{0}</a></b>".format(d.name) for d in same_date_quotations]
+				self.cart_warnings.append(_("Purchase Orders already exist for Delivery Date {0}: {1}")
+					.format(formatdate(self.delivery_date, "EEE, MMMM d, Y"), ", ".join(links)))
+
+			same_date_sales_orders = frappe.get_all("Sales Order", filters={
+				"docstatus": ['<', 2],
+				"customer": self.customer,
+				"delivery_date": self.delivery_date
+			})
+			if same_date_sales_orders:
+				links = ["<b><a href='/sales-orders/{0}' target='_blank'>{0}</a></b>".format(d.name) for d in same_date_sales_orders]
+				self.cart_warnings.append(_("Sales Orders already exist for Delivery Date {0}: {1}")
+					.format(formatdate(self.delivery_date, "EEE, MMMM d, Y"), ", ".join(links)))
+
+	def get_cart_errors(self):
+		pass
+		# if not self.delivery_date:
+		# 	self.cart_errors.append(_("Delivery Date is mandatory"))
 			
 	def validate_valid_till(self):
 		if self.valid_till and self.valid_till < self.transaction_date:
 			frappe.throw(_("Valid till date cannot be before transaction date"))
 
 	def validate_delivery_date(self):
-		if self.order_type in ['Sales', 'Shopping Cart']:
-			if self.delivery_date:
-				if getdate(self.delivery_date) < getdate(self.transaction_date):
-					frappe.throw(_("Delivery Date cannot be before Order Date"))
+		if self.order_type not in ['Sales', 'Shopping Cart']:
+			return
+
+		raise_exception = self._action == "Submit" or self.confirmed_by_customer
+
+		if self.delivery_date and getdate(self.delivery_date) < getdate(self.transaction_date):
+			message = _("Delivery Date <b>{0}</b> cannot be before Order Date").format(
+				formatdate(self.delivery_date, "EEE, MMMM d, Y"))
+			frappe.msgprint(message, raise_exception=raise_exception, indicator="red")
+			self.cart_errors.append(message)
+			self.delivery_date = None
+
+		if self.confirmed_by_customer and not self.delivery_date:
+			frappe.throw(_("Delivery Date is mandatory"))
 
 	def has_sales_order(self):
 		return frappe.db.get_value("Sales Order Item", {"prevdoc_docname": self.name, "docstatus": 1})

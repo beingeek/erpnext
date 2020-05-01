@@ -322,17 +322,7 @@ $.extend(shopping_cart, {
 			},
 			callback: function(r) {
 				if (confirmed) {
-					if(r.exc) {
-						var msg = "";
-						if(r._server_messages) {
-							msg = JSON.parse(r._server_messages || []).join("<br>");
-						}
-
-						$("#cart-error")
-							.empty()
-							.html(msg || frappe._("Something went wrong!"))
-							.toggle(true);
-					} else {
+					if(!r.exc) {
 						window.location.href = "/purchase-orders/" + encodeURIComponent(r.message);
 					}
 				} else {

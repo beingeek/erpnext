@@ -60,6 +60,9 @@ $.extend(shopping_cart, {
 			shopping_cart.set_shopping_cart_menu(r.message.shopping_cart_menu);
 		}
 
+		$(".cart-warning").html(r.message.warnings || "");
+		$(".cart-error").html(r.message.errors || "");
+
 		$.each(shopping_cart.cart_update_callbacks || [], callback => callback(r, opts));
 		if (opts.item_code) {
 			$.each(shopping_cart.cart_update_item_callbacks || [], (i, callback) => callback(r, opts));

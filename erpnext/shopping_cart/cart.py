@@ -42,11 +42,13 @@ def get_cart_quotation(doc=None, name=None):
 		doc.set_indicator()
 
 	addresses = get_address_docs(party=party)
-
 	get_balance = get_balance_on(party=party.name, party_type='Customer')
 
 	if not doc.customer_address and addresses:
 		update_cart_address("customer_address", addresses[0].name)
+
+	doc.get_cart_warnings()
+	doc.get_cart_errors()
 
 	return {
 		"customer_balance": get_balance,
@@ -73,7 +75,6 @@ def place_order(confirmed, name=None):
 	else:
 		quotation.confirmed_by_customer = 0
 
-	quotation.transaction_date = today()
 	quotation.flags.ignore_permissions = True
 	quotation.save()
 
@@ -143,7 +144,10 @@ def update_cart(quotation, with_items=False):
 
 	out = {
 		'name': quotation.name,
-		'shopping_cart_menu': get_shopping_cart_menu(context)
+		'shopping_cart_menu': get_shopping_cart_menu(context),
+		'warnings': frappe.render_template("templates/includes/cart/cart_warnings.html", context),
+		'errors': frappe.render_template("templates/includes/cart/cart_errors.html", context),
+		'quotation_fields': qtn_fields_dict
 	}
 	if cint(with_items):
 		out.update({
@@ -151,7 +155,6 @@ def update_cart(quotation, with_items=False):
 				context) if quotation.delivery_date else "",
 			"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
 				context) if quotation.delivery_date else "",
-			"quotation_fields": qtn_fields_dict
 		})
 
 	return out
@@ -296,6 +299,8 @@ def apply_cart_settings(party=None, quotation=None):
 		party = get_party()
 	if not quotation:
 		quotation = _get_cart_quotation(party)
+
+	quotation.transaction_date = today()
 
 	cart_settings = frappe.get_doc("Shopping Cart Settings")
 
@@ -591,6 +596,8 @@ def can_copy_items(doc):
 		return doc.docstatus == 1 or (doc.docstatus == 0 and doc.get('confirmed_by_customer'))
 	elif doc.doctype == "Sales Order":
 		return doc.docstatus < 2
+	else:
+		return False
 
 
 @frappe.whitelist()
