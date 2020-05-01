@@ -3,7 +3,7 @@
 
 frappe.provide("order");
 frappe.ready(function(){
-	order.duplicate_purchase_order();
+	order.bind_copy_items_from_transaction();
 
 	var loyalty_points_input = document.getElementById("loyalty-point-to-redeem");
 	var loyalty_points_status = document.getElementById("loyalty-points-status");
@@ -43,18 +43,16 @@ frappe.ready(function(){
 	}
 })
 
-order.duplicate_purchase_order = function() {
+order.bind_copy_items_from_transaction = function() {
 	$('.btn-duplicate-items').on('click', function() {
-		return frappe.call({
-			type: "POST",
-			method: "erpnext.templates.pages.order.duplicate_purchase_order",
-			freeze: true,
-			args:{
-				quotation_name: window.doc_info.doctype_name
-			},
+		return erpnext.shopping_cart.copy_items_from_transaction({
+			dt: window.doc_info.doctype,
+			dn: window.doc_info.doctype_name,
 			callback: function(r) {
-				window.location.href = "/cart";
+				if (!r.exc) {
+					window.location.href = "/cart";
+				}
 			}
-		});
+		})
 	});
 }

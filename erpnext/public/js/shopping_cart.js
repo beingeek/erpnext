@@ -191,6 +191,37 @@ $.extend(shopping_cart, {
 		}
 	},
 
+	copy_items_from_transaction: function(opts) {
+		if (!opts || !opts.dt || !opts.dn) {
+			return;
+		}
+
+		if (!shopping_cart.in_update && !shopping_cart.ignore_update && shopping_cart.check_if_logged_in()) {
+			shopping_cart.in_update = true;
+			return frappe.call({
+				type: "POST",
+				method: "erpnext.shopping_cart.cart.copy_items_from_transaction",
+				freeze: opts.freeze || 1,
+				args: {
+					dt: opts.dt,
+					dn: opts.dn,
+					with_items: opts.with_items || 0,
+				},
+				callback: function (r) {
+					shopping_cart.update_cart_callback(r, opts);
+					if (opts.callback) {
+						opts.callback(r);
+					}
+				},
+				always: function() {
+					shopping_cart.in_update = false;
+					if (opts.always)
+						opts.always();
+				}
+			});
+		}
+	},
+
 	set_cart_count: function() {
 		var $cart = $('.cart-icon');
 		var $badge = $cart.find("#cart-count");

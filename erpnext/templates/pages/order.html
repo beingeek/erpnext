@@ -14,9 +14,12 @@
 
 {% block header_actions %}
 <a class='btn btn-xs btn-default' href='/printview?doctype={{ doc.doctype}}&name={{ doc.name }}&format={{ print_format }}' target="_blank" rel="noopener noreferrer">{{ _("Print") }}</a>
+{% if can_copy_items %}
+<a class="btn btn-xs btn-default btn-duplicate-items" type="button">{{ _("Reorder Items") }}</a>
+{% endif %}
 {% if doc.doctype == "Quotation" %}
 	{% if doc.docstatus == 0 %}
-		<a class='btn btn-xs btn-default' href='/cart?name={{ doc.name }}'>{{ _("Edit") }}</a>
+		<a class='btn btn-xs btn-primary' href='/cart?name={{ doc.name }}'>{{ _("Edit") }}</a>
 	{% endif %}
 {% endif %}
 {% endblock %}
@@ -255,19 +258,10 @@
 	<hr><p>{{ doc.terms }}</p>
 </div>
 {% endif %}
-{% if doc.doctype == 'Quotation' %}
-{% if doc.docstatus == 1 or (doc.docstatus == 0 and doc.confirmed_by_customer) %}
-<p class="text-right">
-	<button class="btn btn-primary btn-duplicate-items btn-sm"
-					type="button">
-					{{ _("Duplicate Order") }}</button>
-</p>
-{% endif %}
-{% endif %}
 {% endblock %}
 
 {% block script %}
-	<script> {% include "templates/pages/order.js" %} </script>
+	<script>{% include "templates/pages/order.js" %}</script>
 	<script>{% include "templates/includes/zoom.js" %}</script>
 	<script>
 		window.doc_info = {

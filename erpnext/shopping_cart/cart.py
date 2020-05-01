@@ -236,7 +236,10 @@ def _get_cart_quotation(party=None, name=None):
 	
 	if qdoc:
 		if qdoc.docstatus != 0:
-			frappe.throw(_("Invalid Cart"), frappe.DoesNotExistError)
+			frappe.throw(_("Invalid Cart"), frappe.PermissionError)
+
+		if name and not frappe.has_website_permission(qdoc):
+			frappe.throw(_("Not Permitted"), frappe.PermissionError)
 
 		return qdoc
 	else:
@@ -581,3 +584,30 @@ def add_item(item_code, with_items=False, name=None):
 		quotation.append("items", {"item_code": item_code, "qty": 1})
 
 	return update_cart(quotation, with_items)
+
+
+def can_copy_items(doc):
+	if doc.doctype == "Quotation":
+		return doc.docstatus == 1 or (doc.docstatus == 0 and doc.get('confirmed_by_customer'))
+	elif doc.doctype == "Sales Order":
+		return doc.docstatus < 2
+
+
+@frappe.whitelist()
+def copy_items_from_transaction(dt, dn):
+	meta = frappe.get_meta(dt)
+	if not meta.has_field('items'):
+		frappe.throw(_("Cannot copy items from {0} {1}".format(dt, dn)))
+
+	doc = frappe.get_doc(dt, dn)
+	if not frappe.has_website_permission(doc) or not can_copy_items(doc):
+		frappe.throw(_("Not Permitted"), frappe.PermissionError)
+
+	quotation = _get_cart_quotation()
+	quot_items_list = [d.item_code for d in quotation.items]
+
+	for item in doc.items:
+		if item.item_code not in quot_items_list:
+			quotation.append("items", {"item_code": item.item_code, "qty": 0})
+
+	return update_cart(quotation)

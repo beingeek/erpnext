@@ -6,7 +6,7 @@ import frappe
 
 from frappe import _
 from erpnext.shopping_cart.doctype.shopping_cart_settings.shopping_cart_settings import show_attachments
-from erpnext.shopping_cart.cart import _get_cart_quotation, update_cart
+from erpnext.shopping_cart.cart import can_copy_items
 
 def get_context(context):
 	context.no_cache = 1
@@ -15,6 +15,7 @@ def get_context(context):
 
 	add_linked_documents(context)
 	decorate_doc(context.doc)
+	context.can_copy_items = can_copy_items(context.doc)
 
 	if hasattr(context.doc, "set_indicator"):
 		context.doc.set_indicator()
@@ -80,15 +81,3 @@ def get_attachments(dt, dn):
 	return frappe.get_all("File",
 		fields=["name", "file_name", "file_url", "is_private"],
 		filters={"attached_to_name": dn, "attached_to_doctype": dt, "is_private": 0})
-
-@frappe.whitelist()
-def duplicate_purchase_order(quotation_name):
-	doc = frappe.get_doc("Quotation", quotation_name)
-	quotation = _get_cart_quotation()
-	quot_items_list = [d.item_code for d in quotation.items]
-
-	for item in doc.items:
-		if item.item_code not in quot_items_list:
-			quotation.append("items", {"item_code": item.item_code, "qty": 1})
-
-	return update_cart(quotation)
