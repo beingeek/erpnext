@@ -18,7 +18,7 @@ class WebsitePriceListMissingError(frappe.ValidationError):
 	pass
 
 cart_quotation_fields = ['delivery_date']
-cart_party_fields = ['customer_name','credit_limit']
+cart_party_fields = ['customer_name', 'credit_limit']
 
 def set_cart_count(quotation=None):
 	if cint(frappe.db.get_singles_value("Shopping Cart Settings", "enabled")):
@@ -51,7 +51,6 @@ def get_cart_quotation(doc=None, name=None):
 
 	return {
 		"title": "Place Order",
-		"customer_balance": get_balance,
 		"doc": decorate_quotation_doc(doc),
 		"party": party,
 		"shipping_addresses": [{"name": address.name, "display": address.display}
@@ -61,6 +60,7 @@ def get_cart_quotation(doc=None, name=None):
 		"shipping_rules": get_applicable_shipping_rules(party),
 		"quotation_fields": cart_quotation_fields,
 		"party_fields": cart_party_fields,
+		"customer_balance": get_balance,
 		"default_item_groups_allow": default_item_groups_allow(),
 		"cart_warnings": doc.cart_warnings or [],
 		"cart_errors": doc.cart_errors or [],
