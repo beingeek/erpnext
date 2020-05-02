@@ -25,8 +25,8 @@ $.extend(shopping_cart, {
 					onchange: shopping_cart.handle_change_delivery_date
 				},
 				{
-					label: __('Customer Name'),
-					fieldname: 'customer_name',
+					label: __('Day'),
+					fieldname: 'day',
 					fieldtype: 'Data',
 					read_only: 1
 				},
@@ -34,10 +34,19 @@ $.extend(shopping_cart, {
 					fieldtype: 'Column Break'
 				},
 				{
+					label: __('Customer Name'),
+					fieldname: 'customer_name',
+					fieldtype: 'Data',
+					read_only: 1
+				},
+				{
 					label: __('Credit Limit'),
 					fieldname: 'credit_limit',
 					fieldtype: 'Currency',
 					read_only: 1
+				},
+				{
+					fieldtype: 'Column Break'
 				},
 				{	
 					label: __('Balance Amount'),
@@ -145,6 +154,8 @@ $.extend(shopping_cart, {
 
 	handle_change_delivery_date: function() {
 		var delivery_date = shopping_cart.field_group.get_value('delivery_date') || "";
+		var date = new Date(delivery_date);
+		var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
 		shopping_cart.update_cart_field({
 			fieldname: 'delivery_date',
 			value: delivery_date,
@@ -152,6 +163,7 @@ $.extend(shopping_cart, {
 			name: shopping_cart.quotation_name,
 			callback: function (r) {
 				shopping_cart.cart_page_update_callback(r);
+				// shopping_cart.field_group.set_value("day", weekday[date.getDay()]);
 			},
 			freeze: 1
 		});
