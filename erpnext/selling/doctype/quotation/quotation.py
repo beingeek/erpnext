@@ -101,6 +101,22 @@ class Quotation(SellingController):
 		if self.confirmed_by_customer and not self.delivery_date:
 			frappe.throw(_("Delivery Date is mandatory"))
 
+		self.validate_delivery_date_holiday(raise_exception)
+
+	def validate_delivery_date_holiday(self, raise_exception):
+		if self.delivery_date:
+			holiday_list_name = frappe.get_cached_value("Company", self.company, "default_holiday_list")
+			if holiday_list_name:
+				holiday_list = frappe.get_cached_doc("Holiday List", holiday_list_name)
+				holiday_row = holiday_list.get('holidays', filters={'holiday_date': getdate(self.delivery_date)})
+				if holiday_row:
+					holiday_row = holiday_row[0]
+					message = _("Delivery Date <b>{0}</b> cannot be selected because it is a <b>{1}</b> holiday").format(
+						formatdate(self.delivery_date, "EEE, MMMM d, Y"), holiday_row.description)
+					frappe.msgprint(message, raise_exception=raise_exception, indicator="red")
+					self.cart_errors.append(message)
+					self.delivery_date = None
+
 	def has_sales_order(self):
 		return frappe.db.get_value("Sales Order Item", {"prevdoc_docname": self.name, "docstatus": 1})
 
