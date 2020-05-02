@@ -21,13 +21,11 @@ product.create_fields = function() {
         let $this = $(this);
         values[$this.data('fieldname')] = $this.text();
     });
-    $.each(values, function (k, v) {
-        frappe.run_serially([
-            () => product.ignore_update = true,
-            () => product.field_group.set_value(k, v),
-            () => product.ignore_update = false
-        ]);
-    });
+    frappe.run_serially([
+        () => shopping_cart.ignore_update = true,
+        () => product.field_group.set_values(values),
+        () => shopping_cart.ignore_update = false
+    ]);
 }
 
 product.bind_change_qty = function() {
@@ -57,10 +55,6 @@ product.bind_change_uom = function() {
 }
 
 product.handle_delivery_date_changed = function() {
-    if (product.ignore_update) {
-        return;
-    }
-
     var delivery_date = product.field_group.get_value('delivery_date') || "";
     shopping_cart.update_cart_field({
         fieldname: 'delivery_date',
@@ -82,6 +76,14 @@ product.handle_item_changed = function(r, opts) {
 
 product.handle_qoutation_changed = function() {
     product.get_items_table();
+}
+
+product.handle_cart_changed = function(r) {
+    frappe.run_serially([
+        () => shopping_cart.ignore_update = true,
+        () => product.field_group.set_values(r.message.quotation_fields || {}),
+        () => shopping_cart.ignore_update = false
+    ]);
 }
 
 product.get_item_row = function(item_code, uom) {
@@ -121,6 +123,7 @@ frappe.ready(function() {
 
     shopping_cart.cart_update_item_callbacks.push(product.handle_item_changed);
     shopping_cart.cart_update_doc_callbacks.push(product.handle_qoutation_changed);
+    shopping_cart.cart_update_callbacks.push(product.handle_cart_changed);
 
     product.create_fields();
     product.bind_change_qty();

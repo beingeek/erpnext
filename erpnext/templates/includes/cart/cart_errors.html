@@ -1,8 +1,8 @@
-{% if doc.cart_errors %}
+{% if cart_errors %}
 <div class="alert alert-danger">
     <b>Error:</b>
     <ul>
-    {% for d in doc.cart_errors %}
+    {% for d in cart_errors %}
         <li>{{ d }}</li>
     {% endfor %}
     </ul>

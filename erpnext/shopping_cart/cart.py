@@ -61,7 +61,9 @@ def get_cart_quotation(doc=None, name=None):
 		"shipping_rules": get_applicable_shipping_rules(party),
 		"quotation_fields": cart_quotation_fields,
 		"party_fields": cart_party_fields,
-		"default_item_groups_allow": default_item_groups_allow()
+		"default_item_groups_allow": default_item_groups_allow(),
+		"cart_warnings": doc.cart_warnings or [],
+		"cart_errors": doc.cart_errors or [],
 	}
 
 @frappe.whitelist()

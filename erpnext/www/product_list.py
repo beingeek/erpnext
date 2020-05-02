@@ -36,6 +36,12 @@ def get_context(context):
 	context.update(process_item_data(item_data))
 	context.item_group_map = group_by_item_group(item_data, stock_settings)
 
+	if context.quotation:
+		context.quotation.get_cart_warnings()
+		context.quotation.get_cart_errors()
+		context.cart_warnings = context.quotation.cart_warnings or []
+		context.cart_errors = context.quotation.cart_errors or []
+
 
 @frappe.whitelist()
 def get_items_table(item_group):

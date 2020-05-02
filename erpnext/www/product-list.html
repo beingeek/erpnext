@@ -58,6 +58,8 @@ moment.defaultFormat = frappe.moment_date_format;
     <div class="product-field-data hidden" data-fieldname="delivery_date">{{ delivery_date }}</div>
 </div>
 
+<div class="cart-error">{% include "templates/includes/cart/cart_errors.html" %}</div>
+<div class="cart-warning">{% include "templates/includes/cart/cart_warnings.html" %}</div>
 {% if price_list_note %}<div class="alert alert-info">{{ price_list_note }}</div>{% endif %}
 
 <div class="products-wrapper">

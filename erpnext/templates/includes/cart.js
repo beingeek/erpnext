@@ -54,13 +54,11 @@ $.extend(shopping_cart, {
 			let $this = $(this);
 			values[$this.data('fieldname')] = $this.text();
 		});
-		$.each(values, function (k, v) {
-			frappe.run_serially([
-				() => shopping_cart.ignore_update = true,
-				() => shopping_cart.field_group.set_value(k, v),
-				() => shopping_cart.ignore_update = false
-			]);
-		});
+		frappe.run_serially([
+			() => shopping_cart.ignore_update = true,
+			() => shopping_cart.field_group.set_values(values),
+			() => shopping_cart.ignore_update = false
+		]);
 	},
 
 	bind_events: function () {
@@ -125,13 +123,11 @@ $.extend(shopping_cart, {
 			shopping_cart.toggle_cart_count_buttons();
 			shopping_cart.cart_indicator(r.message.name);
 
-			$.each(r.message.quotation_fields || {}, function (k, v) {
-				frappe.run_serially([
-					() => shopping_cart.ignore_update = true,
-					() => shopping_cart.field_group.set_value(k, v),
-					() => shopping_cart.ignore_update = false,
-				]);
-			});
+			frappe.run_serially([
+				() => shopping_cart.ignore_update = true,
+				() => shopping_cart.field_group.set_values(r.message.quotation_fields || {}),
+				() => shopping_cart.ignore_update = false
+			]);
 		}
 	},
 
