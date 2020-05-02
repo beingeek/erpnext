@@ -47,8 +47,7 @@ def get_cart_quotation(doc=None, name=None):
 	if not doc.customer_address and addresses:
 		update_cart_address("customer_address", addresses[0].name)
 
-	doc.get_cart_warnings()
-	doc.get_cart_errors()
+	doc.get_cart_messages()
 
 	return {
 		"title": "Place Order",
@@ -129,9 +128,9 @@ def update_cart_field(fieldname, value, with_items=False, name=None):
 	quotation.set(fieldname, value)
 	return update_cart(quotation, with_items)
 
-def update_cart(quotation, with_items=False):
+def update_cart(quotation, with_items=False, ignore_mandatory=True):
 	apply_cart_settings(quotation=quotation)
-	quotation.flags.ignore_permissions = True
+	quotation.flags.ignore_permissions = ignore_mandatory
 	quotation.flags.ignore_mandatory = True
 	quotation.payment_schedule = []
 	quotation.save()
@@ -246,8 +245,6 @@ def _get_cart_quotation(party=None, name=None):
 
 		if name and not frappe.has_website_permission(qdoc):
 			frappe.throw(_("Not Permitted"), frappe.PermissionError)
-
-		return qdoc
 	else:
 		qdoc = frappe.get_doc({
 			"doctype": "Quotation",
@@ -268,7 +265,8 @@ def _get_cart_quotation(party=None, name=None):
 		qdoc.run_method("set_missing_values")
 		apply_cart_settings(party, qdoc)
 
-		return qdoc
+	qdoc.flags.cart_quotation = True
+	return qdoc
 
 def update_party(fullname, company_name=None, mobile_no=None, phone=None):
 	party = get_party()
