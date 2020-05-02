@@ -1,13 +1,13 @@
 {% extends "templates/web.html" %}
 
-{% block title %} {{ _("Shopping Cart") }} {% endblock %}
+{% block title %} {{ _("Place Order") }} {% endblock %}
 
 {% block breadcrumbs %}
 	{% include "templates/includes/breadcrumbs.html" %}
 {% endblock %}
 
 {% block header %}
-<h2>{{ _("My Cart") }}</h2>
+<h2>{{ _("Place Order") }}</h2>
 <div class="cart-indicator" style='margin-top: -3px;'>
 	{% if doc.docstatus == 0 %}
 	<a href="" class="margin-top indicator-link" data-quotation-name="{{doc.name or ''}}">

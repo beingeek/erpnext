@@ -51,6 +51,7 @@ def get_cart_quotation(doc=None, name=None):
 	doc.get_cart_errors()
 
 	return {
+		"title": "Place Order",
 		"customer_balance": get_balance,
 		"doc": decorate_quotation_doc(doc),
 		"party": party,
@@ -241,7 +242,7 @@ def _get_cart_quotation(party=None, name=None):
 	
 	if qdoc:
 		if qdoc.docstatus != 0:
-			frappe.throw(_("Invalid Cart"), frappe.PermissionError)
+			frappe.throw(_("Invalid Order"), frappe.PermissionError)
 
 		if name and not frappe.has_website_permission(qdoc):
 			frappe.throw(_("Not Permitted"), frappe.PermissionError)

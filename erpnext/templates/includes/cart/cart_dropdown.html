@@ -1,7 +1,7 @@
 <div class="cart-dropdown-container">
 	<div class="row checkout-btn">
 		<div class="col-sm-12 col-xs-12">
-			<a href="/cart" class="btn btn-block btn-primary">{{ _("Cart Page / Checkout") }}</a>
+			<a href="/cart" class="btn btn-block btn-primary">{{ _("Order Page / Checkout") }}</a>
 		</div>
 	</div>
 	<div class="cart-error">{% include "templates/includes/cart/cart_errors.html" %}</div>
@@ -22,6 +22,6 @@
 		</div>
 	</div>
 	{% else %}
-	<p>{{ _("Cart is Empty") }}</p>
+	<p>{{ _("Order is Empty") }}</p>
 	{% endif %}
 </div>
