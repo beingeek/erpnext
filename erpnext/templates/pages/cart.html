@@ -79,9 +79,6 @@ moment.defaultFormat = frappe.moment_date_format;
 		<div id="cart-fields">
 			{% for f in quotation_fields %}
 			<div class="cart-field-data hidden" data-fieldname="{{ f }}">{{ doc.get(f) or '' }}</div>
-			{% if f == 'delivery_date' %}
-			<div class="cart-field-data hidden" data-fieldname="day">{{ doc.get(f).strftime('%A') or '' }}</div>
-			{% endif %}
 			{% endfor %}
 			{% for p in party_fields %}
 			<div class="cart-field-data hidden" data-fieldname="{{ p }}">{{ party.get(p) or '' }}</div>
