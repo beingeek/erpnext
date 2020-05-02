@@ -49,14 +49,6 @@ moment.defaultFormat = frappe.moment_date_format;
 
 {% block style %}
 <style>
-.form-control:focus {
-    outline: 0 !important;
-    box-shadow: none;
-}
-.form-section {
-	margin: 0;
-	padding: 0;
-}
 .cart-item-image {
 	width: 100% !important;
 	height: 50px !important;
@@ -72,13 +64,9 @@ moment.defaultFormat = frappe.moment_date_format;
 
 {% block header_actions %}
 {% if doc.confirmed_by_customer %}
-<button class="btn btn-cancel-order btn-sm"
-    type="button">
-    {{ _("Cancel Order") }}</button>
+<button class="btn btn-cancel-order btn-sm" type="button">{{ _("Cancel Order") }}</button>
 {% else %}
-<button class="btn btn-primary btn-place-order btn-sm"
-    type="button">
-    {{ _("Place Order") }}</button>
+<button class="btn btn-primary btn-place-order btn-sm" type="button">{{ _("Place Order") }}</button>
 {% endif %}
 {% endblock %}
 
