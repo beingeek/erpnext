@@ -12,7 +12,6 @@ frappe.ready(function() {
 	shopping_cart.quotation_name = frappe.utils.get_url_arg("name");
 	shopping_cart.create_fields();
 	shopping_cart.bind_events();
-	shopping_cart.update_cart_indicator();
 	shopping_cart.toggle_cart_count_buttons();
 	window.zoom_item_image(".cart-items",".cart-product-image", "data-item-image");
 });
@@ -90,7 +89,6 @@ $.extend(shopping_cart, {
 			}
 
 			shopping_cart.toggle_cart_count_buttons();
-			shopping_cart.update_cart_indicator(r.message.name);
 
 			frappe.run_serially([
 				() => shopping_cart.ignore_update = true,
@@ -106,18 +104,6 @@ $.extend(shopping_cart, {
 			$(".btn-place-order").show();
 		} else {
 			$(".btn-place-order").hide();
-		}
-	},
-
-	update_cart_indicator: function(name) {
-		var quotation_name = name || $('.indicator-link').attr('data-quotation-name');
-		if (quotation_name && quotation_name !== "None") {
-			var a = document.getElementsByClassName("indicator-link")[0];
-			a.href = "/purchase-orders/" + encodeURIComponent(quotation_name);
-			$('.quotation-name').html("("+quotation_name+")");
-			$('.cart-indicator').show();
-		} else {
-			$('.cart-indicator').hide();
 		}
 	},
 
@@ -183,7 +169,6 @@ $.extend(shopping_cart, {
 					},
 					callback: function(r) {
 						if(!r.exc) {
-							shopping_cart.update_cart_indicator(r.message.name);
 							$(".cart-tax-items").html(r.message.taxes);
 						}
 					}

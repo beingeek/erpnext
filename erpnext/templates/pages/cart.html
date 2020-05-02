@@ -7,17 +7,7 @@
 {% endblock %}
 
 {% block header %}
-<h2>{{ _("Place Order") }}</h2>
-<div class="cart-indicator">
-	{% if doc.docstatus == 0 %}
-	<a href="" class="margin-top indicator-link" data-quotation-name="{{doc.name or ''}}">
-		<span class="indicator {{ doc.indicator_color }}">
-			{{ _(doc.get('indicator_title')) }}
-			<span class="quotation-name"></span>
-		</span>
-	</a>
-	{% endif %}
-</div>
+<h2 style="margin-bottom: 0">{{ _("Place Order") }} <div class="cart-indicator">{% include "templates/includes/cart/cart_indicator.html" %}</div></h2>
 {% endblock %}
 
 {% block script %}

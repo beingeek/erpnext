@@ -25,18 +25,18 @@ class Quotation(SellingController):
 				self.indicator_color = 'green'
 				self.indicator_title = 'Confirmed'
 			else:
-				self.indicator_color = 'orange'
-				self.indicator_title = 'Received by Sundine'
+				self.indicator_color = 'yellow'
+				self.indicator_title = 'Received by {0}'.format(self.company)
 
 			if self.valid_till and getdate(self.valid_till) < getdate(nowdate()):
 				self.indicator_color = 'darkgrey'
 				self.indicator_title = 'Expired'
 		else:
 			if self.confirmed_by_customer:
-				self.indicator_color = 'red'
-				self.indicator_title = 'Sent to Sundine'
+				self.indicator_color = 'orange'
+				self.indicator_title = 'Sent to {0}'.format(self.company.split(" ")[0])
 			else:
-				self.indicator_color = 'yellow'
+				self.indicator_color = 'red'
 				self.indicator_title = 'Draft'
 
 

@@ -143,12 +143,14 @@ def update_cart(quotation, with_items=False, ignore_mandatory=True):
 		qtn_fields_dict[f] = context['doc'].get(f)
 	for f in cart_party_fields:
 		qtn_fields_dict[f] = context['party'].get(f)
+	qtn_fields_dict['customer_balance'] = context.get('customer_balance')
 
 	out = {
 		'name': quotation.name,
 		'shopping_cart_menu': get_shopping_cart_menu(context),
 		'warnings': frappe.render_template("templates/includes/cart/cart_warnings.html", context),
 		'errors': frappe.render_template("templates/includes/cart/cart_errors.html", context),
+		'indicator': frappe.render_template("templates/includes/cart/cart_indicator.html", context),
 		'quotation_fields': qtn_fields_dict
 	}
 	if cint(with_items):
