@@ -17,7 +17,7 @@ from erpnext.accounts.utils import get_balance_on
 class WebsitePriceListMissingError(frappe.ValidationError):
 	pass
 
-cart_quotation_fields = ['delivery_date']
+cart_quotation_fields = ['delivery_date', 'contact_display']
 cart_party_fields = ['customer_name', 'credit_limit']
 
 def set_cart_count(quotation=None):
