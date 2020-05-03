@@ -51,7 +51,7 @@ def get_cart_quotation(doc=None, name=None):
 	doc.get_cart_messages()
 
 	return {
-		"title": "Place Order",
+		"title": _("Order Cart"),
 		"doc": decorate_quotation_doc(doc),
 		"party": party,
 		"quotation_fields": cart_quotation_fields,

@@ -1,13 +1,13 @@
 {% extends "templates/web.html" %}
 
-{% block title %} {{ _("Place Order") }} {% endblock %}
+{% block title %} {{ title }} {% endblock %}
 
 {% block breadcrumbs %}
 	{% include "templates/includes/breadcrumbs.html" %}
 {% endblock %}
 
 {% block header %}
-<h2 style="margin-bottom: 0">{{ _("Place Order") }} <div class="cart-indicator">{% include "templates/includes/cart/cart_indicator.html" %}</div></h2>
+<h2 style="margin-bottom: 0">{{ title }} <div class="cart-indicator">{% include "templates/includes/cart/cart_indicator.html" %}</div></h2>
 {% endblock %}
 
 {% block script %}
