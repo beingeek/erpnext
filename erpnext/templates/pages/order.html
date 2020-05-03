@@ -9,7 +9,12 @@
 {% block title %}{{ doc.name }}{% endblock %}
 
 {% block header %}
-	<h1>{{ doc.name }}</h1>
+	<h1>
+		{{ doc.name }}
+		<span class="indicator {{ doc.indicator_color or ("blue" if doc.docstatus==1 else "darkgrey") }}">
+			{{ _(doc.get('indicator_title')) or _(doc.status) or _("Submitted") }}
+		</span>
+	</h1>
 {% endblock %}
 
 {% block header_actions %}
@@ -41,9 +46,6 @@
 {% block page_content %}
 <div class="row transaction-subheading">
 	<div class="col-xs-6">
-		<span class="indicator {{ doc.indicator_color or ("blue" if doc.docstatus==1 else "darkgrey") }}">
-			{{ _(doc.get('indicator_title')) or _(doc.status) or _("Submitted") }}
-		</span>
 	</div>
 	<div class="col-xs-6 text-muted text-right small">
 		{{ frappe.utils.global_date_format(doc.transaction_date) }}
@@ -85,7 +87,15 @@
 
 <div class="row" style="margin-top: 15px;">
 	<div class="col-sm-6">
-		<p class='small'>
+		<p class="small">
+			<b>{{_("Delivery Date")}}</b>
+			<br>
+			{{ frappe.format_date(doc.delivery_date, "EEE, MMMM d, Y") if doc.delivery_date else "Not Specified" }}
+
+		</p>	
+	</div>
+	<div class="col-sm-6">
+		<p class='small text-right'>
 		{% if doc.doctype == 'Supplier Quotation' %}
 			<b>{{ doc.supplier_name}}</b>
 		{% else %}
@@ -96,14 +106,6 @@
 			{{ doc.contact_display }}
 		{% endif %}
 		</p>
-	</div>
-	<div class="col-sm-6">
-		<p class="small text-right" style="float: right;">
-			<b>{{_("Delivery Date")}}</b>
-			<br>
-			{{ frappe.format_date(doc.delivery_date, "EEE, MMMM d, Y") if doc.delivery_date else "Not Specified" }}
-
-		</p>	
 	</div>
 </div>
 {% if doc._header %}
