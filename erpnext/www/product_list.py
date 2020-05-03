@@ -37,9 +37,8 @@ def get_context(context):
 	context.item_group_map = group_by_item_group(item_data, stock_settings)
 
 	if context.quotation:
+		context.doc = context.quotation
 		context.quotation.get_cart_messages()
-		context.cart_errors = context.quotation.cart_errors or []
-		context.cart_warnings = context.quotation.cart_warnings or []
 
 
 @frappe.whitelist()

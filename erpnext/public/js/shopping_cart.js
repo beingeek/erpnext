@@ -92,6 +92,7 @@ $.extend(shopping_cart, {
 				shopping_cart.set_shopping_cart_menu(r.message.shopping_cart_menu);
 			}
 
+			$(".cart-indicator").html(r.message.indicator || "");
 			shopping_cart.set_cart_messages(r);
 
 			$.each(shopping_cart.cart_update_callbacks || [], (i, callback) => callback(r, opts));
@@ -104,7 +105,6 @@ $.extend(shopping_cart, {
 	},
 
 	set_cart_messages: function(r) {
-		$(".cart-indicator").html(r.message.indicator || "");
 		$(".cart-warning").html(r.message.warnings || "");
 		$(".cart-error").html(r.message.errors || "");
 	},
