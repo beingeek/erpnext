@@ -166,9 +166,8 @@ $.extend(shopping_cart, {
 
 	set_weekday: function(delivery_date) {
 		if (delivery_date) {
-			var date = new Date(delivery_date);
-			var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-			shopping_cart.field_group.set_value("day", weekday[date.getDay()]);
+			var date_obj = moment(delivery_date);
+			shopping_cart.field_group.set_value("day", date_obj.format("dddd"));
 		} else {
 			shopping_cart.field_group.set_value("day", "");
 		}
