@@ -36,7 +36,8 @@ def get_cart_quotation(doc=None, name=None):
 	if not doc:
 		quotation = _get_cart_quotation(party, name)
 		doc = quotation
-		set_cart_count(quotation)
+		if not doc.confirmed_by_customer:
+			set_cart_count(quotation)
 
 	if hasattr(doc, "set_indicator"):
 		doc.set_indicator()
@@ -152,8 +153,8 @@ def update_cart(quotation, with_items=False, ignore_mandatory=True):
 	quotation.flags.ignore_mandatory = ignore_mandatory
 	quotation.payment_schedule = []
 	quotation.save()
-
-	set_cart_count(quotation)
+	if not quotation.confirmed_by_customer:
+		set_cart_count(quotation)
 
 	context = get_cart_quotation(quotation)
 	qtn_fields_dict = {}
