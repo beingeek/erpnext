@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.mapper import get_mapped_doc
-from frappe.utils import flt, nowdate, getdate, formatdate
+from frappe.utils import flt, nowdate, getdate, formatdate, today
 from frappe import _
 
 from erpnext.controllers.selling_controller import SellingController
@@ -25,22 +25,26 @@ class Quotation(SellingController):
 				self.indicator_color = 'green'
 				self.indicator_title = 'Confirmed'
 			else:
-				self.indicator_color = 'orange'
-				self.indicator_title = 'Received by Sundine'
+				self.indicator_color = 'yellow'
+				self.indicator_title = 'Received by {0}'.format(self.company)
 
 			if self.valid_till and getdate(self.valid_till) < getdate(nowdate()):
 				self.indicator_color = 'darkgrey'
 				self.indicator_title = 'Expired'
 		else:
 			if self.confirmed_by_customer:
-				self.indicator_color = 'red'
-				self.indicator_title = 'Sent to Sundine'
+				self.indicator_color = 'orange'
+				self.indicator_title = 'Sent to {0}'.format(self.company.split(" ")[0])
 			else:
-				self.indicator_color = 'yellow'
+				self.indicator_color = 'red'
 				self.indicator_title = 'Draft'
 
 
 	def validate(self):
+		if self.flags.cart_quotation:
+			self.validate_delivery_date(lower_limit=self.transaction_date, throw=False, set_null=True)
+			self.validate_delivery_date_holiday(throw=False, set_null=True)
+
 		super(Quotation, self).validate()
 		self.set_status()
 		self.update_opportunity()
@@ -48,9 +52,12 @@ class Quotation(SellingController):
 		self.validate_uom_is_integer("stock_uom", "qty")
 		self.validate_quotation_to()
 		self.validate_valid_till()
-		self.validate_delivery_date()
 		if self.items:
 			self.with_items = 1
+
+	def get_cart_messages(self):
+		self.get_cart_errors()
+		self.get_cart_warnings()
 
 	def get_cart_warnings(self):
 		if self.delivery_date:
@@ -77,33 +84,43 @@ class Quotation(SellingController):
 					.format(formatdate(self.delivery_date, "EEE, MMMM d, Y"), ", ".join(links)))
 
 	def get_cart_errors(self):
-		pass
-		# if not self.delivery_date:
-		# 	self.cart_errors.append(_("Delivery Date is mandatory"))
+		self.validate_delivery_date(lower_limit=today(), throw=False, set_null=False)
+		self.validate_delivery_date_holiday(throw=False, set_null=False)
+
+		if self.delivery_date:
+			if not self.items:
+				self.cart_errors.append(_("Please add items to order"))
+			elif not self.total_qty:
+				self.cart_errors.append(_("Please set item quantities"))
+
+			if not self.customer_address:
+				self.cart_errors.append(_("Please select address"))
+		else:
+			self.cart_errors.append(_("Please select Delivery Date"))
+
+	def remove_zero_qty_items(self):
+		to_remove = self.get('items', filters={"qty": 0})
+		for d in to_remove:
+			self.remove(d)
 			
 	def validate_valid_till(self):
 		if self.valid_till and self.valid_till < self.transaction_date:
 			frappe.throw(_("Valid till date cannot be before transaction date"))
 
-	def validate_delivery_date(self):
-		if self.order_type not in ['Sales', 'Shopping Cart']:
-			return
-
-		raise_exception = self._action == "Submit" or self.confirmed_by_customer
-
-		if self.delivery_date and getdate(self.delivery_date) < getdate(self.transaction_date):
+	def validate_delivery_date(self, lower_limit, throw, set_null):
+		if self.delivery_date and getdate(self.delivery_date) < getdate(lower_limit):
 			message = _("Delivery Date <b>{0}</b> cannot be before Order Date").format(
 				formatdate(self.delivery_date, "EEE, MMMM d, Y"))
-			frappe.msgprint(message, raise_exception=raise_exception, indicator="red")
+
+			if throw:
+				frappe.throw(message)
+
 			self.cart_errors.append(message)
-			self.delivery_date = None
 
-		if self.confirmed_by_customer and not self.delivery_date:
-			frappe.throw(_("Delivery Date is mandatory"))
+			if set_null:
+				self.delivery_date = None
 
-		self.validate_delivery_date_holiday(raise_exception)
-
-	def validate_delivery_date_holiday(self, raise_exception):
+	def validate_delivery_date_holiday(self, throw, set_null):
 		if self.delivery_date:
 			holiday_list_name = frappe.get_cached_value("Company", self.company, "default_holiday_list")
 			if holiday_list_name:
@@ -111,11 +128,16 @@ class Quotation(SellingController):
 				holiday_row = holiday_list.get('holidays', filters={'holiday_date': getdate(self.delivery_date)})
 				if holiday_row:
 					holiday_row = holiday_row[0]
-					message = _("Delivery Date <b>{0}</b> cannot be selected because it is a <b>{1}</b> holiday").format(
+					message = _("Delivery Date <b>{0}</b> cannot be selected due to <b>{1}</b> holiday").format(
 						formatdate(self.delivery_date, "EEE, MMMM d, Y"), holiday_row.description)
-					frappe.msgprint(message, raise_exception=raise_exception, indicator="red")
+
+					if throw:
+						frappe.throw(message)
+
 					self.cart_errors.append(message)
-					self.delivery_date = None
+
+					if set_null:
+						self.delivery_date = None
 
 	def has_sales_order(self):
 		return frappe.db.get_value("Sales Order Item", {"prevdoc_docname": self.name, "docstatus": 1})
@@ -163,6 +185,9 @@ class Quotation(SellingController):
 		# Check for Approving Authority
 		frappe.get_doc('Authorization Control').validate_approving_authority(self.doctype,
 			self.company, self.base_grand_total, self)
+
+		self.validate_delivery_date(lower_limit=self.transaction_date, throw=True, set_null=False)
+		self.validate_delivery_date_holiday(throw=True, set_null=False)
 
 		#update enquiry status
 		self.update_opportunity()

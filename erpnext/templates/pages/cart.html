@@ -1,23 +1,13 @@
 {% extends "templates/web.html" %}
 
-{% block title %} {{ _("Shopping Cart") }} {% endblock %}
+{% block title %} {{ _("Place Order") }} {% endblock %}
 
 {% block breadcrumbs %}
 	{% include "templates/includes/breadcrumbs.html" %}
 {% endblock %}
 
 {% block header %}
-<h2>{{ _("My Cart") }}</h2>
-<div class="cart-indicator" style='margin-top: -3px;'>
-	{% if doc.docstatus == 0 %}
-	<a href="" class="margin-top indicator-link" data-quotation-name="{{doc.name or ''}}">
-		<span class="indicator {{ doc.indicator_color }}">
-			{{ _(doc.get('indicator_title')) }}
-			<span class="quotation-name"></span>
-		</span>
-	</a>
-	{% endif %}
-</div>
+<h2 style="margin-bottom: 0">{{ _("Place Order") }} <div class="cart-indicator">{% include "templates/includes/cart/cart_indicator.html" %}</div></h2>
 {% endblock %}
 
 {% block script %}
@@ -45,6 +35,9 @@ $.extend(frappe, {
 frappe.sys_defaults = frappe.boot.sysdefaults;
 moment.defaultFormat = frappe.moment_date_format;
 </script>
+<script>
+shopping_cart.confirmed_by_customer = {{ doc.confirmed_by_customer|int }};
+</script>
 {% endblock %}
 
 {% block style %}
@@ -63,11 +56,12 @@ moment.defaultFormat = frappe.moment_date_format;
 {% endblock %}
 
 {% block header_actions %}
-{% if doc.confirmed_by_customer %}
-<button class="btn btn-cancel-order btn-sm" type="button">{{ _("Cancel Order") }}</button>
-{% else %}
-<button class="btn btn-primary btn-place-order btn-sm" type="button">{{ _("Place Order") }}</button>
-{% endif %}
+<button class="btn btn-cancel-order btn-sm" type="button" style="display: none">
+	{{ _("Cancel Order") }}
+</button>
+<button class="btn btn-primary btn-place-order btn-sm" type="button" style="display: none">
+	{{ _("Place Order") }}
+</button>
 {% endblock %}
 
 {% block page_content %}
@@ -75,29 +69,28 @@ moment.defaultFormat = frappe.moment_date_format;
 {% from "templates/includes/macros.html" import item_name_and_description %}
 
 <div class="cart-container">
-	<div id="cart-container">
-		<div id="cart-fields">
-			{% for f in quotation_fields %}
-			<div class="cart-field-data hidden" data-fieldname="{{ f }}">{{ doc.get(f) or '' }}</div>
-			{% endfor %}
-			{% for p in party_fields %}
-			<div class="cart-field-data hidden" data-fieldname="{{ p }}">{{ party.get(p) or '' }}</div>
-			{% endfor %}
-			<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
-		</div>
+	<div id="cart-fields">
+		{% for f in quotation_fields %}
+		<div class="cart-field-data hidden" data-fieldname="{{ f }}">{{ doc.get(f) or '' }}</div>
+		{% endfor %}
+		{% for p in party_fields %}
+		<div class="cart-field-data hidden" data-fieldname="{{ p }}">{{ party.get(p) or '' }}</div>
+		{% endfor %}
+		<div class="cart-field-data hidden" data-fieldname="customer_balance">{{ customer_balance }}</div>
+	</div>
 
-		<div class="cart-error">{% include "templates/includes/cart/cart_errors.html" %}</div>
-		<div class="cart-warning">{% include "templates/includes/cart/cart_warnings.html" %}</div>
-		{% if price_list_note %}<div class="alert alert-info">{{ price_list_note }}</div>{% endif %}
+	<div class="cart-error">{% include "templates/includes/cart/cart_errors.html" %}</div>
+	<div class="cart-warning">{% include "templates/includes/cart/cart_warnings.html" %}</div>
+	{% if price_list_note %}<div class="alert alert-info">{{ price_list_note }}</div>{% endif %}
 
-		<div id="cart-body" {% if not doc.delivery_date %}class="hidden"{% endif %}>
-
+	<div id="cart-body" {% if not doc.delivery_date %}class="hidden"{% endif %}>
 		<div class="cart-addresses">
 		{% include "templates/includes/cart/cart_address.html" %}
 		</div>
+
 		{% for dig in default_item_groups_allow %}
-			<button class="btn btn-default btn-get-default-items btn-sm margin-top" data-item-group="{{ dig.get('name') }}" type="button">
-						Get Default {{ dig.get("name") }}</button>
+		<button class="btn btn-default btn-get-default-items btn-sm margin-top" data-item-group="{{ dig.get('name') }}" type="button">
+					Get Default {{ dig.get("name") }}</button>
 		{% endfor %}
 
 		<div class="table-responsive margin-top">
@@ -121,8 +114,8 @@ moment.defaultFormat = frappe.moment_date_format;
 			</table>
 		</div>
 
-		<button class="btn btn-default btn-add-items btn-sm" type="button">
-					{{ _("Add Item") }}</button>
+		<button class="btn btn-default btn-add-items btn-sm" type="button">{{ _("Add Item") }}</button>
+
 		<!-- taxes -->
 		<div class="row cart-taxes">
 			<div class="col-sm-12 text-right cart-tax-items">
@@ -141,17 +134,13 @@ moment.defaultFormat = frappe.moment_date_format;
 		{% endif %}
 
 		<p class="cart-footer text-right">
-			{% if doc.confirmed_by_customer %}
-			<button class="btn btn-cancel-order btn-sm"
-				type="button">
-				{{ _("Cancel Order") }}</button>
-			{% else %}
-			<button class="btn btn-primary btn-place-order btn-sm"
-				type="button">
-				{{ _("Place Order") }}</button>
-			{% endif %}
+			<button class="btn btn-cancel-order btn-sm" type="button" style="display: none">
+				{{ _("Cancel Order") }}
+			</button>
+			<button class="btn btn-primary btn-place-order btn-sm" type="button" style="display: none">
+				{{ _("Place Order") }}
+			</button>
 		</p>
-		</div>
 	</div>
 </div>
 

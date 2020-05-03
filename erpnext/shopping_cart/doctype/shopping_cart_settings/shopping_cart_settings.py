@@ -60,7 +60,7 @@ class ShoppingCartSettings(Document):
 
 	def validate_tax_rule(self):
 		if not frappe.db.get_value("Tax Rule", {"use_for_shopping_cart" : 1}, "name"):
-			frappe.throw(frappe._("Set Tax Rule for shopping cart"), ShoppingCartSetupError)
+			frappe.throw(frappe._("Set Tax Rule for Order"), ShoppingCartSetupError)
 
 	def get_tax_master(self, billing_territory):
 		tax_master = self.get_name_from_territory(billing_territory, "sales_taxes_and_charges_masters",
