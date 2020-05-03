@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.mapper import get_mapped_doc
-from frappe.utils import flt, nowdate, getdate
+from frappe.utils import flt, nowdate, getdate, formatdate, today
 from frappe import _
 
 from erpnext.controllers.selling_controller import SellingController
@@ -14,28 +14,37 @@ form_grid_templates = {
 }
 
 class Quotation(SellingController):
+	def __setup__(self):
+		super(Quotation, self).__setup__()
+		self.cart_warnings = []
+		self.cart_errors = []
+
 	def set_indicator(self):
 		if self.docstatus==1:
 			if self.status == "Ordered":
 				self.indicator_color = 'green'
 				self.indicator_title = 'Confirmed'
 			else:
-				self.indicator_color = 'orange'
-				self.indicator_title = 'Received by Sundine'
+				self.indicator_color = 'yellow'
+				self.indicator_title = 'Received by {0}'.format(self.company)
 
 			if self.valid_till and getdate(self.valid_till) < getdate(nowdate()):
 				self.indicator_color = 'darkgrey'
 				self.indicator_title = 'Expired'
 		else:
 			if self.confirmed_by_customer:
-				self.indicator_color = 'red'
-				self.indicator_title = 'Sent to Sundine'
+				self.indicator_color = 'orange'
+				self.indicator_title = 'Sent to {0}'.format(self.company.split(" ")[0])
 			else:
-				self.indicator_color = 'yellow'
+				self.indicator_color = 'red'
 				self.indicator_title = 'Draft'
 
 
 	def validate(self):
+		if self.flags.cart_quotation:
+			self.validate_delivery_date(lower_limit=self.transaction_date, throw=False, set_null=True)
+			self.validate_delivery_date_holiday(throw=False, set_null=True)
+
 		super(Quotation, self).validate()
 		self.set_status()
 		self.update_opportunity()
@@ -43,19 +52,92 @@ class Quotation(SellingController):
 		self.validate_uom_is_integer("stock_uom", "qty")
 		self.validate_quotation_to()
 		self.validate_valid_till()
-		self.validate_delivery_date()
 		if self.items:
 			self.with_items = 1
+
+	def get_cart_messages(self):
+		self.get_cart_errors()
+		self.get_cart_warnings()
+
+	def get_cart_warnings(self):
+		if self.delivery_date:
+			same_date_quotations = frappe.get_all("Quotation", filters={
+				"name": ['!=', self.name],
+				"docstatus": ['<', 2],
+				"quotation_to": "Customer",
+				"customer": self.customer,
+				"delivery_date": self.delivery_date,
+			})
+			if same_date_quotations:
+				links = ["<b><a href='/purchase-orders/{0}' target='_blank'>{0}</a></b>".format(d.name) for d in same_date_quotations]
+				self.cart_warnings.append(_("Purchase Orders already exist for Delivery Date {0}: {1}")
+					.format(formatdate(self.delivery_date, "EEE, MMMM d, Y"), ", ".join(links)))
+
+			same_date_sales_orders = frappe.get_all("Sales Order", filters={
+				"docstatus": ['<', 2],
+				"customer": self.customer,
+				"delivery_date": self.delivery_date
+			})
+			if same_date_sales_orders:
+				links = ["<b><a href='/sales-orders/{0}' target='_blank'>{0}</a></b>".format(d.name) for d in same_date_sales_orders]
+				self.cart_warnings.append(_("Sales Orders already exist for Delivery Date {0}: {1}")
+					.format(formatdate(self.delivery_date, "EEE, MMMM d, Y"), ", ".join(links)))
+
+	def get_cart_errors(self):
+		self.validate_delivery_date(lower_limit=today(), throw=False, set_null=False)
+		self.validate_delivery_date_holiday(throw=False, set_null=False)
+
+		if self.delivery_date:
+			if not self.items:
+				self.cart_errors.append(_("Please add items to order"))
+			elif not self.total_qty:
+				self.cart_errors.append(_("Please set item quantities"))
+
+			if not self.customer_address:
+				self.cart_errors.append(_("Please select address"))
+		else:
+			self.cart_errors.append(_("Please select Delivery Date"))
+
+	def remove_zero_qty_items(self):
+		to_remove = self.get('items', filters={"qty": 0})
+		for d in to_remove:
+			self.remove(d)
 			
 	def validate_valid_till(self):
 		if self.valid_till and self.valid_till < self.transaction_date:
 			frappe.throw(_("Valid till date cannot be before transaction date"))
 
-	def validate_delivery_date(self):
-		if self.order_type in ['Sales', 'Shopping Cart']:
-			if self.delivery_date:
-				if getdate(self.delivery_date) < getdate(self.transaction_date):
-					frappe.throw(_("Delivery Date cannot be before Order Date"))
+	def validate_delivery_date(self, lower_limit, throw, set_null):
+		if self.delivery_date and getdate(self.delivery_date) < getdate(lower_limit):
+			message = _("Delivery Date <b>{0}</b> cannot be before Order Date").format(
+				formatdate(self.delivery_date, "EEE, MMMM d, Y"))
+
+			if throw:
+				frappe.throw(message)
+
+			self.cart_errors.append(message)
+
+			if set_null:
+				self.delivery_date = None
+
+	def validate_delivery_date_holiday(self, throw, set_null):
+		if self.delivery_date:
+			holiday_list_name = frappe.get_cached_value("Company", self.company, "default_holiday_list")
+			if holiday_list_name:
+				holiday_list = frappe.get_cached_doc("Holiday List", holiday_list_name)
+				holiday_row = holiday_list.get('holidays', filters={'holiday_date': getdate(self.delivery_date)})
+				if holiday_row:
+					holiday_row = holiday_row[0]
+					message = _("Delivery Date <b>{0}</b> cannot be selected due to <b>{1}</b> holiday").format(
+						formatdate(self.delivery_date, "EEE, MMMM d, Y"), holiday_row.description)
+
+					if throw:
+						frappe.throw(message)
+
+					self.cart_errors.append(message)
+
+					if set_null:
+						self.delivery_date = None
 
 	def has_sales_order(self):
 		return frappe.db.get_value("Sales Order Item", {"prevdoc_docname": self.name, "docstatus": 1})
@@ -104,6 +186,9 @@ class Quotation(SellingController):
 		frappe.get_doc('Authorization Control').validate_approving_authority(self.doctype,
 			self.company, self.base_grand_total, self)
 
+		self.validate_delivery_date(lower_limit=self.transaction_date, throw=True, set_null=False)
+		self.validate_delivery_date_holiday(throw=True, set_null=False)
+
 		#update enquiry status
 		self.update_opportunity()
 		self.update_lead()
@@ -141,7 +226,7 @@ def get_list_context(context=None):
 		'show_search': True,
 		'no_breadcrumbs': False,
 		'title': _('Purchase Orders'),
-		'order_by': 'transaction_date desc'
+		'order_by': 'delivery_date desc, transaction_date desc'
 	})
 
 	return list_context

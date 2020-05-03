@@ -18,7 +18,7 @@ class WebsitePriceListMissingError(frappe.ValidationError):
 	pass
 
 cart_quotation_fields = ['delivery_date']
-cart_party_fields = ['customer_name','credit_limit']
+cart_party_fields = ['customer_name', 'credit_limit']
 
 def set_cart_count(quotation=None):
 	if cint(frappe.db.get_singles_value("Shopping Cart Settings", "enabled")):
@@ -42,49 +42,70 @@ def get_cart_quotation(doc=None, name=None):
 		doc.set_indicator()
 
 	addresses = get_address_docs(party=party)
-
 	get_balance = get_balance_on(party=party.name, party_type='Customer')
 
 	if not doc.customer_address and addresses:
 		update_cart_address("customer_address", addresses[0].name)
 
+	doc.get_cart_messages()
+
 	return {
-		"customer_balance": get_balance,
+		"title": "Place Order",
 		"doc": decorate_quotation_doc(doc),
 		"party": party,
-		"shipping_addresses": [{"name": address.name, "display": address.display}
-			for address in addresses],
-		"billing_addresses": [{"name": address.name, "display": address.display}
-			for address in addresses],
-		"shipping_rules": get_applicable_shipping_rules(party),
 		"quotation_fields": cart_quotation_fields,
 		"party_fields": cart_party_fields,
+		"customer_balance": get_balance,
+		"shipping_addresses": [{"name": address.name, "display": address.display} for address in addresses],
+		"billing_addresses": [{"name": address.name, "display": address.display} for address in addresses],
+		"shipping_rules": get_applicable_shipping_rules(party),
 		"default_item_groups_allow": default_item_groups_allow()
 	}
 
 @frappe.whitelist()
-def place_order(confirmed, name=None):
+def place_order(confirmed, with_items=True, name=None):
+	def failed(doc):
+		context = {'doc': doc}
+		frappe.msgprint(_('Could not place order. See errors'), indicator='red')
+		return {
+			'failed': 1,
+			'warnings': frappe.render_template("templates/includes/cart/cart_warnings.html", context),
+			'errors': frappe.render_template("templates/includes/cart/cart_errors.html", context)
+		}
+
+	confirmed = cint(confirmed)
+
 	quotation = _get_cart_quotation(name=name)
 	quotation.company = frappe.db.get_value("Shopping Cart Settings", None, "company")
-	if not quotation.get("customer_address"):
-		throw(_("{0} is required").format(_(quotation.meta.get_label("customer_address"))))
-	if cint(confirmed):
-		quotation.confirmed_by_customer = 1
+	quotation.confirmed_by_customer = 1 if confirmed else 0
+
+	if confirmed:
+		quotation.remove_zero_qty_items()
+
+		quotation.get_cart_errors()
+		if quotation.cart_errors:
+			return failed(quotation)
+
+	out = update_cart(quotation, with_items=with_items, ignore_mandatory=False)
+
+	if confirmed:
+		if quotation.cart_errors:
+			frappe.db.rollback()
+			return failed(quotation)
+
+		if quotation.lead:
+			# company used to create customer accounts
+			frappe.defaults.set_user_default("company", quotation.company)
+
+		if hasattr(frappe.local, "cookie_manager"):
+			frappe.local.cookie_manager.delete_cookie("cart_count")
+
+	if confirmed:
+		frappe.msgprint(_("Order {0} Sent").format(quotation.name))
 	else:
-		quotation.confirmed_by_customer = 0
+		frappe.msgprint(_("Order {0} Cancelled").format(quotation.name))
 
-	quotation.transaction_date = today()
-	quotation.flags.ignore_permissions = True
-	quotation.save()
-
-	if quotation.lead:
-		# company used to create customer accounts
-		frappe.defaults.set_user_default("company", quotation.company)
-
-	if hasattr(frappe.local, "cookie_manager"):
-		frappe.local.cookie_manager.delete_cookie("cart_count")
-
-	return quotation.name
+	return out
 
 @frappe.whitelist()
 def update_cart_item(item_code, fieldname, value, with_items=False, name=None):
@@ -125,10 +146,10 @@ def update_cart_field(fieldname, value, with_items=False, name=None):
 	quotation.set(fieldname, value)
 	return update_cart(quotation, with_items)
 
-def update_cart(quotation, with_items=False):
+def update_cart(quotation, with_items=False, ignore_mandatory=True):
 	apply_cart_settings(quotation=quotation)
 	quotation.flags.ignore_permissions = True
-	quotation.flags.ignore_mandatory = True
+	quotation.flags.ignore_mandatory = ignore_mandatory
 	quotation.payment_schedule = []
 	quotation.save()
 
@@ -140,10 +161,15 @@ def update_cart(quotation, with_items=False):
 		qtn_fields_dict[f] = context['doc'].get(f)
 	for f in cart_party_fields:
 		qtn_fields_dict[f] = context['party'].get(f)
+	qtn_fields_dict['customer_balance'] = context.get('customer_balance')
 
 	out = {
 		'name': quotation.name,
-		'shopping_cart_menu': get_shopping_cart_menu(context)
+		'shopping_cart_menu': get_shopping_cart_menu(context),
+		'warnings': frappe.render_template("templates/includes/cart/cart_warnings.html", context),
+		'errors': frappe.render_template("templates/includes/cart/cart_errors.html", context),
+		'indicator': frappe.render_template("templates/includes/cart/cart_indicator.html", context),
+		'quotation_fields': qtn_fields_dict
 	}
 	if cint(with_items):
 		out.update({
@@ -151,7 +177,7 @@ def update_cart(quotation, with_items=False):
 				context) if quotation.delivery_date else "",
 			"taxes": frappe.render_template("templates/includes/order/order_taxes.html",
 				context) if quotation.delivery_date else "",
-			"quotation_fields": qtn_fields_dict
+			"confirmed_by_customer": quotation.confirmed_by_customer
 		})
 
 	return out
@@ -236,9 +262,10 @@ def _get_cart_quotation(party=None, name=None):
 	
 	if qdoc:
 		if qdoc.docstatus != 0:
-			frappe.throw(_("Invalid Cart"), frappe.DoesNotExistError)
+			frappe.throw(_("Invalid Order"), frappe.PermissionError)
 
-		return qdoc
+		if name and not frappe.has_website_permission(qdoc):
+			frappe.throw(_("Not Permitted"), frappe.PermissionError)
 	else:
 		qdoc = frappe.get_doc({
 			"doctype": "Quotation",
@@ -259,7 +286,8 @@ def _get_cart_quotation(party=None, name=None):
 		qdoc.run_method("set_missing_values")
 		apply_cart_settings(party, qdoc)
 
-		return qdoc
+	qdoc.flags.cart_quotation = True
+	return qdoc
 
 def update_party(fullname, company_name=None, mobile_no=None, phone=None):
 	party = get_party()
@@ -293,6 +321,8 @@ def apply_cart_settings(party=None, quotation=None):
 		party = get_party()
 	if not quotation:
 		quotation = _get_cart_quotation(party)
+
+	quotation.transaction_date = today()
 
 	cart_settings = frappe.get_doc("Shopping Cart Settings")
 
@@ -563,7 +593,7 @@ def get_default_items(with_items=False, item_group=None, name=None):
 
 	for item_code in default_item_codes:
 		if item_code not in existing_item_codes:
-			quotation.append("items", {"item_code": item_code, "qty": 1})
+			quotation.append("items", {"item_code": item_code, "qty": 0})
 	
 	return update_cart(quotation, with_items)
 
@@ -581,3 +611,32 @@ def add_item(item_code, with_items=False, name=None):
 		quotation.append("items", {"item_code": item_code, "qty": 1})
 
 	return update_cart(quotation, with_items)
+
+
+def can_copy_items(doc):
+	if doc.doctype == "Quotation":
+		return doc.docstatus == 1 or (doc.docstatus == 0 and doc.get('confirmed_by_customer'))
+	elif doc.doctype == "Sales Order":
+		return doc.docstatus < 2
+	else:
+		return False
+
+
+@frappe.whitelist()
+def copy_items_from_transaction(dt, dn):
+	meta = frappe.get_meta(dt)
+	if not meta.has_field('items'):
+		frappe.throw(_("Cannot copy items from {0} {1}".format(dt, dn)))
+
+	doc = frappe.get_doc(dt, dn)
+	if not frappe.has_website_permission(doc) or not can_copy_items(doc):
+		frappe.throw(_("Not Permitted"), frappe.PermissionError)
+
+	quotation = _get_cart_quotation()
+	quot_items_list = [d.item_code for d in quotation.items]
+
+	for item in doc.items:
+		if item.item_code not in quot_items_list:
+			quotation.append("items", {"item_code": item.item_code, "qty": 0})
+
+	return update_cart(quotation)

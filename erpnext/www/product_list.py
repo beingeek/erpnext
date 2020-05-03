@@ -30,10 +30,15 @@ def get_context(context):
 
 	context.title = item_group
 	stock_settings = frappe.get_single("Stock Settings")
+	context.price_list_note = stock_settings.price_list_note
 
 	item_data = get_items(stock_settings, item_group=item_group)
 	context.update(process_item_data(item_data))
 	context.item_group_map = group_by_item_group(item_data, stock_settings)
+
+	if context.quotation:
+		context.doc = context.quotation
+		context.quotation.get_cart_messages()
 
 
 @frappe.whitelist()

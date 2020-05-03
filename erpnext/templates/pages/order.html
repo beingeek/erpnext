@@ -14,9 +14,12 @@
 
 {% block header_actions %}
 <a class='btn btn-xs btn-default' href='/printview?doctype={{ doc.doctype}}&name={{ doc.name }}&format={{ print_format }}' target="_blank" rel="noopener noreferrer">{{ _("Print") }}</a>
+{% if can_copy_items %}
+<a class="btn btn-xs btn-default btn-duplicate-items" type="button">{{ _("Reorder Items") }}</a>
+{% endif %}
 {% if doc.doctype == "Quotation" %}
 	{% if doc.docstatus == 0 %}
-		<a class='btn btn-xs btn-default' href='/cart?name={{ doc.name }}'>{{ _("Edit") }}</a>
+		<a class='btn btn-xs btn-primary' href='/cart?name={{ doc.name }}'>{{ _("Edit") }}</a>
 	{% endif %}
 {% endif %}
 {% endblock %}
@@ -43,10 +46,10 @@
 		</span>
 	</div>
 	<div class="col-xs-6 text-muted text-right small">
-		{{ frappe.utils.formatdate(doc.transaction_date, 'medium') }}
+		{{ frappe.utils.global_date_format(doc.transaction_date) }}
 		{% if doc.valid_till %}
 		<p>
-		{{ _("Valid Till") }}: {{ frappe.utils.formatdate(doc.valid_till, 'medium') }}
+		{{ _("Valid Till") }}: {{ frappe.utils.global_date_format(doc.valid_till) }}
 		</p>
 		{% endif %}
 	</div>
@@ -95,10 +98,10 @@
 		</p>
 	</div>
 	<div class="col-sm-6">
-		<p class="small" style="float: right;">
+		<p class="small text-right" style="float: right;">
 			<b>{{_("Delivery Date")}}</b>
 			<br>
-			{{ frappe.utils.global_date_format(doc.delivery_date) }}
+			{{ frappe.format_date(doc.delivery_date, "EEE, MMMM d, Y") if doc.delivery_date else "Not Specified" }}
 
 		</p>	
 	</div>
@@ -258,7 +261,7 @@
 {% endblock %}
 
 {% block script %}
-	<script> {% include "templates/pages/order.js" %} </script>
+	<script>{% include "templates/pages/order.js" %}</script>
 	<script>{% include "templates/includes/zoom.js" %}</script>
 	<script>
 		window.doc_info = {

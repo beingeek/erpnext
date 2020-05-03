@@ -6,6 +6,7 @@ import frappe
 
 from frappe import _
 from erpnext.shopping_cart.doctype.shopping_cart_settings.shopping_cart_settings import show_attachments
+from erpnext.shopping_cart.cart import can_copy_items
 
 def get_context(context):
 	context.no_cache = 1
@@ -14,6 +15,7 @@ def get_context(context):
 
 	add_linked_documents(context)
 	decorate_doc(context.doc)
+	context.can_copy_items = can_copy_items(context.doc)
 
 	if hasattr(context.doc, "set_indicator"):
 		context.doc.set_indicator()

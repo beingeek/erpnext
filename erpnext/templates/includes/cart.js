@@ -7,12 +7,16 @@
 frappe.provide("erpnext.shopping_cart");
 var shopping_cart = erpnext.shopping_cart;
 
-$.extend(shopping_cart, {
-	show_error: function(title, text) {
-		$("#cart-container").html('<div class="msg-box"><h4>' +
-			title + '</h4><p class="text-muted">' + text + '</p></div>');
-	},
+frappe.ready(function() {
+	$(".cart-icon").hide();
+	shopping_cart.quotation_name = frappe.utils.get_url_arg("name");
+	shopping_cart.create_fields();
+	shopping_cart.bind_events();
+	shopping_cart.update_action_buttons();
+	window.zoom_item_image(".cart-items",".cart-product-image", "data-item-image");
+});
 
+$.extend(shopping_cart, {
 	create_fields: function() {
 		shopping_cart.field_group = new frappe.ui.FieldGroup({
 			parent: $('#cart-fields'),
@@ -54,13 +58,11 @@ $.extend(shopping_cart, {
 			let $this = $(this);
 			values[$this.data('fieldname')] = $this.text();
 		});
-		$.each(values, function (k, v) {
-			frappe.run_serially([
-				() => shopping_cart.ignore_update = true,
-				() => shopping_cart.field_group.set_value(k, v),
-				() => shopping_cart.ignore_update = false
-			]);
-		});
+		frappe.run_serially([
+			() => shopping_cart.ignore_update = true,
+			() => shopping_cart.field_group.set_values(values),
+			() => shopping_cart.ignore_update = false
+		]);
 	},
 
 	bind_events: function () {
@@ -68,20 +70,42 @@ $.extend(shopping_cart, {
 		shopping_cart.bind_place_order();
 		shopping_cart.bind_change_qty();
 		shopping_cart.bind_change_uom();
-		shopping_cart.bind_dropdown_cart_buttons();
 		shopping_cart.bind_get_default_items();
 		shopping_cart.bind_add_items();
 		shopping_cart.bind_remove_cart_item();
-		shopping_cart.cart_indicator();
-		shopping_cart.toggle_cart_count_buttons();
 	},
 
-	toggle_cart_count_buttons() {
-		var cart_count = frappe.get_cookie("cart_count");
-		if (parseInt(cart_count) !== 0 && cart_count !== undefined) {
-			$(".btn-place-order").show();
-		} else {
+	cart_page_update_callback: function(r) {
+		if(!r.exc) {
+			$(".cart-icon").hide();
+
+			$(".cart-items").html(r.message.items);
+			$(".cart-tax-items").html(r.message.taxes);
+
+			if (r.message.quotation_fields.delivery_date) {
+				$("#cart-body").removeClass('hidden');
+			} else {
+				$("#cart-body").addClass('hidden');
+			}
+
+			shopping_cart.confirmed_by_customer = r.message.confirmed_by_customer;
+			shopping_cart.update_action_buttons();
+
+			frappe.run_serially([
+				() => shopping_cart.ignore_update = true,
+				() => shopping_cart.field_group.set_values(r.message.quotation_fields || {}),
+				() => shopping_cart.ignore_update = false
+			]);
+		}
+	},
+
+	update_action_buttons() {
+		if (shopping_cart.confirmed_by_customer) {
 			$(".btn-place-order").hide();
+			$(".btn-cancel-order").show();
+		} else {
+			$(".btn-place-order").show();
+			$(".btn-cancel-order").hide();
 		}
 	},
 
@@ -108,43 +132,6 @@ $.extend(shopping_cart, {
 				name: shopping_cart.quotation_name
 			}));
 		});
-	},
-
-	cart_page_update_callback: function(r) {
-		if(!r.exc) {
-			$(".cart-items").html(r.message.items);
-			$(".cart-tax-items").html(r.message.taxes);
-			$(".cart-icon").hide();
-
-			if (r.message.quotation_fields.delivery_date) {
-				$("#cart-body").removeClass('hidden');
-			} else {
-				$("#cart-body").addClass('hidden');
-			}
-
-			shopping_cart.toggle_cart_count_buttons();
-			shopping_cart.cart_indicator(r.message.name);
-
-			$.each(r.message.quotation_fields || {}, function (k, v) {
-				frappe.run_serially([
-					() => shopping_cart.ignore_update = true,
-					() => shopping_cart.field_group.set_value(k, v),
-					() => shopping_cart.ignore_update = false,
-				]);
-			});
-		}
-	},
-
-	cart_indicator: function(name) {
-		var quotation_name = name || $('.indicator-link').attr('data-quotation-name');
-		if (quotation_name && quotation_name !== "None") {
-			var a = document.getElementsByClassName("indicator-link")[0];
-			a.href = "/purchase-orders/" + encodeURIComponent(quotation_name);
-			$('.quotation-name').html("("+quotation_name+")");
-			$('.cart-indicator').show();
-		} else {
-			$('.cart-indicator').hide();
-		}
 	},
 
 	handle_change_delivery_date: function() {
@@ -184,7 +171,6 @@ $.extend(shopping_cart, {
 					},
 					callback: function(r) {
 						if(!r.exc) {
-							shopping_cart.cart_indicator(r.message.name);
 							$(".cart-tax-items").html(r.message.taxes);
 						}
 					}
@@ -198,10 +184,10 @@ $.extend(shopping_cart, {
 
 	bind_place_order: function() {
 		$(".btn-place-order").on("click", function() {
-			shopping_cart.place_order(this, 1);
+			shopping_cart.place_order(1, this);
 		});
 		$(".btn-cancel-order").on("click", function() {
-			shopping_cart.place_order(this, 0);
+			shopping_cart.place_order(0, this);
 		});
 	},
 
@@ -311,44 +297,31 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	place_order: function(btn,confirmed) {
-		return frappe.call({
-			type: "POST",
-			method: "erpnext.shopping_cart.cart.place_order",
+	place_order: function(confirmed, btn) {
+		shopping_cart.call_cart_method("erpnext.shopping_cart.cart.place_order", {
+			confirmed: confirmed,
+			name: shopping_cart.quotation_name,
+			with_items: 1,
+		}, {
 			btn: btn,
-			args:{ 
-				confirmed: confirmed,
-				name: shopping_cart.quotation_name
-			},
-			callback: function(r) {
-				if (confirmed) {
-					if(r.exc) {
-						var msg = "";
-						if(r._server_messages) {
-							msg = JSON.parse(r._server_messages || []).join("<br>");
-						}
+			override_callback: 1,
+			callback: function (r) {
+				if (r.exc) {
+					return;
+				}
 
-						$("#cart-error")
-							.empty()
-							.html(msg || frappe._("Something went wrong!"))
-							.toggle(true);
-					} else {
-						window.location.href = "/purchase-orders/" + encodeURIComponent(r.message);
-					}
+				if (r.message.failed) {
+					shopping_cart.set_cart_messages(r);
 				} else {
-					window.location.href = "/cart";
+					shopping_cart.update_cart_callback(r);
+					shopping_cart.cart_page_update_callback(r);
+					if (confirmed) {
+						window.location.href = "/purchase-orders/" + encodeURIComponent(r.message.name);
+					}
 				}
 			}
 		});
 	}
-});
-
-frappe.ready(function() {
-	shopping_cart.quotation_name = frappe.utils.get_url_arg("name");
-	$(".cart-icon").hide();
-	shopping_cart.create_fields();
-	shopping_cart.bind_events();
-	window.zoom_item_image(".cart-items",".cart-product-image", "data-item-image");
 });
 
 function show_terms() {

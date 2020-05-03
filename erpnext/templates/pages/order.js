@@ -1,7 +1,9 @@
 // Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and contributors
 // For license information, please see license.txt
 
+frappe.provide("order");
 frappe.ready(function(){
+	order.bind_copy_items_from_transaction();
 
 	var loyalty_points_input = document.getElementById("loyalty-point-to-redeem");
 	var loyalty_points_status = document.getElementById("loyalty-points-status");
@@ -40,3 +42,17 @@ frappe.ready(function(){
 		}
 	}
 })
+
+order.bind_copy_items_from_transaction = function() {
+	$('.btn-duplicate-items').on('click', function() {
+		return erpnext.shopping_cart.copy_items_from_transaction({
+			dt: window.doc_info.doctype,
+			dn: window.doc_info.doctype_name,
+			callback: function(r) {
+				if (!r.exc) {
+					window.location.href = "/cart";
+				}
+			}
+		})
+	});
+}

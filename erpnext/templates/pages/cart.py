@@ -15,3 +15,4 @@ def get_context(context):
 		raise frappe.PermissionError, "Please login first"
 	
 	context.update(get_cart_quotation(name=frappe.form_dict.name))
+	context.price_list_note = frappe.db.get_value("Stock Settings", None, "price_list_note")
