@@ -72,7 +72,9 @@ $.extend(shopping_cart, {
 			btn: opts.btn,
 			freeze: opts.freeze || 1,
 			callback: function(r) {
-				shopping_cart.update_cart_callback(r, opts);
+				if (!opts.override_callback) {
+					shopping_cart.update_cart_callback(r, opts);
+				}
 				if(opts.callback)
 					opts.callback(r);
 			},
@@ -85,6 +87,10 @@ $.extend(shopping_cart, {
 	},
 
 	update_cart_callback: function(r, opts) {
+		if (!opts) {
+			opts = {};
+		}
+
 		if(!r.exc) {
 			shopping_cart.set_cart_count();
 

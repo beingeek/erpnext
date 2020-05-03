@@ -35,6 +35,9 @@ $.extend(frappe, {
 frappe.sys_defaults = frappe.boot.sysdefaults;
 moment.defaultFormat = frappe.moment_date_format;
 </script>
+<script>
+shopping_cart.confirmed_by_customer = {{ doc.confirmed_by_customer|int }};
+</script>
 {% endblock %}
 
 {% block style %}
@@ -53,11 +56,12 @@ moment.defaultFormat = frappe.moment_date_format;
 {% endblock %}
 
 {% block header_actions %}
-	{% if doc.confirmed_by_customer %}
-		<button class="btn btn-cancel-order btn-sm" type="button">{{ _("Cancel Order") }}</button>
-	{% else %}
-		<button class="btn btn-primary btn-place-order btn-sm" type="button">{{ _("Place Order") }}</button>
-	{% endif %}
+<button class="btn btn-cancel-order btn-sm" type="button" style="display: none">
+	{{ _("Cancel Order") }}
+</button>
+<button class="btn btn-primary btn-place-order btn-sm" type="button" style="display: none">
+	{{ _("Place Order") }}
+</button>
 {% endblock %}
 
 {% block page_content %}
@@ -130,11 +134,12 @@ moment.defaultFormat = frappe.moment_date_format;
 		{% endif %}
 
 		<p class="cart-footer text-right">
-			{% if doc.confirmed_by_customer %}
-				<button class="btn btn-cancel-order btn-sm" type="button">{{ _("Cancel Order") }}</button>
-			{% else %}
-				<button class="btn btn-primary btn-place-order btn-sm" type="button">{{ _("Place Order") }}</button>
-			{% endif %}
+			<button class="btn btn-cancel-order btn-sm" type="button" style="display: none">
+				{{ _("Cancel Order") }}
+			</button>
+			<button class="btn btn-primary btn-place-order btn-sm" type="button" style="display: none">
+				{{ _("Place Order") }}
+			</button>
 		</p>
 	</div>
 </div>

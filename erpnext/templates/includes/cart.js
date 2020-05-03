@@ -12,7 +12,7 @@ frappe.ready(function() {
 	shopping_cart.quotation_name = frappe.utils.get_url_arg("name");
 	shopping_cart.create_fields();
 	shopping_cart.bind_events();
-	shopping_cart.toggle_cart_count_buttons();
+	shopping_cart.update_action_buttons();
 	window.zoom_item_image(".cart-items",".cart-product-image", "data-item-image");
 });
 
@@ -88,7 +88,8 @@ $.extend(shopping_cart, {
 				$("#cart-body").addClass('hidden');
 			}
 
-			shopping_cart.toggle_cart_count_buttons();
+			shopping_cart.confirmed_by_customer = r.message.confirmed_by_customer;
+			shopping_cart.update_action_buttons();
 
 			frappe.run_serially([
 				() => shopping_cart.ignore_update = true,
@@ -98,12 +99,13 @@ $.extend(shopping_cart, {
 		}
 	},
 
-	toggle_cart_count_buttons() {
-		var cart_count = frappe.get_cookie("cart_count");
-		if (parseInt(cart_count) !== 0 && cart_count !== undefined) {
-			$(".btn-place-order").show();
-		} else {
+	update_action_buttons() {
+		if (shopping_cart.confirmed_by_customer) {
 			$(".btn-place-order").hide();
+			$(".btn-cancel-order").show();
+		} else {
+			$(".btn-place-order").show();
+			$(".btn-cancel-order").hide();
 		}
 	},
 
@@ -182,10 +184,10 @@ $.extend(shopping_cart, {
 
 	bind_place_order: function() {
 		$(".btn-place-order").on("click", function() {
-			shopping_cart.place_order(this, 1);
+			shopping_cart.place_order(1, this);
 		});
 		$(".btn-cancel-order").on("click", function() {
-			shopping_cart.place_order(this, 0);
+			shopping_cart.place_order(0, this);
 		});
 	},
 
@@ -295,22 +297,27 @@ $.extend(shopping_cart, {
 		});
 	},
 
-	place_order: function(btn,confirmed) {
-		return frappe.call({
-			type: "POST",
-			method: "erpnext.shopping_cart.cart.place_order",
+	place_order: function(confirmed, btn) {
+		shopping_cart.call_cart_method("erpnext.shopping_cart.cart.place_order", {
+			confirmed: confirmed,
+			name: shopping_cart.quotation_name,
+			with_items: 1,
+		}, {
 			btn: btn,
-			args:{ 
-				confirmed: confirmed,
-				name: shopping_cart.quotation_name
-			},
-			callback: function(r) {
-				if (confirmed) {
-					if(!r.exc) {
-						window.location.href = "/purchase-orders/" + encodeURIComponent(r.message);
-					}
+			override_callback: 1,
+			callback: function (r) {
+				if (r.exc) {
+					return;
+				}
+
+				if (r.message.failed) {
+					shopping_cart.set_cart_messages(r);
 				} else {
-					window.location.href = "/cart";
+					shopping_cart.update_cart_callback(r);
+					shopping_cart.cart_page_update_callback(r);
+					if (confirmed) {
+						window.location.href = "/purchase-orders/" + encodeURIComponent(r.message.name);
+					}
 				}
 			}
 		});

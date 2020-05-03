@@ -90,13 +90,16 @@ class Quotation(SellingController):
 		if self.delivery_date:
 			if not self.items:
 				self.cart_errors.append(_("Please add items to order"))
+			elif not self.total_qty:
+				self.cart_errors.append(_("Please set item quantities"))
+
 			if not self.customer_address:
 				self.cart_errors.append(_("Please select address"))
 		else:
 			self.cart_errors.append(_("Please select Delivery Date"))
 
 	def remove_zero_qty_items(self):
-		to_remove = self.get('item', filters={"qty": 0})
+		to_remove = self.get('items', filters={"qty": 0})
 		for d in to_remove:
 			self.remove(d)
 			
