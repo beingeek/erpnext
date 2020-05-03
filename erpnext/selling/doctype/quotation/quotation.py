@@ -26,7 +26,7 @@ class Quotation(SellingController):
 				self.indicator_title = 'Confirmed'
 			else:
 				self.indicator_color = 'yellow'
-				self.indicator_title = 'Received by {0}'.format(self.company)
+				self.indicator_title = 'Received by {0}'.format(self.company.split(" ")[0])
 
 			if self.valid_till and getdate(self.valid_till) < getdate(nowdate()):
 				self.indicator_color = 'darkgrey'
