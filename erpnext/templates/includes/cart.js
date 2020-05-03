@@ -29,8 +29,23 @@ $.extend(shopping_cart, {
 					onchange: shopping_cart.handle_change_delivery_date
 				},
 				{
+					label: __('Day'),
+					fieldname: 'day',
+					fieldtype: 'Data',
+					read_only: 1
+				},
+				{
+					fieldtype: 'Column Break'
+				},
+				{
 					label: __('Customer Name'),
 					fieldname: 'customer_name',
+					fieldtype: 'Data',
+					read_only: 1
+				},
+				{
+					label: __('Contact'),
+					fieldname: 'contact_display',
 					fieldtype: 'Data',
 					read_only: 1
 				},
@@ -43,7 +58,7 @@ $.extend(shopping_cart, {
 					fieldtype: 'Currency',
 					read_only: 1
 				},
-				{	
+				{
 					label: __('Balance Amount'),
 					fieldname: 'customer_balance',
 					fieldtype: 'Currency',
@@ -136,6 +151,7 @@ $.extend(shopping_cart, {
 
 	handle_change_delivery_date: function() {
 		var delivery_date = shopping_cart.field_group.get_value('delivery_date') || "";
+		shopping_cart.set_weekday(delivery_date);
 		shopping_cart.update_cart_field({
 			fieldname: 'delivery_date',
 			value: delivery_date,
@@ -146,6 +162,16 @@ $.extend(shopping_cart, {
 			},
 			freeze: 1
 		});
+	},
+
+	set_weekday: function(delivery_date) {
+		if (delivery_date) {
+			var date = new Date(delivery_date);
+			var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+			shopping_cart.field_group.set_value("day", weekday[date.getDay()]);
+		} else {
+			shopping_cart.field_group.set_value("day", "");
+		}
 	},
 
 	bind_address_select: function() {

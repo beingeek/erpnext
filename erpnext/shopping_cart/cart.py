@@ -17,7 +17,7 @@ from erpnext.accounts.utils import get_balance_on
 class WebsitePriceListMissingError(frappe.ValidationError):
 	pass
 
-cart_quotation_fields = ['delivery_date']
+cart_quotation_fields = ['delivery_date', 'contact_display']
 cart_party_fields = ['customer_name', 'credit_limit']
 
 def set_cart_count(quotation=None):
@@ -36,7 +36,8 @@ def get_cart_quotation(doc=None, name=None):
 	if not doc:
 		quotation = _get_cart_quotation(party, name)
 		doc = quotation
-		set_cart_count(quotation)
+		if not doc.confirmed_by_customer:
+			set_cart_count(quotation)
 
 	if hasattr(doc, "set_indicator"):
 		doc.set_indicator()
@@ -50,7 +51,7 @@ def get_cart_quotation(doc=None, name=None):
 	doc.get_cart_messages()
 
 	return {
-		"title": "Place Order",
+		"title": _("Order Cart"),
 		"doc": decorate_quotation_doc(doc),
 		"party": party,
 		"quotation_fields": cart_quotation_fields,
@@ -152,8 +153,8 @@ def update_cart(quotation, with_items=False, ignore_mandatory=True):
 	quotation.flags.ignore_mandatory = ignore_mandatory
 	quotation.payment_schedule = []
 	quotation.save()
-
-	set_cart_count(quotation)
+	if not quotation.confirmed_by_customer:
+		set_cart_count(quotation)
 
 	context = get_cart_quotation(quotation)
 	qtn_fields_dict = {}
