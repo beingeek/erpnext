@@ -1,6 +1,20 @@
 frappe.provide('product');
 var shopping_cart = erpnext.shopping_cart;
 
+frappe.ready(function() {
+    product.item_group = frappe.utils.get_url_arg("item_group");
+
+    shopping_cart.cart_update_item_callbacks.push(product.handle_item_changed);
+    shopping_cart.cart_update_doc_callbacks.push(product.handle_qoutation_changed);
+    shopping_cart.cart_update_callbacks.push(product.handle_cart_changed);
+
+    product.create_fields();
+    product.bind_change_qty();
+    product.bind_change_uom();
+    product.bind_product_qty();
+    window.zoom_item_image(".products-wrapper",".product-page-image", "data-item-image");
+});
+
 product.create_fields = function() {
     product.field_group = new frappe.ui.FieldGroup({
         parent: $('#product-field'),
@@ -119,21 +133,11 @@ product.get_items_table = function() {
 }
 
 product.bind_product_qty = function() {
-    $(".product-items").on("focus", ".product-qty", function() {
+    $(".products-wrapper").on("focus", ".product-qty", function() {
         $(this).select();
     });
+
+    $(".products-wrapper").on('keydown', "input.product-qty", function(e) {
+        window.handle_up_down_arrow_key(e, this, "input.product-qty");
+    });
 }
-
-frappe.ready(function() {
-    product.item_group = frappe.utils.get_url_arg("item_group");
-
-    shopping_cart.cart_update_item_callbacks.push(product.handle_item_changed);
-    shopping_cart.cart_update_doc_callbacks.push(product.handle_qoutation_changed);
-    shopping_cart.cart_update_callbacks.push(product.handle_cart_changed);
-
-    product.create_fields();
-    product.bind_change_qty();
-    product.bind_change_uom();
-    product.bind_product_qty();
-    window.zoom_item_image(".products-wrapper",".product-page-image", "data-item-image");
-});

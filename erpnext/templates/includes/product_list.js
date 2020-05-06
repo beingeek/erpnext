@@ -90,3 +90,24 @@ window.product_list_dialog = function(dialog, callback) {
 
 	});
 }
+
+window.handle_up_down_arrow_key = function(event, target, selector) {
+	let prev = null;
+	const elements = $(selector);
+
+	elements.each(function(i) {
+		if (this == target) {
+			if (event.keyCode == 38 && prev) { // Up
+				$(prev).focus();
+				event.preventDefault();
+				return false;
+			} else if (event.keyCode == 40 && i+1 < elements.length) { // Down
+				$(elements[i+1]).focus();
+				event.preventDefault();
+				return false;
+			}
+		}
+
+		prev = this;
+	});
+};
