@@ -226,7 +226,7 @@ $.extend(shopping_cart, {
 			var newVal = parseInt(val);
 
 			if (isNaN(newVal)) {
-				frappe.msgprint(__("{0} is not a valid qty", [val]));
+				frappe.msgprint(__("<b>{0}</b> is not a valid number", [val]));
 				return false;
 			}
 
