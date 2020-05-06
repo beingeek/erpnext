@@ -1,6 +1,6 @@
 <div class="table-responsive margin-top product-items-table">
     {% for item_group in item_group_map.keys() %}
-    <table class="table table-bordered">
+    <table class="table table-bordered" data-table-index="{{ loop.index }}">
         <thead>
             <tr style="color: #8d99a6;font-size: 12px;background-color: #f7fafc;">
                 <th scope="col" class="text-center" colspan="8">{{ item_group }}</th>

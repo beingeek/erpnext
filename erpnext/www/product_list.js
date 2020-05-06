@@ -118,6 +118,12 @@ product.get_items_table = function() {
     });
 }
 
+product.bind_product_qty = function() {
+    $(".product-items").on("focus", ".product-qty", function() {
+        $(this).select();
+    });
+}
+
 frappe.ready(function() {
     product.item_group = frappe.utils.get_url_arg("item_group");
 
@@ -128,5 +134,6 @@ frappe.ready(function() {
     product.create_fields();
     product.bind_change_qty();
     product.bind_change_uom();
+    product.bind_product_qty();
     window.zoom_item_image(".products-wrapper",".product-page-image", "data-item-image");
 });
