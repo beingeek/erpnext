@@ -6,7 +6,7 @@ frappe.listview_settings['Quotation'] = {
 			if (doc.valid_till && doc.valid_till < frappe.datetime.nowdate()) {
 				return [__("Expired"), "darkgrey", "valid_till,<," + frappe.datetime.nowdate()];
 			} else {
-				return [__("To Create SO"), "red", "status,=,Submitted"];
+				return [__("To Fulfill"), "red", "status,=,Submitted"];
 			}
 		} else if(doc.status==="Ordered") {
 			return [__("Ordered"), "green", "status,=,Ordered"];
