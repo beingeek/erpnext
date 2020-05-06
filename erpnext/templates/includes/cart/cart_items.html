@@ -20,11 +20,11 @@
         {{d.item_name}}
     </td>
     <td class="text-center" style="vertical-align: middle;">
-        {{ d.country_code or '' }}
+        {{ d.country_code or '' }} 
     </td>
     <td style="vertical-align: middle;">
         <input class="form-control text-right cart-qty" value="{{ d.get_formatted('qty') }}"
-               data-item-code="{{ d.item_code }}">
+               data-item-code="{{ d.item_code }}" data-index="{{ d.idx }}">
     </td>
     <td style="vertical-align: middle;">
         <select class="form-control small cart-uom" data-item-code="{{ d.item_code }}" style="cursor: pointer;">
