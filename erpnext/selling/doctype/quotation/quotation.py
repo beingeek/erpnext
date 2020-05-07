@@ -140,7 +140,7 @@ class Quotation(SellingController):
 						self.delivery_date = None
 
 	def has_sales_order(self):
-		return frappe.db.get_value("Sales Order Item", {"prevdoc_docname": self.name, "docstatus": 1})
+		return frappe.db.get_value("Sales Order Item", {"prevdoc_docname": self.name, "docstatus": ['<', 2]})
 
 	def validate_order_type(self):
 		super(Quotation, self).validate_order_type()
