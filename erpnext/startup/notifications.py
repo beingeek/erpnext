@@ -14,7 +14,7 @@ def get_notification_config():
 			"Lead": {"status": "Open"},
 			"Contact": {"status": "Open"},
 			"Opportunity": {"status": "Open"},
-			"Quotation": {"docstatus": 0},
+			"Quotation": {"status": ("!=", "Ordered"), "confirmed_by_customer": 1},
 			"Sales Order": {
 				"status": ("not in", ("Completed", "Closed")),
 				"docstatus": ("<", 2)
