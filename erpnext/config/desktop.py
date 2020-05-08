@@ -25,7 +25,7 @@ def get_data():
 		{"module_name": "Qty Adjust Log Summary", "_report": "Qty Adjust Log Summary", "color": "grey", "type": "query-report",
 			"link": "query-report/Qty Adjust Log Summary", "label": _("Qty Adjust Log Summary")},
 
-		{"module_name": "Price List", "_report": "Price List", "color": colors["Stock"], "type": "list",
+		{"module_name": "Price List", "_report": "Price List", "color": colors["Stock"], "type": "list", "icon": "fa fa-usd",
 			"link": "query-report/Price List", "label": _("Price List")},
 
 		{"module_name": "Sales Order Route Map", "type": "link", "link": "/sales_order",
