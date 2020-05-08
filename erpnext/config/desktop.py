@@ -29,7 +29,7 @@ def get_data():
 			"link": "query-report/Price List", "label": _("Price List")},
 
 		{"module_name": "Sales Order Route Map", "type": "link", "link": "/sales_order",
-			"force_show": 1, "label": _("Sales Order Route Map")},
+			"force_show": 1, "label": _("Sales Order Route Map"), "icon": "fa fa-map-marker"},
 		{"module_name": "Customer", "_doctype": "Customer", "color": colors["Selling"], "icon": "octicon octicon-tag",
 			"type": "list", "link": "List/Customer"},
 
