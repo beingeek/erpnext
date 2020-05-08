@@ -4175,7 +4175,7 @@
  "istable": 0, 
  "max_attachments": 1, 
  "menu_index": 0, 
- "modified": "2020-03-20 06:21:02.411649", 
+ "modified": "2020-05-07 11:47:17.939548", 
  "modified_by": "Administrator", 
  "module": "Selling", 
  "name": "Quotation", 
@@ -4347,7 +4347,7 @@
  "sort_order": "DESC", 
  "timeline_field": "customer", 
  "title_field": "title", 
- "track_changes": 0, 
+ "track_changes": 1, 
  "track_seen": 0, 
  "track_views": 0
 }
