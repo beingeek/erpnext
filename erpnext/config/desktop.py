@@ -4,82 +4,91 @@ from __future__ import unicode_literals
 from frappe import _
 
 def get_data():
+	colors = {
+		"Stock": "#f39c12",
+		"Selling": "#1abc9c",
+		"Buying": "#c0392b",
+		"HR": "#2ecc71",
+		"Projects": "#8e44ad",
+		"Support": "#2c3e50",
+		"Accounts": "#3498db",
+		"Tools": "#FFF5A7"
+	}
+
 	return [
-		{
-			"module_name": "Item",
-			"_doctype": "Item",
-			"color": "#f39c12",
-			"icon": "octicon octicon-package",
-			"type": "link",
-			"link": "List/Item"
-		},
-		{
-			"module_name": "Customer",
-			"_doctype": "Customer",
-			"color": "#1abc9c",
-			"icon": "octicon octicon-tag",
-			"type": "link",
-			"link": "List/Customer"
-		},
-		{
-			"module_name": "Supplier",
-			"_doctype": "Supplier",
-			"color": "#c0392b",
-			"icon": "octicon octicon-briefcase",
-			"type": "link",
-			"link": "List/Supplier"
-		},
-		{
-			"_doctype": "Employee",
-			"module_name": "Employee",
-			"color": "#2ecc71",
-			"icon": "octicon octicon-organization",
-			"type": "link",
-			"link": "List/Employee"
-		},
-		{
-			"module_name": "Project",
-			"_doctype": "Project",
-			"color": "#8e44ad",
-			"icon": "octicon octicon-rocket",
-			"type": "link",
-			"link": "List/Project"
-		},
-		{
-			"module_name": "Issue",
-			"color": "#2c3e50",
-			"icon": "octicon octicon-issue-opened",
-			"_doctype": "Issue",
-			"type": "link",
-			"link": "List/Issue"
-		},
-		{
-			"module_name": "Lead",
-			"icon": "octicon octicon-broadcast",
-			"_doctype": "Lead",
-			"type": "link",
-			"link": "List/Lead"
-		},
-		{
-			"module_name": "Profit and Loss Statement",
-			"_doctype": "Account",
-			"color": "#3498db",
-			"icon": "octicon octicon-repo",
-			"type": "link",
-			"link": "query-report/Profit and Loss Statement"
-		},
+		{"module_name": "Sales Order", "_doctype": "Sales Order", "type": "list",
+			"color": colors["Selling"], "icon": "fa fa-file-text"},
+		{"module_name": "Sales Invoice", "_doctype": "Sales Invoice", "type": "list",
+			"color": colors["Accounts"], "icon": "fa fa-file-text"},
+		{"module_name": "Qty Adjust", "_report": "Qty Adjust", "color": "grey", "type": "query-report",
+			"link": "query-report/Qty Adjust", "label": _("Qty Adjust")},
+		{"module_name": "Qty Adjust Log Summary", "_report": "Qty Adjust Log Summary", "color": "grey", "type": "query-report",
+			"link": "query-report/Qty Adjust Log Summary", "label": _("Qty Adjust Log Summary")},
+
+		{"module_name": "Price List", "_report": "Price List", "color": colors["Stock"], "type": "list", "icon": "fa fa-usd",
+			"link": "query-report/Price List", "label": _("Price List")},
+
+		{"module_name": "Sales Order Route Map", "type": "link", "link": "/sales_order",
+			"force_show": 1, "label": _("Sales Order Route Map"), "icon": "fa fa-map-marker"},
+		{"module_name": "Customer", "_doctype": "Customer", "color": colors["Selling"], "icon": "octicon octicon-tag",
+			"type": "list", "link": "List/Customer"},
+
+		{"module_name": "Purchase Order", "_doctype": "Purchase Order", "type": "list",
+			"color": colors["Buying"], "icon": "fa fa-file-text"},
+		{"module_name": "Purchase Receipt", "_doctype": "Purchase Receipt", "type": "list",
+			"color": colors["Stock"], "icon": "fa fa-truck"},
+		{"module_name": "Landed Cost Voucher", "_doctype": "Landed Cost Voucher", "type": "list",
+			"color": colors["Stock"], "icon": "fa fa-plane"},
+		{"module_name": "Purchase Invoice", "_doctype": "Purchase Invoice", "type": "list",
+			"color": colors["Accounts"], "icon": "fa fa-file-text"},
+		{"module_name": "Supplier", "_doctype": "Supplier", "color": colors["Buying"], "icon": "octicon octicon-briefcase",
+			"type": "list", "link": "List/Supplier"},
+
+		{"module_name": "Item", "_doctype": "Item", "color": colors["Stock"], "icon": "octicon octicon-package",
+			"type": "list", "link": "List/Item"},
+		{"module_name": "Stock Ledger", "_report": "Stock Ledger", "type": "query-report", "link": "query-report/Stock Ledger",
+			"color": colors["Stock"], "icon": "fa fa-exchange"},
+		{"module_name": "Stock Reconciliation", "_doctype": "Stock Reconciliation", "type": "list",
+			"color": colors["Stock"], "icon": "fa fa-files-o"},
+		{"module_name": "BOM", "_doctype": "BOM", "color": colors["Stock"], "icon": "octicon octicon-package",
+			"type": "list", "link": "List/BOM"},
+
+		{"module_name": "Leaderboard", "color": "#589494", "icon": "octicon octicon-graph", "type": "page",
+			"link": "leaderboard", "label": _("Leaderboard")},
+
+		{"module_name": "Account", "_doctype": "Account", "type": "link", "link": "Tree/Account", "label": _("Chart of Accounts"),
+			"color": colors["Accounts"], "icon": "fa fa-sitemap"},
+		{"module_name": "Profit and Loss Statement", "_doctype": "Account", "color": colors["Accounts"], "icon": "octicon octicon-repo",
+			"type": "query-report", "link": "query-report/Profit and Loss Statement"},
+		{"module_name": "Master Journal Entry", "_doctype": "Master Journal Entry", "type": "list",
+			"color": colors["Accounts"], "icon": "fa fa-book"},
+		{"module_name": "Payment Entry", "_doctype": "Payment Entry", "type": "list",
+			"color": colors["Accounts"], "icon": "fa fa-money"},
+		{"module_name": "Accounts Payable Summary", "_report": "Accounts Payable Summary", "type": "query-report",
+			"link": "query-report/Accounts Payable Summary", "color": colors["Buying"], "icon": "fa fa-tasks"},
+		{"module_name": "Accounts Receivable Summary", "_report": "Accounts Receivable Summary", "type": "query-report",
+			"link": "query-report/Accounts Receivable Summary", "color": colors["Selling"], "icon": "fa fa-tasks"},
+		{"module_name": "Trial Balance", "_report": "Trial Balance", "type": "query-report", "link": "query-report/Trial Balance",
+			"color": colors["Accounts"], "icon": "fa fa-balance-scale"},
+
+		{"module_name": "Purchase Analytics", "_report": "Purchase Analytics", "type": "query-report", "link": "query-report/Purchase Analytics",
+			"color": colors["Buying"], "icon": "fa fa-line-chart"},
+		{"module_name": "Sales Analytics", "_report": "Sales Analytics", "type": "query-report", "link": "query-report/Sales Analytics",
+			"color": colors["Selling"], "icon": "fa fa-line-chart"},
+		{"module_name": "Master Sales Order", "_doctype": "Master Sales Order", "type": "list",
+			"color": colors["Selling"], "icon": "octicon octicon-briefcase"},
 
 		# old
 		{
 			"module_name": "Accounts",
-			"color": "#3498db",
+			"color": colors["Accounts"],
 			"icon": "octicon octicon-repo",
 			"type": "module",
 			"hidden": 1
 		},
 		{
 			"module_name": "Stock",
-			"color": "#f39c12",
+			"color": colors["Stock"],
 			"icon": "octicon octicon-package",
 			"type": "module",
 			"hidden": 1
@@ -93,21 +102,21 @@ def get_data():
 		},
 		{
 			"module_name": "Selling",
-			"color": "#1abc9c",
+			"color": colors["Selling"],
 			"icon": "octicon octicon-tag",
 			"type": "module",
 			"hidden": 1
 		},
 		{
 			"module_name": "Buying",
-			"color": "#c0392b",
+			"color": colors["Buying"],
 			"icon": "octicon octicon-briefcase",
 			"type": "module",
 			"hidden": 1
 		},
 		{
 			"module_name": "HR",
-			"color": "#2ecc71",
+			"color": colors["HR"],
 			"icon": "octicon octicon-organization",
 			"label": _("Human Resources"),
 			"type": "module",
@@ -121,31 +130,15 @@ def get_data():
 			"hidden": 1
 		},
 		{
-			"module_name": "POS",
-			"color": "#589494",
-			"icon": "octicon octicon-credit-card",
-			"type": "page",
-			"link": "pos",
-			"label": _("POS")
-		},
-		{
-			"module_name": "Leaderboard",
-			"color": "#589494",
-			"icon": "octicon octicon-graph",
-			"type": "page",
-			"link": "leaderboard",
-			"label": _("Leaderboard")
-		},
-		{
 			"module_name": "Projects",
-			"color": "#8e44ad",
+			"color": colors["Projects"],
 			"icon": "octicon octicon-rocket",
 			"type": "module",
 			"hidden": 1
 		},
 		{
 			"module_name": "Support",
-			"color": "#2c3e50",
+			"color": colors["Support"],
 			"icon": "octicon octicon-issue-opened",
 			"type": "module",
 			"hidden": 1
@@ -168,106 +161,6 @@ def get_data():
 			"hidden": 1
 		},
 		{
-			"module_name": "Student",
-			"color": "#c0392b",
-			"icon": "octicon octicon-person",
-			"label": _("Student"),
-			"link": "List/Student",
-			"_doctype": "Student",
-			"type": "list",
-			"hidden": 1
-		},
-		{
-			"module_name": "Student Group",
-			"color": "#d59919",
-			"icon": "octicon octicon-organization",
-			"label": _("Student Group"),
-			"link": "List/Student Group",
-			"_doctype": "Student Group",
-			"type": "list",
-			"hidden": 1
-		},
-		{
-			"module_name": "Course Schedule",
-			"color": "#fd784f",
-			"icon": "octicon octicon-calendar",
-			"label": _("Course Schedule"),
-			"link": "List/Course Schedule/Calendar",
-			"_doctype": "Course Schedule",
-			"type": "list",
-			"hidden": 1
-		},
-		{
-			"module_name": "Student Attendance Tool",
-			"color": "#C0392B",
-			"icon": "octicon octicon-checklist",
-			"label": _("Student Attendance Tool"),
-			"link": "List/Student Attendance Tool",
-			"_doctype": "Student Attendance Tool",
-			"type": "list",
-			"hidden": 1
-		},
-		{
-			"module_name": "Course",
-			"color": "#8e44ad",
-			"icon": "octicon octicon-book",
-			"label": _("Course"),
-			"link": "List/Course",
-			"_doctype": "Course",
-			"type": "list",
-			"hidden": 1
-		},
-		{
-			"module_name": "Program",
-			"color": "#9b59b6",
-			"icon": "octicon octicon-repo",
-			"label": _("Program"),
-			"link": "List/Program",
-			"_doctype": "Program",
-			"type": "list",
-			"hidden": 1
-		},
-		{
-			"module_name": "Student Applicant",
-			"color": "#4d927f",
-			"icon": "octicon octicon-clippy",
-			"label": _("Student Applicant"),
-			"link": "List/Student Applicant",
-			"_doctype": "Student Applicant",
-			"type": "list",
-			"hidden": 1
-		},
-		{
-			"module_name": "Fees",
-			"color": "#83C21E",
-			"icon": "fa fa-money",
-			"label": _("Fees"),
-			"link": "List/Fees",
-			"_doctype": "Fees",
-			"type": "list",
-			"hidden": 1
-		},
-		{
-			"module_name": "Instructor",
-			"color": "#a99e4c",
-			"icon": "octicon octicon-broadcast",
-			"label": _("Instructor"),
-			"link": "List/Instructor",
-			"_doctype": "Instructor",
-			"type": "list",
-			"hidden": 1
-		},
-		{
-			"module_name": "Room",
-			"color": "#f22683",
-			"icon": "fa fa-map-marker",
-			"label": _("Room"),
-			"link": "List/Room",
-			"_doctype": "Room",
-			"type": "list",
-			"hidden": 1
-		},
-		{
 			"module_name": "Education",
 			"color": "#428B46",
 			"icon": "octicon octicon-mortar-board",
@@ -282,104 +175,6 @@ def get_data():
 			"type": "module",
 			"label": _("Healthcare"),
 			"hidden": 1
-		},
-        {
-			"module_name": "Patient",
-			"color": "#6BE273",
-			"icon": "fa fa-user",
-			"doctype": "Patient",
-			"type": "link",
-			"link": "List/Patient",
-			"label": _("Patient"),
-			"hidden": 1
-        },
-        {
-			"module_name": "Healthcare Practitioner",
-			"color": "#2ecc71",
-			"icon": "fa fa-user-md",
-			"doctype": "Healthcare Practitioner",
-			"type": "link",
-			"link": "List/Healthcare Practitioner",
-			"label": _("Healthcare Practitioner"),
-			"hidden": 1
-        },
-        {
-			"module_name": "Patient Appointment",
-			"color": "#934F92",
-			"icon": "fa fa-calendar-plus-o",
-			"doctype": "Patient Appointment",
-			"type": "link",
-			"link": "List/Patient Appointment",
-			"label": _("Patient Appointment"),
-			"hidden": 1
-        },
-        {
-			"module_name": "Patient Encounter",
-			"color": "#2ecc71",
-			"icon": "fa fa-stethoscope",
-			"doctype": "Patient Encounter",
-			"type": "link",
-			"link": "List/Patient Encounter",
-			"label": _("Patient Encounter"),
-			"hidden": 1
-        },
-        {
-			"module_name": "Lab Test",
-			"color": "#7578f6",
-			"icon": "octicon octicon-beaker",
-			"doctype": "Lab Test",
-			"type": "list",
-			"link": "List/Lab Test",
-			"label": _("Lab Test"),
-			"hidden": 1
-        },
-        {
-			"module_name": "Vital Signs",
-			"color": "#2ecc71",
-			"icon": "fa fa-thermometer-empty",
-			"doctype": "Vital Signs",
-			"type": "list",
-			"link": "List/Vital Signs",
-			"label": _("Vital Signs"),
-			"hidden": 1
-        },
-        {
-			"module_name": "Clinical Procedure",
-			"color": "#FF888B",
-			"icon": "fa fa-medkit",
-			"doctype": "Clinical Procedure",
-			"type": "list",
-			"link": "List/Clinical Procedure",
-			"label": _("Clinical Procedure"),
-			"hidden": 1
-        },
-        {
-			"module_name": "Inpatient Record",
-			"color": "#7578f6",
-			"icon": "fa fa-list-alt",
-			"doctype": "Inpatient Record",
-			"type": "list",
-			"link": "List/Inpatient Record",
-			"label": _("Inpatient Record"),
-			"hidden": 1
-        },
-		{
-			"module_name": "Hub",
-			"color": "#009248",
-			"icon": "/assets/erpnext/images/hub_logo.svg",
-			"type": "page",
-			"link": "Hub/Item",
-			"label": _("Hub")
-		},
-		{
-			"module_name": "Data Import",
-			"color": "#FFF168",
-			"reverse": 1,
-			"doctype": "Data Import",
-			"icon": "octicon octicon-cloud-upload",
-			"label": _("Data Import"),
-			"link": "List/Data Import",
-			"type": "list"
 		},
 		{
 			"module_name": "Restaurant",
@@ -408,163 +203,12 @@ def get_data():
 			"hidden": 1
 		},
 		{
-			"module_name": "Crop",
-			"_doctype": "Crop",
-			"label": _("Crop"),
-			"color": "#8BC34A",
-			"icon": "fa fa-tree",
-			"type": "list",
-			"link": "List/Crop",
-			"hidden": 1
-		},
-		{
-			"module_name": "Crop Cycle",
-			"_doctype": "Crop Cycle",
-			"label": _("Crop Cycle"),
-			"color": "#8BC34A",
-			"icon": "fa fa-circle-o-notch",
-			"type": "list",
-			"link": "List/Crop Cycle",
-			"hidden": 1
-		},
-		{
-			"module_name": "Fertilizer",
-			"_doctype": "Fertilizer",
-			"label": _("Fertilizer"),
-			"color": "#8BC34A",
-			"icon": "fa fa-leaf",
-			"type": "list",
-			"link": "List/Fertilizer",
-			"hidden": 1
-		},
-		{
-			"module_name": "Location",
-			"_doctype": "Location",
-			"label": _("Location"),
-			"color": "#8BC34A",
-			"icon": "fa fa-map",
-			"type": "list",
-			"link": "List/Location",
-			"hidden": 1
-		},
-		{
-			"module_name": "Disease",
-			"_doctype": "Disease",
-			"label": _("Disease"),
-			"color": "#8BC34A",
-			"icon": "octicon octicon-bug",
-			"type": "list",
-			"link": "List/Disease",
-			"hidden": 1
-		},
-		{
-			"module_name": "Plant Analysis",
-			"_doctype": "Plant Analysis",
-			"label": _("Plant Analysis"),
-			"color": "#8BC34A",
-			"icon": "fa fa-pagelines",
-			"type": "list",
-			"link": "List/Plant Analysis",
-			"hidden": 1
-		},
-		{
-			"module_name": "Soil Analysis",
-			"_doctype": "Soil Analysis",
-			"label": _("Soil Analysis"),
-			"color": "#8BC34A",
-			"icon": "fa fa-flask",
-			"type": "list",
-			"link": "List/Soil Analysis",
-			"hidden": 1
-		},
-		{
-			"module_name": "Soil Texture",
-			"_doctype": "Soil Texture",
-			"label": _("Soil Texture"),
-			"color": "#8BC34A",
-			"icon": "octicon octicon-beaker",
-			"type": "list",
-			"link": "List/Soil Texture",
-			"hidden": 1
-		},
-		{
-			"module_name": "Water Analysis",
-			"_doctype": "Water Analysis",
-			"label": _("Water Analysis"),
-			"color": "#8BC34A",
-			"icon": "fa fa-tint",
-			"type": "list",
-			"link": "List/Water Analysis",
-			"hidden": 1
-		},
-		{
-			"module_name": "Weather",
-			"_doctype": "Weather",
-			"label": _("Weather"),
-			"color": "#8BC34A",
-			"icon": "fa fa-sun-o",
-			"type": "list",
-			"link": "List/Weather",
-			"hidden": 1
-		},
-		{
 			"module_name": "Assets",
 			"color": "#4286f4",
 			"icon": "octicon octicon-database",
 			"hidden": 1,
 			"label": _("Assets"),
 			"type": "module"
-		},
-		{
-			"module_name": "Grant Application",
-			"color": "#E9AB17",
-			"icon": "fa fa-gift",
-			"_doctype": "Grant Application",
-			"type": "list",
-			"link": "List/Grant Application",
-			"label": _("Grant Application"),
-			"hidden": 1
-
-		},
-		{
-			"module_name": "Donor",
-			"color": "#7F5A58",
-			"icon": "fa fa-tint",
-			"_doctype": "Donor",
-			"type": "list",
-			"link": "List/Donor",
-			"label": _("Donor"),
-			"hidden": 1
-		},
-		{
-			"module_name": "Volunteer",
-			"color": "#7E587E",
-			"icon": "fa fa-angellist",
-			"_doctype": "Volunteer",
-			"type": "list",
-			"link": "List/Volunteer",
-			"label": _("Volunteer"),
-			"hidden": 1
-		},
-		{
-			"module_name": "Member",
-			"color": "#79BAEC",
-			"icon": "fa fa-users",
-			"_doctype": "Member",
-			"type": "list",
-			"link": "List/Member",
-			"label": _("Member"),
-			"hidden": 1
-		},
-		{
-			"module_name": "Chapter",
-			"color": "#3B9C9C",
-			"icon": "fa fa-handshake-o",
-			"_doctype": "Chapter",
-			"type": "list",
-			"link": "List/Chapter",
-			"label": _("Chapter"),
-			"hidden": 1
 		},
 		{
 			"module_name": "Non Profit",

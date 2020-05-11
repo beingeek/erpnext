@@ -155,10 +155,11 @@ class SalesOrder(SellingController):
 			if quotation:
 				doc = frappe.get_doc("Quotation", quotation)
 				if doc.docstatus==2:
-					frappe.throw(_("Quotation {0} is cancelled").format(quotation))
-
-				doc.set_status(update=True)
-				doc.update_opportunity()
+					if flag == "submit":
+						frappe.throw(_("Quotation {0} is cancelled").format(quotation))
+				else:
+					doc.set_status(update=True)
+					doc.update_opportunity()
 
 	def validate_drop_ship(self):
 		for d in self.get('items'):
@@ -188,6 +189,13 @@ class SalesOrder(SellingController):
 		frappe.db.set(self, 'status', 'Cancelled')
 
 		self.update_blanket_order()
+
+	def on_update(self):
+		if self._action == 'save':
+			self.update_prevdoc_status('save')
+
+	def after_delete(self):
+		self.update_prevdoc_status('delete')
 
 	def update_project(self):
 		if frappe.db.get_single_value('Selling Settings', 'sales_update_frequency') != "Each Transaction":
@@ -291,9 +299,6 @@ class SalesOrder(SellingController):
 			update_bin_qty(item_code, warehouse, {
 				"reserved_qty": get_reserved_qty(item_code, warehouse)
 			})
-
-	def on_update(self):
-		pass
 
 	def before_update_after_submit(self):
 		self.validate_po()
