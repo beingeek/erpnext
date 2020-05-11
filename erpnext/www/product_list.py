@@ -19,6 +19,7 @@ def get_context(context):
 		raise frappe.PermissionError, "Please login first"
 
 	item_group = frappe.form_dict.item_group
+	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
 
 	if not item_group:
 		frappe.local.flags.redirect_location = "/products"
@@ -27,6 +28,14 @@ def get_context(context):
 	if not frappe.db.get_value("Item Group", item_group, 'show_in_website'):
 		context.title = _("Invalid Item Group")
 		raise frappe.DoesNotExistError
+
+	item_group_tbl = party.get('item_group_tbl')
+	customer_item_groups = [d.item_group for d in item_group_tbl ]
+
+	if customer_item_groups:
+		if item_group not in customer_item_groups:
+			context.title = _("Invalid Item Group")
+			raise frappe.DoesNotExistError
 
 	context.title = item_group
 	stock_settings = frappe.get_single("Stock Settings")
