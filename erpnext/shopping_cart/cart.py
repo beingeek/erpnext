@@ -446,7 +446,10 @@ def get_party(user=None, get_contact=False):
 		contact.flags.ignore_mandatory = True
 		contact.insert(ignore_permissions=True)
 
-		return customer
+		if get_contact:
+			return customer, contact
+		else:
+			return customer
 
 def get_contact_name(user):
 	contacts = frappe.db.sql_list("""
