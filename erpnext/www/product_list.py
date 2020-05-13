@@ -46,7 +46,7 @@ def get_context(context):
 	if customer_item_groups:
 		if item_group not in customer_item_groups:
 			context.title = _("Invalid Item Group")
-			raise frappe.PermissionError("You do not have access to {}".format(item_group))
+			raise frappe.PermissionError("You do not have access to {0}".format(item_group))
 
 
 @frappe.whitelist()
