@@ -19,7 +19,6 @@ def get_context(context):
 		raise frappe.PermissionError, "Please login first"
 
 	item_group = frappe.form_dict.item_group
-	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
 
 	if not item_group:
 		frappe.local.flags.redirect_location = "/products"
@@ -28,14 +27,6 @@ def get_context(context):
 	if not frappe.db.get_value("Item Group", item_group, 'show_in_website'):
 		context.title = _("Invalid Item Group")
 		raise frappe.DoesNotExistError
-
-	item_group_tbl = party.get('item_group_tbl')
-	customer_item_groups = [d.item_group for d in item_group_tbl ]
-
-	if customer_item_groups:
-		if item_group not in customer_item_groups:
-			context.title = _("Invalid Item Group")
-			raise frappe.DoesNotExistError
 
 	context.title = item_group
 	stock_settings = frappe.get_single("Stock Settings")
@@ -48,6 +39,14 @@ def get_context(context):
 	if context.quotation:
 		context.doc = context.quotation
 		context.quotation.get_cart_messages()
+
+	item_group_tbl = context.contact.get('item_groups_allowed')
+	customer_item_groups = [d.item_group for d in item_group_tbl]
+
+	if customer_item_groups:
+		if item_group not in customer_item_groups:
+			context.title = _("Invalid Item Group")
+			raise frappe.PermissionError("You do not have access to {}".format(item_group))
 
 
 @frappe.whitelist()
@@ -142,7 +141,7 @@ def process_item_data(item_data, delivery_date=None):
 
 	item_code_map = group_by_item_code(item_data)
 
-	party = get_party() if frappe.session.user != "Guest" else frappe._dict()
+	party, contact = get_party(get_contact=True) if frappe.session.user != "Guest" else frappe._dict()
 
 	price_list = determine_price_list(party, cart_settings, selling_settings)
 	customer_group = determine_customer_group(party, cart_settings, selling_settings)
@@ -161,6 +160,8 @@ def process_item_data(item_data, delivery_date=None):
 	set_uom_details(item_data)
 
 	out.delivery_date = cstr(delivery_date)
+	out.party = party
+	out.contact = contact
 	return out
 
 
