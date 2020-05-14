@@ -387,7 +387,7 @@ def set_taxes(quotation, cart_settings):
 # 	# append taxes
 	quotation.append_taxes_from_master()
 
-def get_party(user=None):
+def get_party(user=None, get_contact=False):
 	if not user:
 		user = frappe.session.user
 
@@ -408,8 +408,10 @@ def get_party(user=None):
 		debtors_account = get_debtors_account(cart_settings)
 
 	if party:
-		return frappe.get_doc(party_doctype, party)
-
+		if get_contact:
+			return frappe.get_doc(party_doctype, party), contact
+		else:
+			return frappe.get_doc(party_doctype, party)
 	else:
 		if not cart_settings.enabled:
 			frappe.local.flags.redirect_location = "/contact"
@@ -444,7 +446,10 @@ def get_party(user=None):
 		contact.flags.ignore_mandatory = True
 		contact.insert(ignore_permissions=True)
 
-		return customer
+		if get_contact:
+			return customer, contact
+		else:
+			return customer
 
 def get_contact_name(user):
 	contacts = frappe.db.sql_list("""
