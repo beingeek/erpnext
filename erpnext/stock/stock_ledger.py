@@ -187,10 +187,7 @@ class update_entries_after(object):
 		# rounding as per precision
 		self.stock_value = flt(self.stock_value, self.precision)
 
-		if self.prev_stock_value < 0 and self.stock_value >= 0:
-			stock_value_difference = sle.actual_qty * self.valuation_rate
-		else:
-			stock_value_difference = self.stock_value - self.prev_stock_value
+		stock_value_difference = self.stock_value - self.prev_stock_value
 
 		self.prev_stock_value = self.stock_value
 
@@ -267,6 +264,7 @@ class update_entries_after(object):
 	def get_moving_average_values(self, sle):
 		actual_qty = flt(sle.actual_qty)
 		prev_qty = flt(self.batch_data.batch_qty_after_transaction if self.batch_wise_valuation else self.qty_after_transaction)
+
 		new_qty = flt(prev_qty + actual_qty, self.qty_db_precision)
 		prev_valuation_rate = flt(self.batch_data.batch_valuation_rate if self.batch_wise_valuation else self.valuation_rate)
 		new_valuation_rate = prev_valuation_rate
