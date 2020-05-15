@@ -112,7 +112,7 @@ frappe.ui.form.on("Item", {
 		const stock_exists = (frm.doc.__onload
 			&& frm.doc.__onload.stock_exists) ? 1 : 0;
 
-		['is_stock_item', 'has_serial_no', 'has_batch_no', 'batch_wise_valuation'].forEach((fieldname) => {
+		['is_stock_item', 'has_serial_no', 'has_batch_no', 'batch_wise_valuation', 'stock_uom', 'alt_uom_size', 'alt_uom'].forEach((fieldname) => {
 			frm.set_df_property(fieldname, 'read_only', stock_exists);
 		});
 
