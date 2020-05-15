@@ -164,7 +164,7 @@
 					<span class="text-muted small">{{d.alt_uom}}</span>
 				</td>
 				<td class="text-right" style="vertical-align: middle;">
-					{{ d.get_formatted("rate") }}
+					{{ d.get_formatted("rate") if d.get('rate') else '' }}
 				</td>
 				{% if doc.doctype != 'Quotation' %}
 				<td class="text-right" style="vertical-align: middle;">
