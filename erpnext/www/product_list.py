@@ -40,13 +40,11 @@ def get_context(context):
 		context.doc = context.quotation
 		context.quotation.get_cart_messages()
 
-	item_group_tbl = context.contact.get('item_groups_allowed')
-	customer_item_groups = [d.item_group for d in item_group_tbl]
+	customer_item_groups = [d.item_group for d in context.contact.get('item_groups_allowed') or []]
 
-	if customer_item_groups:
-		if item_group not in customer_item_groups:
-			context.title = _("Invalid Item Group")
-			raise frappe.PermissionError("You do not have access to {0}".format(item_group))
+	if customer_item_groups and item_group not in customer_item_groups:
+		context.title = _("Invalid Item Group")
+		raise frappe.PermissionError("You do not have access to {0}".format(item_group))
 
 
 @frappe.whitelist()
