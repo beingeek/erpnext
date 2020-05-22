@@ -20,3 +20,7 @@ def home_page_is_products(doc, method):
 	if home_page_is_products:
 		doc.home_page = 'products'
 
+@frappe.whitelist()
+def get_item_groups_allowed():
+	doc = frappe.get_cached_doc("Products Settings", None)
+	return [d.item_group for d in doc.get('item_groups_allowed') or []]

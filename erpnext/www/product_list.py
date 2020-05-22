@@ -9,6 +9,7 @@ from collections import OrderedDict
 from erpnext.shopping_cart.cart import _get_cart_quotation, get_party
 from erpnext.utilities.product import get_price
 from erpnext.stock.doctype.item.item import convert_item_uom_for
+from erpnext.portal.doctype.products_settings.products_settings import get_item_groups_allowed
 
 
 def get_context(context):
@@ -24,7 +25,9 @@ def get_context(context):
 		frappe.local.flags.redirect_location = "/products"
 		raise frappe.Redirect
 
-	if not frappe.db.get_value("Item Group", item_group, 'show_in_website'):
+	all_customer_item_groups = get_item_groups_allowed()
+
+	if item_group not in all_customer_item_groups or not frappe.db.get_value("Item Group", item_group, 'show_in_website'):
 		context.title = _("Invalid Item Group")
 		raise frappe.DoesNotExistError
 
@@ -40,7 +43,11 @@ def get_context(context):
 		context.doc = context.quotation
 		context.quotation.get_cart_messages()
 
-	customer_item_groups = [d.item_group for d in context.contact.get('item_groups_allowed') or []]
+	customer_item_groups = frappe.db.sql_list("""
+		select distinct item_group
+		from `tabCustomer Item Group`
+		where (parenttype = 'User' and parent = %s)
+	""", frappe.session.user)
 
 	if customer_item_groups and item_group not in customer_item_groups:
 		context.title = _("Invalid Item Group")
