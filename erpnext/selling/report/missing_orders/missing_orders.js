@@ -6,7 +6,7 @@ frappe.query_reports["Missing Orders"] = {
 	"filters": [
 		{
 			"fieldname":"delivery_date",
-			"label": __("Dalivery Date"),
+			"label": __("Delivery Date"),
 			"fieldtype": "Date",
 			"default": frappe.datetime.get_today()
 		},
@@ -21,8 +21,8 @@ frappe.query_reports["Missing Orders"] = {
 			"fieldname":"enable_disable",
 			"label": __("Enabled/Disabled"),
 			"fieldtype": "Select",
-			"default": "Enabled",
-			"options": "Enabled\nDisabled\nAll"
+			"default": "Enabled Customers",
+			"options": "Enabled Customers\nDisabled Customers\nAll Customers"
 		}
 	]
 }
