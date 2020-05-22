@@ -413,6 +413,9 @@ def get_party(user=None, get_contact=False):
 		else:
 			return frappe.get_doc(party_doctype, party)
 	else:
+		frappe.throw(_("""You are not allowed to access the Customer Portal because you are not linked to any Customer.
+			<a href='/contact' style='font-weight:bold;'>Please contact support</a>."""), frappe.PermissionError)
+
 		if not cart_settings.enabled:
 			frappe.local.flags.redirect_location = "/contact"
 			raise frappe.Redirect
