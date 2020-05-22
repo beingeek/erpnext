@@ -82,7 +82,7 @@ frappe.treeview_settings["Account"] = {
 		treeview.tree.load_children(treeview.tree.root_node, true);
 	},
 	onrender: function(node) {
-		if(frappe.boot.user.can_read.indexOf("GL Entry") !== -1){
+		if(frappe.boot.user.can_write.indexOf("GL Entry") !== -1){
 			var dr_or_cr = node.data.balance < 0 ? "Cr" : "Dr";
 			if (node.data && node.data.balance!==undefined) {
 				$('<span class="balance-area pull-right text-muted small">'
