@@ -66,7 +66,21 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 				"fieldname": "total_outstanding_amt",
 				"fieldtype": "Currency",
 				"options": "currency",
-				"width": 160
+				"width": 150
+			},
+			{
+				"label": _("PDC/LC Amount"),
+				"fieldname": "pdc/lc_amount",
+				"fieldtype": "Currency",
+				"options": "currency",
+				"width": 100
+			},
+			{
+				"label": _("Total Remaining Amt"),
+				"fieldname": "remaining_amount",
+				"fieldtype": "Currency",
+				"options": "currency",
+				"width": 150
 			},
 			{
 				"label": _("0-" + str(self.filters.range1)),
@@ -140,7 +154,8 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 		partywise_advance_amount = get_partywise_advanced_payment_amount(args.get("party_type"),
 			self.filters.get("report_date")) or {}
-		for party, party_dict in iteritems(partywise_total):
+		for party in sorted(partywise_total):
+			party_dict = partywise_total[party]
 			row = [party]
 
 			if party_naming_by == "Naming Series":
@@ -157,6 +172,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 			row += [
 				party_dict.invoiced_amt, paid_amt, party_dict.credit_amt, party_dict.outstanding_amt,
+				party_dict['pdc/lc_amount'], party_dict.remaining_balance,
 				party_dict.range1, party_dict.range2, party_dict.range3, party_dict.range4,
 			]
 
@@ -179,6 +195,8 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 					"paid_amt": 0,
 					"credit_amt": 0,
 					"outstanding_amt": 0,
+					"pdc/lc_amount": 0,
+					"remaining_balance": 0,
 					"range1": 0,
 					"range2": 0,
 					"range3": 0,
