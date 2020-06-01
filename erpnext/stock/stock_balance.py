@@ -262,9 +262,6 @@ def repost_all_stock_vouchers():
 
 		frappe.db.commit()
 
-		print("Updating Stock Entry Additional Cost Account to 5111 - Stock Entry additional Expenses - SP")
-		frappe.db.sql("update `tabStock Entry` set additional_cost_account = '5111 - Stock Entry additional Expenses - SP'")
-
 		print("Getting Stock Vouchers List")
 		vouchers = frappe.db.sql("""select distinct voucher_type, voucher_no
 			from `tabStock Ledger Entry` sle
