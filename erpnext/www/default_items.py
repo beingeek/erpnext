@@ -10,7 +10,7 @@ def get_context(context):
 	context.no_cache = 1
 
 	if frappe.session.user == "Guest":
-		raise frappe.PermissionError, "Please login first"
+		raise frappe.PermissionError("Please login first")
 
 	party = get_party()
 	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],

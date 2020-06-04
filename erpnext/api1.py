@@ -180,13 +180,13 @@ def salesOrderList():
 			d["address_display"]=row[8]
 			d["vehical"]=row[9].encode('utf-8')		
 			d["city"]=row[10].encode('utf-8')
-                        d["state"]=row[11].encode('utf-8')
-                        d["country"]=row[12].encode('utf-8')
-                        d["address_title"]=row[13].encode('utf-8')
-                        d["address_line1"]=row[14].encode('utf-8')
-                        d["latitude"]=row[15].encode('utf-8')
-                        d["longitude"]=row[16].encode('utf-8')
-                        d["near_by_location"]=row[17]
+			d["state"]=row[11].encode('utf-8')
+			d["country"]=row[12].encode('utf-8')
+			d["address_title"]=row[13].encode('utf-8')
+			d["address_line1"]=row[14].encode('utf-8')
+			d["latitude"]=row[15].encode('utf-8')
+			d["longitude"]=row[16].encode('utf-8')
+			d["near_by_location"]=row[17]
 			d["phone"]=row[18]
 			d["items"]=salesOrderItem(row[2])
 			objects_list.append(d)
@@ -212,13 +212,13 @@ def salesOrderItem(invoice_number):
 	objects_list1=[]
 	item_list1=frappe.db.sql("""select item_name,qty,base_rate,base_amount,description from `tabSales Order Item` where parent=%s""",invoice_number.encode('utf-8'))
 	for row1 in item_list1:
-	    d1 = collections.OrderedDict()
-	    d1["item_name"]=row1[0].encode('utf-8')
-	    d1["qty"]=row1[1]
-	    d1["mrp"]=row1[2]
-	    d1["amount"]=row1[3]
-	    d1["item_description"]=row1[4].encode('utf-8')
-	    objects_list1.append(d1)
+		d1 = collections.OrderedDict()
+		d1["item_name"]=row1[0].encode('utf-8')
+		d1["qty"]=row1[1]
+		d1["mrp"]=row1[2]
+		d1["amount"]=row1[3]
+		d1["item_description"]=row1[4].encode('utf-8')
+		objects_list1.append(d1)
 
 	return objects_list1
 
@@ -281,12 +281,12 @@ def save_sales_order(item_object,delivery_date):
 	if final:
 		objects_list = []
 		for row in final.items:
-		    d = collections.OrderedDict()
-		    d["item_name"]=row.item_name
-		    d["qty"]=row.qty
-		    d["base_amount"]=row.base_amount
-		    d["base_rate"]=row.base_rate
-		    objects_list.append(d)
+			d = collections.OrderedDict()
+			d["item_name"]=row.item_name
+			d["qty"]=row.qty
+			d["base_amount"]=row.base_amount
+			d["base_rate"]=row.base_rate
+			objects_list.append(d)
 		#return objects_list
 		result_list1=[]
 		d = collections.OrderedDict()
@@ -395,13 +395,13 @@ def purchaseOrderList():
 			d["address_display"]=row[8]
 			d["vehical"]=row[9].encode('utf-8')		
 			d["city"]=row[10].encode('utf-8')
-                        d["state"]=row[11].encode('utf-8')
-                        d["country"]=row[12].encode('utf-8')
-                        d["address_title"]=row[13].encode('utf-8')
-                        d["address_line1"]=row[14].encode('utf-8')
-                        d["latitude"]=row[15].encode('utf-8')
-                        d["longitude"]=row[16].encode('utf-8')
-                        d["near_by_location"]=row[17]
+			d["state"]=row[11].encode('utf-8')
+			d["country"]=row[12].encode('utf-8')
+			d["address_title"]=row[13].encode('utf-8')
+			d["address_line1"]=row[14].encode('utf-8')
+			d["latitude"]=row[15].encode('utf-8')
+			d["longitude"]=row[16].encode('utf-8')
+			d["near_by_location"]=row[17]
 			d["phone"]=row[18]
 			d["items"]=salesOrderItem(row[2])
 			objects_list.append(d)
@@ -427,13 +427,13 @@ def purchaseOrderItem(invoice_number):
 	objects_list1=[]
 	item_list1=frappe.db.sql("""select item_name,qty,base_rate,base_amount,description from `tabSales Order Item` where parent=%s""",invoice_number.encode('utf-8'))
 	for row1 in item_list1:
-	    d1 = collections.OrderedDict()
-	    d1["item_name"]=row1[0].encode('utf-8')
-	    d1["qty"]=row1[1]
-	    d1["mrp"]=row1[2]
-	    d1["amount"]=row1[3]
-	    d1["item_description"]=row1[4].encode('utf-8')
-	    objects_list1.append(d1)
+		d1 = collections.OrderedDict()
+		d1["item_name"]=row1[0].encode('utf-8')
+		d1["qty"]=row1[1]
+		d1["mrp"]=row1[2]
+		d1["amount"]=row1[3]
+		d1["item_description"]=row1[4].encode('utf-8')
+		objects_list1.append(d1)
 
 	return objects_list1
 
@@ -496,12 +496,12 @@ def save_purchase_order(item_object,delivery_date):
 	if final:
 		objects_list = []
 		for row in final.items:
-		    d = collections.OrderedDict()
-		    d["item_name"]=row.item_name
-		    d["qty"]=row.qty
-		    d["base_amount"]=row.base_amount
-		    d["base_rate"]=row.base_rate
-		    objects_list.append(d)
+			d = collections.OrderedDict()
+			d["item_name"]=row.item_name
+			d["qty"]=row.qty
+			d["base_amount"]=row.base_amount
+			d["base_rate"]=row.base_rate
+			objects_list.append(d)
 		#return objects_list
 		result_list1=[]
 		d = collections.OrderedDict()
@@ -695,19 +695,19 @@ def getUserLocation(date1=None):
 
 @frappe.whitelist()
 def getUserLocation1(date1=None):
-        if date1==None:
-                date1=today()
+		if date1==None:
+				date1=today()
 
-        data=frappe.db.sql("""select name from `tabUser Location Log` group by user order by date desc""",as_dict=True)
-        if data:
-                objects_list = []
-                for row in data:
-                        data1=frappe.db.sql("""select max(ul.time) as 'time',ul.latitude,ul.longitude,ull.user from `tabUser Location` as ul inner join `tabUser Location Log` as ull on ul.parent=ull.name where ul.parent=%s""",row[0],as_dict=True)
-                        if data1:
-                                objects_list.append(data1[0])
-                return objects_list
-        else:
-                return _(False)
+		data=frappe.db.sql("""select name from `tabUser Location Log` group by user order by date desc""",as_dict=True)
+		if data:
+				objects_list = []
+				for row in data:
+						data1=frappe.db.sql("""select max(ul.time) as 'time',ul.latitude,ul.longitude,ull.user from `tabUser Location` as ul inner join `tabUser Location Log` as ull on ul.parent=ull.name where ul.parent=%s""",row[0],as_dict=True)
+						if data1:
+								objects_list.append(data1[0])
+				return objects_list
+		else:
+				return _(False)
 
 @frappe.whitelist()
 def customerProfile():
@@ -797,14 +797,14 @@ def salesinvoice_item(invoice_number):
 	objects_list1=[]
 	item_list1=frappe.db.sql("""select item_name,qty,rate,amount,item_code,uom from `tabSales Order Item` where parent=%s""",invoice_number)
 	for row1 in item_list1:
-	    d1 = collections.OrderedDict()
-	    d1["item_name"]=str(row1[0])
-	    d1["qty"]=str(row1[1])
-	    d1["rate"]=row1[2]
-	    d1["amount"]=str(row1[3])
-	    d1["item_code"]=str(row1[4])
-	    d1["uom"]=str(row1[5])
-	    objects_list1.append(d1)
+		d1 = collections.OrderedDict()
+		d1["item_name"]=str(row1[0])
+		d1["qty"]=str(row1[1])
+		d1["rate"]=row1[2]
+		d1["amount"]=str(row1[3])
+		d1["item_code"]=str(row1[4])
+		d1["uom"]=str(row1[5])
+		objects_list1.append(d1)
 
 	return objects_list1
 
@@ -892,12 +892,12 @@ def save_sales_order_for_sd(item_object,delivery_date,customer,driver):
 	if final:
 		objects_list = []
 		for row in final.items:
-		    d = collections.OrderedDict()
-		    d["item_name"]=row.item_name
-		    d["qty"]=row.qty
-		    d["base_amount"]=row.base_amount
-		    d["base_rate"]=row.base_rate
-		    objects_list.append(d)
+			d = collections.OrderedDict()
+			d["item_name"]=row.item_name
+			d["qty"]=row.qty
+			d["base_amount"]=row.base_amount
+			d["base_rate"]=row.base_rate
+			objects_list.append(d)
 		#return objects_list
 		result_list1=[]
 		d = collections.OrderedDict()

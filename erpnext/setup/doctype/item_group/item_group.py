@@ -59,7 +59,7 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 
 	def get_context(self, context):
 		if frappe.session.user == "Guest":
-			raise frappe.PermissionError, "Please login first"
+			raise frappe.PermissionError("Please login first")
 
 		context.show_search=True
 		context.page_length = cint(frappe.db.get_single_value('Products Settings', 'products_per_page')) or 6

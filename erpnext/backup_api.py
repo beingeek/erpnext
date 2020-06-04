@@ -24,55 +24,55 @@ from frappe.utils.backups import backup
 
 
 def get_newest_file():
-    import os
-    path = '/home/vini/frappe-bench/sites/site1.local/private/backups'
-    os.chdir(path)
-    files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
-    if files:
-        oldest = files[0]
-        newest = files[-1]
-        return newest
+	import os
+	path = '/home/vini/frappe-bench/sites/site1.local/private/backups'
+	os.chdir(path)
+	files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
+	if files:
+		oldest = files[0]
+		newest = files[-1]
+		return newest
 
 
 def transfer_files():
-    import paramiko
+	import paramiko
 
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('74.208.40.77', username='root', password='HeyRam108')
+	ssh = paramiko.SSHClient()
+	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	ssh.connect('74.208.40.77', username='root', password='HeyRam108')
 
-    print "connected successfully!"
+	print("connected successfully!")
 
-    sftp = ssh.open_sftp()
+	sftp = ssh.open_sftp()
 
 
-    # createFolder('/home/vini/frappe-bench/production_backups/')
+	# createFolder('/home/vini/frappe-bench/production_backups/')
 
-    filesInRemoteArtifacts = sftp.listdir(path='/home/vini/frappe-bench/production_backups/')
-    if len(filesInRemoteArtifacts)<5:
-        pass
-    else:
-        sftp.remove('/home/vini/frappe-bench/production_backups/'+filesInRemoteArtifacts[-1])
+	filesInRemoteArtifacts = sftp.listdir(path='/home/vini/frappe-bench/production_backups/')
+	if len(filesInRemoteArtifacts)<5:
+		pass
+	else:
+		sftp.remove('/home/vini/frappe-bench/production_backups/'+filesInRemoteArtifacts[-1])
    
-    print sftp
+	print(sftp)
 
-    import os
+	import os
 
-    sftp.put('/home/vini/frappe-bench/sites/site1.local/private/backups/'+get_newest_file(),'/home/vini/frappe-bench/production_backups/'+get_newest_file())
-    
-    sftp.close()
-    print "copied successfully!"
+	sftp.put('/home/vini/frappe-bench/sites/site1.local/private/backups/'+get_newest_file(),'/home/vini/frappe-bench/production_backups/'+get_newest_file())
+	
+	sftp.close()
+	print("copied successfully!")
 
-    ssh.close()
-    exit()
+	ssh.close()
+	exit()
 
 
 def createFolder(directory):
-    try:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-    except OSError:
-        print ('Error: Creating directory. ' +  directory)
+	try:
+		if not os.path.exists(directory):
+			os.makedirs(directory)
+	except OSError:
+		print('Error: Creating directory. ' +  directory)
 
 
 

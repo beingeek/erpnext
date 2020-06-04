@@ -113,12 +113,12 @@ def saveMasterPoOrder(po,ps):
 	master_so_data.pallet_weight = data["pallet_weight"]
 	master_so_data.total_actual_cost = data["total_actual_cost"]
 	master_so_data.total_actual_cost_usd = data["total_actual_cost_usd"]
-        master_so_data.template_name = data["template_name"]
+	master_so_data.template_name = data["template_name"]
 
 	master_so_data.save(ignore_permissions=True)
 	
 	frappe.db.sql("""delete from `tabMaster Sales Order Item` 
-        where parent = %s """, master_so_data.name)
+		where parent = %s """, master_so_data.name)
 	
 	for row in data["master_sales_order_item"]:
 
@@ -268,12 +268,12 @@ def updateMasterPoOrder(po,ps):
 	master_so_data.pallet_weight = data["pallet_weight"]
 	master_so_data.total_actual_cost = data["total_actual_cost"]
 	master_so_data.total_actual_cost_usd = data["total_actual_cost_usd"]
-        master_so_data.template_name = data["template_name"]
+	master_so_data.template_name = data["template_name"]
 
 	master_so_data.save(ignore_permissions=True)
 	
 	frappe.db.sql("""delete from `tabMaster Sales Order Item` 
-        where parent = %s """, master_so_data.name)
+		where parent = %s """, master_so_data.name)
 	
 	for row in data["master_sales_order_item"]:
 

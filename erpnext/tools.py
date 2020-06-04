@@ -41,7 +41,7 @@ def transfer_files():
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect('74.208.40.77', username='root', password='HeyRam108')
 
-    print "connected successfully!"
+    print("connected successfully!")
 
     sftp = ssh.open_sftp()
 
@@ -54,14 +54,14 @@ def transfer_files():
     else:
         sftp.remove('/home/vini/frappe-bench/production_backups/'+filesInRemoteArtifacts[-1])
    
-    print sftp
+    print(sftp)
 
     import os
 
     sftp.put('/home/vini/frappe-bench/sites/sundinepro.com/private/backups/'+get_newest_file(),'/home/vini/frappe-bench/production_backups/'+get_newest_file())
     
     sftp.close()
-    print "copied successfully!"
+    print("copied successfully!")
 
     ssh.close()
     exit()
@@ -221,9 +221,9 @@ def tst_sa():
         rows = read_csv_content(infile.read())
 
         for index, row in enumerate(rows):
-            print index
+            print(index)
             if row[0]:
-                print "1"
+                print("1")
                 doc = frappe.new_doc("Sales Invoice")
                 doc.naming_series = row[0]
                 doc.company = row[1]
@@ -291,7 +291,7 @@ def tst_sa():
                 doc.insert(ignore_permissions=True)
 
             elif row[1] and row[2] and row[3]:
-                print "2"
+                print("2")
                 x = frappe.get_doc("Sales Invoice",doc.name)
                 x.append("items", {
                                 "item_name": row[23],
@@ -335,7 +335,7 @@ def tst_sa():
                 x.save(ignore_permissions=True)
 
             elif row[1] and row[2] and not row[3]:
-                print "3"
+                print("3")
                 y = frappe.get_doc("Sales Invoice",doc.name)
                 y.append("items", {
                                 "item_name": row[23],
@@ -372,7 +372,7 @@ def tst_sa():
                 y.save(ignore_permissions=True)
 
             elif row[1] and not row[2] and not row[3]:
-                print "4"
+                print("4")
                 z = frappe.get_doc("Sales Invoice",doc.name)
                 z.append("items", {
                                 "item_name": row[23],
@@ -451,7 +451,7 @@ def tst_edit_allo():
             doc.new_leaves_allocated = flt(row[3]) - (doc.total_leaves_allocated-flt(emp[0][0]))
             doc.flags.ignore_validate = True
             doc.save(ignore_permissions=True)
-            print 'Done'
+            print('Done')
 
 
 
@@ -462,7 +462,7 @@ def tst_edit_allo():
 #         doc.new_leaves_allocated += 0.01
 #         doc.flags.ignore_validate = True
 #         doc.save(ignore_permissions=True)
-#         print 'Done'
+#         print('Done')
 
 
 
@@ -480,7 +480,7 @@ def tst_allo():
                 doc.new_leaves_allocated += deserved_leave
                 doc.flags.ignore_validate = True
                 doc.save(ignore_permissions=True)
-                print 'Done'
+                print('Done')
 
 
 
@@ -499,13 +499,13 @@ def tst_leave():
     current_year = datetime.datetime.strptime(str(leave[0].from_date), '%Y-%m-%d')
     current_year_month = current_year.month
 
-    print leave_balance,current_month,current_year_month,leave[0].from_date
+    print(leave_balance,current_month,current_year_month,leave[0].from_date)
 
 
 
 def tst_end_of_service():
     award_info = get_award('2016-01-01', '2018-05-22', 2500, 'دوام كامل' , 'استقالة الموظف')
-    print round(award_info['award'],2)
+    print(round(award_info['award'],2))
 
 
 def tst_sal():
@@ -526,9 +526,9 @@ def tst_sal():
 def val_leave_expense():
     emp = frappe.get_list("Employee", filters={"name": 'EMP0001'}, fields=["work_days"])
     leave = frappe.get_list("Leave Allocation", filters={"employee": 'EMP0001'}, fields=["total_leaves_allocated"])
-    print emp[0].work_days,leave[0].total_leaves_allocated
+    print(emp[0].work_days,leave[0].total_leaves_allocated)
     if leave[0].total_leaves_allocated > int(emp[0].work_days):
-        print leave[0].total_leaves_allocated - int(emp[0].work_days)
+        print(leave[0].total_leaves_allocated - int(emp[0].work_days))
     else:
         frappe.throw("Employee {0} can't have leave balance expense claim this year".format('EMP0001'))
 
@@ -539,7 +539,7 @@ def add_contract_type():
     emp=frappe.db.sql("select name from `tabEmployee` ")
 
     for i in range(length[0][0]):
-        print emp[i][0]
+        print(emp[i][0])
         doc_emp = frappe.get_doc('Employee', emp[i][0])
         doc_emp.type_of_contract = "دوام كامل"
         doc_emp.flags.ignore_validate = True
@@ -553,11 +553,11 @@ def valid_start_leave():
     allocation = frappe.db.sql("select from_date,to_date from `tabLeave Allocation` where employee='EMP0006' order by creation asc limit 1")
     # from_date = datetime.datetime.strptime(str(allocation[0][0]), '%Y-%m-%d')
     valid_date = allocation[0][0] + relativedelta(months=+3)
-    # print allocation[0][0]
-    # print valid_date
+    # print(allocation[0][0])
+    # print(valid_date)
     if date.today() < valid_date:
-        print allocation[0][0]
-        print valid_date
+        print(allocation[0][0])
+        print(valid_date)
 
       
 
@@ -569,11 +569,11 @@ def valid_start_leave():
 #     allocation = frappe.db.sql("select from_date,to_date from `tabLeave Allocation` where employee='EMP0006' order by creation asc limit 1")
 #     from_date = datetime.datetime.strptime(str(allocation[0][0]), '%Y-%m-%d')
 #     valid_date = date(from_date.year, from_date.month, from_date.day) + relativedelta(months=+3)
-#     # print allocation[0][0]
-#     # print valid_date
+#     # print(allocation[0][0])
+#     # print(valid_date)
 #     if "2018-06-02" < valid_date:
-#         print allocation[0][0]
-#         print valid_date
+#         print(allocation[0][0])
+#         print(valid_date)
 
       
 
@@ -603,7 +603,7 @@ def hooked_leave_allocation_builder():
                 }).insert(ignore_permissions=True)
 
                 
-                print leave_allocation[0][0],leave_allocation[0][1]
+                print(leave_allocation[0][0],leave_allocation[0][1])
                 c+=1
         
         else:
@@ -627,7 +627,7 @@ def hooked_leave_allocation_builder():
                 }).insert(ignore_permissions=True)
 
 
-    print 'Count ',c
+    print('Count ',c)
 
 
 
@@ -658,10 +658,10 @@ def tst_allocation():
                 }).insert(ignore_permissions=True)
 
                 
-                print leave_allocation[0][0],leave_allocation[0][1]
+                print(leave_allocation[0][0],leave_allocation[0][1])
                 c+=1
 
-    print c
+    print(c)
 
 
 
@@ -686,8 +686,8 @@ def add_salary():
 
 
                 if query[0].status == "Active":
-                    print query[0].name
-                    print row[2]
+                    print(query[0].name)
+                    print(row[2])
                     ss = frappe.new_doc("Salary Structure")
                     ss.update(
                         {
@@ -727,13 +727,13 @@ def add_emp():
     import sys
     from frappe.utils.csvutils import read_csv_content
     from frappe.core.doctype.data_import.importer import upload
-    # print "Importing " + path
+    # print("Importing " + path)
     with open('/home/frappe/frappe-bench/apps/client/client/emp.csv', "r") as infile:
         rows = read_csv_content(infile.read())
 
         cc = 0
         for index, row in enumerate(rows):
-            print index
+            print(index)
 
             frappe.get_doc({
                 "doctype": "Employee",
@@ -753,7 +753,7 @@ def add_emp():
             }).insert(ignore_permissions=True)
 
             
-        print cc
+        print(cc)
 
 
 
@@ -761,7 +761,7 @@ def add_usres_email():
     import sys
     from frappe.utils.csvutils import read_csv_content
     from frappe.core.doctype.data_import.importer import upload
-    # print "Importing " + path
+    # print("Importing " + path)
     with open('/home/frappe/frappe-bench/apps/client/client/emp.csv', "r") as infile:
         rows = read_csv_content(infile.read())
 
@@ -772,7 +772,7 @@ def add_usres_email():
             string = str(row[1])
             tt = string.split()
             if row[11]:
-                print tt[0]+'.'+tt[-1]
+                print(tt[0]+'.'+tt[-1])
 
 
                 frappe.get_doc({
@@ -791,7 +791,7 @@ def add_usres_email():
                 _update_password(row[11], row[5])
 
             
-        print cc
+        print(cc)
 
 
 
@@ -803,7 +803,7 @@ def add_translation( ignore_links=False, overwrite=False, submit=False, pre_proc
         rows = read_csv_content(infile.read())
         for index, row in enumerate(rows):
             if not frappe.db.exists("Translation", {"source_name": row[0]}) and (row[0] is not None):
-                print index,'---',row[0]
+                print(index,'---',row[0])
                 frappe.get_doc({
                         "doctype":"Translation",
                         "language": 'ar',
@@ -813,7 +813,7 @@ def add_translation( ignore_links=False, overwrite=False, submit=False, pre_proc
             else:
                 try:
                     frappe.db.sql("""update `tabTranslation` set target_name="{0}" where source_name="{1}" """.format(row[1],row[0]))
-                    print row[0]
+                    print(row[0])
                 except: 
                     pass
                 
@@ -822,7 +822,7 @@ def add_reports_to():
     import sys
     from frappe.utils.csvutils import read_csv_content
     from frappe.core.doctype.data_import.importer import upload
-    # print "Importing " + path
+    # print("Importing " + path)
     with open('/home/frappe/frappe-bench/apps/client/emps.csv', "r") as infile:
         rows = read_csv_content(infile.read())
 
@@ -830,15 +830,15 @@ def add_reports_to():
         names = []
         result_manager = frappe.db.sql(
                  "select name,employee_name,Designation from tabEmployee")
-        print result_manager[1][0]
+        print(result_manager[1][0])
         for index, row in enumerate(rows):
-            print row[3]
+            print(row[3])
             for i in result_manager:
                 if i[2] == row[3]:
-                    print "adding......"
+                    print("adding......")
                     emp_name = frappe.db.sql("select name from tabEmployee where employee_name='{0}'".format(row[1]))
                     if emp_name:
-                        print emp_name[0][0]
+                        print(emp_name[0][0])
                         doc_emp = frappe.get_doc('Employee',emp_name[0][0])
                         doc_emp.reports_to = i[0]
                         doc_emp.save(ignore_permissions=True)
@@ -852,7 +852,7 @@ def add_usr_id_to_employee():
     import sys
     from frappe.utils.csvutils import read_csv_content
     from frappe.core.doctype.data_import.importer import upload
-    # print "Importing " + path
+    # print("Importing " + path)
     # with open('/home/frappe/frappe-bench/apps/client/emps.csv', "r") as infile:
     #     rows = read_csv_content(infile.read())
 
@@ -860,13 +860,13 @@ def add_usr_id_to_employee():
     #             "select name from tabUser where civil_id_no='{0}'".format(row[9]))
     result_user = frappe.db.sql(
                  "select email,civil_id_no from tabUser")
-    # print result_user[1][1]
+    # print(result_user[1][1])
     for i in result_user:
         emp_name = frappe.db.sql("select name from tabEmployee where civil_id_no='{0}'".format(i[1]))
         if emp_name:
             doc_emp = frappe.get_doc('Employee',emp_name[0][0])
             doc_emp.user_id = i[0]
-            print i[0]
+            print(i[0])
             doc_emp.save(ignore_permissions=True)
 
 
@@ -874,7 +874,7 @@ def add_usr():
     import sys
     from frappe.utils.csvutils import read_csv_content
     from frappe.core.doctype.data_import.importer import upload
-    # print "Importing " + path
+    # print("Importing " + path)
     with open('/home/frappe/frappe-bench/apps/client/emps.csv', "r") as infile:
         rows = read_csv_content(infile.read())
 
@@ -885,7 +885,7 @@ def add_usr():
             result = frappe.db.sql(
                 "select name from tabEmployee where civil_id_no='{0}'".format(row[9]))
             
-            print row[0]
+            print(row[0])
             cc += 1
             string = str(row[0])
             tt = string.split()
@@ -894,13 +894,13 @@ def add_usr():
         #    if rr:
         #        pass
         #    else:
-            print cc
+            print(cc)
             name = tt[0] + "." + tt[-1]+"@tadweer.sa"
             if row[15] != None:
                 name = row[15]
 
-            print name
-            print "***************************"
+            print(name)
+            print("***************************")
             middle_name = ""
             if len(tt)>2 and tt[1] != "-":
                 middle_name = tt[1]
@@ -928,18 +928,18 @@ def add_usr():
         if result:
             frappe.db.sql(
                 "update `tabEmployee` set user_id='{0}' where civil_id='{1}'".format(row[3], row[2]))
-            print "h"
+            print("h")
 
-        print cc
+        print(cc)
 
 
 def timee():
 
     # time= frappe.db.sql("select time from `tabLeave App` ")
     time = frappe.db.sql("select time from `tabLeave App` ")
-    # print len(time)
+    # print(len(time))
     for i in time:
-        print i[0]
+        print(i[0])
 
 
 def tst():
@@ -949,24 +949,24 @@ def tst():
     day = datetime.timedelta(days=1)
 
     while date1 <= date2:
-        print date1.strftime('%Y.%m.%d')
+        print(date1.strftime('%Y.%m.%d'))
         date1 = date1 + day
 
     for d in daterange(date2, date1):
-        print d.strftime('%Y.%m.%d')
+        print(d.strftime('%Y.%m.%d'))
 
 
 def balance():
     t = frappe.db.sql(
         "select total from `tabLeave App` where employee='EMP/0003' ")[0]
-    print t[0]
+    print(t[0])
 
 
 # def val():
 #     to_date =frappe.db.sql("select to_date from `tabLeave App` where employee='EMP/0003' ")[0][0]
 #     from_date = frappe.db.sql("select from_date from `tabLeave App` where employee='EMP/0003' ")[0][0]
 #     for i in daterange(from_date):
-#         print i
+#         print(i)
 
 
 def num():
@@ -979,25 +979,25 @@ def num():
 
     # m =datetime.datetime.today().strftime('%Y-%m-%d')
     # for single_date in (from_date + timedelta(n) for n in range(day_count)):
-    #     print single_date
+    #     print(single_date)
     #     if str(single_date) >= '2018-02-14' and str(single_date)<= '2018-02-20' :
-    #         print "not alllowe"
+    #         print("not alllowe")
     #     else:
-    #         print 'allow'
+    #         print('allow')
 
     # if str(from_date) >= m or m <= str(to_date):
-    #     print ('no')
-    #     print m
+    #     print(('no'))
+    #     print(m)
 
     # else:
-    #     print ('allow')
+    #     print(('allow'))
 
     # if m == day_count :
-    #     print ('not allow')
+    #     print(('not allow'))
     # else :
-    #     print single_date
+    #     print(single_date)
 
-    #print single_date
+    #print(single_date)
 
 
 def add_items():
@@ -1009,7 +1009,7 @@ def add_items():
         c = 0
 
         for index, row in enumerate(rows):
-            print index,row[0]
+            print(index,row[0])
             frappe.get_doc({
                 "doctype": "Item",
                 "item_group": row[0],
@@ -1027,7 +1027,7 @@ def add_items():
 
             }).insert(ignore_permissions=True)
 
-    print c
+    print(c)
 
 
 def make_salary_structure():
@@ -1080,4 +1080,4 @@ def add_items_group():
 
             }).insert(ignore_permissions=True)
 
-    print c
+    print(c)

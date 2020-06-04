@@ -17,7 +17,7 @@ def get_context(context):
 	context.parents = [{'title': _('Products'), 'route': 'product-list'}]
 
 	if frappe.session.user == "Guest":
-		raise frappe.PermissionError, "Please login first"
+		raise frappe.PermissionError("Please login first")
 
 	item_group = frappe.form_dict.item_group
 
@@ -57,7 +57,7 @@ def get_context(context):
 @frappe.whitelist()
 def get_items_table(item_group):
 	if frappe.session.user == "Guest":
-		raise frappe.PermissionError, "Please login first"
+		raise frappe.PermissionError("Please login first")
 
 	if not frappe.db.get_value("Item Group", item_group, 'show_in_website'):
 		frappe.throw("Item Group {0} is not available".format(item_group))
