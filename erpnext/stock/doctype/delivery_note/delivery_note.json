@@ -1,9 +1,11 @@
 {
+ "actions": [],
  "allow_import": 1,
  "autoname": "naming_series:",
  "creation": "2013-05-24 19:29:09",
  "doctype": "DocType",
  "document_type": "Document",
+ "engine": "InnoDB",
  "field_order": [
   "delivery_to_section",
   "column_break0",
@@ -18,13 +20,14 @@
   "posting_time",
   "set_posting_time",
   "is_return",
-  "reopen_order",
   "issue_credit_note",
   "return_against",
   "customer_po_details",
   "po_no",
   "column_break_17",
   "po_date",
+  "section_break_18",
+  "pick_list",
   "contact_info",
   "shipping_address_name",
   "shipping_address",
@@ -53,29 +56,18 @@
   "items_section",
   "scan_barcode",
   "items",
+  "pricing_rule_details",
+  "pricing_rules",
   "packing_list",
   "packed_items",
   "product_bundle_help",
-  "sec_before_discount",
-  "base_total_before_discount",
-  "base_tax_exclusive_total_before_discount",
-  "base_total_discount",
-  "base_tax_exclusive_total_discount",
-  "col_break_before_discount",
-  "total_before_discount",
-  "tax_exclusive_total_before_discount",
-  "total_discount",
-  "tax_exclusive_total_discount",
   "section_break_31",
   "total_qty",
-  "total_alt_uom_qty",
   "base_total",
-  "base_tax_exclusive_total",
   "base_net_total",
   "column_break_33",
-  "total_gross_weight",
+  "total_net_weight",
   "total",
-  "tax_exclusive_total",
   "net_total",
   "taxes_section",
   "tax_category",
@@ -124,8 +116,6 @@
   "source",
   "column_break5",
   "per_billed",
-  "per_returned",
-  "per_completed",
   "customer_group",
   "territory",
   "printing_details",
@@ -144,7 +134,6 @@
   "instructions",
   "subscription_section",
   "auto_repeat",
-  "subscription",
   "sales_team_section_break",
   "sales_partner",
   "column_break7",
@@ -184,7 +173,7 @@
    "no_copy": 1,
    "oldfieldname": "naming_series",
    "oldfieldtype": "Select",
-   "options": "DN-\nDN-RET-",
+   "options": "MAT-DN-.YYYY.-",
    "print_hide": 1,
    "reqd": 1,
    "set_only_once": 1
@@ -289,14 +278,6 @@
   {
    "default": "0",
    "depends_on": "is_return",
-   "fieldname": "reopen_order",
-   "fieldtype": "Check",
-   "label": "Reopen Order",
-   "no_copy": 1
-  },
-  {
-   "default": "0",
-   "depends_on": "is_return",
    "fieldname": "issue_credit_note",
    "fieldtype": "Check",
    "label": "Issue Credit Note"
@@ -313,7 +294,6 @@
   },
   {
    "collapsible": 1,
-   "collapsible_depends_on": "po_no",
    "fieldname": "customer_po_details",
    "fieldtype": "Section Break",
    "label": "Customer PO Details"
@@ -321,7 +301,7 @@
   {
    "allow_on_submit": 1,
    "fieldname": "po_no",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "label": "Customer's Purchase Order No",
    "no_copy": 1,
    "oldfieldname": "po_no",
@@ -335,7 +315,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.po_no",
    "fieldname": "po_date",
    "fieldtype": "Date",
    "label": "Customer's Purchase Order Date",
@@ -343,7 +322,6 @@
    "oldfieldtype": "Data",
    "print_hide": 1,
    "print_width": "100px",
-   "read_only": 1,
    "width": "100px"
   },
   {
@@ -553,6 +531,18 @@
    "reqd": 1
   },
   {
+   "fieldname": "pricing_rule_details",
+   "fieldtype": "Section Break",
+   "label": "Pricing Rules"
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Table",
+   "label": "Pricing Rule Detail",
+   "options": "Pricing Rule Detail",
+   "read_only": 1
+  },
+  {
    "collapsible": 1,
    "collapsible_depends_on": "packed_items",
    "fieldname": "packing_list",
@@ -579,88 +569,6 @@
    "print_hide": 1
   },
   {
-   "collapsible": 1,
-   "fieldname": "sec_before_discount",
-   "fieldtype": "Section Break",
-   "label": "Total Before Discount"
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "base_total_before_discount",
-   "fieldtype": "Currency",
-   "label": "Total Before Discount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "base_tax_exclusive_total_before_discount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Total Before Discount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "base_total_discount",
-   "fieldtype": "Currency",
-   "label": "Total Discount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "base_tax_exclusive_total_discount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Total Discount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "col_break_before_discount",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "total_before_discount",
-   "fieldtype": "Currency",
-   "label": "Total Before Discount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "tax_exclusive_total_before_discount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Total Before Discount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "total_discount",
-   "fieldtype": "Currency",
-   "label": "Total Discount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "tax_exclusive_total_discount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Total Discount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "section_break_31",
    "fieldtype": "Section Break"
   },
@@ -671,24 +579,9 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.total_qty != doc.total_alt_uom_qty",
-   "fieldname": "total_alt_uom_qty",
-   "fieldtype": "Float",
-   "label": "Total Contents Quantity",
-   "read_only": 1
-  },
-  {
    "fieldname": "base_total",
    "fieldtype": "Currency",
    "label": "Total (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "base_tax_exclusive_total",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Total (Company Currency)",
    "options": "Company:company:default_currency",
    "print_hide": 1,
    "read_only": 1
@@ -710,13 +603,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "total_gross_weight",
-   "fieldtype": "Float",
-   "label": "Total Net Weight",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "total",
    "fieldtype": "Currency",
    "label": "Total",
@@ -724,19 +610,17 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.tax_exclusive_total != doc.net_total",
-   "fieldname": "tax_exclusive_total",
+   "fieldname": "net_total",
    "fieldtype": "Currency",
-   "label": "Tax Exclusive Total",
+   "label": "Net Total",
    "options": "currency",
    "print_hide": 1,
    "read_only": 1
   },
   {
-   "fieldname": "net_total",
-   "fieldtype": "Currency",
-   "label": "Net Total",
-   "options": "currency",
+   "fieldname": "total_net_weight",
+   "fieldtype": "Float",
+   "label": "Total Net Weight",
    "print_hide": 1,
    "read_only": 1
   },
@@ -796,7 +680,7 @@
   },
   {
    "fieldname": "other_charges_calculation",
-   "fieldtype": "Text",
+   "fieldtype": "Long Text",
    "label": "Taxes and Charges Calculation",
    "no_copy": 1,
    "oldfieldtype": "HTML",
@@ -901,7 +785,6 @@
   {
    "fieldname": "base_rounded_total",
    "fieldtype": "Currency",
-   "hidden": 1,
    "label": "Rounded Total (Company Currency)",
    "oldfieldname": "rounded_total",
    "oldfieldtype": "Currency",
@@ -953,12 +836,10 @@
    "bold": 1,
    "fieldname": "rounded_total",
    "fieldtype": "Currency",
-   "hidden": 1,
    "label": "Rounded Total",
    "oldfieldname": "rounded_total_export",
    "oldfieldtype": "Currency",
    "options": "currency",
-   "print_hide": 1,
    "print_width": "150px",
    "read_only": 1,
    "width": "150px"
@@ -967,7 +848,6 @@
    "description": "In Words (Export) will be visible once you save the Delivery Note.",
    "fieldname": "in_words",
    "fieldtype": "Data",
-   "hidden": 1,
    "label": "In Words",
    "oldfieldname": "in_words_export",
    "oldfieldtype": "Data",
@@ -1121,23 +1001,7 @@
   {
    "fieldname": "per_billed",
    "fieldtype": "Percent",
-   "label": "% Billed",
-   "no_copy": 1,
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "per_returned",
-   "fieldtype": "Percent",
-   "label": "% Returned",
-   "no_copy": 1,
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "per_completed",
-   "fieldtype": "Percent",
-   "label": "% Completed (Billed + Returned)",
+   "label": "% Amount Billed",
    "no_copy": 1,
    "print_hide": 1,
    "read_only": 1
@@ -1161,7 +1025,7 @@
    "collapsible": 1,
    "fieldname": "printing_details",
    "fieldtype": "Section Break",
-   "label": "Printing Details"
+   "label": "Print Settings"
   },
   {
    "allow_on_submit": 1,
@@ -1229,7 +1093,7 @@
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "options": "\nDraft\nTo Bill\nCompleted\nReturn\nCancelled\nClosed",
+   "options": "\nDraft\nTo Bill\nCompleted\nCancelled\nClosed",
    "print_hide": 1,
    "print_width": "150px",
    "read_only": 1,
@@ -1278,7 +1142,6 @@
    "oldfieldtype": "Text"
   },
   {
-   "collapsible": 1,
    "fieldname": "subscription_section",
    "fieldtype": "Section Break",
    "label": "Subscription Section"
@@ -1289,15 +1152,6 @@
    "label": "Auto Repeat",
    "no_copy": 1,
    "options": "Auto Repeat",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "subscription",
-   "fieldtype": "Link",
-   "label": "Subscription",
-   "no_copy": 1,
-   "options": "Subscription",
    "print_hide": 1,
    "read_only": 1
   },
@@ -1360,17 +1214,30 @@
    "allow_on_submit": 1,
    "fieldname": "sales_team",
    "fieldtype": "Table",
-   "label": "Sales Team1",
+   "label": "Sales Team",
    "oldfieldname": "sales_team",
    "oldfieldtype": "Table",
    "options": "Sales Team",
    "print_hide": 1
+  },
+  {
+   "fieldname": "pick_list",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Pick List",
+   "options": "Pick List",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_18",
+   "fieldtype": "Section Break"
   }
  ],
  "icon": "fa fa-truck",
  "idx": 146,
  "is_submittable": 1,
- "modified": "2020-06-04 06:41:32.439304",
+ "links": [],
+ "modified": "2020-05-19 17:03:45.880106",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",

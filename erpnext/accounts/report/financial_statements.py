@@ -13,9 +13,10 @@ import frappe, erpnext
 from erpnext.accounts.report.utils import get_currency, convert_to_presentation_currency
 from erpnext.accounts.utils import get_fiscal_year
 from frappe import _
-from frappe.utils import (flt, getdate, get_first_day, add_months, add_days, formatdate)
+from frappe.utils import (flt, getdate, get_first_day, add_months, add_days, formatdate, cstr)
 
 from six import itervalues
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions, get_dimension_with_children
 
 def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_values=False,
 	company=None, reset_period_on_fy_change=True):
@@ -263,8 +264,8 @@ def filter_out_zero_value_rows(data, parent_children_map, show_zero_values=False
 
 def add_total_row(out, root_type, balance_must_be, period_list, company_currency):
 	total_row = {
-		"account_name": "'" + _("Total {0} ({1})").format(_(root_type), _(balance_must_be)) + "'",
-		"account": "'" + _("Total {0} ({1})").format(_(root_type), _(balance_must_be)) + "'",
+		"account_name": _("Total {0} ({1})").format(_(root_type), _(balance_must_be)),
+		"account": _("Total {0} ({1})").format(_(root_type), _(balance_must_be)),
 		"currency": company_currency
 	}
 
@@ -321,7 +322,10 @@ def sort_accounts(accounts, is_root=False, key="name"):
 	"""Sort root types as Asset, Liability, Equity, Income, Expense"""
 
 	def compare_accounts(a, b):
-		if is_root:
+		if re.split('\W+', a[key])[0].isdigit():
+			# if chart of accounts is numbered, then sort by number
+			return cmp(a[key], b[key])
+		elif is_root:
 			if a.report_type != b.report_type and a.report_type == "Balance Sheet":
 				return -1
 			if a.root_type != b.root_type and a.root_type == "Asset":
@@ -331,9 +335,8 @@ def sort_accounts(accounts, is_root=False, key="name"):
 			if a.root_type == "Income" and b.root_type == "Expense":
 				return -1
 		else:
-			if re.split('\W+', a[key])[0].isdigit():
-				# if chart of accounts is numbered, then sort by number
-				return cmp(a[key], b[key])
+			# sort by key (number) or name
+			return cmp(a[key], b[key])
 		return 1
 
 	accounts.sort(key = functools.cmp_to_key(compare_accounts))
@@ -345,35 +348,48 @@ def set_gl_entries_by_account(
 	additional_conditions = get_additional_conditions(from_date, ignore_closing_entries, filters)
 
 	accounts = frappe.db.sql_list("""select name from `tabAccount`
-		where lft >= %s and rgt <= %s""", (root_lft, root_rgt))
-	additional_conditions += " and account in ('{}')"\
-		.format("', '".join([frappe.db.escape(d) for d in accounts]))
+		where lft >= %s and rgt <= %s and company = %s""", (root_lft, root_rgt, company))
 
-	gl_entries = frappe.db.sql("""select posting_date, account, debit, credit, is_opening, fiscal_year, debit_in_account_currency, credit_in_account_currency, account_currency from `tabGL Entry`
-		where company=%(company)s
-		{additional_conditions}
-		and posting_date <= %(to_date)s
-		order by account, posting_date""".format(additional_conditions=additional_conditions),
-		{
+	if accounts:
+		additional_conditions += " and account in ({})"\
+			.format(", ".join([frappe.db.escape(d) for d in accounts]))
+
+		gl_filters = {
 			"company": company,
 			"from_date": from_date,
 			"to_date": to_date,
-			"cost_center": filters.cost_center,
-			"project": filters.project
-		},
-		as_dict=True)
+			"finance_book": cstr(filters.get("finance_book"))
+		}
 
-	if filters and filters.get('presentation_currency'):
-		convert_to_presentation_currency(gl_entries, get_currency(filters))
+		if filters.get("include_default_book_entries"):
+			gl_filters["company_fb"] = frappe.db.get_value("Company",
+				company, 'default_finance_book')
 
-	for entry in gl_entries:
-		gl_entries_by_account.setdefault(entry.account, []).append(entry)
+		for key, value in filters.items():
+			if value:
+				gl_filters.update({
+					key: value
+				})
 
-	return gl_entries_by_account
+		gl_entries = frappe.db.sql("""select posting_date, account, debit, credit, is_opening, fiscal_year, debit_in_account_currency, credit_in_account_currency, account_currency from `tabGL Entry`
+			where company=%(company)s
+			{additional_conditions}
+			and posting_date <= %(to_date)s
+			order by account, posting_date""".format(additional_conditions=additional_conditions), gl_filters, as_dict=True) #nosec
+
+		if filters and filters.get('presentation_currency'):
+			convert_to_presentation_currency(gl_entries, get_currency(filters))
+
+		for entry in gl_entries:
+			gl_entries_by_account.setdefault(entry.account, []).append(entry)
+
+		return gl_entries_by_account
 
 
 def get_additional_conditions(from_date, ignore_closing_entries, filters):
 	additional_conditions = []
+
+	accounting_dimensions = get_accounting_dimensions(as_list=False)
 
 	if ignore_closing_entries:
 		additional_conditions.append("ifnull(voucher_type, '')!='Period Closing Voucher'")
@@ -384,22 +400,28 @@ def get_additional_conditions(from_date, ignore_closing_entries, filters):
 	if filters:
 		if filters.get("project"):
 			if not isinstance(filters.get("project"), list):
-				projects = frappe.safe_encode(filters.get("project"))
-				filters.project = [d.strip() for d in projects.strip().split(',') if d]
+				filters.project = frappe.parse_json(filters.get("project"))
+
 			additional_conditions.append("project in %(project)s")
 
 		if filters.get("cost_center"):
 			filters.cost_center = get_cost_centers_with_children(filters.cost_center)
 			additional_conditions.append("cost_center in %(cost_center)s")
 
-		company_finance_book = erpnext.get_default_finance_book(filters.get("company"))
+		if filters.get("include_default_book_entries"):
+			additional_conditions.append("(finance_book in (%(finance_book)s, %(company_fb)s, '') OR finance_book IS NULL)")
+		else:
+			additional_conditions.append("(finance_book in (%(finance_book)s, '') OR finance_book IS NULL)")
 
-		if not filters.get('finance_book') or (filters.get('finance_book') == company_finance_book):
-			additional_conditions.append("ifnull(finance_book, '') in ('%s', '')" %
-				frappe.db.escape(company_finance_book))
-		elif filters.get("finance_book"):
-			additional_conditions.append("ifnull(finance_book, '') = '%s' " %
-				frappe.db.escape(filters.get("finance_book")))
+	if accounting_dimensions:
+		for dimension in accounting_dimensions:
+			if filters.get(dimension.fieldname):
+				if frappe.get_cached_value('DocType', dimension.document_type, 'is_tree'):
+					filters[dimension.fieldname] = get_dimension_with_children(dimension.document_type,
+						filters.get(dimension.fieldname))
+					additional_conditions.append("{0} in %({0})s".format(dimension.fieldname))
+				else:
+					additional_conditions.append("{0} in (%({0})s)".format(dimension.fieldname))
 
 	return " and {}".format(" and ".join(additional_conditions)) if additional_conditions else ""
 
@@ -409,9 +431,12 @@ def get_cost_centers_with_children(cost_centers):
 
 	all_cost_centers = []
 	for d in cost_centers:
-		lft, rgt = frappe.db.get_value("Cost Center", d, ["lft", "rgt"])
-		children = frappe.get_all("Cost Center", filters={"lft": [">=", lft], "rgt": ["<=", rgt]})
-		all_cost_centers += [c.name for c in children]
+		if frappe.db.exists("Cost Center", d):
+			lft, rgt = frappe.db.get_value("Cost Center", d, ["lft", "rgt"])
+			children = frappe.get_all("Cost Center", filters={"lft": [">=", lft], "rgt": ["<=", rgt]})
+			all_cost_centers += [c.name for c in children]
+		else:
+			frappe.throw(_("Cost Center: {0} does not exist".format(d)))
 
 	return list(set(all_cost_centers))
 

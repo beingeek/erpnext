@@ -22,7 +22,9 @@
   "payment_plan_section",
   "payment_plan_id",
   "column_break_16",
-  "payment_gateway"
+  "payment_gateway",
+  "accounting_dimensions_section",
+  "dimension_col_break"
  ],
  "fields": [
   {
@@ -124,9 +126,19 @@
    "fieldtype": "Link",
    "label": "Payment Gateway",
    "options": "Payment Gateway Account"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
   }
  ],
- "modified": "2020-06-04 06:58:26.468488",
+ "modified": "2019-07-25 18:35:04.362556",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Subscription Plan",

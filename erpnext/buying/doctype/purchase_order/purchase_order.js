@@ -18,6 +18,7 @@ frappe.ui.form.on("Purchase Order", {
 			return {
 				filters: {
 					"company": frm.doc.company,
+					"name": ['!=', frm.doc.supplier_warehouse],
 					"is_group": 0
 				}
 			}
@@ -26,23 +27,24 @@ frappe.ui.form.on("Purchase Order", {
 		frm.set_indicator_formatter('item_code',
 			function(doc) { return (doc.qty<=doc.received_qty) ? "green" : "orange" })
 
-		frm.set_query("blanket_order", "items", function() {
+		frm.set_query("expense_account", "items", function() {
 			return {
-				filters: {
-					"company": frm.doc.company,
-					"docstatus": 1
-				}
+				query: "erpnext.controllers.queries.get_expense_account",
+				filters: {'company': frm.doc.company}
 			}
 		});
+
 	},
 
 	refresh: function(frm) {
-		if(frm.doc.docstatus == 1 && frm.doc.status == 'To Receive and Bill') {
+		if(frm.doc.docstatus === 1 && frm.doc.status !== 'Closed'
+			&& flt(frm.doc.per_received) < 100 && flt(frm.doc.per_billed) < 100) {
 			frm.add_custom_button(__('Update Items'), () => {
 				erpnext.utils.update_child_items({
 					frm: frm,
 					child_docname: "items",
 					child_doctype: "Purchase Order Detail",
+					cannot_add_row: false,
 				})
 			});
 		}
@@ -120,7 +122,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			}
 		}
 
-		cur_frm.set_df_property("drop_ship", "hidden", !is_drop_ship);
+		this.frm.set_df_property("drop_ship", "hidden", !is_drop_ship);
 
 		if(doc.docstatus == 1 && !in_list(["Closed", "Delivered"], doc.status)) {
 			if (this.frm.has_perm("submit")) {
@@ -340,6 +342,10 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 		set_schedule_date(this.frm);
 	},
 
+	has_unsupplied_items: function() {
+		return this.frm.doc['supplied_items'].some(item => item.required_qty != item.supplied_qty)
+	},
+
 	make_stock_entry: function() {
 		var items = $.map(cur_frm.doc.items, function(d) { return d.bom ? d.item_code : false; });
 		var me = this;
@@ -347,10 +353,10 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 		if(items.length >= 1){
 			me.raw_material_data = [];
 			me.show_dialog = 1;
-			let title = "";
+			let title = __('Transfer Material to Supplier');
 			let fields = [
 			{fieldtype:'Section Break', label: __('Raw Materials')},
-			{fieldname: 'sub_con_rm_items', fieldtype: 'Table',
+			{fieldname: 'sub_con_rm_items', fieldtype: 'Table', label: __('Items'),
 				fields: [
 					{
 						fieldtype:'Data',
@@ -416,13 +422,13 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 
 		if (me.frm.doc['supplied_items']) {
 			me.frm.doc['supplied_items'].forEach((item, index) => {
-			if (item.rm_item_code && item.main_item_code) {
+			if (item.rm_item_code && item.main_item_code && item.required_qty - item.supplied_qty != 0) {
 					me.raw_material_data.push ({
 						'name':item.name,
 						'item_code': item.main_item_code,
 						'rm_item_code': item.rm_item_code,
 						'item_name': item.rm_item_code,
-						'qty': item.required_qty,
+						'qty': item.required_qty - item.supplied_qty,
 						'warehouse':item.reserve_warehouse,
 						'rate':item.rate,
 						'amount':item.amount,
@@ -432,6 +438,8 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 				}
 			})
 		}
+
+		me.dialog.get_field('sub_con_rm_items').check_all_rows()
 
 		me.dialog.show()
 		this.dialog.set_primary_action(__('Transfer'), function() {
@@ -466,6 +474,13 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 				var doclist = frappe.model.sync(r.message);
 				frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
 			}
+		});
+	},
+
+	make_inter_company_order: function(frm) {
+		frappe.model.open_mapped_doc({
+			method: "erpnext.buying.doctype.purchase_order.purchase_order.make_inter_company_sales_order",
+			frm: frm
 		});
 	},
 
@@ -600,6 +615,43 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 		} else {
 			this.frm.script_manager.copy_from_first_row("items", row, ["schedule_date"]);
 		}
+	},
+
+	unhold_purchase_order: function(){
+		cur_frm.cscript.update_status("Resume", "Draft")
+	},
+
+	hold_purchase_order: function(){
+		var me = this;
+		var d = new frappe.ui.Dialog({
+			title: __('Reason for Hold'),
+			fields: [
+				{
+					"fieldname": "reason_for_hold",
+					"fieldtype": "Text",
+					"reqd": 1,
+				}
+			],
+			primary_action: function() {
+				var data = d.get_values();
+				frappe.call({
+					method: "frappe.desk.form.utils.add_comment",
+					args: {
+						reference_doctype: me.frm.doctype,
+						reference_name: me.frm.docname,
+						content: __('Reason for hold: ')+data.reason_for_hold,
+						comment_email: frappe.session.user
+					},
+					callback: function(r) {
+						if(!r.exc) {
+							me.update_status('Hold', 'On Hold')
+							d.hide();
+						}
+					}
+				});
+			}
+		});
+		d.show();
 	},
 
 	unclose_purchase_order: function(){

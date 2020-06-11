@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "allow_events_in_timeline": 1,
  "allow_import": 1,
  "allow_rename": 1,
@@ -19,10 +20,13 @@
   "lead_name",
   "image",
   "column_break0",
+  "account_manager",
   "customer_group",
   "territory",
   "tax_id",
   "tax_category",
+  "so_required",
+  "dn_required",
   "disabled",
   "is_internal_customer",
   "represents_company",
@@ -49,10 +53,8 @@
   "default_receivable_accounts",
   "accounts",
   "credit_limit_section",
-  "credit_limit",
-  "bypass_credit_limit_check_at_sales_order",
-  "column_break_34",
   "payment_terms",
+  "credit_limits",
   "more_info",
   "customer_details",
   "column_break_45",
@@ -124,7 +126,7 @@
   {
    "fieldname": "default_bank_account",
    "fieldtype": "Link",
-   "label": "Default Bank Account",
+   "label": "Default Company Bank Account",
    "options": "Bank Account"
   },
   {
@@ -149,6 +151,12 @@
    "fieldname": "column_break0",
    "fieldtype": "Column Break",
    "width": "50%"
+  },
+  {
+   "fieldname": "account_manager",
+   "fieldtype": "Link",
+   "label": "Account Manager",
+   "options": "User"
   },
   {
    "fieldname": "customer_group",
@@ -324,8 +332,9 @@
   },
   {
    "fieldname": "primary_address",
-   "fieldtype": "Read Only",
-   "label": "Primary Address"
+   "fieldtype": "Text",
+   "label": "Primary Address",
+   "read_only": 1
   },
   {
    "collapsible": 1,
@@ -345,24 +354,6 @@
    "fieldname": "credit_limit_section",
    "fieldtype": "Section Break",
    "label": "Credit Limit and Payment Terms"
-  },
-  {
-   "fieldname": "credit_limit",
-   "fieldtype": "Currency",
-   "label": "Credit Limit",
-   "oldfieldname": "credit_limit",
-   "oldfieldtype": "Currency",
-   "permlevel": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "bypass_credit_limit_check_at_sales_order",
-   "fieldtype": "Check",
-   "label": "Bypass credit limit check at Sales Order"
-  },
-  {
-   "fieldname": "column_break_34",
-   "fieldtype": "Column Break"
   },
   {
    "fieldname": "payment_terms",
@@ -477,12 +468,32 @@
    "print_hide": 1,
    "read_only": 1,
    "report_hide": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "credit_limits",
+   "fieldtype": "Table",
+   "label": "Credit Limit",
+   "options": "Customer Credit Limit"
+  },
+  {
+   "default": "0",
+   "fieldname": "so_required",
+   "fieldtype": "Check",
+   "label": "Allow Sales Invoice Creation Without Sales Order"
+  },
+  {
+   "default": "0",
+   "fieldname": "dn_required",
+   "fieldtype": "Check",
+   "label": "Allow Sales Invoice Creation Without Delivery Note"
   }
  ],
  "icon": "fa fa-user",
  "idx": 363,
  "image_field": "image",
- "modified": "2020-06-04 06:31:56.217325",
+ "links": [],
+ "modified": "2020-03-17 11:03:42.706907",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
@@ -563,6 +574,7 @@
  "quick_entry": 1,
  "search_fields": "customer_name,customer_group,territory, mobile_no,primary_address",
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "ASC",
  "title_field": "customer_name",
  "track_changes": 1

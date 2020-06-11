@@ -10,6 +10,7 @@
   "column_break_4",
   "supplier",
   "payment_request",
+  "payment_entry",
   "mode_of_payment",
   "bank_account_details",
   "bank_account",
@@ -24,7 +25,8 @@
    "in_list_view": 1,
    "label": "Type",
    "options": "DocType",
-   "read_only": 1
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "reference_name",
@@ -32,14 +34,16 @@
    "in_list_view": 1,
    "label": "Name",
    "options": "reference_doctype",
-   "read_only": 1
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Amount",
-   "read_only": 1
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "column_break_4",
@@ -78,7 +82,8 @@
    "fieldtype": "Link",
    "label": "Bank Account",
    "options": "Bank Account",
-   "read_only": 1
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "column_break_10",
@@ -98,10 +103,17 @@
    "no_copy": 1,
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "payment_entry",
+   "fieldtype": "Link",
+   "label": "Payment Entry",
+   "options": "Payment Entry",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-06-04 06:58:24.128130",
+ "modified": "2019-05-08 13:56:25.724557",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Order Reference",

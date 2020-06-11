@@ -14,7 +14,10 @@
   "item_name",
   "outstanding_amount",
   "column_break_4",
-  "qty"
+  "qty",
+  "accounting_dimensions_section",
+  "cost_center",
+  "dimension_col_break"
  ],
  "fields": [
   {
@@ -85,10 +88,25 @@
    "fieldname": "qty",
    "fieldtype": "Data",
    "label": "Quantity"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
   }
  ],
  "istable": 1,
- "modified": "2020-06-04 06:58:45.426752",
+ "modified": "2019-07-25 15:00:00.460695",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Opening Invoice Creation Tool Item",

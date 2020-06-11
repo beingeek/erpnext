@@ -23,7 +23,7 @@ class DuplicatePartyAccountError(frappe.ValidationError): pass
 @frappe.whitelist()
 def get_party_details(party=None, account=None, party_type="Customer", company=None, posting_date=None, letter_of_credit=None,
 	bill_date=None, price_list=None, currency=None, doctype=None, ignore_permissions=False, fetch_payment_terms_template=True,
-	party_address=None, shipping_address=None, pos_profile=None):
+	party_address=None, company_address=None, shipping_address=None, pos_profile=None):
 
 	if not party:
 		return {}
@@ -31,14 +31,14 @@ def get_party_details(party=None, account=None, party_type="Customer", company=N
 		frappe.throw(_("{0}: {1} does not exists").format(party_type, party))
 	return _get_party_details(party, account, party_type, letter_of_credit,
 		company, posting_date, bill_date, price_list, currency, doctype, ignore_permissions,
-		fetch_payment_terms_template, party_address, shipping_address, pos_profile)
+		fetch_payment_terms_template, party_address, company_address, shipping_address, pos_profile)
 
 def _get_party_details(party=None, account=None, party_type="Customer", letter_of_credit=None, company=None, posting_date=None,
 	bill_date=None, price_list=None, currency=None, doctype=None, ignore_permissions=False,
-	fetch_payment_terms_template=True, party_address=None, shipping_address=None, pos_profile=None):
+	fetch_payment_terms_template=True, party_address=None, company_address=None,shipping_address=None, pos_profile=None):
 
-	out = frappe._dict(set_due_date(party, party_type, company, posting_date, bill_date, doctype))
-	party = out[scrub(party_type)]
+	party_details = frappe._dict(set_due_date(party, party_type, company, posting_date, bill_date, doctype))
+	party = party_details[scrub(party_type)]
 
 	if not ignore_permissions and not frappe.has_permission(party_type, "read", party):
 		frappe.throw(_("Not permitted for {0}").format(party), frappe.PermissionError)
@@ -47,88 +47,89 @@ def _get_party_details(party=None, account=None, party_type="Customer", letter_o
 		account = get_party_account("Letter of Credit" if letter_of_credit else party_type,
 									letter_of_credit if letter_of_credit else party, company)
 		account_fieldname = "debit_to" if party_type=="Customer" else "credit_to"
-		out[account_fieldname] = account
+		party_details[account_fieldname] = account
 
 	party = frappe.get_doc(party_type, party)
-	currency = party.default_currency if party.default_currency else get_company_currency(company)
+	currency = party.default_currency if party.get("default_currency") else get_company_currency(company)
 
-	party_address, shipping_address = set_address_details(out, party, party_type, doctype, company, party_address, shipping_address)
-	set_contact_details(out, party, party_type)
-	set_other_values(out, party, party_type)
-	set_price_list(out, party, party_type, price_list, pos_profile)
+	party_address, shipping_address = set_address_details(party_details, party, party_type, doctype, company, party_address, company_address, shipping_address)
+	set_contact_details(party_details, party, party_type)
+	set_other_values(party_details, party, party_type)
+	set_price_list(party_details, party, party_type, price_list, pos_profile)
 
-	out["tax_category"] = get_address_tax_category(party.get("tax_category"),
+	party_details["tax_category"] = get_address_tax_category(party.get("tax_category"),
 		party_address, shipping_address if party_type != "Supplier" else party_address)
-	out["taxes_and_charges"] = set_taxes(party.name, party_type, posting_date, company,
-		customer_group=out.customer_group, supplier_group=out.supplier_group, tax_category=out.tax_category,
-		billing_address=party_address, shipping_address=shipping_address)
+
+	if not party_details.get("taxes_and_charges"):
+		party_details["taxes_and_charges"] = set_taxes(party.name, party_type, posting_date, company,
+			customer_group=party_details.customer_group, supplier_group=party_details.supplier_group, tax_category=party_details.tax_category,
+			billing_address=party_address, shipping_address=shipping_address)
 
 	if fetch_payment_terms_template:
-		out["payment_terms_template"] = get_pyt_term_template(party.name, party_type, company)
+		party_details["payment_terms_template"] = get_pyt_term_template(party.name, party_type, company)
 
-	if not out.get("currency"):
-		out["currency"] = currency
+	if not party_details.get("currency"):
+		party_details["currency"] = currency
 
 	# sales team
 	if party_type=="Customer":
-		out["sales_team"] = [{
+		party_details["sales_team"] = [{
 			"sales_person": d.sales_person,
 			"allocated_percentage": d.allocated_percentage or None
 		} for d in party.get("sales_team")]
 
 	# supplier tax withholding category
 	if party_type == "Supplier" and party:
-		out["supplier_tds"] = frappe.get_value(party_type, party.name, "tax_withholding_category")
+		party_details["supplier_tds"] = frappe.get_value(party_type, party.name, "tax_withholding_category")
 
 	if doctype == "Purchase Invoice" and party_type == "Supplier":
-		out["on_hold"] = cint(party.get('hold_invoices_by_default'))
+		party_details["on_hold"] = cint(party.get('hold_invoices_by_default'))
 
 	if doctype == "Sales Order":
 		from erpnext.selling.doctype.customer.customer import get_credit_limit, get_customer_outstanding
-		out["customer_credit_limit"] = get_credit_limit(party.name, company)
-		out["customer_outstanding_amount"] = frappe.db.sql("""
+		party_details["customer_credit_limit"] = get_credit_limit(party.name, company)
+		party_details["customer_outstanding_amount"] = frappe.db.sql("""
 			select ifnull(sum(debit) - sum(credit), 0)
 			from `tabGL Entry`
 			where party_type = 'Customer' and party = %s and company=%s""", (party.name, company))
-		out["customer_outstanding_amount"] = out["customer_outstanding_amount"][0][0] if out["customer_outstanding_amount"] else 0
+		party_details["customer_outstanding_amount"] = party_details["customer_outstanding_amount"][0][0] if party_details["customer_outstanding_amount"] else 0
 
 	if party.get('party_warehouse'):
-		out['set_warehouse'] = party.get('party_warehouse')
+		party_details['set_warehouse'] = party.get('party_warehouse')
 
-	return out
+	return party_details
 
-def set_address_details(out, party, party_type, doctype=None, company=None, party_address=None, shipping_address=None):
+def set_address_details(party_details, party, party_type, doctype=None, company=None, party_address=None, company_address=None, shipping_address=None):
 	billing_address_field = "customer_address" if party_type == "Lead" \
 		else scrub(party_type) + "_address"
-	out[billing_address_field] = party_address or get_default_address(party_type, party.name)
+	party_details[billing_address_field] = party_address or get_default_address(party_type, party.name)
 	if doctype:
-		out.update(get_fetch_values(doctype, billing_address_field, out[billing_address_field]))
+		party_details.update(get_fetch_values(doctype, billing_address_field, party_details[billing_address_field]))
 	# address display
-	out.address_display = get_address_display(out[billing_address_field])
+	party_details.address_display = get_address_display(party_details[billing_address_field])
 	# shipping address
 	if party_type in ["Customer", "Lead", "Supplier"]:
-		out.shipping_address_name = shipping_address or get_party_shipping_address(party_type, party.name)
-		out.shipping_address = get_address_display(out["shipping_address_name"])
+		party_details.shipping_address_name = shipping_address or get_party_shipping_address(party_type, party.name)
+		party_details.shipping_address = get_address_display(party_details["shipping_address_name"])
 		if doctype:
-			out.update(get_fetch_values(doctype, 'shipping_address_name', out.shipping_address_name))
+			party_details.update(get_fetch_values(doctype, 'shipping_address_name', party_details.shipping_address_name))
 
-	if doctype and doctype in ['Delivery Note', 'Sales Invoice']:
-		out.update(get_company_address(company))
-		if out.company_address:
-			out.update(get_fetch_values(doctype, 'company_address', out.company_address))
-		get_regional_address_details(out, doctype, company)
+	if company_address:
+		party_details.update({'company_address': company_address})
+	else:
+		party_details.update(get_company_address(company))
 
-	return out.get(billing_address_field), out.shipping_address_name
+	return party_details.get(billing_address_field), party_details.shipping_address_name
 
 @erpnext.allow_regional
-def get_regional_address_details(out, doctype, company):
+def get_regional_address_details(party_details, doctype, company):
 	pass
 
-def set_contact_details(out, party, party_type):
-	out.contact_person = get_default_contact(party_type, party.name)
+def set_contact_details(party_details, party, party_type):
+	party_details.contact_person = get_default_contact(party_type, party.name)
 
-	if not out.contact_person:
-		out.update({
+	if not party_details.contact_person:
+		party_details.update({
 			"contact_person": None,
 			"contact_display": None,
 			"contact_email": None,
@@ -138,20 +139,20 @@ def set_contact_details(out, party, party_type):
 			"contact_department": None
 		})
 	else:
-		out.update(get_contact_details(out.contact_person))
+		party_details.update(get_contact_details(party_details.contact_person))
 
-def set_other_values(out, party, party_type):
+def set_other_values(party_details, party, party_type):
 	# copy
 	if party_type=="Customer":
 		to_copy = ["customer_name", "customer_group", "territory", "language", "default_sales_partner", "default_commission_rate"]
 	else:
 		to_copy = ["supplier_name", "supplier_group", "language"]
 	for f in to_copy:
-		out[f] = party.get(f)
+		party_details[f] = party.get(f)
 
 def get_default_price_list(party):
 	"""Return default price list for party (Document object)"""
-	if party.default_price_list:
+	if party.get("default_price_list"):
 		return party.default_price_list
 
 	if party.doctype == "Customer":
@@ -162,11 +163,12 @@ def get_default_price_list(party):
 
 	return None
 
-def set_price_list(out, party, party_type, given_price_list, pos=None):
+def set_price_list(party_details, party, party_type, given_price_list, pos=None):
 	# price list
 	price_list = get_permitted_documents('Price List')
 
-	if price_list:
+	# if there is only one permitted document based on user permissions, set it
+	if price_list and len(price_list) == 1:
 		price_list = price_list[0]
 	elif pos and party_type == 'Customer':
 		customer_price_list = frappe.get_value('Customer', party.name, 'default_price_list')
@@ -180,9 +182,9 @@ def set_price_list(out, party, party_type, given_price_list, pos=None):
 		price_list = get_default_price_list(party) or given_price_list
 
 	if price_list:
-		out.price_list_currency = frappe.db.get_value("Price List", price_list, "currency", cache=True)
+		party_details.price_list_currency = frappe.db.get_value("Price List", price_list, "currency", cache=True)
 
-	out["selling_price_list" if party.doctype=="Customer" else "buying_price_list"] = price_list
+	party_details["selling_price_list" if party.doctype=="Customer" else "buying_price_list"] = price_list
 
 
 def set_due_date(party, party_type, company, posting_date, bill_date, doctype):
@@ -299,8 +301,11 @@ def validate_party_accounts(doc):
 
 		party_account_currency = frappe.db.get_value("Account", account.account, "account_currency", cache=True)
 		existing_gle_currency = get_party_gle_currency(doc.doctype, doc.name, account.company)
-		company_default_currency = frappe.get_cached_value('Company',
-			frappe.db.get_default("Company"),  "default_currency")
+		if frappe.db.get_default("Company"):
+			company_default_currency = frappe.get_cached_value('Company',
+				frappe.db.get_default("Company"),  "default_currency")
+		else:
+			company_default_currency = frappe.db.get_value('Company', account.company, "default_currency")
 
 		if existing_gle_currency and party_account_currency != existing_gle_currency:
 			frappe.throw(_("Accounting entries have already been made in currency {0} for company {1}. Please select a receivable or payable account with currency {0}.").format(existing_gle_currency, account.company))
@@ -372,7 +377,7 @@ def validate_due_date(posting_date, due_date, party_type, party, company=None, b
 					.format(formatdate(default_due_date)))
 
 @frappe.whitelist()
-def get_address_tax_category(tax_category, billing_address=None, shipping_address=None):
+def get_address_tax_category(tax_category=None, billing_address=None, shipping_address=None):
 	addr_tax_category_from = frappe.db.get_single_value("Accounts Settings", "determine_address_tax_category_from")
 	if addr_tax_category_from == "Shipping Address":
 		if shipping_address:
@@ -469,21 +474,25 @@ def get_timeline_data(doctype, name):
 	from frappe.desk.form.load import get_communication_data
 
 	out = {}
-	fields = 'date(creation), count(name)'
+	fields = 'creation, count(*)'
 	after = add_years(None, -1).strftime('%Y-%m-%d')
-	group_by='group by date(creation)'
+	group_by='group by Date(creation)'
 
-	data = get_communication_data(doctype, name,
-		fields=fields, after=after, group_by=group_by, as_dict=False)
+	data = get_communication_data(doctype, name, after=after, group_by='group by creation',
+		fields='C.creation as creation, count(C.name)',as_dict=False)
 
 	# fetch and append data from Activity Log
 	data += frappe.db.sql("""select {fields}
 		from `tabActivity Log`
-		where reference_doctype="{doctype}" and reference_name="{name}"
+		where (reference_doctype=%(doctype)s and reference_name=%(name)s)
+		or (timeline_doctype in (%(doctype)s) and timeline_name=%(name)s)
+		or (reference_doctype in ("Quotation", "Opportunity") and timeline_name=%(name)s)
 		and status!='Success' and creation > {after}
 		{group_by} order by creation desc
-		""".format(doctype=frappe.db.escape(doctype), name=frappe.db.escape(name), fields=fields,
-			group_by=group_by, after=after), as_dict=False)
+		""".format(fields=fields, group_by=group_by, after=after), {
+			"doctype": doctype,
+			"name": name
+		}, as_dict=False)
 
 	timeline_items = dict(data)
 
@@ -602,10 +611,12 @@ def get_party_shipping_address(doctype, name):
 	else:
 		return ''
 
-def get_partywise_advanced_payment_amount(party_type, posting_date = None):
+def get_partywise_advanced_payment_amount(party_type, posting_date = None, company=None):
 	cond = "1=1"
 	if posting_date:
 		cond = "posting_date <= '{0}'".format(posting_date)
+	if company:
+		cond += "and company = '{0}'".format(company)
 
 	data = frappe.db.sql(""" SELECT party, sum({0}) as amount
 		FROM `tabGL Entry`

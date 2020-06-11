@@ -190,7 +190,7 @@
   }
  ],
  "issingle": 1,
- "modified": "2020-06-04 06:56:23.958008",
+ "modified": "2019-08-07 15:26:00.653433",
  "modified_by": "Administrator",
  "module": "ERPNext Integrations",
  "name": "QuickBooks Migrator",
@@ -208,7 +208,6 @@
   }
  ],
  "quick_entry": 1,
- "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC"
 }

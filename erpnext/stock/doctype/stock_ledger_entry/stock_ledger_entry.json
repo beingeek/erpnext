@@ -33,6 +33,7 @@
   "batch_qty_after_transaction",
   "batch_stock_value",
   "batch_valuation_rate"
+  "to_rename"
  ],
  "fields": [
   {
@@ -52,7 +53,7 @@
   },
   {
    "fieldname": "serial_no",
-   "fieldtype": "Text",
+   "fieldtype": "Long Text",
    "in_list_view": 1,
    "label": "Serial No",
    "print_width": "100px",
@@ -264,6 +265,7 @@
    "options": "Company",
    "print_width": "150px",
    "read_only": 1,
+   "search_index": 1,
    "width": "150px"
   },
   {
@@ -306,13 +308,21 @@
    "label": "Batch Valuation Rate",
    "options": "Company:company:default_currency",
    "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "to_rename",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "To Rename",
+   "search_index": 1
   }
  ],
  "hide_toolbar": 1,
  "icon": "fa fa-list",
  "idx": 1,
  "in_create": 1,
- "modified": "2020-06-04 06:53:26.753878",
+ "modified": "2020-02-25 22:53:33.504681",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Ledger Entry",

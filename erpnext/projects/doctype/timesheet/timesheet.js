@@ -45,13 +45,13 @@ frappe.ui.form.on("Timesheet", {
 	refresh: function(frm) {
 		if(frm.doc.docstatus==1) {
 			if(frm.doc.per_billed < 100 && frm.doc.total_billable_hours && frm.doc.total_billable_hours > frm.doc.total_billed_hours){
-				frm.add_custom_button(__("Make Sales Invoice"), function() { frm.trigger("make_invoice"); },
-					"fa fa-file-alt");
+				frm.add_custom_button(__('Create Sales Invoice'), function() { frm.trigger("make_invoice") },
+					"fa fa-file-text");
 			}
 
 			if(!frm.doc.salary_slip && frm.doc.employee){
-				frm.add_custom_button(__("Make Salary Slip"), function() { frm.trigger("make_salary_slip"); },
-					"fa fa-file-alt");
+				frm.add_custom_button(__('Create Salary Slip'), function() { frm.trigger("make_salary_slip") },
+					"fa fa-file-text");
 			}
 		}
 
@@ -110,7 +110,7 @@ frappe.ui.form.on("Timesheet", {
 			]
 		});
 
-		dialog.set_primary_action(__("Make Sales Invoice"), () => {
+		dialog.set_primary_action(__('Create Sales Invoice'), () => {
 			var args = dialog.get_values();
 			if(!args) return;
 			dialog.hide();
@@ -145,6 +145,15 @@ frappe.ui.form.on("Timesheet", {
 frappe.ui.form.on("Timesheet Detail", {
 	time_logs_remove: function(frm) {
 		calculate_time_and_amount(frm);
+	},
+
+	task: (frm, cdt, cdn) => {
+		let row = frm.selected_doc;
+		if (row.task) {
+			frappe.db.get_value("Task", row.task, "project", (r) => {
+				frappe.model.set_value(cdt, cdn, "project", r.project);
+			});
+		}
 	},
 
 	from_time: function(frm, cdt, cdn) {
@@ -200,9 +209,6 @@ frappe.ui.form.on("Timesheet Detail", {
 	},
 
 	activity_type: function(frm, cdt, cdn) {
-		frm.script_manager.copy_from_first_row('time_logs', frm.selected_doc,
-			'project');
-
 		frappe.call({
 			method: "erpnext.projects.doctype.timesheet.timesheet.get_activity_cost",
 			args: {

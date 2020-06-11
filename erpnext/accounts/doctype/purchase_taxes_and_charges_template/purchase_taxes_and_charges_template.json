@@ -12,6 +12,7 @@
   "disabled",
   "column_break4",
   "company",
+  "tax_category",
   "section_break6",
   "taxes"
  ],
@@ -24,8 +25,7 @@
    "no_copy": 1,
    "oldfieldname": "title",
    "oldfieldtype": "Data",
-   "reqd": 1,
-   "unique": 1
+   "reqd": 1
   },
   {
    "default": "0",
@@ -67,11 +67,17 @@
    "oldfieldname": "purchase_tax_details",
    "oldfieldtype": "Table",
    "options": "Purchase Taxes and Charges"
+  },
+  {
+   "fieldname": "tax_category",
+   "fieldtype": "Link",
+   "label": "Tax Category",
+   "options": "Tax Category"
   }
  ],
  "icon": "fa fa-money",
  "idx": 1,
- "modified": "2020-06-04 06:55:59.421750",
+ "modified": "2019-11-25 13:05:26.220275",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Taxes and Charges Template",
@@ -100,5 +106,6 @@
    "role": "Purchase User"
   }
  ],
- "sort_order": "DESC"
+ "sort_order": "DESC",
+ "track_changes": 1
 }

@@ -25,7 +25,7 @@ frappe.ui.form.on("Item", {
 	},
 
 	refresh: function(frm) {
-		if(frm.doc.is_stock_item) {
+		if (frm.doc.is_stock_item) {
 			frm.add_custom_button(__("Balance"), function() {
 				frappe.route_options = {
 					"item_code": frm.doc.name
@@ -46,8 +46,13 @@ frappe.ui.form.on("Item", {
 			}, __("View"));
 		}
 
-		if(!frm.doc.is_fixed_asset) {
+		if (!frm.doc.is_fixed_asset) {
 			erpnext.item.make_dashboard(frm);
+		}
+
+		if (frm.doc.is_fixed_asset) {
+			frm.trigger('is_fixed_asset');
+			frm.trigger('auto_create_assets');
 		}
 
 		// clear intro
@@ -66,17 +71,17 @@ frappe.ui.form.on("Item", {
 			if(frm.doc.variant_based_on==="Item Attribute") {
 				frm.add_custom_button(__("Single Variant"), function() {
 					erpnext.item.show_single_variant_dialog(frm);
-				}, __("Make"));
+				}, __('Create'));
 				frm.add_custom_button(__("Multiple Variants"), function() {
 					erpnext.item.show_multiple_variants_dialog(frm);
-				}, __("Make"));
+				}, __('Create'));
 			} else {
 				frm.add_custom_button(__("Variant"), function() {
 					erpnext.item.show_modal_for_manufacturers(frm);
-				}, __("Make"));
+				}, __('Create'));
 			}
 
-			frm.page.set_inner_btn_group_as_primary(__("Make"));
+			frm.page.set_inner_btn_group_as_primary(__('Create'));
 		}
 		if (frm.doc.variant_of) {
 			frm.set_intro(__('This Item is a Variant of {0} (Template).',
@@ -118,6 +123,8 @@ frappe.ui.form.on("Item", {
 
 		frm.fields_dict.uoms.grid.cannot_add_rows = true;
 		$('.grid-footer', frm.fields_dict.uoms.$wrapper).hide();
+
+		frm.toggle_reqd('customer', frm.doc.is_customer_provided_item ? 1:0);
 	},
 
 	validate: function(frm){
@@ -128,7 +135,31 @@ frappe.ui.form.on("Item", {
 		refresh_field("image_view");
 	},
 
+	is_customer_provided_item: function(frm) {
+		frm.toggle_reqd('customer', frm.doc.is_customer_provided_item ? 1:0);
+	},
+
+	gst_hsn_code: function(frm) {
+		if(!frm.doc.taxes || !frm.doc.taxes.length) {
+			frappe.db.get_doc("GST HSN Code", frm.doc.gst_hsn_code).then(hsn_doc => {
+				$.each(hsn_doc.taxes || [], function(i, tax) {
+					let a = frappe.model.add_child(frm.doc, 'Item Tax', 'taxes');
+					a.item_tax_template = tax.item_tax_template;
+					a.tax_category = tax.tax_category;
+					a.valid_from = tax.valid_from;
+					frm.refresh_field('taxes');
+				});
+			});
+		}
+	},
+
 	is_fixed_asset: function(frm) {
+		// set serial no to false & toggles its visibility
+		frm.set_value('has_serial_no', 0);
+		frm.toggle_enable(['has_serial_no', 'serial_no_series'], !frm.doc.is_fixed_asset);
+		frm.toggle_reqd(['asset_category'], frm.doc.is_fixed_asset);
+		frm.toggle_display(['has_serial_no', 'serial_no_series'], !frm.doc.is_fixed_asset);
+
 		frm.call({
 			method: "set_asset_naming_series",
 			doc: frm.doc,
@@ -136,13 +167,20 @@ frappe.ui.form.on("Item", {
 				frm.set_value("is_stock_item", frm.doc.is_fixed_asset ? 0 : 1);
 				frm.trigger("set_asset_naming_series");
 			}
-		})
+		});
+
+		frm.trigger('auto_create_assets');
 	},
 
 	set_asset_naming_series: function(frm) {
 		if (frm.doc.__onload && frm.doc.__onload.asset_naming_series) {
 			frm.set_df_property("asset_naming_series", "options", frm.doc.__onload.asset_naming_series);
 		}
+	},
+
+	auto_create_assets: function(frm) {
+		frm.toggle_reqd(['asset_naming_series'], frm.doc.auto_create_assets);
+		frm.toggle_display(['asset_naming_series'], frm.doc.auto_create_assets);
 	},
 
 	page_name: frappe.utils.warn_page_name_change,
@@ -190,6 +228,10 @@ frappe.ui.form.on("Item", {
 	},
 	size_uom: function (frm) {
 		erpnext.item.calculate_volume(frm);
+	},
+
+	set_meta_tags(frm) {
+		frappe.utils.set_meta_tag(frm.doc.route);
 	}
 });
 
@@ -381,21 +423,29 @@ $.extend(erpnext.item, {
 	show_modal_for_manufacturers: function(frm) {
 		var dialog = new frappe.ui.Dialog({
 			fields: [
-				{fieldtype:'Link', options:'Manufacturer',
-					reqd:1, label:'Manufacturer'},
-				{fieldtype:'Data', label:'Manufacturer Part Number',
-					fieldname: 'manufacturer_part_no'},
+				{
+					fieldtype: 'Link',
+					fieldname: 'manufacturer',
+					options: 'Manufacturer',
+					label: 'Manufacturer',
+					reqd: 1,
+				},
+				{
+					fieldtype: 'Data',
+					label: 'Manufacturer Part Number',
+					fieldname: 'manufacturer_part_no'
+				},
 			]
 		});
 
-		dialog.set_primary_action(__('Make'), function() {
+		dialog.set_primary_action(__('Create'), function() {
 			var data = dialog.get_values();
 			if(!data) return;
 
 			// call the server to make the variant
 			data.template = frm.doc.name;
 			frappe.call({
-				method:"erpnext.controllers.item_variant.get_variant",
+				method: "erpnext.controllers.item_variant.get_variant",
 				args: data,
 				callback: function(r) {
 					var doclist = frappe.model.sync(r.message);
@@ -434,7 +484,7 @@ $.extend(erpnext.item, {
 								lengths.push(selected_attributes[key].length);
 							});
 							if(lengths.includes(0)) {
-								me.multiple_variant_dialog.get_primary_btn().html(__("Make Variants"));
+								me.multiple_variant_dialog.get_primary_btn().html(__('Create Variants'));
 								me.multiple_variant_dialog.disable_primary_action();
 							} else {
 								let no_of_combinations = lengths.reduce((a, b) => a * b, 1);
@@ -465,12 +515,12 @@ $.extend(erpnext.item, {
 				].concat(fields)
 			});
 
-			me.multiple_variant_dialog.set_primary_action(__("Make Variants"), () => {
+			me.multiple_variant_dialog.set_primary_action(__('Create Variants'), () => {
 				let selected_attributes = get_selected_attributes();
 
 				me.multiple_variant_dialog.hide();
 				frappe.call({
-					method:"erpnext.controllers.item_variant.enqueue_multiple_variant_creation",
+					method: "erpnext.controllers.item_variant.enqueue_multiple_variant_creation",
 					args: {
 						"item": frm.doc.name,
 						"args": selected_attributes
@@ -520,9 +570,9 @@ $.extend(erpnext.item, {
 			let p = new Promise(resolve => {
 				if(!d.numeric_values) {
 					frappe.call({
-						method:"frappe.client.get_list",
-						args:{
-							doctype:"Item Attribute Value",
+						method: "frappe.client.get_list",
+						args: {
+							doctype: "Item Attribute Value",
 							filters: [
 								["parent","=", d.attribute]
 							],
@@ -540,9 +590,9 @@ $.extend(erpnext.item, {
 					});
 				} else {
 					frappe.call({
-						method:"frappe.client.get",
-						args:{
-							doctype:"Item Attribute",
+						method: "frappe.client.get",
+						args: {
+							doctype: "Item Attribute",
 							name: d.attribute
 						}
 					}).then((r) => {
@@ -591,21 +641,22 @@ $.extend(erpnext.item, {
 				"label": row.attribute,
 				"fieldname": row.attribute,
 				"fieldtype": fieldtype,
-				"reqd": 1,
+				"reqd": 0,
 				"description": desc
 			})
 		}
 
 		var d = new frappe.ui.Dialog({
-			title: __("Make Variant"),
+			title: __('Create Variant'),
 			fields: fields
 		});
 
-		d.set_primary_action(__("Make"), function() {
+		d.set_primary_action(__('Create'), function() {
 			var args = d.get_values();
 			if(!args) return;
 			frappe.call({
-				method:"erpnext.controllers.item_variant.get_variant",
+				method: "erpnext.controllers.item_variant.get_variant",
+				btn: d.get_primary_btn(),
 				args: {
 					"template": frm.doc.name,
 					"args": d.get_values()
@@ -627,7 +678,7 @@ $.extend(erpnext.item, {
 					} else {
 						d.hide();
 						frappe.call({
-							method:"erpnext.controllers.item_variant.create_variant",
+							method: "erpnext.controllers.item_variant.create_variant",
 							args: {
 								"item": frm.doc.name,
 								"args": d.get_values()
@@ -665,8 +716,8 @@ $.extend(erpnext.item, {
 				.on('input', function(e) {
 					var term = e.target.value;
 					frappe.call({
-						method:"erpnext.stock.doctype.item.item.get_item_attribute",
-						args:{
+						method: "erpnext.stock.doctype.item.item.get_item_attribute",
+						args: {
 							parent: i,
 							attribute_value: term
 						},
@@ -763,7 +814,7 @@ frappe.ui.form.on("UOM Conversion Detail", {
 		var row = locals[cdt][cdn];
 		if (row.uom) {
 			frappe.call({
-				method:"erpnext.stock.doctype.item.item.get_uom_conv_factor",
+				method: "erpnext.stock.doctype.item.item.get_uom_conv_factor",
 				args: {
 					"uom": row.uom,
 					"stock_uom": frm.doc.stock_uom

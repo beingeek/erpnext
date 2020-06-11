@@ -9,13 +9,15 @@ from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_orde
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 from erpnext.stock.get_item_details import get_item_details
 from frappe import MandatoryError
+from erpnext.stock.doctype.item.test_item import make_item
+from erpnext.healthcare.doctype.lab_test_template.lab_test_template import make_item_price
 
 class TestPricingRule(unittest.TestCase):
 	def setUp(self):
-		frappe.db.sql("delete from `tabPricing Rule`")
+		delete_existing_pricing_rules()
 
 	def tearDown(self):
-		frappe.db.sql("delete from `tabPricing Rule`")
+		delete_existing_pricing_rules()
 
 	def test_pricing_rule_for_discount(self):
 		from erpnext.stock.get_item_details import get_item_details
@@ -25,7 +27,9 @@ class TestPricingRule(unittest.TestCase):
 			"doctype": "Pricing Rule",
 			"title": "_Test Pricing Rule",
 			"apply_on": "Item Code",
-			"item_code": "_Test Item",
+			"items": [{
+				"item_code": "_Test Item"
+			}],
 			"currency": "USD",
 			"selling": 1,
 			"rate_or_discount": "Discount Percentage",
@@ -64,7 +68,10 @@ class TestPricingRule(unittest.TestCase):
 
 		prule = frappe.get_doc(test_record.copy())
 		prule.apply_on = "Item Group"
-		prule.item_group = "All Item Groups"
+		prule.items = []
+		prule.append('item_groups', {
+			'item_group': "All Item Groups"
+		})
 		prule.title = "_Test Pricing Rule for Item Group"
 		prule.discount_percentage = 15
 		prule.insert()
@@ -86,7 +93,7 @@ class TestPricingRule(unittest.TestCase):
 		self.assertEqual(details.get("discount_percentage"), 5)
 
 		frappe.db.sql("update `tabPricing Rule` set priority=NULL where campaign='_Test Campaign'")
-		from erpnext.accounts.doctype.pricing_rule.pricing_rule	import MultiplePricingRuleConflict
+		from erpnext.accounts.doctype.pricing_rule.utils import MultiplePricingRuleConflict
 		self.assertRaises(MultiplePricingRuleConflict, get_item_details, args)
 
 		args.item_code = "_Test Item 2"
@@ -101,7 +108,9 @@ class TestPricingRule(unittest.TestCase):
 			"doctype": "Pricing Rule",
 			"title": "_Test Pricing Rule",
 			"apply_on": "Item Code",
-			"item_code": "_Test FG Item 2",
+			"items": [{
+				"item_code": "_Test FG Item 2",
+			}],
 			"selling": 1,
 			"currency": "USD",
 			"rate_or_discount": "Discount Percentage",
@@ -138,6 +147,52 @@ class TestPricingRule(unittest.TestCase):
 		self.assertEquals(details.get("margin_type"), "Percentage")
 		self.assertEquals(details.get("margin_rate_or_amount"), 10)
 
+	def test_mixed_conditions_for_item_group(self):
+		for item in ["Mixed Cond Item 1", "Mixed Cond Item 2"]:
+			make_item(item, {"item_group": "Products"})
+			make_item_price(item, "_Test Price List", 100)
+
+		test_record = {
+			"doctype": "Pricing Rule",
+			"title": "_Test Pricing Rule for Item Group",
+			"apply_on": "Item Group",
+			"item_groups": [
+				{
+					"item_group": "Products",
+				},
+				{
+					"item_group": "Seed",
+				},
+			],
+			"selling": 1,
+			"mixed_conditions": 1,
+			"currency": "USD",
+			"rate_or_discount": "Discount Percentage",
+			"discount_percentage": 10,
+			"applicable_for": "Customer Group",
+			"customer_group": "All Customer Groups",
+			"company": "_Test Company"
+		}
+		frappe.get_doc(test_record.copy()).insert()
+
+		args = frappe._dict({
+			"item_code": "Mixed Cond Item 1",
+			"item_group": "Products",
+			"company": "_Test Company",
+			"price_list": "_Test Price List",
+			"currency": "_Test Currency",
+			"doctype": "Sales Order",
+			"conversion_rate": 1,
+			"price_list_currency": "_Test Currency",
+			"plc_conversion_rate": 1,
+			"order_type": "Sales",
+			"customer": "_Test Customer",
+			"customer_group": "_Test Customer Group",
+			"name": None
+		})
+		details = get_item_details(args)
+		self.assertEquals(details.get("discount_percentage"), 10)
+
 	def test_pricing_rule_for_variants(self):
 		from erpnext.stock.get_item_details import get_item_details
 		from frappe import MandatoryError
@@ -166,7 +221,9 @@ class TestPricingRule(unittest.TestCase):
 			"title": "_Test Pricing Rule 1",
 			"apply_on": "Item Code",
 			"currency": "USD",
-			"item_code": "_Test Variant Item",
+			"items": [{
+				"item_code": "_Test Variant Item",
+			}],
 			"selling": 1,
 			"rate_or_discount": "Discount Percentage",
 			"rate": 0,
@@ -196,7 +253,9 @@ class TestPricingRule(unittest.TestCase):
 			"doctype": "Pricing Rule",
 			"title": "_Test Pricing Rule 2",
 			"apply_on": "Item Code",
-			"item_code": "Test Variant PRT",
+			"items": [{
+				"item_code": "Test Variant PRT",
+			}],
 			"currency": "USD",
 			"selling": 1,
 			"rate_or_discount": "Discount Percentage",
@@ -214,7 +273,9 @@ class TestPricingRule(unittest.TestCase):
 			"title": "_Test Pricing Rule",
 			"apply_on": "Item Code",
 			"currency": "USD",
-			"item_code": "_Test Item",
+			"items": [{
+				"item_code": "_Test Item",
+			}],
 			"selling": 1,
 			"rate_or_discount": "Discount Percentage",
 			"rate": 0,
@@ -267,6 +328,66 @@ class TestPricingRule(unittest.TestCase):
 		self.assertEquals(item.discount_amount, 110)
 		self.assertEquals(item.rate, 990)
 
+	def test_pricing_rule_for_product_discount_on_same_item(self):
+		frappe.delete_doc_if_exists('Pricing Rule', '_Test Pricing Rule')
+		test_record = {
+			"doctype": "Pricing Rule",
+			"title": "_Test Pricing Rule",
+			"apply_on": "Item Code",
+			"currency": "USD",
+			"items": [{
+				"item_code": "_Test Item",
+			}],
+			"selling": 1,
+			"rate_or_discount": "Discount Percentage",
+			"rate": 0,
+			"min_qty": 0,
+			"max_qty": 7,
+			"discount_percentage": 17.5,
+			"price_or_product_discount": "Product",
+			"same_item": 1,
+			"free_qty": 1,
+			"company": "_Test Company"
+		}
+		frappe.get_doc(test_record.copy()).insert()
+
+		# With pricing rule
+		so = make_sales_order(item_code="_Test Item", qty=1)
+		so.load_from_db()
+		self.assertEqual(so.items[1].is_free_item, 1)
+		self.assertEqual(so.items[1].item_code, "_Test Item")
+
+
+	def test_pricing_rule_for_product_discount_on_different_item(self):
+		frappe.delete_doc_if_exists('Pricing Rule', '_Test Pricing Rule')
+		test_record = {
+			"doctype": "Pricing Rule",
+			"title": "_Test Pricing Rule",
+			"apply_on": "Item Code",
+			"currency": "USD",
+			"items": [{
+				"item_code": "_Test Item",
+			}],
+			"selling": 1,
+			"rate_or_discount": "Discount Percentage",
+			"rate": 0,
+			"min_qty": 0,
+			"max_qty": 7,
+			"discount_percentage": 17.5,
+			"price_or_product_discount": "Product",
+			"same_item": 0,
+			"free_item": "_Test Item 2",
+			"free_qty": 1,
+			"company": "_Test Company"
+		}
+		frappe.get_doc(test_record.copy()).insert()
+
+		# With pricing rule
+		so = make_sales_order(item_code="_Test Item", qty=1)
+		so.load_from_db()
+		self.assertEqual(so.items[1].is_free_item, 1)
+		self.assertEqual(so.items[1].item_code, "_Test Item 2")
+
 def make_pricing_rule(**args):
 	args = frappe._dict(args)
 
@@ -275,7 +396,6 @@ def make_pricing_rule(**args):
 		"title": args.title or "_Test Pricing Rule",
 		"company": args.company or "_Test Company",
 		"apply_on": args.apply_on or "Item Code",
-		"item_code": args.item_code or "_Test Item",
 		"applicable_for": args.applicable_for,
 		"selling": args.selling or 0,
 		"currency": "USD",
@@ -287,12 +407,25 @@ def make_pricing_rule(**args):
 		"rate": args.rate or 0.0,
 		"margin_type": args.margin_type,
 		"margin_rate_or_amount": args.margin_rate_or_amount or 0.0
-	}).insert(ignore_permissions=True)
+	})
 
 	apply_on = doc.apply_on.replace(' ', '_').lower()
+	child_table = {'Item Code': 'items', 'Item Group': 'item_groups', 'Brand': 'brands'}
+	doc.append(child_table.get(doc.apply_on), {
+		apply_on: args.get(apply_on) or "_Test Item"
+	})
+
+	doc.insert(ignore_permissions=True)
 	if args.get(apply_on) and apply_on != "item_code":
 		doc.db_set(apply_on, args.get(apply_on))
 
 	applicable_for = doc.applicable_for.replace(' ', '_').lower()
 	if args.get(applicable_for):
 		doc.db_set(applicable_for, args.get(applicable_for))
+
+
+def delete_existing_pricing_rules():
+	for doctype in ["Pricing Rule", "Pricing Rule Item Code",
+		"Pricing Rule Item Group", "Pricing Rule Brand"]:
+
+		frappe.db.sql("delete from `tab{0}`".format(doctype))

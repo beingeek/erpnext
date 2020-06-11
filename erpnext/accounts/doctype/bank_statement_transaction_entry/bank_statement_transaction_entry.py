@@ -48,7 +48,7 @@ class BankStatementTransactionEntry(Document):
 
 	def get_statement_headers(self):
 		if not self.bank_settings:
-			frappe.throw("Bank Data mapper doesn't exist")
+			frappe.throw(_("Bank Data mapper doesn't exist"))
 		mapper_doc = frappe.get_doc("Bank Statement Settings", self.bank_settings)
 		headers = {entry.mapped_header:entry.stmt_header for entry in mapper_doc.header_items}
 		return headers
@@ -57,7 +57,7 @@ class BankStatementTransactionEntry(Document):
 		if self.bank_statement is None: return
 		filename = self.bank_statement.split("/")[-1]
 		if (len(self.new_transaction_items + self.reconciled_transaction_items) > 0):
-			frappe.throw("Transactions already retreived from the statement")
+			frappe.throw(_("Transactions already retreived from the statement"))
 
 		date_format = frappe.get_value("Bank Statement Settings", self.bank_settings, "date_format")
 		if (date_format is None):
@@ -314,7 +314,7 @@ class BankStatementTransactionEntry(Document):
 			try:
 				reconcile_against_document(lst)
 			except:
-				frappe.throw("Exception occurred while reconciling {0}".format(payment.reference_name))
+				frappe.throw(_("Exception occurred while reconciling {0}".format(payment.reference_name)))
 
 	def submit_payment_entries(self):
 		for payment in self.new_transaction_items:
@@ -406,15 +406,15 @@ def get_transaction_entries(filename, headers):
 		from frappe.utils.xlsxutils import read_xlsx_file_from_attached_file
 		rows = read_xlsx_file_from_attached_file(file_id=filename)
 	elif (filename.lower().endswith("csv")):
-		from frappe.utils.file_manager import get_file_path
 		from frappe.utils.csvutils import read_csv_content
-		filepath = get_file_path(filename)
+		_file = frappe.get_doc("File", {"file_name": filename})
+		filepath = _file.get_full_path()
 		with open(filepath,'rb') as csvfile:
 			rows = read_csv_content(csvfile.read())
 	elif (filename.lower().endswith("xls")):
 		rows = get_rows_from_xls_file(filename)
 	else:
-		frappe.throw("Only .csv and .xlsx files are supported currently")
+		frappe.throw(_("Only .csv and .xlsx files are supported currently"))
 
 	stmt_headers = headers.values()
 	for row in rows:
@@ -428,8 +428,8 @@ def get_transaction_entries(filename, headers):
 	return transactions
 
 def get_rows_from_xls_file(filename):
-	from frappe.utils.file_manager import get_file_path
-	filepath = get_file_path(filename)
+	_file = frappe.get_doc("File", {"file_name": filename})
+	filepath = _file.get_full_path()
 	import xlrd
 	book = xlrd.open_workbook(filepath)
 	sheets = book.sheets()

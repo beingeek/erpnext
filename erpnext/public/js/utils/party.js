@@ -7,11 +7,33 @@ erpnext.utils.get_party_details = function(frm, method, args, callback) {
 	if(!method) {
 		method = "erpnext.accounts.party.get_party_details";
 	}
+
+	if (args) {
+		if (in_list(['Sales Invoice', 'Sales Order', 'Delivery Note'], frm.doc.doctype)) {
+			if (frm.doc.company_address && (!args.company_address)) {
+				args.company_address = frm.doc.company_address;
+			}
+		}
+
+		if (in_list(['Purchase Invoice', 'Purchase Order', 'Purchase Receipt'], frm.doc.doctype)) {
+			if (frm.doc.shipping_address && (!args.shipping_address)) {
+				args.shipping_address = frm.doc.shipping_address;
+			}
+		}
+	}
+
 	if(!args) {
-		if(frm.doctype != "Purchase Order" && frm.doc.customer) {
+		if((frm.doctype != "Purchase Order" && frm.doc.customer)
+			|| (frm.doc.party_name && in_list(['Quotation', 'Opportunity'], frm.doc.doctype))) {
+
+			let party_type = "Customer";
+			if(frm.doc.quotation_to && frm.doc.quotation_to === "Lead") {
+				party_type = "Lead";
+			}
+
 			args = {
-				party: frm.doc.customer,
-				party_type: "Customer",
+				party: frm.doc.customer || frm.doc.party_name,
+				party_type: party_type,
 				price_list: frm.doc.selling_price_list
 			};
 		} else if(frm.doc.supplier) {
@@ -21,6 +43,35 @@ erpnext.utils.get_party_details = function(frm, method, args, callback) {
 				bill_date: frm.doc.bill_date,
 				price_list: frm.doc.buying_price_list
 			};
+		}
+
+		if (in_list(['Sales Invoice', 'Sales Order', 'Delivery Note'], frm.doc.doctype)) {
+			if (!args) {
+				args = {
+					party: frm.doc.customer || frm.doc.party_name,
+					party_type: 'Customer'
+				}
+			}
+			if (frm.doc.company_address && (!args.company_address)) {
+				args.company_address = frm.doc.company_address;
+			}
+
+			if (frm.doc.shipping_address_name &&(!args.shipping_address_name)) {
+				args.shipping_address_name = frm.doc.shipping_address_name;
+			}
+		}
+
+		if (in_list(['Purchase Invoice', 'Purchase Order', 'Purchase Receipt'], frm.doc.doctype)) {
+			if (!args) {
+				args = {
+					party: frm.doc.supplier,
+					party_type: 'Supplier'
+				}
+			}
+
+			if (frm.doc.shipping_address && (!args.shipping_address)) {
+				args.shipping_address = frm.doc.shipping_address;
+			}
 		}
 
 		if (args) {
@@ -104,7 +155,7 @@ erpnext.utils.set_taxes_from_address = function(frm, triggered_from_field, billi
 
 	if(frappe.meta.get_docfield(frm.doc.doctype, "taxes")) {
 		if(!erpnext.utils.validate_mandatory(frm, "Lead/Customer/Supplier",
-			frm.doc.customer || frm.doc.supplier || frm.doc.lead, triggered_from_field)) {
+			frm.doc.customer || frm.doc.supplier || frm.doc.lead || frm.doc.party_name, triggered_from_field)) {
 			return;
 		}
 
@@ -138,7 +189,7 @@ erpnext.utils.set_taxes_from_address = function(frm, triggered_from_field, billi
 erpnext.utils.set_taxes = function(frm, triggered_from_field) {
 	if(frappe.meta.get_docfield(frm.doc.doctype, "taxes")) {
 		if(!erpnext.utils.validate_mandatory(frm, "Lead/Customer/Supplier",
-			frm.doc.customer || frm.doc.supplier || frm.doc.lead, triggered_from_field)) {
+			frm.doc.customer || frm.doc.supplier || frm.doc.lead || frm.doc.party_name, triggered_from_field)) {
 			return;
 		}
 
@@ -160,6 +211,9 @@ erpnext.utils.set_taxes = function(frm, triggered_from_field) {
 	} else if (frm.doc.supplier) {
 		party_type = 'Supplier';
 		party = frm.doc.supplier;
+	} else if (frm.doc.quotation_to){
+		party_type = frm.doc.quotation_to;
+		party = frm.doc.party_name;
 	}
 
 	frappe.call({

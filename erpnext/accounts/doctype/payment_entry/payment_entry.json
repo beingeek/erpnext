@@ -6,6 +6,7 @@
  "field_order": [
   "type_of_payment",
   "payment_type",
+  "payment_order_status",
   "column_break_5",
   "company",
   "naming_series",
@@ -15,6 +16,10 @@
   "party_type",
   "party",
   "party_name",
+  "bank_account",
+  "party_bank_account",
+  "contact_person",
+  "contact_email",
   "mode_of_payment",
   "column_break_11",
   "paid_from",
@@ -53,14 +58,21 @@
   "write_off_difference_amount",
   "deductions_or_loss_section",
   "deductions",
-  "section_break_12",
+  "accounting_dimensions_section",
   "project",
+  "dimension_col_break",
+  "cost_center",
+  "section_break_12",
+  "status",
   "remarks",
   "column_break_16",
   "letter_head",
   "print_heading",
+  "bank",
+  "bank_account_no",
+  "payment_order",
   "subscription_section",
-  "subscription",
+  "auto_repeat",
   "title",
   "amended_from"
  ],
@@ -130,7 +142,8 @@
    "in_standard_filter": 1,
    "label": "Party Type",
    "options": "DocType",
-   "print_hide": 1
+   "print_hide": 1,
+   "search_index": 1
   },
   {
    "bold": 1,
@@ -159,6 +172,21 @@
   {
    "fieldname": "column_break_11",
    "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "party",
+   "fieldname": "contact_person",
+   "fieldtype": "Link",
+   "label": "Contact",
+   "options": "Contact"
+  },
+  {
+   "depends_on": "contact_person",
+   "fieldname": "contact_email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email",
+   "read_only": 1
   },
   {
    "bold": 1,
@@ -459,6 +487,27 @@
    "print_hide": 1
   },
   {
+   "fetch_from": "bank_account.bank",
+   "fieldname": "bank",
+   "fieldtype": "Read Only",
+   "label": "Bank"
+  },
+  {
+   "fetch_from": "bank_account.bank_account_no",
+   "fieldname": "bank_account_no",
+   "fieldtype": "Read Only",
+   "label": "Bank Account No"
+  },
+  {
+   "fieldname": "payment_order",
+   "fieldtype": "Link",
+   "label": "Payment Order",
+   "no_copy": 1,
+   "options": "Payment Order",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
    "collapsible": 1,
    "fieldname": "subscription_section",
    "fieldtype": "Section Break",
@@ -466,11 +515,11 @@
   },
   {
    "allow_on_submit": 1,
-   "fieldname": "subscription",
+   "fieldname": "auto_repeat",
    "fieldtype": "Link",
-   "label": "Subscription",
+   "label": "Auto Repeat",
    "no_copy": 1,
-   "options": "Subscription",
+   "options": "Auto Repeat",
    "print_hide": 1,
    "read_only": 1
   },
@@ -488,6 +537,32 @@
    "no_copy": 1,
    "options": "Payment Entry",
    "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_order_status",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Payment Order Status",
+   "options": "Initiated\nPayment Ordered",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nDraft\nSubmitted\nCancelled",
    "read_only": 1
   }
  ],

@@ -8,10 +8,12 @@
   "employee",
   "incentive_amount",
   "payroll_date",
+  "salary_component",
   "amended_from",
   "column_break_5",
   "employee_name",
-  "department"
+  "department",
+  "additional_salary"
  ],
  "fields": [
   {
@@ -31,7 +33,8 @@
   {
    "fieldname": "payroll_date",
    "fieldtype": "Date",
-   "label": "Payroll Date"
+   "label": "Payroll Date",
+   "reqd": 1
   },
   {
    "fieldname": "amended_from",
@@ -60,10 +63,25 @@
    "label": "Department",
    "options": "Department",
    "read_only": 1
+  },
+  {
+   "fieldname": "additional_salary",
+   "fieldtype": "Link",
+   "label": "Additional Salary",
+   "no_copy": 1,
+   "options": "Additional Salary",
+   "read_only": 1
+  },
+  {
+   "fieldname": "salary_component",
+   "fieldtype": "Link",
+   "label": "Salary Component",
+   "options": "Salary Component",
+   "reqd": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-06-04 06:56:39.485685",
+ "modified": "2019-09-03 16:48:16.822252",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Employee Incentive",

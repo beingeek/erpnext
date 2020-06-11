@@ -20,6 +20,7 @@
  ],
  "fields": [
   {
+   "columns": 3,
    "fieldname": "specification",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -29,6 +30,7 @@
    "reqd": 1
   },
   {
+   "columns": 2,
    "fieldname": "value",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -37,6 +39,7 @@
    "oldfieldtype": "Data"
   },
   {
+   "columns": 1,
    "fieldname": "reading_1",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -45,6 +48,7 @@
    "oldfieldtype": "Data"
   },
   {
+   "columns": 1,
    "fieldname": "reading_2",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -53,6 +57,7 @@
    "oldfieldtype": "Data"
   },
   {
+   "columns": 1,
    "fieldname": "reading_3",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -63,7 +68,6 @@
   {
    "fieldname": "reading_4",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Reading 4",
    "oldfieldname": "reading_4",
    "oldfieldtype": "Data"
@@ -111,9 +115,11 @@
    "oldfieldtype": "Data"
   },
   {
+   "columns": 2,
    "default": "Accepted",
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Status",
    "oldfieldname": "status",
    "oldfieldtype": "Select",
@@ -122,10 +128,11 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:59:07.630781",
+ "modified": "2019-07-11 18:48:12.667404",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Quality Inspection Reading",
  "owner": "Administrator",
- "permissions": []
+ "permissions": [],
+ "track_changes": 1
 }

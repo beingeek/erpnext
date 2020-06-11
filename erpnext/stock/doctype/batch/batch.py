@@ -2,13 +2,15 @@
 # License: GNU General Public License v3. See license.txt
 
 from __future__ import unicode_literals
+from six import text_type
 import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname, revert_series_if_last
-from frappe.utils import flt, cint, cstr
+from frappe.utils import flt, cint, cstr, get_link_to_form
 from frappe.utils.jinja import render_template
 from frappe.utils.data import add_days
+from six import string_types
 import math
 
 class UnableToSelectBatchError(frappe.ValidationError):
@@ -61,7 +63,7 @@ def _make_naming_series_key(prefix):
 	:param prefix: Naming series prefix gotten from Stock Settings
 	:return: The derived key. If no prefix is given, an empty string is returned
 	"""
-	if not unicode(prefix):
+	if not text_type(prefix):
 		return ''
 	elif not prefix.find('#'):
 		return prefix.upper() + '.#####'
@@ -89,7 +91,7 @@ class Batch(Document):
 	def autoname(self):
 		"""Generate random ID for batch if not specified"""
 		if not self.batch_id:
-			create_new_batch, batch_number_series = frappe.db.get_value('Item', self.item, 
+			create_new_batch, batch_number_series = frappe.db.get_value('Item', self.item,
 				['create_new_batch', 'batch_number_series'])
 
 			if create_new_batch:
@@ -130,8 +132,11 @@ class Batch(Document):
 			self.expiry_date = add_days(self.manufacturing_date, shelf_life_in_days)
 
 		if has_expiry_date and not self.expiry_date:
-			frappe.throw(_('Expiry date is mandatory for selected item'))
-			frappe.msgprint(_('Set items shelf life in days, to set expiry based on manufacturing_date plus self life'))
+			frappe.throw(msg=_("Please set {0} for Batched Item {1}, which is used to set {2} on Submit.") \
+				.format(frappe.bold("Shelf Life in Days"),
+					get_link_to_form("Item", self.item),
+					frappe.bold("Batch Expiry Date")),
+				title=_("Expiry Date Mandatory"))
 
 	def get_name_from_naming_series(self):
 		"""
@@ -220,9 +225,17 @@ def get_batches_by_oldest(item_code, warehouse):
 def split_batch(batch_no, item_code, warehouse, qty, new_batch_id=None):
 	"""Split the batch into a new batch"""
 	batch = frappe.get_doc(dict(doctype='Batch', item=item_code, batch_id=new_batch_id)).insert()
+
+	company = frappe.db.get_value('Stock Ledger Entry', dict(
+			item_code=item_code,
+			batch_no=batch_no,
+			warehouse=warehouse
+		), ['company'])
+
 	stock_entry = frappe.get_doc(dict(
 		doctype='Stock Entry',
 		purpose='Repack',
+		company=company,
 		items=[
 			dict(
 				item_code=item_code,
@@ -238,6 +251,7 @@ def split_batch(batch_no, item_code, warehouse, qty, new_batch_id=None):
 			),
 		]
 	))
+	stock_entry.set_stock_entry_type()
 	stock_entry.insert()
 	stock_entry.submit()
 
@@ -252,7 +266,7 @@ def set_batch_nos(doc, warehouse_field, throw=False):
 		warehouse = d.get(warehouse_field, None)
 		if has_batch_no and warehouse and qty > 0:
 			if not d.batch_no:
-				d.batch_no = get_batch_no(d.item_code, warehouse, qty, throw)
+				d.batch_no = get_batch_no(d.item_code, warehouse, qty, throw, d.serial_no)
 			else:
 				batch_qty = get_batch_qty(batch_no=d.batch_no, warehouse=warehouse)
 				if flt(batch_qty, d.precision("qty")) < flt(qty, d.precision("qty")) and throw:
@@ -335,7 +349,7 @@ def auto_select_and_split_batches(doc, warehouse_field):
 
 
 @frappe.whitelist()
-def get_batch_no(item_code, warehouse, qty=1, throw=False):
+def get_batch_no(item_code, warehouse, qty=1, throw=False, serial_no=None):
 	"""
 	Get batch number using First Expiring First Out method.
 	:param item_code: `item_code` of Item Document

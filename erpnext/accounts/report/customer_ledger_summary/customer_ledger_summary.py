@@ -184,12 +184,8 @@ class PartyLedgerSummaryReport(object):
 		if self.filters.company:
 			conditions.append("gle.company=%(company)s")
 
-		self.filters.company_finance_book = erpnext.get_default_finance_book(self.filters.company)
-
-		if not self.filters.finance_book or (self.filters.finance_book == self.filters.company_finance_book):
-			conditions.append("ifnull(finance_book,'') in (%(company_finance_book)s, '')")
-		elif self.filters.finance_book:
-			conditions.append("ifnull(finance_book,'') = %(finance_book)s")
+		if self.filters.finance_book:
+			conditions.append("ifnull(finance_book,'') in (%(finance_book)s, '')")
 
 		if self.filters.get("party"):
 			conditions.append("party=%(party)s")
@@ -290,14 +286,14 @@ class PartyLedgerSummaryReport(object):
 
 			if parties and accounts:
 				if len(parties) == 1:
-					party = parties.keys()[0]
+					party = list(parties.keys())[0]
 					for account, amount in iteritems(accounts):
 						self.party_adjustment_accounts.add(account)
 						self.party_adjustment_details.setdefault(party, {})
 						self.party_adjustment_details[party].setdefault(account, 0)
 						self.party_adjustment_details[party][account] += amount
 				elif len(accounts) == 1 and not has_irrelevant_entry:
-					account = accounts.keys()[0]
+					account = list(accounts.keys())[0]
 					self.party_adjustment_accounts.add(account)
 					for party, amount in iteritems(parties):
 						self.party_adjustment_details.setdefault(party, {})

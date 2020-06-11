@@ -4,6 +4,7 @@
  "creation": "2013-03-25 10:53:52",
  "doctype": "DocType",
  "document_type": "Document",
+ "engine": "InnoDB",
  "field_order": [
   "entry_type_and_date",
   "title",
@@ -270,6 +271,7 @@
    "label": "Total Amount",
    "no_copy": 1,
    "options": "total_amount_currency",
+   "print_hide": 1,
    "read_only": 1,
    "report_hide": 1
   },
@@ -506,7 +508,7 @@
  "icon": "fa fa-file-text",
  "idx": 176,
  "is_submittable": 1,
- "modified": "2020-06-04 06:32:16.927852",
+ "modified": "2020-01-16 13:05:30.634226",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Journal Entry",

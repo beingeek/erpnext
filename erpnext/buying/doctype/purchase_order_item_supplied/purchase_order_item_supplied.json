@@ -6,6 +6,7 @@
   "main_item_code",
   "rm_item_code",
   "required_qty",
+  "supplied_qty",
   "rate",
   "amount",
   "column_break_6",
@@ -43,7 +44,7 @@
    "fieldname": "required_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Supplied Qty",
+   "label": "Required Qty",
    "oldfieldname": "required_qty",
    "oldfieldtype": "Currency",
    "read_only": 1
@@ -113,12 +114,19 @@
    "in_list_view": 1,
    "label": "Reserve Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "fieldname": "supplied_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Supplied Qty",
+   "read_only": 1
   }
  ],
  "hide_toolbar": 1,
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:53:39.621981",
+ "modified": "2019-08-20 13:37:32.702068",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order Item Supplied",

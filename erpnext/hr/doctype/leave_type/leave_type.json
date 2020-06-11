@@ -5,6 +5,7 @@
  "creation": "2013-02-21 09:55:58",
  "doctype": "DocType",
  "document_type": "Setup",
+ "engine": "InnoDB",
  "field_order": [
   "leave_type_name",
   "max_leaves_allowed",
@@ -17,6 +18,9 @@
   "allow_negative",
   "include_holiday",
   "is_compensatory",
+  "carry_forward_section",
+  "maximum_carry_forwarded_leaves",
+  "expire_carry_forwarded_leaves_after_days",
   "encashment",
   "allow_encashment",
   "encashment_threshold_days",
@@ -34,7 +38,8 @@
    "label": "Leave Type Name",
    "oldfieldname": "leave_type_name",
    "oldfieldtype": "Data",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
   },
   {
    "fieldname": "max_leaves_allowed",
@@ -59,6 +64,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "0",
    "fieldname": "is_carry_forward",
    "fieldtype": "Check",
    "in_list_view": 1,
@@ -67,29 +73,47 @@
    "oldfieldtype": "Check"
   },
   {
+   "default": "0",
    "fieldname": "is_lwp",
    "fieldtype": "Check",
    "label": "Is Leave Without Pay"
   },
   {
+   "default": "0",
    "fieldname": "is_optional_leave",
    "fieldtype": "Check",
    "label": "Is Optional Leave"
   },
   {
+   "default": "0",
    "fieldname": "allow_negative",
    "fieldtype": "Check",
    "label": "Allow Negative Balance"
   },
   {
+   "default": "0",
    "fieldname": "include_holiday",
    "fieldtype": "Check",
    "label": "Include holidays within leaves as leaves"
   },
   {
+   "default": "0",
    "fieldname": "is_compensatory",
    "fieldtype": "Check",
    "label": "Is Compensatory"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval: doc.is_carry_forward == 1",
+   "fieldname": "carry_forward_section",
+   "fieldtype": "Section Break",
+   "label": "Carry Forward"
+  },
+  {
+   "description": "Calculated in days",
+   "fieldname": "expire_carry_forwarded_leaves_after_days",
+   "fieldtype": "Int",
+   "label": "Expire Carry Forwarded Leaves (Days)"
   },
   {
    "collapsible": 1,
@@ -98,6 +122,7 @@
    "label": "Encashment"
   },
   {
+   "default": "0",
    "fieldname": "allow_encashment",
    "fieldtype": "Check",
    "label": "Allow Encashment"
@@ -122,6 +147,7 @@
    "label": "Earned Leave"
   },
   {
+   "default": "0",
    "fieldname": "is_earned_leave",
    "fieldtype": "Check",
    "label": "Is Earned Leave"
@@ -131,7 +157,7 @@
    "fieldname": "earned_leave_frequency",
    "fieldtype": "Select",
    "label": "Earned Leave Frequency",
-   "options": "Monthly\nQuarterly\nYearly"
+   "options": "Monthly\nQuarterly\nHalf-Yearly\nYearly"
   },
   {
    "default": "0.5",
@@ -140,11 +166,17 @@
    "fieldtype": "Select",
    "label": "Rounding",
    "options": "0.5\n1.0"
+  },
+  {
+   "depends_on": "is_carry_forward",
+   "fieldname": "maximum_carry_forwarded_leaves",
+   "fieldtype": "Float",
+   "label": "Maximum Carry Forwarded Leaves"
   }
  ],
  "icon": "fa fa-flag",
  "idx": 1,
- "modified": "2020-06-04 06:58:27.962786",
+ "modified": "2019-09-06 18:48:48.946074",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Leave Type",
@@ -176,5 +208,7 @@
    "read": 1,
    "role": "Employee"
   }
- ]
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
 }

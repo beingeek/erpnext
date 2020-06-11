@@ -31,7 +31,11 @@ frappe.ui.form.on('Payroll Entry', {
 			}
 			if ((frm.doc.employees || []).length) {
 				frm.page.set_primary_action(__('Create Salary Slips'), () => {
-					frm.save('Submit');
+					frm.save('Submit').then(()=>{
+						frm.page.clear_primary_action();
+						frm.refresh();
+						frm.events.refresh(frm);
+					});
 				});
 			}
 		}
@@ -69,7 +73,7 @@ frappe.ui.form.on('Payroll Entry', {
 	},
 
 	add_context_buttons: function(frm) {
-		if(frm.doc.salary_slips_submitted) {
+		if(frm.doc.salary_slips_submitted || (frm.doc.__onload && frm.doc.__onload.submitted_ss)) {
 			frm.events.add_bank_entry_button(frm);
 		} else if(frm.doc.salary_slips_created) {
 			frm.add_custom_button(__("Submit Salary Slip"), function() {
@@ -245,7 +249,7 @@ const submit_salary_slip = function (frm) {
 
 let make_bank_entry = function (frm) {
 	var doc = frm.doc;
-	if (doc.company && doc.start_date && doc.end_date && doc.payment_account) {
+	if (doc.payment_account) {
 		return frappe.call({
 			doc: cur_frm.doc,
 			method: "make_payment_entry",
@@ -258,7 +262,8 @@ let make_bank_entry = function (frm) {
 			freeze_message: __("Creating Payment Entries......")
 		});
 	} else {
-		frappe.msgprint(__("Company, Payment Account, From Date and To Date is mandatory"));
+		frappe.msgprint(__("Payment Account is mandatory"));
+		frm.scroll_to_field('payment_account');
 	}
 };
 

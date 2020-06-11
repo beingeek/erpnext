@@ -4,14 +4,16 @@ import frappe, json, os
 from frappe.utils import flt, cstr
 from erpnext.controllers.taxes_and_totals import get_itemised_tax
 from frappe import _
+from frappe.core.doctype.file.file import remove_file
 from six import string_types
-from frappe.utils.file_manager import save_file, remove_file
 from frappe.desk.form.load import get_attachments
 from erpnext.regional.italy import state_codes
 
 
 def update_itemised_tax_data(doc):
 	if not doc.taxes: return
+
+	if doc.doctype == "Purchase Invoice": return
 
 	itemised_tax = get_itemised_tax(doc.taxes)
 
@@ -75,12 +77,12 @@ def prepare_invoice(invoice, progressive_number):
 	invoice.tax_data = tax_data
 
 	#Check if stamp duty (Bollo) of 2 EUR exists.
-	stamp_duty_charge_row = next((tax for tax in invoice.taxes if tax.charge_type == _("Actual") and tax.tax_amount == 2.0 ), None)
+	stamp_duty_charge_row = next((tax for tax in invoice.taxes if tax.charge_type == "Actual" and tax.tax_amount == 2.0 ), None)
 	if stamp_duty_charge_row:
 		invoice.stamp_duty = stamp_duty_charge_row.tax_amount
 
 	for item in invoice.e_invoice_items:
-		if item.tax_rate == 0.0 and item.tax_amount == 0.0:
+		if item.tax_rate == 0.0 and item.tax_amount == 0.0 and tax_data.get("0.0"):
 			item.tax_exemption_reason = tax_data["0.0"]["tax_exemption_reason"]
 
 	customer_po_data = {}
@@ -176,6 +178,10 @@ def get_invoice_summary(items, taxes):
 						summary_data[key]["tax_exemption_reason"] = tax.tax_exemption_reason
 						summary_data[key]["tax_exemption_law"] = tax.tax_exemption_law
 
+			if summary_data.get("0.0") and tax.charge_type in ["On Previous Row Total",
+				"On Previous Row Amount"]:
+				summary_data[key]["taxable_amount"] = tax.total
+
 			if summary_data == {}: #Implies that Zero VAT has not been set on any item.
 				summary_data.setdefault("0.0", {"tax_amount": 0.0, "taxable_amount": tax.total,
 					"tax_exemption_reason": tax.tax_exemption_reason, "tax_exemption_law": tax.tax_exemption_law})
@@ -222,7 +228,7 @@ def sales_invoice_validate(doc):
 	#Validate customer details
 	customer = frappe.get_doc("Customer", doc.customer)
 
-	if customer.customer_type == _("Individual"):
+	if customer.customer_type == "Individual":
 		doc.customer_fiscal_code = customer.fiscal_code
 		if not doc.customer_fiscal_code:
 			frappe.throw(_("Please set Fiscal Code for the customer '%s'" % doc.customer), title=_("E-Invoicing Information Missing"))
@@ -278,11 +284,25 @@ def prepare_and_attach_invoice(doc, replace=False):
 	progressive_name, progressive_number = get_progressive_name_and_number(doc, replace)
 
 	invoice = prepare_invoice(doc, progressive_number)
-	invoice_xml = frappe.render_template('erpnext/regional/italy/e-invoice.xml', context={"doc": invoice}, is_path=True)
+	item_meta = frappe.get_meta("Sales Invoice Item")
+
+	invoice_xml = frappe.render_template('erpnext/regional/italy/e-invoice.xml',
+		context={"doc": invoice, "item_meta": item_meta}, is_path=True)
+
 	invoice_xml = invoice_xml.replace("&", "&amp;")
 
 	xml_filename = progressive_name + ".xml"
-	return save_file(xml_filename, invoice_xml, dt=doc.doctype, dn=doc.name, is_private=True)
+
+	_file = frappe.get_doc({
+		"doctype": "File",
+		"file_name": xml_filename,
+		"attached_to_doctype": doc.doctype,
+		"attached_to_name": doc.name,
+		"is_private": True,
+		"content": invoice_xml
+	})
+	_file.save()
+	return _file
 
 @frappe.whitelist()
 def generate_single_invoice(docname):
@@ -316,6 +336,9 @@ def get_company_country(company):
 	return frappe.get_cached_value('Company', company, 'country')
 
 def get_e_invoice_attachments(invoice):
+	if not invoice.company_tax_id:
+		return []
+
 	out = []
 	attachments = get_attachments(invoice.doctype, invoice.name)
 	company_tax_id = invoice.company_tax_id if invoice.company_tax_id.startswith("IT") else "IT" + invoice.company_tax_id

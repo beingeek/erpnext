@@ -11,11 +11,13 @@
   "section_break_1",
   "from_shareholder",
   "from_folio_no",
-  "equity_or_liability_account",
-  "asset_account",
   "column_break_3",
   "to_shareholder",
   "to_folio_no",
+  "section_break_10",
+  "equity_or_liability_account",
+  "column_break_12",
+  "asset_account",
   "section_break_4",
   "share_type",
   "from_no",
@@ -72,7 +74,8 @@
    "fieldname": "equity_or_liability_account",
    "fieldtype": "Link",
    "label": "Equity/Liability Account",
-   "options": "Account"
+   "options": "Account",
+   "reqd": 1
   },
   {
    "depends_on": "eval:(doc.transfer_type != 'Transfer') && (doc.company)",
@@ -174,10 +177,18 @@
    "options": "Share Transfer",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_10",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_12",
+   "fieldtype": "Column Break"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-06-04 06:56:27.849159",
+ "modified": "2019-12-20 14:48:01.990600",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Share Transfer",
@@ -185,6 +196,7 @@
  "permissions": [
   {
    "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -210,6 +222,7 @@
    "write": 1
   },
   {
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -219,6 +232,7 @@
    "report": 1,
    "role": "Accounts Manager",
    "share": 1,
+   "submit": 1,
    "write": 1
   }
  ],

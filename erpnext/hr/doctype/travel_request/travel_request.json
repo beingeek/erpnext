@@ -26,8 +26,10 @@
   "travel_itinerary",
   "itinerary",
   "costing_details",
-  "cost_center",
   "costings",
+  "accounting_dimensions_section",
+  "cost_center",
+  "dimension_col_break",
   "event_details",
   "name_of_organizer",
   "address_of_organizer",
@@ -189,9 +191,29 @@
    "fieldname": "other_details",
    "fieldtype": "Text",
    "label": "Other Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Travel Request",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
   }
  ],
- "modified": "2020-06-04 06:56:42.333874",
+ "is_submittable": 1,
+ "modified": "2019-05-25 23:15:00.609186",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Travel Request",

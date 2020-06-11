@@ -3,6 +3,7 @@
  "autoname": "Prompt",
  "creation": "2013-05-24 12:15:51",
  "doctype": "DocType",
+ "engine": "InnoDB",
  "field_order": [
   "disabled",
   "section_break_2",
@@ -49,9 +50,12 @@
   "column_break_23",
   "income_account",
   "expense_account",
-  "cost_center",
   "taxes_and_charges",
-  "apply_discount_on"
+  "tax_category",
+  "apply_discount_on",
+  "accounting_dimensions_section",
+  "cost_center",
+  "dimension_col_break"
  ],
  "fields": [
   {
@@ -370,11 +374,26 @@
    "fieldtype": "Select",
    "label": "Apply Discount On",
    "options": "Grand Total\nNet Total"
+  },
+  {
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tax_category",
+   "fieldtype": "Link",
+   "label": "Tax Category",
+   "options": "Tax Category"
   }
  ],
  "icon": "icon-cog",
  "idx": 1,
- "modified": "2020-06-04 06:56:14.689771",
+ "modified": "2020-01-24 15:52:03.797701",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Profile",

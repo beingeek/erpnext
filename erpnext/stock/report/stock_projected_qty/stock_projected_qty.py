@@ -44,7 +44,9 @@ def execute(filters=None):
 				re_order_level = d.warehouse_reorder_level
 				re_order_qty = d.warehouse_reorder_qty
 
-		shortage_qty = re_order_level - flt(bin.projected_qty) if (re_order_level or re_order_qty) else 0
+		shortage_qty = 0
+		if (re_order_level or re_order_qty) and re_order_level > bin.projected_qty:
+			shortage_qty = re_order_level - flt(bin.projected_qty)
 
 		data.append([item.name, item.item_name, item.description, item.item_group, item.brand, bin.warehouse,
 			item.stock_uom, bin.actual_qty, bin.planned_qty, bin.indented_qty, bin.ordered_qty,
@@ -83,10 +85,10 @@ def get_columns():
 
 def get_bin_list(filters):
 	conditions = []
-	
+
 	if filters.item_code:
 		conditions.append("item_code = '%s' "%filters.item_code)
-		
+
 	if filters.warehouse:
 		warehouse_details = frappe.db.get_value("Warehouse", filters.warehouse, ["lft", "rgt"], as_dict=1)
 
@@ -107,7 +109,7 @@ def get_item_map(item_code, include_uom):
 
 	condition = ""
 	if item_code:
-		condition = 'and item_code = "{0}"'.format(frappe.db.escape(item_code, percent=False))
+		condition = 'and item_code = {0}'.format(frappe.db.escape(item_code, percent=False))
 
 	cf_field = cf_join = ""
 	if include_uom:
@@ -128,7 +130,7 @@ def get_item_map(item_code, include_uom):
 
 	condition = ""
 	if item_code:
-		condition = 'where parent="{0}"'.format(frappe.db.escape(item_code, percent=False))
+		condition = 'where parent={0}'.format(frappe.db.escape(item_code, percent=False))
 
 	reorder_levels = frappe._dict()
 	for ir in frappe.db.sql("""select * from `tabItem Reorder` {condition}""".format(condition=condition), as_dict=1):

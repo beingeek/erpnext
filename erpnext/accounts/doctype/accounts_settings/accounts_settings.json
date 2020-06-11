@@ -10,14 +10,17 @@
   "acc_frozen_upto",
   "frozen_accounts_modifier",
   "determine_address_tax_category_from",
+  "over_billing_allowance",
   "column_break_4",
   "credit_controller",
   "check_supplier_invoice_uniqueness",
   "make_payment_via_journal_entry",
   "unlink_payment_on_cancellation_of_invoice",
+  "unlink_advance_payment_on_cancelation_of_order",
   "book_asset_depreciation_entry_automatically",
   "allow_cost_center_in_entry_of_bs_account",
   "add_taxes_from_item_tax_template",
+  "automatically_fetch_payment_terms",
   "print_settings",
   "show_inclusive_tax_in_print",
   "column_break_12",
@@ -74,13 +77,11 @@
    "options": "Role"
   },
   {
-   "default": "0",
    "fieldname": "check_supplier_invoice_uniqueness",
    "fieldtype": "Check",
    "label": "Check Supplier Invoice Number Uniqueness"
   },
   {
-   "default": "0",
    "fieldname": "make_payment_via_journal_entry",
    "fieldtype": "Check",
    "label": "Make Payment via Journal Entry"
@@ -93,12 +94,17 @@
   },
   {
    "default": "1",
+   "fieldname": "unlink_advance_payment_on_cancelation_of_order",
+   "fieldtype": "Check",
+   "label": "Unlink Advance Payment on Cancelation of Order"
+  },
+  {
+   "default": "1",
    "fieldname": "book_asset_depreciation_entry_automatically",
    "fieldtype": "Check",
    "label": "Book Asset Depreciation Entry Automatically"
   },
   {
-   "default": "0",
    "fieldname": "allow_cost_center_in_entry_of_bs_account",
    "fieldtype": "Check",
    "label": "Allow Cost Center In Entry of Balance Sheet Account"
@@ -115,7 +121,6 @@
    "label": "Print Settings"
   },
   {
-   "default": "0",
    "fieldname": "show_inclusive_tax_in_print",
    "fieldtype": "Check",
    "label": "Show Inclusive Tax In Print"
@@ -125,7 +130,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
    "fieldname": "show_payment_schedule_in_print",
    "fieldtype": "Check",
    "label": "Show Payment Schedule in Print"
@@ -160,12 +164,23 @@
    "fieldname": "use_custom_cash_flow",
    "fieldtype": "Check",
    "label": "Use Custom Cash Flow Format"
+  },
+  {
+   "fieldname": "automatically_fetch_payment_terms",
+   "fieldtype": "Check",
+   "label": "Automatically Fetch Payment Terms"
+  },
+  {
+   "description": "Percentage you are allowed to bill more against the amount ordered. For example: If the order value is $100 for an item and tolerance is set as 10% then you are allowed to bill for $110.",
+   "fieldname": "over_billing_allowance",
+   "fieldtype": "Currency",
+   "label": "Over Billing Allowance (%)"
   }
  ],
  "icon": "icon-cog",
  "idx": 1,
  "issingle": 1,
- "modified": "2020-06-04 06:56:13.500593",
+ "modified": "2019-07-04 18:20:55.789946",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",

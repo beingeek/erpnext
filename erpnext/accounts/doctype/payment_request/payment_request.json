@@ -262,7 +262,7 @@
    "hidden": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "\nDraft\nInitiated\nPayment Ordered\nPaid\nFailed\nCancelled",
+   "options": "\nDraft\nRequested\nInitiated\nPartially Paid\nPayment Ordered\nPaid\nFailed\nCancelled",
    "read_only": 1
   },
   {
@@ -348,7 +348,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-06-04 06:56:04.722211",
+ "modified": "2020-03-28 16:07:31.960798",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Request",

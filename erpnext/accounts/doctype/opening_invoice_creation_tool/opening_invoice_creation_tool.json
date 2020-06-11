@@ -10,6 +10,9 @@
   "create_missing_party",
   "column_break_3",
   "invoice_type",
+  "accounting_dimensions_section",
+  "cost_center",
+  "dimension_col_break",
   "section_break_4",
   "invoices"
  ],
@@ -23,6 +26,7 @@
    "reqd": 1
   },
   {
+   "default": "0",
    "description": "Create missing customer or supplier.",
    "fieldname": "create_missing_party",
    "fieldtype": "Check",
@@ -51,11 +55,27 @@
    "fieldtype": "Table",
    "options": "Opening Invoice Creation Tool Item",
    "reqd": 1
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
   }
  ],
  "hide_toolbar": 1,
  "issingle": 1,
- "modified": "2020-06-04 06:58:42.660376",
+ "modified": "2019-07-25 14:57:33.187689",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Opening Invoice Creation Tool",

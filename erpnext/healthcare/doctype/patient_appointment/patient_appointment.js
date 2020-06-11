@@ -11,7 +11,7 @@ frappe.ui.form.on('Patient Appointment', {
 	refresh: function(frm) {
 		frm.set_query("patient", function () {
 			return {
-				filters: {"disabled": 0}
+				filters: {"status": "Active"}
 			};
 		});
 		frm.set_query("practitioner", function() {
@@ -30,9 +30,9 @@ frappe.ui.form.on('Patient Appointment', {
 			};
 		});
 		if(frm.doc.patient){
-			frm.add_custom_button(__('Medical Record'), function() {
+			frm.add_custom_button(__('Patient History'), function() {
 				frappe.route_options = {"patient": frm.doc.patient};
-				frappe.set_route("medical_record");
+				frappe.set_route("patient_history");
 			},__("View"));
 		}
 		if(frm.doc.status == "Open"){
@@ -288,17 +288,24 @@ var check_and_set_availability = function(frm) {
 };
 
 var get_procedure_prescribed = function(frm){
-	if(frm.doc.patient){
+	if (frm.doc.patient) {
 		frappe.call({
 			method:"erpnext.healthcare.doctype.patient_appointment.patient_appointment.get_procedure_prescribed",
 			args: {patient: frm.doc.patient},
-			callback: function(r){
-				show_procedure_templates(frm, r.message);
+			callback: function(r) {
+				if (r.message && r.message.length) {
+					show_procedure_templates(frm, r.message);
+				} else {
+					frappe.msgprint({
+						title: __('Not Found'),
+						message: __('No Prescribed Procedures found for the selected Patient')
+					});
+				}
 			}
 		});
 	}
 	else{
-		frappe.msgprint("Please select Patient to get prescribed procedure");
+		frappe.msgprint(__("Please select Patient to get prescribed procedure"));
 	}
 };
 

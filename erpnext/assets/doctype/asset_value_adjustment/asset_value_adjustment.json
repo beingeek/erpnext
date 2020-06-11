@@ -14,8 +14,10 @@
   "current_asset_value",
   "new_asset_value",
   "difference_amount",
+  "amended_from",
+  "accounting_dimensions_section",
   "cost_center",
-  "amended_from"
+  "dimension_col_break"
  ],
  "fields": [
   {
@@ -58,7 +60,8 @@
   {
    "fieldname": "date",
    "fieldtype": "Date",
-   "label": "Date"
+   "label": "Date",
+   "reqd": 1
   },
   {
    "fieldname": "current_asset_value",
@@ -96,10 +99,19 @@
    "options": "Asset Value Adjustment",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-06-04 06:58:26.999033",
+ "modified": "2019-11-22 14:09:25.800375",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset Value Adjustment",

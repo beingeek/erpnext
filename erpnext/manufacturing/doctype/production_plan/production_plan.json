@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "naming_series:",
  "creation": "2017-10-29 11:53:09.523362",
  "doctype": "DocType",
@@ -24,16 +25,18 @@
   "material_request_detail",
   "get_material_request",
   "material_requests",
-  "items_for_production",
+  "select_items_to_manufacture_section",
   "get_items",
   "po_items",
   "material_request_planning",
   "include_non_stock_items",
+  "include_subcontracted_items",
   "ignore_existing_ordered_qty",
   "column_break_25",
-  "include_subcontracted_items",
-  "section_break_27",
+  "for_warehouse",
+  "download_materials_required",
   "get_items_for_mr",
+  "section_break_27",
   "mr_items",
   "other_details",
   "total_planned_qty",
@@ -135,7 +138,7 @@
    "depends_on": "eval: doc.get_items_from == \"Sales Order\"",
    "fieldname": "sales_orders_detail",
    "fieldtype": "Section Break",
-   "label": "Sales Orders Detail"
+   "label": "Sales Orders"
   },
   {
    "fieldname": "get_sales_orders",
@@ -170,9 +173,9 @@
    "options": "Production Plan Material Request"
   },
   {
-   "fieldname": "items_for_production",
+   "fieldname": "select_items_to_manufacture_section",
    "fieldtype": "Section Break",
-   "label": "Select Items"
+   "label": "Select Items to Manufacture"
   },
   {
    "depends_on": "get_items_from",
@@ -183,7 +186,6 @@
   {
    "fieldname": "po_items",
    "fieldtype": "Table",
-   "label": "Items",
    "no_copy": 1,
    "options": "Production Plan Item",
    "reqd": 1
@@ -200,28 +202,41 @@
    "label": "Include Non Stock Items"
   },
   {
-   "fieldname": "ignore_existing_ordered_qty",
-   "fieldtype": "Check",
-   "label": "Ignore Existing Ordered Quantity"
-  },
-  {
-   "fieldname": "column_break_25",
-   "fieldtype": "Column Break"
-  },
-  {
    "default": "1",
    "fieldname": "include_subcontracted_items",
    "fieldtype": "Check",
    "label": "Include Subcontracted Items"
   },
   {
-   "fieldname": "section_break_27",
-   "fieldtype": "Section Break"
+   "default": "0",
+   "description": "To know more about projected quantity, <a href=\"https://erpnext.com/docs/user/manual/en/stock/projected-quantity\" style=\"text-decoration: underline;\" target=\"_blank\">click here</a>.",
+   "fieldname": "ignore_existing_ordered_qty",
+   "fieldtype": "Check",
+   "label": "Ignore Existing Projected Quantity"
+  },
+  {
+   "fieldname": "column_break_25",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "for_warehouse",
+   "fieldtype": "Link",
+   "label": "For Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "download_materials_required",
+   "fieldtype": "Button",
+   "label": "Download Required Materials"
   },
   {
    "fieldname": "get_items_for_mr",
    "fieldtype": "Button",
    "label": "Get Raw Materials For Production"
+  },
+  {
+   "fieldname": "section_break_27",
+   "fieldtype": "Section Break"
   },
   {
    "fieldname": "mr_items",
@@ -280,7 +295,8 @@
  ],
  "icon": "fa fa-calendar",
  "is_submittable": 1,
- "modified": "2020-06-04 06:58:23.281647",
+ "links": [],
+ "modified": "2019-12-04 15:58:50.940460",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Production Plan",

@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:salary_component",
@@ -6,19 +7,22 @@
  "doctype": "DocType",
  "document_type": "Setup",
  "editable_grid": 1,
+ "engine": "InnoDB",
  "field_order": [
   "salary_component",
   "salary_component_abbr",
   "type",
-  "is_additional_component",
-  "is_tax_applicable",
-  "is_payable",
-  "depends_on_lwp",
-  "do_not_include_in_total",
-  "column_break_4",
-  "disabled",
   "description",
+  "column_break_4",
+  "depends_on_payment_days",
+  "is_tax_applicable",
+  "deduct_full_tax_on_selected_payroll_date",
+  "variable_based_on_taxable_salary",
+  "exempted_from_income_tax",
+  "round_to_the_nearest_integer",
   "statistical_component",
+  "do_not_include_in_total",
+  "disabled",
   "flexible_benefits",
   "is_flexible_benefit",
   "max_benefit_amount",
@@ -26,15 +30,13 @@
   "pay_against_benefit_claim",
   "only_tax_impact",
   "create_separate_payment_entry_against_benefit_claim",
-  "section_break_11",
-  "variable_based_on_taxable_salary",
   "section_break_5",
   "accounts",
   "condition_and_formula",
   "condition",
+  "amount",
   "amount_based_on_formula",
   "formula",
-  "amount",
   "column_break_28",
   "help"
  ],
@@ -65,13 +67,6 @@
    "reqd": 1
   },
   {
-   "default": "0",
-   "depends_on": "eval:doc.is_flexible_benefit != 1",
-   "fieldname": "is_additional_component",
-   "fieldtype": "Check",
-   "label": "Is Additional Component"
-  },
-  {
    "default": "1",
    "depends_on": "eval:doc.type == \"Earning\"",
    "fieldname": "is_tax_applicable",
@@ -80,22 +75,23 @@
   },
   {
    "default": "1",
-   "fieldname": "is_payable",
+   "fieldname": "depends_on_payment_days",
    "fieldtype": "Check",
-   "label": "Is Payable"
-  },
-  {
-   "default": "0",
-   "fieldname": "depends_on_lwp",
-   "fieldtype": "Check",
-   "label": "Depends on Leave Without Pay",
+   "label": "Depends on Payment Days",
    "print_hide": 1
   },
   {
    "default": "0",
    "fieldname": "do_not_include_in_total",
    "fieldtype": "Check",
-   "label": "Do not include in total"
+   "label": "Do Not Include in Total"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.is_tax_applicable && doc.type=='Earning'",
+   "fieldname": "deduct_full_tax_on_selected_payroll_date",
+   "fieldtype": "Check",
+   "label": "Deduct Full Tax on Selected Payroll Date"
   },
   {
    "fieldname": "column_break_4",
@@ -121,14 +117,13 @@
    "label": "Statistical Component"
   },
   {
-   "depends_on": "eval:doc.type==\"Earning\" && doc.is_additional_component != 1 && doc.statistical_component!=1",
+   "depends_on": "eval:doc.type==\"Earning\" && doc.statistical_component!=1",
    "fieldname": "flexible_benefits",
    "fieldtype": "Section Break",
    "label": "Flexible Benefits"
   },
   {
    "default": "0",
-   "depends_on": "eval:doc.is_additional_component != 1",
    "fieldname": "is_flexible_benefit",
    "fieldtype": "Check",
    "label": "Is Flexible Benefit"
@@ -165,12 +160,8 @@
    "label": "Create Separate Payment Entry Against Benefit Claim"
   },
   {
-   "depends_on": "eval:doc.type=='Deduction'",
-   "fieldname": "section_break_11",
-   "fieldtype": "Section Break"
-  },
-  {
    "default": "0",
+   "depends_on": "eval:doc.type == \"Deduction\"",
    "fieldname": "variable_based_on_taxable_salary",
    "fieldtype": "Check",
    "label": "Variable Based On Taxable Salary"
@@ -206,7 +197,7 @@
    "label": "Amount based on formula"
   },
   {
-   "depends_on": "eval:doc.amount_based_on_formula!==0",
+   "depends_on": "amount_based_on_formula",
    "fieldname": "formula",
    "fieldtype": "Code",
    "label": "Formula"
@@ -226,10 +217,25 @@
    "fieldtype": "HTML",
    "label": "Help",
    "options": "<h3>Help</h3>\n\n<p>Notes:</p>\n\n<ol>\n<li>Use field <code>base</code> for using base salary of the Employee</li>\n<li>Use Salary Component abbreviations in conditions and formulas. <code>BS = Basic Salary</code></li>\n<li>Use field name for employee details in conditions and formulas. <code>Employment Type = employment_type</code><code>Branch = branch</code></li>\n<li>Use field name from Salary Slip in conditions and formulas. <code>Payment Days = payment_days</code><code>Leave without pay = leave_without_pay</code></li>\n<li>Direct Amount can also be entered based on Condtion. See example 3</li></ol>\n\n<h4>Examples</h4>\n<ol>\n<li>Calculating Basic Salary based on <code>base</code>\n<pre><code>Condition: base &lt; 10000</code></pre>\n<pre><code>Formula: base * .2</code></pre></li>\n<li>Calculating HRA based on Basic Salary<code>BS</code> \n<pre><code>Condition: BS &gt; 2000</code></pre>\n<pre><code>Formula: BS * .1</code></pre></li>\n<li>Calculating TDS based on Employment Type<code>employment_type</code> \n<pre><code>Condition: employment_type==\"Intern\"</code></pre>\n<pre><code>Amount: 1000</code></pre></li>\n</ol>"
+  },
+  {
+   "default": "0",
+   "fieldname": "round_to_the_nearest_integer",
+   "fieldtype": "Check",
+   "label": "Round to the Nearest Integer"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.type == \"Deduction\" && !doc.variable_based_on_taxable_salary",
+   "description": "If checked, the full amount will be deducted from taxable income before calculating income tax without any declaration or proof submission.",
+   "fieldname": "exempted_from_income_tax",
+   "fieldtype": "Check",
+   "label": "Exempted from Income Tax"
   }
  ],
  "icon": "fa fa-flag",
- "modified": "2020-06-04 06:56:27.594850",
+ "links": [],
+ "modified": "2020-04-28 15:46:45.252945",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Salary Component",

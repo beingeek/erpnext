@@ -1,7 +1,7 @@
 {
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "field:program_code",
+ "autoname": "field:program_name",
  "creation": "2015-09-07 12:54:03.609282",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -9,10 +9,17 @@
   "program_name",
   "department",
   "column_break_3",
-  "program_code",
   "program_abbreviation",
+  "section_break_courses",
+  "courses",
   "section_break_5",
-  "courses"
+  "is_published",
+  "allow_self_enroll",
+  "is_featured",
+  "column_break_11",
+  "intro_video",
+  "hero_image",
+  "description"
  ],
  "fields": [
   {
@@ -20,7 +27,8 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Program Name",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
   },
   {
    "fieldname": "department",
@@ -35,12 +43,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "program_code",
-   "fieldtype": "Data",
-   "label": "Program Code",
-   "reqd": 1
-  },
-  {
    "fieldname": "program_abbreviation",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -49,16 +51,64 @@
   {
    "fieldname": "section_break_5",
    "fieldtype": "Section Break",
-   "label": "Course"
+   "label": "Portal Settings"
   },
   {
    "fieldname": "courses",
    "fieldtype": "Table",
    "label": "Courses",
    "options": "Program Course"
+  },
+  {
+   "depends_on": "is_published",
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "depends_on": "is_published",
+   "fieldname": "intro_video",
+   "fieldtype": "Data",
+   "label": "Intro Video"
+  },
+  {
+   "fieldname": "hero_image",
+   "fieldtype": "Attach Image",
+   "hidden": 1,
+   "label": "Hero Image"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_published",
+   "fieldtype": "Check",
+   "label": "Is Published"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.is_published == 1",
+   "fieldname": "is_featured",
+   "fieldtype": "Check",
+   "label": "Is Featured"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.is_published == 1",
+   "fieldname": "allow_self_enroll",
+   "fieldtype": "Check",
+   "label": "Allow Self Enroll"
+  },
+  {
+   "fieldname": "section_break_courses",
+   "fieldtype": "Section Break",
+   "label": "Courses"
+  },
+  {
+   "fieldname": "column_break_11",
+   "fieldtype": "Column Break"
   }
  ],
- "modified": "2020-06-04 06:58:52.138249",
+ "image_field": "hero_image",
+ "modified": "2019-06-12 12:31:14.999346",
  "modified_by": "Administrator",
  "module": "Education",
  "name": "Program",
@@ -72,9 +122,51 @@
    "print": 1,
    "read": 1,
    "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Academics User",
    "share": 1,
    "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Instructor",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Guest",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Student",
+   "share": 1
   }
  ],
  "restrict_to_domain": "Education",

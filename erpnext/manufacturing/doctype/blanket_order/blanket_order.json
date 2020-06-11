@@ -17,7 +17,10 @@
   "company",
   "section_break_12",
   "items",
-  "amended_from"
+  "amended_from",
+  "terms_and_conditions_section",
+  "tc_name",
+  "terms"
  ],
  "fields": [
   {
@@ -85,7 +88,9 @@
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
-   "options": "Company"
+   "options": "Company",
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "section_break_12",
@@ -106,10 +111,26 @@
    "options": "Blanket Order",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "terms_and_conditions_section",
+   "fieldtype": "Section Break",
+   "label": "Terms and Conditions"
+  },
+  {
+   "fieldname": "tc_name",
+   "fieldtype": "Link",
+   "label": "Terms",
+   "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "terms",
+   "fieldtype": "Text Editor",
+   "label": "Terms and Conditions Details"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-06-04 06:58:22.490924",
+ "modified": "2019-11-18 19:37:37.151686",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Blanket Order",

@@ -7,9 +7,10 @@ import json
 
 import frappe
 from frappe import _, throw
-from frappe.utils import add_days, cstr, date_diff, get_link_to_form, getdate
+from frappe.utils import add_days, cstr, date_diff, get_link_to_form, getdate, today
 from frappe.utils.nestedset import NestedSet
-
+from frappe.desk.form.assign_to import close_all_assignments, clear
+from frappe.utils import date_diff
 
 class CircularReferenceError(frappe.ValidationError): pass
 class EndDateCannotBeGreaterThanProjectEndDateError(frappe.ValidationError): pass
@@ -20,11 +21,6 @@ class Task(NestedSet):
 	def get_feed(self):
 		return '{0}: {1}'.format(_(self.status), self.subject)
 
-	def get_project_details(self):
-		return {
-			"project": self.project
-		}
-
 	def get_customer_details(self):
 		cust = frappe.db.sql("select customer_name from `tabCustomer` where name=%s", self.customer)
 		if cust:
@@ -33,29 +29,47 @@ class Task(NestedSet):
 
 	def validate(self):
 		self.validate_dates()
+		self.validate_parent_project_dates()
 		self.validate_progress()
 		self.validate_status()
 		self.update_depends_on()
 
 	def validate_dates(self):
 		if self.exp_start_date and self.exp_end_date and getdate(self.exp_start_date) > getdate(self.exp_end_date):
-			frappe.throw(_("'Expected Start Date' can not be greater than 'Expected End Date'"))
+			frappe.throw(_("{0} can not be greater than {1}").format(frappe.bold("Expected Start Date"), \
+				frappe.bold("Expected End Date")))
 
 		if self.act_start_date and self.act_end_date and getdate(self.act_start_date) > getdate(self.act_end_date):
-			frappe.throw(_("'Actual Start Date' can not be greater than 'Actual End Date'"))
+			frappe.throw(_("{0} can not be greater than {1}").format(frappe.bold("Actual Start Date"), \
+				frappe.bold("Actual End Date")))
+
+	def validate_parent_project_dates(self):
+		if not self.project or frappe.flags.in_test:
+			return
+
+		expected_end_date = frappe.db.get_value("Project", self.project, "expected_end_date")
+
+		if expected_end_date:
+			validate_project_dates(getdate(expected_end_date), self, "exp_start_date", "exp_end_date", "Expected")
+			validate_project_dates(getdate(expected_end_date), self, "act_start_date", "act_end_date", "Actual")
 
 	def validate_status(self):
-		if self.status!=self.get_db_value("status") and self.status == "Closed":
+		if self.status!=self.get_db_value("status") and self.status == "Completed":
 			for d in self.depends_on:
-				if frappe.db.get_value("Task", d.task, "status") != "Closed":
-					frappe.throw(_("Cannot close task as its dependant task {0} is not closed.").format(d.task))
+				if frappe.db.get_value("Task", d.task, "status") not in ("Completed", "Cancelled"):
+					frappe.throw(_("Cannot complete task {0} as its dependant tasks {1} are not completed / cancelled.").format(frappe.bold(self.name), frappe.bold(d.task)))
 
-			from frappe.desk.form.assign_to import clear
-			clear(self.doctype, self.name)
+			close_all_assignments(self.doctype, self.name)
 
 	def validate_progress(self):
 		if (self.progress or 0) > 100:
 			frappe.throw(_("Progress % for a task cannot be more than 100."))
+
+		if self.progress == 100:
+			self.status = 'Completed'
+
+		if self.status == 'Completed':
+			self.progress = 100
 
 	def update_depends_on(self):
 		depends_on_tasks = self.depends_on_tasks or ""
@@ -76,8 +90,9 @@ class Task(NestedSet):
 		self.populate_depends_on()
 
 	def unassign_todo(self):
-		if self.status == "Closed" or self.status == "Cancelled":
-			from frappe.desk.form.assign_to import clear
+		if self.status == "Completed":
+			close_all_assignments(self.doctype, self.name)
+		if self.status == "Cancelled":
 			clear(self.doctype, self.name)
 
 	def update_total_expense_claim(self):
@@ -99,7 +114,7 @@ class Task(NestedSet):
 
 	def update_project(self):
 		if self.project and not self.flags.from_project:
-			frappe.get_doc("Project", self.project).update_project()
+			frappe.get_cached_doc("Project", self.project).update_project()
 
 	def check_recursion(self):
 		if self.flags.ignore_recursion_check: return
@@ -160,10 +175,10 @@ class Task(NestedSet):
 		self.update_nsm_model()
 
 	def update_status(self):
-		if self.status not in ('Cancelled', 'Closed') and self.exp_end_date:
+		if self.status not in ('Cancelled', 'Completed') and self.exp_end_date:
 			from datetime import datetime
 			if self.exp_end_date < datetime.now().date():
-				self.db_set('status', 'Overdue')
+				self.db_set('status', 'Overdue', update_modified=False)
 				self.update_project()
 
 @frappe.whitelist()
@@ -176,12 +191,16 @@ def check_if_child_exists(name):
 def get_project(doctype, txt, searchfield, start, page_len, filters):
 	from erpnext.controllers.queries import get_match_cond
 	return frappe.db.sql(""" select name from `tabProject`
-			where %(key)s like "%(txt)s"
+			where %(key)s like %(txt)s
 				%(mcond)s
 			order by name
-			limit %(start)s, %(page_len)s """ % {'key': searchfield,
-			'txt': "%%%s%%" % frappe.db.escape(txt), 'mcond':get_match_cond(doctype),
-			'start': start, 'page_len': page_len})
+			limit %(start)s, %(page_len)s""" % {
+				'key': searchfield,
+				'txt': frappe.db.escape('%' + txt + '%'),
+				'mcond':get_match_cond(doctype),
+				'start': start,
+				'page_len': page_len
+			})
 
 
 @frappe.whitelist()
@@ -193,8 +212,11 @@ def set_multiple_status(names, status):
 		task.save()
 
 def set_tasks_as_overdue():
-	tasks = frappe.get_all("Task", filters={'status':['not in',['Cancelled', 'Closed']]})
+	tasks = frappe.get_all("Task", filters={"status": ["not in", ["Cancelled", "Completed"]]}, fields=["name", "status", "review_date"])
 	for task in tasks:
+		if task.status == "Pending Review":
+			if getdate(task.review_date) > getdate(today()):
+				continue
 		frappe.get_doc("Task", task.name).update_status()
 
 @frappe.whitelist()
@@ -250,3 +272,10 @@ def add_multiple_tasks(data, parent):
 
 def on_doctype_update():
 	frappe.db.add_index("Task", ["lft", "rgt"])
+
+def validate_project_dates(project_end_date, task, task_start, task_end, actual_or_expected_date):
+	if task.get(task_start) and date_diff(project_end_date, getdate(task.get(task_start))) < 0:
+		frappe.throw(_("Task's {0} Start Date cannot be after Project's End Date.").format(actual_or_expected_date))
+
+	if task.get(task_end) and date_diff(project_end_date, getdate(task.get(task_end))) < 0:
+		frappe.throw(_("Task's {0} End Date cannot be after Project's End Date.").format(actual_or_expected_date))

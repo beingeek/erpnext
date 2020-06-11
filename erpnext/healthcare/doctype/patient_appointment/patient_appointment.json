@@ -217,10 +217,9 @@
   {
    "fieldname": "appointment_datetime",
    "fieldtype": "Datetime",
-   "hidden": 1,
-   "label": "Date TIme",
+   "label": "Appointment Datetime",
    "print_hide": 1,
-   "report_hide": 1,
+   "read_only": 1,
    "search_index": 1
   },
   {
@@ -286,8 +285,8 @@
    "report_hide": 1
   }
  ],
- "modified": "2020-06-04 06:56:16.667288",
- "modified_by": "Administrator",
+ "modified": "2020-03-27 15:55:24.344945",
+ "modified_by": "ruchamahabal2@gmail.com",
  "module": "Healthcare",
  "name": "Patient Appointment",
  "owner": "Administrator",

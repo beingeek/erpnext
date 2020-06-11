@@ -128,7 +128,7 @@
   {
    "fieldname": "current_stock",
    "fieldtype": "Float",
-   "hidden": 1,
+   "in_list_view": 1,
    "label": "Current Stock",
    "oldfieldname": "current_stock",
    "oldfieldtype": "Currency",
@@ -157,7 +157,7 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:53:40.739745",
+ "modified": "2019-11-21 16:25:29.909112",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Receipt Item Supplied",

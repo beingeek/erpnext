@@ -3,14 +3,16 @@
  "creation": "2013-01-10 16:34:15",
  "doctype": "DocType",
  "field_order": [
+  "select_employees_section",
   "company",
   "employment_type",
   "branch",
+  "column_break1",
   "department",
   "designation",
   "employee_grade",
   "employee",
-  "column_break1",
+  "allocate_leaves_section",
   "from_date",
   "to_date",
   "leave_policy",
@@ -27,47 +29,43 @@
    "options": "Company"
   },
   {
-   "description": "Leave blank if considered for all employee types",
    "fieldname": "employment_type",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Employment Type",
+   "label": "Employment Type (optional)",
    "options": "Employment Type"
   },
   {
-   "description": "Leave blank if considered for all branches",
    "fieldname": "branch",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Branch",
+   "label": "Branch (optional)",
    "options": "Branch"
   },
   {
-   "description": "Leave blank if considered for all departments",
    "fieldname": "department",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Department",
+   "label": "Department (optional)",
    "options": "Department"
   },
   {
-   "description": "Leave blank if considered for all designations",
    "fieldname": "designation",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Designation",
+   "label": "Designation (optional)",
    "options": "Designation"
   },
   {
    "fieldname": "employee_grade",
    "fieldtype": "Link",
-   "label": "Employee Grade",
+   "label": "Employee Grade (optional)",
    "options": "Employee Grade"
   },
   {
    "fieldname": "employee",
    "fieldtype": "Link",
-   "label": "Employee",
+   "label": "Employee (optional)",
    "options": "Employee"
   },
   {
@@ -100,6 +98,7 @@
    "options": "Leave Type"
   },
   {
+   "default": "0",
    "description": "Please select Carry Forward if you also want to include previous fiscal year's balance leaves to this fiscal year",
    "fieldname": "carry_forward",
    "fieldtype": "Check",
@@ -116,13 +115,23 @@
    "fieldtype": "Button",
    "label": "Allocate",
    "options": "allocate_leave"
+  },
+  {
+   "fieldname": "select_employees_section",
+   "fieldtype": "Section Break",
+   "label": "Select Employees"
+  },
+  {
+   "fieldname": "allocate_leaves_section",
+   "fieldtype": "Section Break",
+   "label": "Allocate Leaves"
   }
  ],
  "hide_toolbar": 1,
  "icon": "fa fa-cog",
  "idx": 1,
  "issingle": 1,
- "modified": "2020-06-04 06:58:39.553488",
+ "modified": "2019-05-24 09:41:34.105741",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Leave Control Panel",

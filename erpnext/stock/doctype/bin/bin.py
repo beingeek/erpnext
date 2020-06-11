@@ -61,7 +61,7 @@ class Bin(Document):
 			select * from `tabStock Ledger Entry`
 			where item_code = %s
 			and warehouse = %s
-			order by timestamp(posting_date, posting_time) asc, name asc
+			order by timestamp(posting_date, posting_time) asc, creation asc
 			limit 1
 		""", (self.item_code, self.warehouse), as_dict=1)
 		return sle and sle[0] or None
@@ -70,15 +70,21 @@ class Bin(Document):
 		'''Update qty reserved for production from Production Item tables
 			in open work orders'''
 		self.reserved_qty_for_production = frappe.db.sql('''
-			select sum(item.required_qty - item.transferred_qty)
-			from `tabWork Order` pro, `tabWork Order Item` item
-			where
+			SELECT
+				CASE WHEN ifnull(skip_transfer, 0) = 0 THEN
+					SUM(item.required_qty - item.transferred_qty)
+				ELSE
+					SUM(item.required_qty - item.consumed_qty)
+				END
+			FROM `tabWork Order` pro, `tabWork Order Item` item
+			WHERE
 				item.item_code = %s
 				and item.parent = pro.name
 				and pro.docstatus = 1
 				and item.source_warehouse = %s
 				and pro.status not in ("Stopped", "Completed")
-				and item.required_qty > item.transferred_qty''', (self.item_code, self.warehouse))[0][0]
+				and (item.required_qty > item.transferred_qty or item.required_qty > item.consumed_qty)
+		''', (self.item_code, self.warehouse))[0][0]
 
 		self.set_projected_qty()
 
@@ -107,7 +113,7 @@ class Bin(Document):
 				`tabStock Entry` se, `tabStock Entry Detail` sed, `tabPurchase Order` po
 			where
 				se.docstatus=1
-				and se.purpose='Subcontract'
+				and se.purpose='Send to Subcontractor'
 				and ifnull(se.purchase_order, '') !=''
 				and (sed.item_code = %(item)s or sed.original_item = %(item)s)
 				and se.name = sed.parent

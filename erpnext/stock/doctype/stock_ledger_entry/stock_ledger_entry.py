@@ -16,6 +16,13 @@ class StockFreezeError(frappe.ValidationError): pass
 exclude_from_linked_with = True
 
 class StockLedgerEntry(Document):
+	def autoname(self):
+		"""
+		Temporarily name doc for fast insertion
+		name will be changed using autoname options (in a scheduled job)
+		"""
+		self.name = frappe.generate_hash(txt="", length=10)
+
 	def validate(self):
 		self.flags.ignore_submit_comment = True
 		from erpnext.stock.utils import validate_warehouse_company
@@ -31,7 +38,7 @@ class StockLedgerEntry(Document):
 		self.check_stock_frozen_date()
 		self.actual_amt_check()
 
-		if not self.get("via_landed_cost_voucher") and self.voucher_type != 'Stock Reconciliation':
+		if not self.get("via_landed_cost_voucher"):
 			from erpnext.stock.doctype.serial_no.serial_no import process_serial_no
 			process_serial_no(self)
 
@@ -58,7 +65,7 @@ class StockLedgerEntry(Document):
 			frappe.throw(_("Actual Qty is mandatory"))
 
 	def validate_item(self):
-		item_det = frappe.db.sql("""select name, has_batch_no, docstatus,
+		item_det = frappe.db.sql("""select name, item_name, has_batch_no, docstatus,
 			is_stock_item, has_variants, stock_uom, create_new_batch
 			from tabItem where name=%s""", self.item_code, as_dict=True)
 
@@ -73,10 +80,11 @@ class StockLedgerEntry(Document):
 		# check if batch number is required
 		if self.voucher_type != 'Stock Reconciliation (Old)':
 			if item_det.has_batch_no ==1:
+				batch_item = self.item_code if self.item_code == item_det.item_name else self.item_code + ":" +  item_det.item_name
 				if not self.batch_no:
-					frappe.throw(_("Batch number is mandatory for Item {0}").format(self.item_code))
+					frappe.throw(_("Batch number is mandatory for Item {0}").format(batch_item))
 				elif not frappe.db.get_value("Batch",{"item": self.item_code, "name": self.batch_no}):
-					frappe.throw(_("{0} is not a valid Batch Number for Item {1}").format(self.batch_no, self.item_code))
+					frappe.throw(_("{0} is not a valid Batch Number for Item {1}").format(self.batch_no, batch_item))
 
 			elif item_det.has_batch_no ==0 and self.batch_no and self.is_cancelled == "No":
 				frappe.throw(_("The Item {0} cannot have Batch").format(self.item_code))
@@ -125,11 +133,11 @@ class StockLedgerEntry(Document):
 		is_group_warehouse(self.warehouse)
 
 def on_doctype_update():
-	if not frappe.db.sql("""show index from `tabStock Ledger Entry`
-		where Key_name="posting_sort_index" """):
+	if not frappe.db.has_index('tabStock Ledger Entry', 'posting_sort_index'):
 		frappe.db.commit()
-		frappe.db.sql("""alter table `tabStock Ledger Entry`
-			add index posting_sort_index(posting_date, posting_time, name)""")
+		frappe.db.add_index("Stock Ledger Entry",
+			fields=["posting_date", "posting_time", "name"],
+			index_name="posting_sort_index")
 
 	frappe.db.add_index("Stock Ledger Entry", ["voucher_no", "voucher_type"])
 	frappe.db.add_index("Stock Ledger Entry", ["batch_no", "item_code", "warehouse"])

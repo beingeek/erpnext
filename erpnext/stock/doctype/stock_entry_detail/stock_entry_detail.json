@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "hash",
  "creation": "2013-03-29 18:22:12",
  "doctype": "DocType",
@@ -13,6 +14,7 @@
   "t_warehouse",
   "sec_break1",
   "item_code",
+  "item_group",
   "col_break2",
   "item_name",
   "section_break_8",
@@ -47,7 +49,9 @@
   "accounting",
   "expense_account",
   "col_break5",
+  "accounting_dimensions_section",
   "cost_center",
+  "dimension_col_break",
   "more_info",
   "allow_zero_valuation_rate",
   "actual_qty",
@@ -57,7 +61,15 @@
   "material_request",
   "material_request_item",
   "original_item",
-  "subcontracted_item"
+  "subcontracted_item",
+  "reference_section",
+  "against_stock_entry",
+  "ste_detail",
+  "po_detail",
+  "column_break_51",
+  "transferred_qty",
+  "reference_purchase_receipt",
+  "project"
  ],
  "fields": [
   {
@@ -446,15 +458,89 @@
    "fieldtype": "Link",
    "label": "Subcontracted Item",
    "options": "Item"
+  },
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference"
+  },
+  {
+   "fieldname": "against_stock_entry",
+   "fieldtype": "Link",
+   "label": "Against Stock Entry",
+   "no_copy": 1,
+   "options": "Stock Entry",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "ste_detail",
+   "fieldtype": "Data",
+   "label": "Stock Entry Child",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_51",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transferred_qty",
+   "fieldtype": "Float",
+   "label": "Transferred Qty",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "item_code.item_group",
+   "fieldname": "item_group",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Group"
+  },
+  {
+   "fieldname": "reference_purchase_receipt",
+   "fieldtype": "Link",
+   "label": "Reference Purchase Receipt",
+   "options": "Purchase Receipt",
+   "read_only": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "po_detail",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "PO Supplied Item",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:53:39.984643",
+ "links": [],
+ "modified": "2020-03-19 12:34:09.836295",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Entry Detail",
  "owner": "Administrator",
  "permissions": [],
+ "sort_field": "modified",
  "sort_order": "ASC"
 }

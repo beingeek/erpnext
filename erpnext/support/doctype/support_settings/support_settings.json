@@ -4,6 +4,9 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "sb_00",
+  "track_service_level_agreement",
+  "allow_resetting_service_level_agreement",
   "issues_sb",
   "close_issue_after_days",
   "portal_sb",
@@ -45,6 +48,7 @@
    "label": "Get Started Sections"
   },
   {
+   "default": "0",
    "fieldname": "show_latest_forum_posts",
    "fieldtype": "Check",
    "label": "Show Latest Forum Posts"
@@ -104,10 +108,27 @@
    "fieldtype": "Table",
    "label": "Search APIs",
    "options": "Support Search Source"
+  },
+  {
+   "fieldname": "sb_00",
+   "fieldtype": "Section Break",
+   "label": "Service Level Agreements"
+  },
+  {
+   "default": "0",
+   "fieldname": "track_service_level_agreement",
+   "fieldtype": "Check",
+   "label": "Track Service Level Agreement"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_resetting_service_level_agreement",
+   "fieldtype": "Check",
+   "label": "Allow Resetting Service Level Agreement"
   }
  ],
  "issingle": 1,
- "modified": "2020-06-04 06:58:30.710157",
+ "modified": "2019-07-10 22:52:39.663873",
  "modified_by": "Administrator",
  "module": "Support",
  "name": "Support Settings",

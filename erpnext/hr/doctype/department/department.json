@@ -1,9 +1,11 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "creation": "2013-02-05 11:48:26",
  "doctype": "DocType",
  "document_type": "Setup",
+ "engine": "InnoDB",
  "field_order": [
   "department_name",
   "parent_department",
@@ -122,10 +124,13 @@
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
- "modified": "2020-06-04 06:56:36.106256",
+ "is_tree": 1,
+ "links": [],
+ "modified": "2020-03-18 18:26:05.966022",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Department",
+ "nsm_parent_field": "parent_department",
  "owner": "Administrator",
  "permissions": [
   {
@@ -166,7 +171,7 @@
    "write": 1
   }
  ],
- "quick_entry": 1,
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "ASC"
 }

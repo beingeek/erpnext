@@ -20,6 +20,9 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 		if(item.discount_percentage) {
 			item.discount_amount = flt(item.rate_with_margin) * flt(item.discount_percentage) / 100;
+		}
+
+		if (item.discount_amount) {
 			item.rate = flt((item.rate_with_margin) - (item.discount_amount), precision('rate', item));
 		} else {
 			item.discount_amount = 0;
@@ -41,6 +44,12 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 		if(in_list(["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"], this.frm.doc.doctype)) {
 			this.calculate_commission();
 			this.calculate_contribution();
+		}
+
+		// Update paid amount on return/debit note creation
+		if(this.frm.doc.doctype === "Purchase Invoice" && this.frm.doc.is_return
+			&& (this.frm.doc.grand_total > this.frm.doc.paid_amount)) {
+			this.frm.doc.paid_amount = flt(this.frm.doc.grand_total, precision("grand_total"));
 		}
 
 		this.frm.refresh_fields();
@@ -78,15 +87,13 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			if(this.frm.doc.currency == company_currency) {
 				this.frm.set_value("conversion_rate", 1);
 			} else {
-				frappe.throw(repl('%(conversion_rate_label)s' +
-					__(' is mandatory. Maybe Currency Exchange record is not created for ') +
-				'%(from_currency)s' + __(" to ") + '%(to_currency)s', {
-					"conversion_rate_label": conversion_rate_label,
-					"from_currency": this.frm.doc.currency,
-					"to_currency": company_currency
-				}));
+				const err_message = __('{0} is mandatory. Maybe Currency Exchange record is not created for {1} to {2}', [
+					conversion_rate_label,
+					this.frm.doc.currency,
+					company_currency
+				]);
+				frappe.throw(err_message);
 			}
-
 		}
 	},
 
@@ -545,9 +552,14 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 				var diff = me.frm.doc.total + non_inclusive_tax_amount
 					- flt(last_tax.total, precision("grand_total"));
 
+				if(me.discount_amount_applied && me.frm.doc.discount_amount) {
+					diff -= flt(me.frm.doc.discount_amount);
+				}
+
+				diff = flt(diff, precision("rounding_adjustment"));
+
 				if ( diff && Math.abs(diff) <= (5.0 / Math.pow(10, precision("tax_amount", last_tax))) ) {
-					this.frm.doc.rounding_adjustment = flt(flt(this.frm.doc.rounding_adjustment) + diff,
-						precision("rounding_adjustment"));
+					me.frm.doc.rounding_adjustment = diff;
 				}
 			}
 		}
@@ -749,7 +761,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 					net_total += item.net_amount;
 
 					// discount amount rounding loss adjustment if no taxes
-					if ((!(me.frm.doc.taxes || []).length || (me.frm.doc.apply_discount_on == "Net Total"))
+					if ((!(me.frm.doc.taxes || []).length || total_for_discount_amount==me.frm.doc.net_total || (me.frm.doc.apply_discount_on == "Net Total"))
 							&& i == (me.frm.doc.items || []).length - 1) {
 						var discount_amount_loss = flt(me.frm.doc.net_total - net_total
 							- me.frm.doc.discount_amount, precision("net_total"));

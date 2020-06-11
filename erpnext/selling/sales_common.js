@@ -234,6 +234,12 @@ Customer Request`}
 			});
 		}
 
+		if(this.frm.fields_dict.tc_name) {
+			this.frm.set_query("tc_name", function() {
+				return { filters: { selling: 1 } };
+			});
+		}
+
 		if(!this.frm.fields_dict["items"]) {
 			return;
 		}
@@ -253,6 +259,13 @@ Customer Request`}
 				return me.set_query_for_batch(doc, cdt, cdn)
 			});
 		}
+
+		if(this.frm.fields_dict["items"].grid.get_field('item_code')) {
+			this.frm.set_query("item_tax_template", "items", function(doc, cdt, cdn) {
+				return me.set_query_for_item_tax_template(doc, cdt, cdn)
+			});
+		}
+
 	},
 
 	refresh: function() {
@@ -370,8 +383,25 @@ Customer Request`}
 
 	discount_percentage: function(doc, cdt, cdn) {
 		var item = frappe.get_doc(cdt, cdn);
+		item.discount_amount = 0.0;
+		this.apply_discount_on_item(doc, cdt, cdn, 'discount_percentage');
+	},
+
+	discount_amount: function(doc, cdt, cdn) {
+
+		if(doc.name === cdn) {
+			return;
+		}
+
+		var item = frappe.get_doc(cdt, cdn);
+		item.discount_percentage = 0.0;
+		this.apply_discount_on_item(doc, cdt, cdn, 'discount_amount');
+	},
+
+	apply_discount_on_item: function(doc, cdt, cdn, field) {
+		var item = frappe.get_doc(cdt, cdn);
 		if(!item.price_list_rate) {
-			item.discount_percentage = 0.0;
+			item[field] = 0.0;
 		} else {
 			this.price_list_rate(doc, cdt, cdn);
 		}
@@ -416,7 +446,7 @@ Customer Request`}
 			this.calculate_incentive(sales_person);
 			refresh_field(["allocated_percentage", "allocated_amount", "commission_rate","incentives"], sales_person.name,
 				sales_person.parentfield);
-		}	
+		}
 	},
 
 	sales_person: function(doc, cdt, cdn) {
@@ -428,9 +458,15 @@ Customer Request`}
 	warehouse: function(doc, cdt, cdn) {
 		var me = this;
 		var item = frappe.get_doc(cdt, cdn);
+
+		if (item.serial_no && item.qty === item.serial_no.split(`\n`).length) {
+			return;
+		}
+
 		if (item.serial_no && !item.batch_no) {
 			item.serial_no = null;
 		}
+
 		var has_batch_no;
 		frappe.db.get_value('Item', {'item_code': item.item_code}, 'has_batch_no', (r) => {
 			has_batch_no = r && r.has_batch_no;
@@ -441,12 +477,15 @@ Customer Request`}
 					args: {
 						item_code: item.item_code,
 						warehouse: item.warehouse,
-						has_batch_no: has_batch_no,
+						has_batch_no: has_batch_no || 0,
 						stock_qty: item.stock_qty,
 						serial_no: item.serial_no || "",
 					},
 					callback:function(r){
 						if (in_list(['Delivery Note', 'Sales Invoice'], doc.doctype)) {
+
+							if (doc.doctype === 'Sales Invoice' && (!doc.update_stock)) return;
+
 							me.set_batch_number(cdt, cdn);
 							me.batch_no(doc, cdt, cdn);
 						}
@@ -504,7 +543,7 @@ Customer Request`}
 					child: item,
 					args: {
 						"batch_no": item.batch_no,
-						"stock_qty": item.stock_qty,
+						"stock_qty": item.stock_qty || item.qty, //if stock_qty field is not available fetch qty (in case of Packed Items table)
 						"warehouse": item.warehouse,
 						"item_code": item.item_code,
 						"has_serial_no": has_serial_no
@@ -656,8 +695,8 @@ Customer Request`}
 	update_auto_repeat_reference: function(doc) {
 		if (doc.auto_repeat) {
 			frappe.call({
-				method:"frappe.desk.doctype.auto_repeat.auto_repeat.update_reference",
-				args:{ 
+				method:"frappe.automation.doctype.auto_repeat.auto_repeat.update_reference",
+				args:{
 					docname: doc.auto_repeat,
 					reference:doc.name
 				},
@@ -691,5 +730,44 @@ frappe.ui.form.on(cur_frm.doctype,"project", function(frm) {
 				}
 			})
 		}
+	}
+})
+
+frappe.ui.form.on(cur_frm.doctype, {
+	set_as_lost_dialog: function(frm) {
+		var dialog = new frappe.ui.Dialog({
+			title: __("Set as Lost"),
+			fields: [
+				{"fieldtype": "Table MultiSelect",
+				"label": __("Lost Reasons"),
+				"fieldname": "lost_reason",
+				"options": "Lost Reason Detail",
+				"reqd": 1},
+
+				{"fieldtype": "Text", "label": __("Detailed Reason"), "fieldname": "detailed_reason"},
+			],
+			primary_action: function() {
+				var values = dialog.get_values();
+				var reasons = values["lost_reason"];
+				var detailed_reason = values["detailed_reason"];
+
+				frm.call({
+					doc: frm.doc,
+					method: 'declare_enquiry_lost',
+					args: {
+						'lost_reasons_list': reasons,
+						'detailed_reason': detailed_reason
+					},
+					callback: function(r) {
+						dialog.hide();
+						frm.reload_doc();
+					},
+				});
+				refresh_field("lost_reason");
+			},
+			primary_action_label: __('Declare Lost')
+		});
+
+		dialog.show();
 	}
 })

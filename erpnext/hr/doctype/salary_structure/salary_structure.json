@@ -1,10 +1,12 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "Prompt",
  "creation": "2013-03-07 18:50:29",
  "doctype": "DocType",
  "document_type": "Document",
+ "engine": "InnoDB",
  "field_order": [
   "company",
   "letter_head",
@@ -116,12 +118,14 @@
   {
    "fieldname": "leave_encashment_amount_per_day",
    "fieldtype": "Currency",
-   "label": "Leave Encashment Amount Per Day"
+   "label": "Leave Encashment Amount Per Day",
+   "options": "Company:company:default_currency"
   },
   {
    "fieldname": "max_benefits",
    "fieldtype": "Currency",
-   "label": "Max Benefits (Amount)"
+   "label": "Max Benefits (Amount)",
+   "options": "Company:company:default_currency"
   },
   {
    "description": "Salary breakup based on Earning and Deduction.",
@@ -235,7 +239,8 @@
  "icon": "fa fa-file-text",
  "idx": 1,
  "is_submittable": 1,
- "modified": "2020-06-04 06:56:05.074112",
+ "links": [],
+ "modified": "2019-12-31 17:05:14.118507",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Salary Structure",

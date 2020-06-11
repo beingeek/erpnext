@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:item_group_name",
@@ -6,6 +7,7 @@
  "description": "Item Classification",
  "doctype": "DocType",
  "document_type": "Setup",
+ "engine": "InnoDB",
  "field_order": [
   "gs",
   "item_group_name",
@@ -190,12 +192,15 @@
  "icon": "fa fa-sitemap",
  "idx": 1,
  "image_field": "image",
+ "is_tree": 1,
+ "links": [],
  "max_attachments": 3,
- "modified": "2020-06-04 06:32:03.051883",
+ "modified": "2020-03-18 18:25:59.979083",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",
  "name_case": "Title Case",
+ "nsm_parent_field": "parent_item_group",
  "owner": "Administrator",
  "permissions": [
   {
@@ -249,8 +254,8 @@
    "role": "Accounts User"
   }
  ],
- "quick_entry": 1,
  "search_fields": "parent_item_group",
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "DESC"
 }

@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:territory_name",
@@ -6,6 +7,7 @@
  "description": "Classification of Customers by region",
  "doctype": "DocType",
  "document_type": "Setup",
+ "engine": "InnoDB",
  "field_order": [
   "territory_name",
   "parent_territory",
@@ -16,8 +18,7 @@
   "rgt",
   "old_parent",
   "target_details_section_break",
-  "targets",
-  "distribution_id"
+  "targets"
  ],
  "fields": [
   {
@@ -116,24 +117,18 @@
    "oldfieldname": "target_details",
    "oldfieldtype": "Table",
    "options": "Target Detail"
-  },
-  {
-   "description": "Select Monthly Distribution to unevenly distribute targets across months.",
-   "fieldname": "distribution_id",
-   "fieldtype": "Link",
-   "label": "Target Distribution",
-   "oldfieldname": "distribution_id",
-   "oldfieldtype": "Link",
-   "options": "Monthly Distribution"
   }
  ],
  "icon": "fa fa-map-marker",
  "idx": 1,
- "modified": "2020-06-04 06:56:35.912859",
+ "is_tree": 1,
+ "links": [],
+ "modified": "2020-03-18 18:26:02.055750",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Territory",
  "name_case": "Title Case",
+ "nsm_parent_field": "parent_territory",
  "owner": "Administrator",
  "permissions": [
   {
@@ -173,8 +168,8 @@
    "role": "Maintenance User"
   }
  ],
- "quick_entry": 1,
  "search_fields": "parent_territory,territory_manager",
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "DESC"
 }

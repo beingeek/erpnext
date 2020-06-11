@@ -41,10 +41,10 @@ frappe.ui.form.on('Patient Encounter', {
 				}
 			});
 		}
-		frm.add_custom_button(__('Medical Record'), function() {
+		frm.add_custom_button(__('Patient History'), function() {
 			if (frm.doc.patient) {
 				frappe.route_options = {"patient": frm.doc.patient};
-				frappe.set_route("medical_record");
+				frappe.set_route("patient_history");
 			} else {
 				frappe.msgprint(__("Please select Patient"));
 			}
@@ -62,7 +62,7 @@ frappe.ui.form.on('Patient Encounter', {
 
 		frm.set_query("patient", function () {
 			return {
-				filters: {"disabled": 0}
+				filters: {"status": "Active"}
 			};
 		});
 		frm.set_query("drug_code", "drug_prescription", function() {
@@ -160,7 +160,7 @@ var btn_create_vital_signs = function (frm) {
 
 var btn_create_procedure = function (frm) {
 	if(!frm.doc.patient){
-		frappe.throw("Please select patient");
+		frappe.throw(__("Please select patient"));
 	}
 	frappe.route_options = {
 		"patient": frm.doc.patient,

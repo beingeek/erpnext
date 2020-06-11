@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "beta": 1,
  "creation": "2017-05-09 11:26:22.337760",
  "doctype": "DocType",
@@ -77,6 +78,7 @@
   },
   {
    "default": "0",
+   "description": "Checking this will create new Patients with a Disabled status by default and will only be enabled after invoicing the Registration Fee.",
    "fieldname": "collect_registration_fee",
    "fieldtype": "Check",
    "label": "Collect Fee for Patient Registration"
@@ -86,6 +88,7 @@
    "fieldname": "registration_fee",
    "fieldtype": "Currency",
    "label": "Registration Fee",
+   "mandatory_depends_on": "eval:doc.collect_registration_fee == 1",
    "options": "Currency"
   },
   {
@@ -292,7 +295,8 @@
   }
  ],
  "issingle": 1,
- "modified": "2020-06-04 06:56:25.036436",
+ "links": [],
+ "modified": "2020-01-23 13:39:06.078738",
  "modified_by": "Administrator",
  "module": "Healthcare",
  "name": "Healthcare Settings",

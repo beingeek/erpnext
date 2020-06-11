@@ -3,6 +3,7 @@
  "creation": "2013-01-10 16:34:06",
  "doctype": "DocType",
  "document_type": "Document",
+ "engine": "InnoDB",
  "field_order": [
   "posting_date",
   "transaction_date",
@@ -27,7 +28,9 @@
   "is_advance",
   "fiscal_year",
   "company",
-  "finance_book"
+  "finance_book",
+  "to_rename",
+  "due_date"
  ],
  "fields": [
   {
@@ -111,13 +114,13 @@
    "fieldname": "debit_in_account_currency",
    "fieldtype": "Currency",
    "label": "Debit Amount in Account Currency",
-   "options": "currency"
+   "options": "account_currency"
   },
   {
    "fieldname": "credit_in_account_currency",
    "fieldtype": "Currency",
    "label": "Credit Amount in Account Currency",
-   "options": "currency"
+   "options": "account_currency"
   },
   {
    "fieldname": "against",
@@ -153,7 +156,8 @@
    "label": "Voucher Type",
    "oldfieldname": "voucher_type",
    "oldfieldtype": "Select",
-   "options": "DocType"
+   "options": "DocType",
+   "search_index": 1
   },
   {
    "fieldname": "voucher_no",
@@ -228,12 +232,25 @@
    "fieldtype": "Link",
    "label": "Finance Book",
    "options": "Finance Book"
+  },
+  {
+   "default": "1",
+   "fieldname": "to_rename",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "To Rename",
+   "search_index": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date"
   }
  ],
  "icon": "fa fa-list",
  "idx": 1,
  "in_create": 1,
- "modified": "2020-06-04 06:56:30.611167",
+ "modified": "2020-03-28 16:22:33.766994",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "GL Entry",

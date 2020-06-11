@@ -13,7 +13,7 @@ def execute(filters=None):
 	conditions, filters = get_conditions(filters)
 	columns = get_columns(filters)
 	att_map = get_attendance_list(conditions, filters)
-	emp_map = get_employee_details()
+	emp_map = get_employee_details(filters)
 
 	holiday_list = [emp_map[d]["holiday_list"] for d in emp_map if emp_map[d]["holiday_list"]]
 	default_holiday_list = frappe.get_cached_value('Company',  filters.get("company"),  "default_holiday_list")
@@ -25,6 +25,7 @@ def execute(filters=None):
 	leave_types = frappe.db.sql("""select name from `tabLeave Type`""", as_list=True)
 	leave_list = [d[0] for d in leave_types]
 	columns.extend(leave_list)
+	columns.extend([_("Total Late Entries") + ":Float:120", _("Total Early Exits") + ":Float:120"])
 
 	for emp in sorted(att_map):
 		emp_det = emp_map.get(emp)
@@ -65,6 +66,10 @@ def execute(filters=None):
 
 		leave_details = frappe.db.sql("""select leave_type, status, count(*) as count from `tabAttendance`\
 			where leave_type is not NULL %s group by leave_type, status""" % conditions, filters, as_dict=1)
+		
+		time_default_counts = frappe.db.sql("""select (select count(*) from `tabAttendance` where \
+			late_entry = 1 %s) as late_entry_count, (select count(*) from tabAttendance where \
+			early_exit = 1 %s) as early_exit_count""" % (conditions, conditions), filters)
 
 		leaves = {}
 		for d in leave_details:
@@ -80,7 +85,8 @@ def execute(filters=None):
 				row.append(leaves[d])
 			else:
 				row.append("0.0")
-
+		
+		row.extend([time_default_counts[0][0],time_default_counts[0][1]])
 		data.append(row)
 	return columns, data
 
@@ -125,10 +131,10 @@ def get_conditions(filters):
 
 	return conditions, filters
 
-def get_employee_details():
+def get_employee_details(filters):
 	emp_map = frappe._dict()
 	for d in frappe.db.sql("""select name, employee_name, designation, department, branch, company,
-		holiday_list from tabEmployee""", as_dict=1):
+		holiday_list from tabEmployee where company = "%s" """ % (filters.get("company")), as_dict=1):
 		emp_map.setdefault(d.name, d)
 
 	return emp_map

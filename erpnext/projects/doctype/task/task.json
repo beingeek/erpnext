@@ -1,42 +1,47 @@
 {
+ "actions": [],
  "allow_import": 1,
  "autoname": "TASK-.YYYY.-.#####",
  "creation": "2013-01-29 19:25:50",
  "doctype": "DocType",
  "document_type": "Setup",
+ "engine": "InnoDB",
  "field_order": [
   "subject",
   "project",
+  "issue",
+  "type",
   "is_group",
   "column_break0",
   "status",
   "priority",
+  "task_weight",
+  "completed_by",
+  "color",
   "parent_task",
-  "section_break_10",
+  "sb_timeline",
   "exp_start_date",
   "expected_time",
-  "task_weight",
   "column_break_11",
   "exp_end_date",
   "progress",
   "is_milestone",
-  "color",
-  "section_break0",
+  "sb_details",
   "description",
-  "section_break",
+  "sb_depends_on",
   "depends_on",
   "depends_on_tasks",
-  "actual",
+  "sb_actual",
   "act_start_date",
   "actual_time",
   "column_break_15",
   "act_end_date",
-  "section_break_17",
+  "sb_costing",
   "total_costing_amount",
   "total_expense_claim",
   "column_break_20",
   "total_billing_amount",
-  "more_details",
+  "sb_more_info",
   "review_date",
   "closing_date",
   "column_break_22",
@@ -51,6 +56,7 @@
    "fieldname": "subject",
    "fieldtype": "Data",
    "in_global_search": 1,
+   "in_standard_filter": 1,
    "label": "Subject",
    "reqd": 1,
    "search_index": 1
@@ -68,6 +74,18 @@
    "options": "Project",
    "remember_last_selected_value": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "issue",
+   "fieldtype": "Link",
+   "label": "Issue",
+   "options": "Issue"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Link",
+   "label": "Type",
+   "options": "Task Type"
   },
   {
    "bold": 1,
@@ -94,7 +112,7 @@
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "options": "Open\nWorking\nPending Review\nOverdue\nClosed\nCancelled"
+   "options": "Open\nWorking\nPending Review\nOverdue\nCompleted\nCancelled"
   },
   {
    "fieldname": "priority",
@@ -108,6 +126,11 @@
    "search_index": 1
   },
   {
+   "fieldname": "color",
+   "fieldtype": "Color",
+   "label": "Color"
+  },
+  {
    "bold": 1,
    "fieldname": "parent_task",
    "fieldtype": "Link",
@@ -117,8 +140,11 @@
    "search_index": 1
   },
   {
-   "fieldname": "section_break_10",
-   "fieldtype": "Section Break"
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.__islocal",
+   "fieldname": "sb_timeline",
+   "fieldtype": "Section Break",
+   "label": "Timeline"
   },
   {
    "fieldname": "exp_start_date",
@@ -136,10 +162,10 @@
    "oldfieldtype": "Data"
   },
   {
+   "fetch_from": "type.weight",
    "fieldname": "task_weight",
    "fieldtype": "Float",
-   "label": "Weight",
-   "read_only": 1
+   "label": "Weight"
   },
   {
    "fieldname": "column_break_11",
@@ -167,46 +193,42 @@
    "label": "Is Milestone"
   },
   {
-   "fieldname": "color",
-   "fieldtype": "Color",
-   "label": "Color"
-  },
-  {
-   "fieldname": "section_break0",
+   "fieldname": "sb_details",
    "fieldtype": "Section Break",
-   "oldfieldtype": "Section Break",
-   "options": "Simple"
+   "label": "Details",
+   "oldfieldtype": "Section Break"
   },
   {
    "fieldname": "description",
    "fieldtype": "Text Editor",
-   "label": "Details",
+   "in_preview": 1,
+   "label": "Task Description",
    "oldfieldname": "description",
    "oldfieldtype": "Text Editor",
    "print_width": "300px",
    "width": "300px"
   },
   {
-   "fieldname": "section_break",
+   "fieldname": "sb_depends_on",
    "fieldtype": "Section Break",
-   "label": "Depends On",
+   "label": "Dependencies",
    "oldfieldtype": "Section Break"
   },
   {
    "fieldname": "depends_on",
    "fieldtype": "Table",
-   "label": "depends_on",
+   "label": "Dependent Tasks",
    "options": "Task Depends On"
   },
   {
    "fieldname": "depends_on_tasks",
-   "fieldtype": "Data",
+   "fieldtype": "Code",
    "hidden": 1,
    "label": "Depends on Tasks",
    "read_only": 1
   },
   {
-   "fieldname": "actual",
+   "fieldname": "sb_actual",
    "fieldtype": "Section Break",
    "oldfieldtype": "Column Break",
    "print_width": "50%",
@@ -239,8 +261,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "section_break_17",
-   "fieldtype": "Section Break"
+   "collapsible": 1,
+   "fieldname": "sb_costing",
+   "fieldtype": "Section Break",
+   "label": "Costing"
   },
   {
    "fieldname": "total_costing_amount",
@@ -269,8 +293,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "more_details",
-   "fieldtype": "Section Break"
+   "collapsible": 1,
+   "fieldname": "sb_more_info",
+   "fieldtype": "Section Break",
+   "label": "More Info"
   },
   {
    "depends_on": "eval:doc.status == \"Closed\" || doc.status == \"Pending Review\"",
@@ -326,15 +352,24 @@
    "ignore_user_permissions": 1,
    "label": "Old Parent",
    "read_only": 1
+  },
+  {
+   "fieldname": "completed_by",
+   "fieldtype": "Link",
+   "label": "Completed By",
+   "options": "User"
   }
  ],
  "icon": "fa fa-check",
  "idx": 1,
+ "is_tree": 1,
+ "links": [],
  "max_attachments": 5,
- "modified": "2020-06-04 06:56:37.621332",
+ "modified": "2020-03-18 18:26:04.788061",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Task",
+ "nsm_parent_field": "parent_task",
  "owner": "Administrator",
  "permissions": [
   {
@@ -350,6 +385,9 @@
   }
  ],
  "search_fields": "subject",
+ "show_name_in_global_search": 1,
+ "show_preview_popup": 1,
+ "sort_field": "modified",
  "sort_order": "DESC",
  "timeline_field": "project",
  "title_field": "subject",

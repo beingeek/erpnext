@@ -1,22 +1,26 @@
 {
+ "actions": [],
  "allow_import": 1,
+ "allow_rename": 1,
  "autoname": "naming_series:",
  "creation": "2013-03-07 18:50:30",
  "description": "Potential Sales Deal",
  "doctype": "DocType",
  "document_type": "Document",
  "editable_grid": 1,
+ "engine": "InnoDB",
  "field_order": [
   "from_section",
   "naming_series",
-  "enquiry_from",
-  "customer",
-  "lead",
+  "opportunity_from",
+  "party_name",
   "customer_name",
   "column_break0",
   "title",
   "opportunity_type",
   "status",
+  "converted_by",
+  "sales_stage",
   "order_lost_reason",
   "mins_to_first_response",
   "next_contact",
@@ -29,7 +33,6 @@
   "opportunity_amount",
   "with_items",
   "column_break_17",
-  "sales_stage",
   "probability",
   "items_section",
   "items",
@@ -49,7 +52,8 @@
   "column_break1",
   "company",
   "transaction_date",
-  "amended_from"
+  "amended_from",
+  "lost_reasons"
  ],
  "fields": [
   {
@@ -70,39 +74,28 @@
    "set_only_once": 1
   },
   {
-   "fieldname": "enquiry_from",
-   "fieldtype": "Select",
+   "fieldname": "opportunity_from",
+   "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Opportunity From",
    "oldfieldname": "enquiry_from",
    "oldfieldtype": "Select",
-   "options": "\nLead\nCustomer",
+   "options": "DocType",
    "print_hide": 1,
    "reqd": 1
   },
   {
    "bold": 1,
-   "depends_on": "eval:doc.enquiry_from===\"Customer\"",
-   "fieldname": "customer",
-   "fieldtype": "Link",
+   "fieldname": "party_name",
+   "fieldtype": "Dynamic Link",
    "in_standard_filter": 1,
-   "label": "Customer",
+   "label": "Party",
    "oldfieldname": "customer",
    "oldfieldtype": "Link",
-   "options": "Customer",
-   "print_hide": 1
-  },
-  {
-   "bold": 1,
-   "depends_on": "eval:doc.enquiry_from===\"Lead\"",
-   "fieldname": "lead",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Lead",
-   "oldfieldname": "lead",
-   "oldfieldtype": "Link",
-   "options": "Lead",
-   "print_hide": 1
+   "options": "opportunity_from",
+   "print_hide": 1,
+   "reqd": 1
   },
   {
    "bold": 1,
@@ -216,7 +209,8 @@
   {
    "fieldname": "opportunity_amount",
    "fieldtype": "Currency",
-   "label": "Opportunity Amount"
+   "label": "Opportunity Amount",
+   "options": "currency"
   },
   {
    "default": "0",
@@ -260,14 +254,14 @@
   {
    "collapsible": 1,
    "collapsible_depends_on": "next_contact_by",
-   "depends_on": "eval:doc.lead || doc.customer",
+   "depends_on": "eval:doc.party_name",
    "fieldname": "contact_info",
    "fieldtype": "Section Break",
    "label": "Contact Info",
    "options": "fa fa-bullhorn"
   },
   {
-   "depends_on": "eval:doc.customer || doc.lead",
+   "depends_on": "eval:doc.party_name",
    "fieldname": "customer_address",
    "fieldtype": "Link",
    "label": "Customer / Lead Address",
@@ -284,7 +278,7 @@
    "read_only": 1
   },
   {
-   "depends_on": "customer",
+   "depends_on": "eval:",
    "fieldname": "territory",
    "fieldtype": "Link",
    "label": "Territory",
@@ -293,7 +287,7 @@
    "search_index": 1
   },
   {
-   "depends_on": "customer",
+   "depends_on": "eval:doc.opportunity_from=='Customer' && doc.party_name",
    "fieldname": "customer_group",
    "fieldtype": "Link",
    "label": "Customer Group",
@@ -308,7 +302,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.lead || doc.customer",
+   "depends_on": "eval:doc.party_name",
    "fieldname": "contact_person",
    "fieldtype": "Link",
    "label": "Contact Person",
@@ -316,7 +310,7 @@
    "print_hide": 1
   },
   {
-   "depends_on": "customer",
+   "depends_on": "eval:doc.opportunity_from=='Customer' && doc.party_name",
    "fieldname": "contact_display",
    "fieldtype": "Small Text",
    "in_global_search": 1,
@@ -324,14 +318,14 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.lead || doc.customer",
+   "depends_on": "eval:doc.party_name",
    "fieldname": "contact_email",
    "fieldtype": "Data",
    "label": "Contact Email",
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.lead || doc.customer",
+   "depends_on": "eval:doc.party_name",
    "fieldname": "contact_mobile",
    "fieldtype": "Small Text",
    "label": "Contact Mobile No",
@@ -403,11 +397,25 @@
    "print_hide": 1,
    "read_only": 1,
    "width": "150px"
+  },
+  {
+   "fieldname": "lost_reasons",
+   "fieldtype": "Table MultiSelect",
+   "label": "Lost Reasons",
+   "options": "Lost Reason Detail",
+   "read_only": 1
+  },
+  {
+   "fieldname": "converted_by",
+   "fieldtype": "Link",
+   "label": "Converted By",
+   "options": "User"
   }
  ],
  "icon": "fa fa-info-sign",
  "idx": 195,
- "modified": "2020-06-04 06:56:27.124188",
+ "links": [],
+ "modified": "2020-03-20 12:28:45.228994",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",
@@ -438,11 +446,12 @@
    "write": 1
   }
  ],
- "search_fields": "status,transaction_date,customer,lead,opportunity_type,territory,company",
+ "search_fields": "status,transaction_date,party_name,opportunity_type,territory,company",
  "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "timeline_field": "customer",
+ "timeline_field": "party_name",
  "title_field": "title",
- "track_seen": 1
+ "track_seen": 1,
+ "track_views": 1
 }

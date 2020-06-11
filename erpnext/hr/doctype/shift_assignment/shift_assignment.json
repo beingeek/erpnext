@@ -10,7 +10,6 @@
   "employee_name",
   "department",
   "shift_type",
-  "present",
   "column_break_3",
   "company",
   "date",
@@ -49,12 +48,6 @@
    "reqd": 1
   },
   {
-   "default": "0",
-   "fieldname": "present",
-   "fieldtype": "Check",
-   "label": "Present"
-  },
-  {
    "fieldname": "column_break_3",
    "fieldtype": "Column Break"
   },
@@ -89,7 +82,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-06-04 06:56:42.587936",
+ "modified": "2019-05-30 15:40:54.418427",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Shift Assignment",

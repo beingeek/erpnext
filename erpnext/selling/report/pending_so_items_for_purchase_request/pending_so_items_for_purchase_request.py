@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import cint,cstr
+from frappe.utils import flt
 
 def execute(filters=None):
 	columns = get_columns()
@@ -47,9 +47,8 @@ def get_columns():
 		},
 		{
 			"label": _("Material Request"),
-			"options": "Material Request",
 			"fieldname": "material_request",
-			"fieldtype": "Link",
+			"fieldtype": "Data",
 			"width": 140
 		},
 		{
@@ -101,7 +100,7 @@ def get_data():
 			so.transaction_date,
 			so.customer,
 			so.territory,
-			sum(so_item.qty) as net_qty,
+			sum(so_item.qty) as total_qty,
 			so.company
 		FROM `tabSales Order` so, `tabSales Order Item` so_item
 		WHERE
@@ -112,37 +111,89 @@ def get_data():
 			so.name,so_item.item_code
 		""", as_dict = 1)
 
+	sales_orders = [row.name for row in sales_order_entry]
 	mr_records = frappe.get_all("Material Request Item",
-		{"sales_order_item": ("!=",""), "docstatus": 1},
+		{"sales_order": ("in", sales_orders), "docstatus": 1},
 		["parent", "qty", "sales_order", "item_code"])
 
-	grouped_records = {}
+	bundled_item_map = get_packed_items(sales_orders)
+
+	item_with_product_bundle = get_items_with_product_bundle([row.item_code for row in sales_order_entry])
+
+	materials_request_dict = {}
 
 	for record in mr_records:
-		grouped_records.setdefault(record.sales_order, []).append(record)
+		key = (record.sales_order, record.item_code)
+		if key not in materials_request_dict:
+			materials_request_dict.setdefault(key, {
+				'qty': 0,
+				'material_requests': [record.parent]
+			})
 
-	pending_so=[]
+		details = materials_request_dict.get(key)
+		details['qty'] += record.qty
+
+		if record.parent not in details.get('material_requests'):
+			details['material_requests'].append(record.parent)
+
+	pending_so = []
 	for so in sales_order_entry:
-		# fetch all the material request records for a sales order item
-		mr_list = grouped_records.get(so.name) or [{}]
-		mr_item_record = ([mr for mr in mr_list if mr.get('item_code') == so.item_code] or [{}])
-
-		for mr in mr_item_record:
+		if so.item_code not in item_with_product_bundle:
+			material_requests_against_so = materials_request_dict.get((so.name, so.item_code)) or {}
 			# check for pending sales order
-			if cint(so.net_qty) > cint(mr.get('qty')):
+			if flt(so.total_qty) > flt(material_requests_against_so.get('qty')):
 				so_record = {
 					"item_code": so.item_code,
 					"item_name": so.item_name,
 					"description": so.description,
 					"sales_order_no": so.name,
 					"date": so.transaction_date,
-					"material_request": cstr(mr.get('parent')),
+					"material_request": ','.join(material_requests_against_so.get('material_requests', [])),
 					"customer": so.customer,
 					"territory": so.territory,
-					"so_qty": so.net_qty,
-					"requested_qty": cint(mr.get('qty')),
-					"pending_qty": so.net_qty - cint(mr.get('qty')),
+					"so_qty": so.total_qty,
+					"requested_qty": material_requests_against_so.get('qty'),
+					"pending_qty": so.total_qty - flt(material_requests_against_so.get('qty')),
 					"company": so.company
 				}
 				pending_so.append(so_record)
+		else:
+			for item in bundled_item_map.get((so.name, so.item_code)):
+				material_requests_against_so = materials_request_dict.get((so.name, item.item_code)) or {}
+				if flt(item.qty) > flt(material_requests_against_so.get('qty')):
+					so_record = {
+						"item_code": item.item_code,
+						"item_name": item.item_name,
+						"description": item.description,
+						"sales_order_no": so.name,
+						"date": so.transaction_date,
+						"material_request": ','.join(material_requests_against_so.get('material_requests', [])),
+						"customer": so.customer,
+						"territory": so.territory,
+						"so_qty": item.qty,
+						"requested_qty": material_requests_against_so.get('qty', 0),
+						"pending_qty": item.qty - flt(material_requests_against_so.get('qty', 0)),
+						"company": so.company
+					}
+					pending_so.append(so_record)
+
+
 	return pending_so
+
+def get_items_with_product_bundle(item_list):
+	bundled_items = frappe.get_all("Product Bundle", filters = [
+		("new_item_code", "IN", item_list)
+	], fields = ["new_item_code"])
+
+	return [d.new_item_code for d in bundled_items]
+
+def get_packed_items(sales_order_list):
+	packed_items = frappe.get_all("Packed Item", filters = [
+		("parent", "IN", sales_order_list)
+	], fields = ["parent_item", "item_code", "qty", "item_name", "description", "parent"])
+
+	bundled_item_map = frappe._dict()
+	for d in packed_items:
+		bundled_item_map.setdefault((d.parent, d.parent_item), []).append(d)
+
+	return bundled_item_map

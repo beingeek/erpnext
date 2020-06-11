@@ -3,13 +3,13 @@
 
 from __future__ import unicode_literals
 import frappe, erpnext, json
-from frappe.utils import cstr, flt, fmt_money, formatdate, getdate, nowdate, cint
+from frappe.utils import cstr, flt, fmt_money, formatdate, getdate, nowdate, cint, get_link_to_form
 from frappe import msgprint, _, scrub
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.utils import get_balance_on, get_balance_on_voucher, get_account_currency
 from erpnext.accounts.party import get_party_account
 from erpnext.hr.doctype.expense_claim.expense_claim import update_reimbursed_amount
-from erpnext.hr.doctype.loan.loan import update_disbursement_status, update_total_amount_paid
+from erpnext.accounts.doctype.invoice_discounting.invoice_discounting import get_party_account_based_on_invoice_discounting
 
 from six import string_types, iteritems
 
@@ -50,12 +50,22 @@ class JournalEntry(AccountsController):
 		self.update_expense_claim()
 		self.update_loan()
 		self.update_inter_company_jv()
+		self.update_invoice_discounting()
 
-	def before_print(self):
-		self.gl_entries = frappe.get_list("GL Entry",filters={"voucher_type": "Journal Entry",
-			"voucher_no": self.name} ,
-			fields=["account", "party_type", "party", "debit", "credit", "remarks"]
-		)
+	def on_cancel(self):
+		from erpnext.accounts.utils import unlink_ref_doc_from_payment_entries
+		from erpnext.hr.doctype.salary_slip.salary_slip import unlink_ref_doc_from_salary_slip
+		unlink_ref_doc_from_payment_entries(self)
+		unlink_ref_doc_from_salary_slip(self.name)
+		self.make_gl_entries(1)
+		self.update_advance_paid()
+		self.update_expense_claim()
+		self.update_loan()
+		self.unlink_advance_entry_reference()
+		self.unlink_asset_reference()
+		self.unlink_inter_company_jv()
+		self.unlink_asset_adjustment_entry()
+		self.update_invoice_discounting()
 
 	def get_title(self):
 		return self.pay_to_recd_from or self.accounts[0].account
@@ -84,6 +94,36 @@ class JournalEntry(AccountsController):
 			frappe.db.set_value("Journal Entry", self.inter_company_journal_entry_reference,\
 				"inter_company_journal_entry_reference", self.name)
 
+	def update_invoice_discounting(self):
+		def _validate_invoice_discounting_status(inv_disc, id_status, expected_status, row_id):
+			id_link = get_link_to_form("Invoice Discounting", inv_disc)
+			if id_status != expected_status:
+				frappe.throw(_("Row #{0}: Status must be {1} for Invoice Discounting {2}").format(d.idx, expected_status, id_link))
+
+		invoice_discounting_list = list(set([d.reference_name for d in self.accounts if d.reference_type=="Invoice Discounting"]))
+		for inv_disc in invoice_discounting_list:
+			inv_disc_doc = frappe.get_doc("Invoice Discounting", inv_disc)
+			status = None
+			for d in self.accounts:
+				if d.account == inv_disc_doc.short_term_loan and d.reference_name == inv_disc:
+					if self.docstatus == 1:
+						if d.credit > 0:
+							_validate_invoice_discounting_status(inv_disc, inv_disc_doc.status, "Sanctioned", d.idx)
+							status = "Disbursed"
+						elif d.debit > 0:
+							_validate_invoice_discounting_status(inv_disc, inv_disc_doc.status, "Disbursed", d.idx)
+							status = "Settled"
+					else:
+						if d.credit > 0:
+							_validate_invoice_discounting_status(inv_disc, inv_disc_doc.status, "Disbursed", d.idx)
+							status = "Sanctioned"
+						elif d.debit > 0:
+							_validate_invoice_discounting_status(inv_disc, inv_disc_doc.status, "Settled", d.idx)
+							status = "Disbursed"
+					break
+			if status:
+				inv_disc_doc.set_status(status=status)
+
 	def validate_returned_cheque_entry(self):
 		if self.voucher_type == "Returned Cheque":
 			if not self.return_against_pe:
@@ -103,20 +143,6 @@ class JournalEntry(AccountsController):
 
 		elif self.return_against_pe:
 			self.return_against_pe = ""
-
-	def on_cancel(self):
-		from erpnext.accounts.utils import unlink_ref_doc_from_payment_entries
-		from erpnext.hr.doctype.salary_slip.salary_slip import unlink_ref_doc_from_salary_slip
-		unlink_ref_doc_from_payment_entries(self)
-		unlink_ref_doc_from_salary_slip(self.name)
-		self.make_gl_entries(1)
-		self.update_advance_paid()
-		self.update_expense_claim()
-		self.update_loan()
-		self.unlink_advance_entry_reference()
-		self.unlink_asset_reference()
-		self.unlink_inter_company_jv()
-		self.unlink_asset_adjustment_entry()
 
 	def unlink_advance_entry_reference(self):
 		for d in self.get("accounts"):
@@ -321,7 +347,8 @@ class JournalEntry(AccountsController):
 		for reference_name, total in iteritems(self.reference_totals):
 			reference_type = self.reference_types[reference_name]
 
-			if reference_type in ("Sales Invoice", "Purchase Invoice"):
+			if (reference_type in ("Sales Invoice", "Purchase Invoice") and
+				self.voucher_type not in ['Debit Note', 'Credit Note']):
 				invoice = frappe.db.get_value(reference_type, reference_name,
 					["docstatus", "outstanding_amount"], as_dict=1)
 
@@ -474,6 +501,7 @@ class JournalEntry(AccountsController):
 	def set_print_format_fields(self):
 		bank_amount = party_amount = total_amount = 0.0
 		currency = bank_account_currency = party_account_currency = pay_to_recd_from= None
+		party_type = None
 		for d in self.get('accounts'):
 			if d.party_type in ['Customer', 'Supplier', 'Letter of Credit'] and d.party:
 				if not pay_to_recd_from:
@@ -483,15 +511,17 @@ class JournalEntry(AccountsController):
 						name_field = "customer_name" if d.party_type=="Customer" else "supplier_name"
 					pay_to_recd_from = frappe.db.get_value(d.party_type, d.party, name_field)
 
-				party_amount += (d.debit_in_account_currency or d.credit_in_account_currency)
-				party_account_currency = d.account_currency
+				if pay_to_recd_from and pay_to_recd_from == d.party:
+					party_amount += (d.debit_in_account_currency or d.credit_in_account_currency)
+					party_account_currency = d.account_currency
 
 			elif frappe.db.get_value("Account", d.account, "account_type") in ["Bank", "Cash"]:
 				bank_amount += (d.debit_in_account_currency or d.credit_in_account_currency)
 				bank_account_currency = d.account_currency
 
-		if pay_to_recd_from:
-			self.pay_to_recd_from = pay_to_recd_from
+		if party_type and pay_to_recd_from:
+			self.pay_to_recd_from = frappe.db.get_value(party_type, pay_to_recd_from,
+				"customer_name" if party_type=="Customer" else "supplier_name")
 			if bank_amount:
 				total_amount = bank_amount
 				currency = bank_account_currency
@@ -521,6 +551,7 @@ class JournalEntry(AccountsController):
 					self.get_gl_dict({
 						"account": d.account,
 						"party_type": d.party_type,
+						"due_date": self.due_date,
 						"party": d.party,
 						"against": d.against_account,
 						"debit": flt(d.debit, d.precision("debit")),
@@ -534,7 +565,7 @@ class JournalEntry(AccountsController):
 						"cost_center": d.cost_center,
 						"project": d.project,
 						"finance_book": self.finance_book
-					})
+					}, item=d)
 				)
 
 		if gl_map:
@@ -578,20 +609,20 @@ class JournalEntry(AccountsController):
 
 			if self.write_off_based_on == 'Accounts Receivable':
 				jd1.party_type = "Customer"
-				jd1.credit = flt(d.outstanding_amount, self.precision("credit", "accounts"))
+				jd1.credit_in_account_currency = flt(d.outstanding_amount, self.precision("credit", "accounts"))
 				jd1.reference_type = "Sales Invoice"
 				jd1.reference_name = cstr(d.name)
 			elif self.write_off_based_on == 'Accounts Payable':
 				jd1.party_type = "Supplier"
-				jd1.debit = flt(d.outstanding_amount, self.precision("debit", "accounts"))
+				jd1.debit_in_account_currency = flt(d.outstanding_amount, self.precision("debit", "accounts"))
 				jd1.reference_type = "Purchase Invoice"
 				jd1.reference_name = cstr(d.name)
 
 		jd2 = self.append('accounts', {})
 		if self.write_off_based_on == 'Accounts Receivable':
-			jd2.debit = total
+			jd2.debit_in_account_currency = total
 		elif self.write_off_based_on == 'Accounts Payable':
-			jd2.credit = total
+			jd2.credit_in_account_currency = total
 
 		self.validate_total_debit_and_credit()
 
@@ -624,8 +655,8 @@ class JournalEntry(AccountsController):
 		for d in self.accounts:
 			if d.reference_type=="Loan" and flt(d.debit) > 0:
 				doc = frappe.get_doc("Loan", d.reference_name)
-				update_disbursement_status(doc)
-				update_total_amount_paid(doc)
+				doc.update_total_amount_paid()
+				doc.set_status()
 
 	def validate_expense_claim(self):
 		for d in self.accounts:
@@ -746,7 +777,7 @@ def get_payment_entry_against_invoice(dt, dn, amount=None,  debit_in_account_cur
 	ref_doc = frappe.get_doc(dt, dn)
 	if dt == "Sales Invoice":
 		party_type = "Customer"
-		party_account = ref_doc.debit_to
+		party_account = get_party_account_based_on_invoice_discounting(dn) or ref_doc.debit_to
 	else:
 		party_type = "Supplier" if not ref_doc.get("letter_of_credit") else "Letter of Credit"
 		party_account = ref_doc.credit_to
@@ -771,7 +802,6 @@ def get_payment_entry_against_invoice(dt, dn, amount=None,  debit_in_account_cur
 		"bank_account": bank_account,
 		"journal_entry": journal_entry
 	})
-
 
 def get_payment_entry(ref_doc, args):
 	cost_center = ref_doc.get("cost_center") or frappe.get_cached_value('Company',  ref_doc.company,  "cost_center")
@@ -844,10 +874,10 @@ def get_opening_accounts(company):
 	accounts = frappe.db.sql_list("""select
 			name from tabAccount
 		where
-			is_group=0 and report_type='Balance Sheet' and company=%s and
-			name not in(select distinct account from tabWarehouse where
+			is_group=0 and report_type='Balance Sheet' and company={0} and
+			name not in (select distinct account from tabWarehouse where
 			account is not null and account != '')
-		order by name asc""", frappe.db.escape(company))
+		order by name asc""".format(frappe.db.escape(company)))
 
 	return [{"account": a, "balance": get_balance_on(a)} for a in accounts]
 
@@ -1031,7 +1061,7 @@ def get_exchange_rate(posting_date, account=None, account_currency=None, company
 
 		# The date used to retreive the exchange rate here is the date passed
 		# in as an argument to this function.
-		elif (not exchange_rate or exchange_rate==1) and account_currency and posting_date:
+		elif (not exchange_rate or flt(exchange_rate)==1) and account_currency and posting_date:
 			exchange_rate = get_exchange_rate(account_currency, company_currency, posting_date)
 	else:
 		exchange_rate = 1

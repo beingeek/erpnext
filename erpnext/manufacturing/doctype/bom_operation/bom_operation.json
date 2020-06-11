@@ -11,6 +11,7 @@
   "col_break1",
   "hour_rate",
   "time_in_mins",
+  "batch_size",
   "operating_cost",
   "base_hour_rate",
   "base_operating_cost",
@@ -97,14 +98,22 @@
    "fieldname": "image",
    "fieldtype": "Attach",
    "label": "Image"
+  },
+  {
+   "default": "1",
+   "fieldname": "batch_size",
+   "fieldtype": "Int",
+   "label": "Batch Size"
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:58:40.307629",
- "modified_by": "Administrator",
+ "modified": "2019-07-16 22:35:55.374037",
+ "modified_by": "govindsmenokee@gmail.com",
  "module": "Manufacturing",
  "name": "BOM Operation",
  "owner": "Administrator",
- "permissions": []
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
 }

@@ -1,5 +1,6 @@
 {
  "allow_import": 1,
+ "allow_rename": 1,
  "autoname": "Prompt",
  "creation": "2017-10-06 12:53:34.714153",
  "doctype": "DocType",
@@ -16,7 +17,7 @@
    "label": "Description"
   }
  ],
- "modified": "2020-06-04 06:58:49.327419",
+ "modified": "2019-06-26 16:56:39.863392",
  "modified_by": "Administrator",
  "module": "Support",
  "name": "Issue Type",

@@ -13,7 +13,9 @@
   "company",
   "column_break_12",
   "account",
+  "accounting_dimensions_section",
   "cost_center",
+  "dimension_col_break",
   "shipping_amount_section",
   "calculate_based_on",
   "column_break_8",
@@ -125,11 +127,20 @@
    "fieldtype": "Table",
    "label": "Valid for Countries",
    "options": "Shipping Rule Country"
+  },
+  {
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-truck",
  "idx": 1,
- "modified": "2020-06-04 06:56:35.686547",
+ "modified": "2019-05-25 23:12:26.156405",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Shipping Rule",

@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:sales_person_name",
@@ -21,8 +22,7 @@
   "rgt",
   "old_parent",
   "target_details_section_break",
-  "targets",
-  "distribution_id"
+  "targets"
  ],
  "fields": [
   {
@@ -82,8 +82,7 @@
    "fieldname": "employee",
    "fieldtype": "Link",
    "label": "Employee",
-   "options": "Employee",
-   "reqd": 1
+   "options": "Employee"
   },
   {
    "fetch_from": "employee.department",
@@ -140,23 +139,17 @@
    "oldfieldname": "target_details",
    "oldfieldtype": "Table",
    "options": "Target Detail"
-  },
-  {
-   "description": "Select Monthly Distribution to unevenly distribute targets across months.",
-   "fieldname": "distribution_id",
-   "fieldtype": "Link",
-   "label": "Target Distribution",
-   "oldfieldname": "distribution_id",
-   "oldfieldtype": "Link",
-   "options": "Monthly Distribution"
   }
  ],
  "icon": "icon-user",
  "idx": 1,
- "modified": "2020-06-04 06:56:07.083520",
+ "is_tree": 1,
+ "links": [],
+ "modified": "2020-03-18 18:26:01.076203",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Sales Person",
+ "nsm_parent_field": "parent_sales_person",
  "owner": "Administrator",
  "permissions": [
   {
@@ -185,9 +178,8 @@
    "write": 1
   }
  ],
- "quick_entry": 1,
  "search_fields": "parent_sales_person",
  "show_name_in_global_search": 1,
- "sort_order": "ASC",
- "track_changes": 1
+ "sort_field": "modified",
+ "sort_order": "ASC"
 }

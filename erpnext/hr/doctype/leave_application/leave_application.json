@@ -1,10 +1,12 @@
 {
+ "actions": [],
  "allow_import": 1,
  "autoname": "naming_series:",
  "creation": "2013-02-20 11:18:11",
  "description": "Apply / Approve Leaves",
  "doctype": "DocType",
  "document_type": "Document",
+ "engine": "InnoDB",
  "field_order": [
   "naming_series",
   "employee",
@@ -101,7 +103,6 @@
    "fieldname": "from_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "From Date",
    "reqd": 1,
    "search_index": 1
@@ -109,7 +110,6 @@
   {
    "fieldname": "to_date",
    "fieldtype": "Date",
-   "in_standard_filter": 1,
    "label": "To Date",
    "reqd": 1,
    "search_index": 1
@@ -173,14 +173,8 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Open\nApproved\nRejected\nCancelled"
-  },
-  {
-   "fieldname": "salary_slip",
-   "fieldtype": "Link",
-   "label": "Salary Slip",
-   "options": "Salary Slip",
-   "print_hide": 1
+   "options": "Open\nApproved\nRejected\nCancelled",
+   "permlevel": 1
   },
   {
    "fieldname": "sb10",
@@ -195,6 +189,15 @@
    "reqd": 1
   },
   {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1,
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
    "allow_on_submit": 1,
    "default": "1",
    "fieldname": "follow_via_email",
@@ -203,23 +206,15 @@
    "print_hide": 1
   },
   {
-   "allow_on_submit": 1,
-   "fieldname": "color",
-   "fieldtype": "Color",
-   "label": "Color",
-   "print_hide": 1
-  },
-  {
    "fieldname": "column_break_17",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "company",
+   "fieldname": "salary_slip",
    "fieldtype": "Link",
-   "label": "Company",
-   "options": "Company",
-   "remember_last_selected_value": 1,
-   "reqd": 1
+   "label": "Salary Slip",
+   "options": "Salary Slip",
+   "print_hide": 1
   },
   {
    "allow_on_submit": 1,
@@ -228,6 +223,13 @@
    "ignore_user_permissions": 1,
    "label": "Letter Head",
    "options": "Letter Head",
+   "print_hide": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "color",
+   "fieldtype": "Color",
+   "label": "Color",
    "print_hide": 1
   },
   {
@@ -244,8 +246,9 @@
  "icon": "fa fa-calendar",
  "idx": 1,
  "is_submittable": 1,
+ "links": [],
  "max_attachments": 3,
- "modified": "2020-06-04 06:56:07.769003",
+ "modified": "2020-03-10 22:40:43.487721",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Leave Application",

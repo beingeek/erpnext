@@ -22,7 +22,7 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 		invoices = []
 
 		# create invoices for lower than single threshold tax rate
-		for _ in xrange(2):
+		for _ in range(2):
 			pi = create_purchase_invoice(supplier = "Test TDS Supplier")
 			pi.submit()
 			invoices.append(pi)
@@ -48,7 +48,6 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 		#delete invoices to avoid clashing
 		for d in invoices:
 			d.cancel()
-			frappe.delete_doc("Purchase Invoice", d.name)
 
 	def test_single_threshold_tds(self):
 		invoices = []
@@ -83,7 +82,6 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 		# delete invoices to avoid clashing
 		for d in invoices:
 			d.cancel()
-			frappe.delete_doc("Purchase Invoice", d.name)
 
 	def test_single_threshold_tds_with_previous_vouchers(self):
 		invoices = []
@@ -102,7 +100,6 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 		# delete invoices to avoid clashing
 		for d in invoices:
 			d.cancel()
-			frappe.delete_doc("Purchase Invoice", d.name)
 
 def create_purchase_invoice(**args):
 	# return sales invoice doc object

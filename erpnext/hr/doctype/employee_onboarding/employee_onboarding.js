@@ -7,6 +7,14 @@ frappe.ui.form.on('Employee Onboarding', {
 		frm.add_fetch("employee_onboarding_template", "department", "department");
 		frm.add_fetch("employee_onboarding_template", "designation", "designation");
 		frm.add_fetch("employee_onboarding_template", "employee_grade", "employee_grade");
+
+		frm.set_query('job_offer', function () {
+			return {
+				filters: {
+					'job_applicant': frm.doc.job_applicant
+				}
+			};
+		});
 	},
 
 	refresh: function(frm) {
@@ -29,8 +37,8 @@ frappe.ui.form.on('Employee Onboarding', {
 					method: "erpnext.hr.doctype.employee_onboarding.employee_onboarding.make_employee",
 					frm: frm
 				});
-			}, __("Make"));
-			frm.page.set_inner_btn_group_as_primary(__("Make"));
+			}, __('Create'));
+			frm.page.set_inner_btn_group_as_primary(__('Create'));
 		}
 		if (frm.doc.docstatus === 1 && frm.doc.project) {
 			frappe.call({
@@ -60,12 +68,11 @@ frappe.ui.form.on('Employee Onboarding', {
 				},
 				callback: function(r) {
 					if (r.message) {
-						$.each(r.message, function(i, d) {
-							var row = frappe.model.add_child(frm.doc, "Employee Boarding Activity", "activities");
-							$.extend(row, d);
+						r.message.forEach((d) => {
+							frm.add_child("activities", d);
 						});
+						refresh_field("activities");
 					}
-					refresh_field("activities");
 				}
 			});
 		}

@@ -11,11 +11,13 @@
   "employee",
   "bonus_payment_date",
   "bonus_amount",
+  "salary_component",
   "amended_from",
   "column_break_6",
   "employee_name",
   "department",
-  "date_of_joining"
+  "date_of_joining",
+  "additional_salary"
  ],
  "fields": [
   {
@@ -43,7 +45,8 @@
   {
    "fieldname": "bonus_amount",
    "fieldtype": "Currency",
-   "label": "Bonus Amount"
+   "label": "Bonus Amount",
+   "reqd": 1
   },
   {
    "fieldname": "amended_from",
@@ -79,10 +82,25 @@
    "fieldtype": "Data",
    "label": "Date of Joining",
    "read_only": 1
+  },
+  {
+   "fieldname": "additional_salary",
+   "fieldtype": "Link",
+   "label": "Additional Salary",
+   "no_copy": 1,
+   "options": "Additional Salary",
+   "read_only": 1
+  },
+  {
+   "fieldname": "salary_component",
+   "fieldtype": "Link",
+   "label": "Salary Component",
+   "options": "Salary Component",
+   "reqd": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-06-04 06:56:44.023652",
+ "modified": "2019-09-03 16:47:24.210422",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Retention Bonus",

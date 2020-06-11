@@ -22,9 +22,11 @@
   "receivable_account",
   "income_account",
   "column_break_16",
-  "cost_center",
   "company",
-  "amended_from"
+  "amended_from",
+  "accounting_dimensions_section",
+  "cost_center",
+  "dimension_col_break"
  ],
  "fields": [
   {
@@ -142,11 +144,20 @@
    "options": "Fee Structure",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-flag",
  "is_submittable": 1,
- "modified": "2020-06-04 06:58:23.130256",
+ "modified": "2019-05-26 09:04:17.765758",
  "modified_by": "Administrator",
  "module": "Education",
  "name": "Fee Structure",

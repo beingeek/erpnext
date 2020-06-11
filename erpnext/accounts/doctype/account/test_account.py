@@ -69,6 +69,7 @@ class TestAccount(unittest.TestCase):
 			acc.account_name = "Accumulated Depreciation"
 			acc.parent_account = "Fixed Assets - _TC"
 			acc.company = "_Test Company"
+			acc.account_type = "Accumulated Depreciation"
 			acc.insert()
 
 		doc = frappe.get_doc("Account", "Securities and Deposits - _TC")
@@ -142,12 +143,14 @@ def _make_test_records(verbose):
 		["_Test Write Off", "Indirect Expenses", 0, None, None],
 		["_Test Exchange Gain/Loss", "Indirect Expenses", 0, None, None],
 
+		["_Test Account Sales", "Direct Income", 0, None, None],
+
 		# related to Account Inventory Integration
 		["_Test Account Stock In Hand", "Current Assets", 0, None, None],
 
 		# fixed asset depreciation
 		["_Test Fixed Asset", "Current Assets", 0, "Fixed Asset", None],
-		["_Test Accumulated Depreciations", "Current Assets", 0, None, None],
+		["_Test Accumulated Depreciations", "Current Assets", 0, "Accumulated Depreciation", None],
 		["_Test Depreciations", "Expenses", 0, None, None],
 		["_Test Gain/Loss on Asset Disposal", "Expenses", 0, None, None],
 
@@ -158,7 +161,7 @@ def _make_test_records(verbose):
 		["_Test Payable USD", "Current Liabilities", 0, "Payable", "USD"]
 	]
 
-	for company, abbr in [["_Test Company", "_TC"], ["_Test Company 1", "_TC1"]]:
+	for company, abbr in [["_Test Company", "_TC"], ["_Test Company 1", "_TC1"], ["_Test Company with perpetual inventory", "TCP1"]]:
 		test_objects = make_test_objects("Account", [{
 				"doctype": "Account",
 				"account_name": account_name,

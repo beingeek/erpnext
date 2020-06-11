@@ -8,6 +8,7 @@
  "engine": "InnoDB",
  "field_order": [
   "mode_of_payment",
+  "enabled",
   "type",
   "accounts",
   "disable_past_entry"
@@ -42,11 +43,17 @@
    "label": "Disable Past Entry",
    "options": "\nFor Receive\nFor Pay\nFor All"
   }
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  }
  ],
  "icon": "fa fa-credit-card",
  "idx": 1,
- "modified": "2020-06-04 06:53:36.965883",
- "modified_by": "Administrator",
+ "modified": "2019-08-14 14:58:42.079115",
+ "modified_by": "sammish.thundiyil@gmail.com",
  "module": "Accounts",
  "name": "Mode of Payment",
  "owner": "harshada@webnotestech.com",
@@ -69,5 +76,6 @@
  ],
  "quick_entry": 1,
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "ASC"
 }

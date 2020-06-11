@@ -9,19 +9,22 @@
   "items_section",
   "title",
   "naming_series",
+  "stock_entry_type",
+  "outgoing_stock_entry",
   "purpose",
   "company",
   "work_order",
   "purchase_order",
   "delivery_note_no",
   "sales_invoice_no",
+  "pick_list",
   "purchase_receipt_no",
-  "from_bom",
-  "inspection_required",
   "col2",
   "posting_date",
   "posting_time",
   "set_posting_time",
+  "inspection_required",
+  "from_bom",
   "sb1",
   "bom_no",
   "fg_completed_qty",
@@ -59,13 +62,17 @@
   "customer",
   "customer_name",
   "customer_address",
+  "accounting_dimensions_section",
+  "project",
+  "dimension_col_break",
   "printing_settings",
   "select_print_heading",
   "letter_head",
   "more_info",
-  "project",
+  "is_opening",
   "remarks",
   "col5",
+  "per_transferred",
   "total_amount",
   "job_card",
   "amended_from",
@@ -100,17 +107,33 @@
    "set_only_once": 1
   },
   {
-   "bold": 1,
-   "default": "Material Issue",
-   "fieldname": "purpose",
-   "fieldtype": "Select",
+   "fieldname": "stock_entry_type",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
+   "label": "Stock Entry Type",
+   "options": "Stock Entry Type",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.purpose == 'Receive at Warehouse'",
+   "fieldname": "outgoing_stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry (Outward GIT)",
+   "options": "Stock Entry"
+  },
+  {
+   "bold": 1,
+   "fetch_from": "stock_entry_type.purpose",
+   "fieldname": "purpose",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "in_list_view": 1,
    "label": "Purpose",
    "oldfieldname": "purpose",
    "oldfieldtype": "Select",
-   "options": "Material Issue\nMaterial Receipt\nMaterial Transfer\nMaterial Transfer for Manufacture\nMaterial Consumption for Manufacture\nManufacture\nRepack\nSubcontract",
-   "reqd": 1
+   "options": "Material Issue\nMaterial Receipt\nMaterial Transfer\nMaterial Transfer for Manufacture\nMaterial Consumption for Manufacture\nManufacture\nRepack\nSend to Subcontractor\nSend to Warehouse\nReceive at Warehouse",
+   "read_only": 1
   },
   {
    "fieldname": "company",
@@ -135,7 +158,7 @@
    "search_index": 1
   },
   {
-   "depends_on": "eval:doc.purpose==\"Subcontract\"",
+   "depends_on": "eval:doc.purpose==\"Send to Subcontractor\"",
    "fieldname": "purchase_order",
    "fieldtype": "Link",
    "label": "Purchase Order",
@@ -175,20 +198,6 @@
    "search_index": 1
   },
   {
-   "default": "0",
-   "depends_on": "eval:in_list([\"Material Issue\", \"Material Transfer\", \"Manufacture\", \"Repack\", \t\t\t\t\t\"Subcontract\", \"Material Transfer for Manufacture\", \"Material Consumption for Manufacture\"], doc.purpose)",
-   "fieldname": "from_bom",
-   "fieldtype": "Check",
-   "label": "From BOM",
-   "print_hide": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "inspection_required",
-   "fieldtype": "Check",
-   "label": "Inspection Required"
-  },
-  {
    "fieldname": "col2",
    "fieldtype": "Column Break",
    "oldfieldtype": "Column Break",
@@ -220,6 +229,20 @@
    "fieldname": "set_posting_time",
    "fieldtype": "Check",
    "label": "Edit Posting Date and Time",
+   "print_hide": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "inspection_required",
+   "fieldtype": "Check",
+   "label": "Inspection Required"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:in_list([\"Material Issue\", \"Material Transfer\", \"Manufacture\", \"Repack\", \t\t\t\t\t\"Send to Subcontractor\", \"Material Transfer for Manufacture\", \"Material Consumption for Manufacture\"], doc.purpose)",
+   "fieldname": "from_bom",
+   "fieldtype": "Check",
+   "label": "From BOM",
    "print_hide": 1
   },
   {
@@ -314,7 +337,7 @@
    "depends_on": "to_warehouse",
    "fieldname": "target_warehouse_address",
    "fieldtype": "Link",
-   "label": "Target Warehouse Name",
+   "label": "Target Warehouse Address",
    "options": "Address"
   },
   {
@@ -339,6 +362,7 @@
    "label": "Auto Select Batches"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "Items",
@@ -419,13 +443,13 @@
   },
   {
    "collapsible": 1,
-   "depends_on": "eval: in_list([\"Sales Return\", \"Purchase Return\", \"Subcontract\"], doc.purpose)",
+   "depends_on": "eval: in_list([\"Sales Return\", \"Purchase Return\", \"Send to Subcontractor\"], doc.purpose)",
    "fieldname": "contact_section",
    "fieldtype": "Section Break",
    "label": "Customer or Supplier Details"
   },
   {
-   "depends_on": "eval:doc.purpose==\"Purchase Return\" || doc.purpose==\"Subcontract\"",
+   "depends_on": "eval:doc.purpose==\"Purchase Return\" || doc.purpose==\"Send to Subcontractor\"",
    "fieldname": "supplier",
    "fieldtype": "Link",
    "label": "Supplier",
@@ -437,7 +461,7 @@
   },
   {
    "bold": 1,
-   "depends_on": "eval:doc.purpose==\"Purchase Return\" || doc.purpose==\"Subcontract\"",
+   "depends_on": "eval:doc.purpose==\"Purchase Return\" || doc.purpose==\"Send to Subcontractor\"",
    "fieldname": "supplier_name",
    "fieldtype": "Data",
    "label": "Supplier Name",
@@ -447,7 +471,7 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.purpose==\"Purchase Return\" || doc.purpose==\"Subcontract\"",
+   "depends_on": "eval:doc.purpose==\"Purchase Return\" || doc.purpose==\"Send to Subcontractor\"",
    "fieldname": "supplier_address",
    "fieldtype": "Link",
    "label": "Supplier Address",
@@ -525,6 +549,12 @@
    "oldfieldtype": "Section Break"
   },
   {
+   "fieldname": "is_opening",
+   "fieldtype": "Select",
+   "label": "Is Opening",
+   "options": "No\nYes"
+  },
+  {
    "fieldname": "project",
    "fieldtype": "Link",
    "label": "Project",
@@ -546,6 +576,15 @@
    "fieldtype": "Column Break",
    "print_width": "50%",
    "width": "50%"
+  },
+  {
+   "fieldname": "per_transferred",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Per Transferred",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
   },
   {
    "depends_on": "total_amount",
@@ -582,12 +621,29 @@
    "hidden": 1,
    "label": "Credit Note",
    "options": "Journal Entry"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "dimension_col_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pick_list",
+   "fieldtype": "Link",
+   "label": "Pick List",
+   "options": "Pick List",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 1,
  "is_submittable": 1,
- "modified": "2020-06-04 06:32:23.845495",
+ "modified": "2019-09-27 14:38:20.801420",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Entry",

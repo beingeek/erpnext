@@ -5,6 +5,7 @@
  "creation": "2013-04-10 11:45:37",
  "doctype": "DocType",
  "document_type": "Document",
+ "engine": "InnoDB",
  "field_order": [
   "organization_lead",
   "lead_details",
@@ -13,6 +14,7 @@
   "company_name",
   "email_id",
   "col_break123",
+  "lead_owner",
   "status",
   "gender",
   "source",
@@ -20,7 +22,6 @@
   "campaign_name",
   "image",
   "section_break_12",
-  "lead_owner",
   "contact_by",
   "column_break_14",
   "contact_date",
@@ -79,7 +80,6 @@
    "label": "Person Name",
    "oldfieldname": "lead_name",
    "oldfieldtype": "Data",
-   "reqd": 1,
    "search_index": 1
   },
   {
@@ -103,6 +103,17 @@
    "fieldname": "col_break123",
    "fieldtype": "Column Break",
    "width": "50%"
+  },
+  {
+   "default": "__user",
+   "fieldname": "lead_owner",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Lead Owner",
+   "oldfieldname": "lead_owner",
+   "oldfieldtype": "Link",
+   "options": "User",
+   "search_index": 1
   },
   {
    "default": "Lead",
@@ -163,16 +174,6 @@
    "fieldname": "section_break_12",
    "fieldtype": "Section Break",
    "label": "Follow Up"
-  },
-  {
-   "default": "__user",
-   "fieldname": "lead_owner",
-   "fieldtype": "Link",
-   "label": "Lead Owner",
-   "oldfieldname": "lead_owner",
-   "oldfieldtype": "Link",
-   "options": "User",
-   "search_index": 1
   },
   {
    "fieldname": "contact_by",
@@ -365,7 +366,7 @@
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
- "modified": "2020-06-04 06:56:26.428650",
+ "modified": "2020-05-11 20:30:02.536647",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",

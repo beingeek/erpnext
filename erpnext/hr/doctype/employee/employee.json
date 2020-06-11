@@ -1,4 +1,5 @@
 {
+ "allow_events_in_timeline": 1,
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
@@ -6,6 +7,7 @@
  "doctype": "DocType",
  "document_type": "Setup",
  "editable_grid": 1,
+ "engine": "InnoDB",
  "field_order": [
   "basic_information",
   "employee",
@@ -51,9 +53,13 @@
   "column_break_31",
   "grade",
   "branch",
-  "organization_profile",
+  "attendance_and_leave_details",
   "leave_policy",
+  "attendance_device_id",
+  "column_break_44",
   "holiday_list",
+  "default_shift",
+  "leave_approver",
   "salary_information",
   "salary_mode",
   "bank_name",
@@ -193,6 +199,8 @@
    "label": "Warehouse"
   },
   {
+   "fetch_from": "user_id.user_image",
+   "fetch_if_empty": 1,
    "fieldname": "image",
    "fieldtype": "Attach Image",
    "hidden": 1,
@@ -285,7 +293,7 @@
    "bold": 1,
    "fieldname": "person_to_be_contacted",
    "fieldtype": "Data",
-   "label": "Emergency Contact"
+   "label": "Emergency Contact Name"
   },
   {
    "fieldname": "relation",
@@ -424,12 +432,6 @@
    "oldfieldname": "branch",
    "oldfieldtype": "Link",
    "options": "Branch"
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "organization_profile",
-   "fieldtype": "Section Break",
-   "label": "Leave Details"
   },
   {
    "fieldname": "leave_policy",
@@ -774,12 +776,41 @@
    "hidden": 1,
    "ignore_user_permissions": 1,
    "label": "Old Parent"
+  },
+  {
+   "fieldname": "attendance_device_id",
+   "fieldtype": "Data",
+   "label": "Attendance Device ID (Biometric/RF tag ID)",
+   "no_copy": 1,
+   "unique": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "attendance_and_leave_details",
+   "fieldtype": "Section Break",
+   "label": "Attendance and Leave Details"
+  },
+  {
+   "fieldname": "column_break_44",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_shift",
+   "fieldtype": "Link",
+   "label": "Default Shift",
+   "options": "Shift Type"
+  },
+  {
+   "fieldname": "leave_approver",
+   "fieldtype": "Link",
+   "label": "Leave Approver",
+   "options": "User"
   }
  ],
  "icon": "fa fa-user",
  "idx": 24,
  "image_field": "image",
- "modified": "2020-06-04 06:53:36.049284",
+ "modified": "2020-01-09 04:23:55.611366",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Employee",

@@ -89,24 +89,28 @@ def delete_lead_addresses(company_name):
 	leads = [ "'%s'"%row.get("name") for row in leads ]
 	addresses = []
 	if leads:
-		addresses = frappe.db.sql_list("""select parent from `tabDynamic Link` where link_name 
+		addresses = frappe.db.sql_list("""select parent from `tabDynamic Link` where link_name
 			in ({leads})""".format(leads=",".join(leads)))
 
 		if addresses:
-			addresses = ["'%s'"%frappe.db.escape(addr) for addr in addresses]
+			addresses = ["%s" % frappe.db.escape(addr) for addr in addresses]
 
-			frappe.db.sql("""delete from tabAddress where name in ({addresses}) and 
-				name not in (select distinct dl1.parent from `tabDynamic Link` dl1 
-				inner join `tabDynamic Link` dl2 on dl1.parent=dl2.parent 
+			frappe.db.sql("""delete from tabAddress where name in ({addresses}) and
+				name not in (select distinct dl1.parent from `tabDynamic Link` dl1
+				inner join `tabDynamic Link` dl2 on dl1.parent=dl2.parent
 				and dl1.link_doctype<>dl2.link_doctype)""".format(addresses=",".join(addresses)))
 
-			frappe.db.sql("""delete from `tabDynamic Link` where link_doctype='Lead' 
+			frappe.db.sql("""delete from `tabDynamic Link` where link_doctype='Lead'
 				and parenttype='Address' and link_name in ({leads})""".format(leads=",".join(leads)))
 
 		frappe.db.sql("""update tabCustomer set lead_name=NULL where lead_name in ({leads})""".format(leads=",".join(leads)))
 
 def delete_communications(doctype, company_name, company_fieldname):
-		frappe.db.sql("""
-			DELETE FROM `tabCommunication` WHERE reference_doctype = %s AND
-			EXISTS (SELECT name FROM `tab{0}` WHERE {1} = %s AND `tabCommunication`.reference_name = name)
-			""".format(doctype, company_fieldname), (doctype, company_name))
+
+	refrence_docs = frappe.get_all(doctype, filters={company_fieldname:company_name})
+	reference_doctype_names = [r.name for r in refrence_docs]
+
+	communications = frappe.get_all("Communication", filters={"reference_doctype":doctype,"reference_name":["in",reference_doctype_names]})
+	communication_names = [c.name for c in communications]
+
+	frappe.delete_doc("Communication", communication_names, ignore_permissions=True)
