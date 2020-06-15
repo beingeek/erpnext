@@ -53,7 +53,7 @@ frappe.ready(function() {
 		}
 	});
 	$.ajax({
-            url: '/api/resource/Employee/?fields=["name","employee_name"]&limit_page_length=0',
+            url: '/api/resource/Employee/?fields=["name","employee_name"]&filters=[["is_delivery","=",1]]&limit_page_length=0',
             type: 'get',
             dataType: "json",
             success: function(r) {
