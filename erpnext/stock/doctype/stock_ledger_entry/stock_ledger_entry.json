@@ -32,7 +32,7 @@
   "is_cancelled",
   "batch_qty_after_transaction",
   "batch_stock_value",
-  "batch_valuation_rate"
+  "batch_valuation_rate",
   "to_rename"
  ],
  "fields": [

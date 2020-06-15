@@ -42,7 +42,7 @@
    "fieldtype": "Select",
    "label": "Disable Past Entry",
    "options": "\nFor Receive\nFor Pay\nFor All"
-  }
+  },
   {
    "default": "1",
    "fieldname": "enabled",

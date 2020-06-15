@@ -111,9 +111,9 @@ class AccountsController(TransactionBase):
 				self.set_advances()
 
 		if self.doctype in ['Purchase Invoice', 'Sales Invoice'] and self.is_return:
-				self.validate_qty()
-			else:
-				self.validate_deferred_start_and_end_date()
+			self.validate_qty()
+		else:
+			self.validate_deferred_start_and_end_date()
 
 		validate_regional(self)
 		if self.doctype != 'Material Request':

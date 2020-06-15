@@ -621,7 +621,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 										let key = item.name;
 										me.apply_rule_on_other_items({key: item});
 									}
-								}
+								},
 								() => {
 									if (me.frm.doc.doctype == "Sales Order") {
 										me.set_item_custom_projected_qty(item, r.message);

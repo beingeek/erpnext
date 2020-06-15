@@ -579,7 +579,7 @@ class Item(WebsiteGenerator):
 			if not flt(self.alt_uom_size):
 				frappe.throw(_("Per Unit cannot be 0"))
 
-			alt_uom_row = filter(lambda d: {d.from_uom, d.to_uom} == {self.stock_uom, self.alt_uom}, self.uom_conversion_graph)
+			alt_uom_row = list(filter(lambda d: {d.from_uom, d.to_uom} == {self.stock_uom, self.alt_uom}, self.uom_conversion_graph))
 			alt_uom_row = alt_uom_row[0] if alt_uom_row else self.append('uom_conversion_graph')
 
 			alt_uom_row.from_qty = 1.0
