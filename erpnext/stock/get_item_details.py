@@ -663,7 +663,7 @@ def get_item_price(args, item_code, ignore_party=False):
 
 	conditions = """where item_code=%(item_code)s
 		and price_list=%(price_list)s"""
-	order_by = "order by ifnull(valid_from, '2000-01-01') desc, uom desc, min_qty desc"
+	order_by = "order by ifnull(valid_from, '2000-01-01') desc, uom desc"
 
 	if not ignore_party:
 		if args.get("customer"):
@@ -677,7 +677,7 @@ def get_item_price(args, item_code, ignore_party=False):
 		if args.get('period') == 'future':
 			args['uom'] = args.get('uom', '')
 			conditions += """ and ifnull(valid_from, '2000-01-01') > %(transaction_date)s and ifnull(uom, '') = %(uom)s"""
-			order_by = "order by valid_from asc, min_qty desc "
+			order_by = "order by valid_from asc "
 		else:
 			conditions += """ and %(transaction_date)s between
 				ifnull(valid_from, '2000-01-01') and ifnull(valid_upto, '2500-12-31')"""
@@ -689,11 +689,11 @@ def get_item_price(args, item_code, ignore_party=False):
 		{conditions} {order_by}
 	""".format(conditions=conditions, order_by=order_by), args, as_list=1)
 
-	matches_uom = filter(lambda d: cstr(d[2]) == cstr(args.get('uom')), out)
+	matches_uom = list(filter(lambda d: cstr(d[2]) == cstr(args.get('uom')), out))
 	if matches_uom:
 		return matches_uom
 
-	has_uom = filter(lambda d: d[2], out)
+	has_uom = list(filter(lambda d: d[2], out))
 	if has_uom:
 		# there are item prices with uom other than the current uom
 
@@ -702,7 +702,7 @@ def get_item_price(args, item_code, ignore_party=False):
 
 		convertible_prices = [d for d in has_uom if d[2] in item_uoms]
 		if convertible_prices:
-			has_uom_other_than_stock_uom = filter(lambda d: cstr(d[2]) != cstr(item.stock_uom), convertible_prices)
+			has_uom_other_than_stock_uom = list(filter(lambda d: cstr(d[2]) != cstr(item.stock_uom), convertible_prices))
 			if has_uom_other_than_stock_uom:
 				return has_uom_other_than_stock_uom
 
