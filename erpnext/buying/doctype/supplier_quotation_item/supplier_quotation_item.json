@@ -26,6 +26,7 @@
   "col_break1",
   "image",
   "image_view",
+  "manufacturer_part_no",
   "quantity_and_rate",
   "stock_uom",
   "conversion_factor",
@@ -73,6 +74,8 @@
   "sec_break1",
   "amount",
   "base_amount",
+  "pricing_rules",
+  "is_free_item",
   "tax_exclusive_amount",
   "base_tax_exclusive_amount",
   "col_break3",
@@ -98,7 +101,8 @@
   "item_group",
   "item_tax_rate",
   "section_break_44",
-  "page_break"
+  "page_break",
+  "manufacturer"
  ],
  "fields": [
   {
@@ -800,11 +804,38 @@
    "oldfieldname": "page_break",
    "oldfieldtype": "Check",
    "print_hide": 1
+  },
+  {
+   "fieldname": "manufacturer_part_no",
+   "fieldtype": "Data",
+   "label": "Manufacturer Part Number"
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Pricing Rules",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_free_item",
+   "fieldtype": "Check",
+   "label": "Is Free Item",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "manufacturer",
+   "fieldtype": "Link",
+   "label": "Manufacturer",
+   "options": "Manufacturer"
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:32:08.824349",
+ "modified": "2020-06-16 04:59:30.481664",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Supplier Quotation Item",

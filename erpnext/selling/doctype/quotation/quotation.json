@@ -5,10 +5,12 @@
  "doctype": "DocType",
  "document_type": "Document",
  "editable_grid": 1,
+ "engine": "InnoDB",
  "field_order": [
   "customer_section",
   "title",
   "quotation_to",
+  "party_name",
   "customer",
   "lead",
   "customer_name",
@@ -58,6 +60,7 @@
   "tax_exclusive_total_before_discount",
   "total_discount",
   "tax_exclusive_total_discount",
+  "pricing_rules",
   "sec_break23",
   "total_qty",
   "total_pallets",
@@ -91,6 +94,8 @@
   "sec_tax_breakup",
   "other_charges_calculation",
   "section_break_44",
+  "coupon_code",
+  "referral_sales_partner",
   "apply_discount_on",
   "base_discount_amount",
   "column_break_46",
@@ -127,7 +132,8 @@
   "status",
   "enq_det",
   "supplier_quotation",
-  "opportunity"
+  "opportunity",
+  "lost_reasons"
  ],
  "fields": [
   {
@@ -1111,13 +1117,53 @@
    "options": "Opportunity",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "party_name",
+   "fieldtype": "Dynamic Link",
+   "in_global_search": 1,
+   "in_standard_filter": 1,
+   "label": "Party",
+   "oldfieldname": "customer",
+   "oldfieldtype": "Link",
+   "options": "quotation_to",
+   "print_hide": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Table",
+   "label": "Pricing Rule Detail",
+   "options": "Pricing Rule Detail",
+   "read_only": 1
+  },
+  {
+   "fieldname": "coupon_code",
+   "fieldtype": "Link",
+   "label": "Coupon Code",
+   "options": "Coupon Code"
+  },
+  {
+   "fieldname": "referral_sales_partner",
+   "fieldtype": "Link",
+   "label": "Referral Sales Partner",
+   "options": "Sales Partner"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "lost_reasons",
+   "fieldtype": "Table MultiSelect",
+   "label": "Lost Reasons",
+   "options": "Lost Reason Detail",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-shopping-cart",
  "idx": 82,
  "is_submittable": 1,
  "max_attachments": 1,
- "modified": "2020-06-04 06:31:57.342506",
+ "modified": "2020-06-16 05:00:59.426277",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation",

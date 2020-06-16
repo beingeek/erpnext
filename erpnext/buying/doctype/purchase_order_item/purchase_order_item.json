@@ -27,6 +27,7 @@
   "col_break1",
   "image",
   "image_view",
+  "manufacturer_part_no",
   "quantity_and_rate",
   "stock_uom",
   "conversion_factor",
@@ -75,6 +76,9 @@
   "sec_break2",
   "amount",
   "base_amount",
+  "pricing_rules",
+  "is_free_item",
+  "is_fixed_asset",
   "tax_exclusive_amount",
   "base_tax_exclusive_amount",
   "column_break_64",
@@ -119,7 +123,8 @@
   "item_tax_template",
   "column_break_68",
   "cost_center",
-  "page_break"
+  "page_break",
+  "manufacturer"
  ],
  "fields": [
   {
@@ -1001,11 +1006,44 @@
    "oldfieldname": "page_break",
    "oldfieldtype": "Check",
    "print_hide": 1
+  },
+  {
+   "fieldname": "manufacturer_part_no",
+   "fieldtype": "Data",
+   "label": "Manufacturer Part Number"
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Pricing Rules",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_free_item",
+   "fieldtype": "Check",
+   "label": "Is Free Item",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "item_code.is_fixed_asset",
+   "fieldname": "is_fixed_asset",
+   "fieldtype": "Check",
+   "label": "Is Fixed Asset",
+   "read_only": 1
+  },
+  {
+   "fieldname": "manufacturer",
+   "fieldtype": "Link",
+   "label": "Manufacturer",
+   "options": "Manufacturer"
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:41:31.870373",
+ "modified": "2020-06-16 04:59:05.595952",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order Item",

@@ -83,6 +83,8 @@
   "tax_exclusive_amount",
   "col_break3",
   "base_amount",
+  "pricing_rules",
+  "is_free_item",
   "base_tax_exclusive_amount",
   "section_break_24",
   "net_rate",
@@ -116,6 +118,7 @@
   "returned_qty",
   "total_returned_qty",
   "return_qty",
+  "additional_notes",
   "section_break_63",
   "item_tax_template",
   "col_break5",
@@ -1077,11 +1080,32 @@
    "print_hide": 1,
    "read_only": 1,
    "report_hide": 1
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Pricing Rules",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_free_item",
+   "fieldtype": "Check",
+   "label": "Is Free Item",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "additional_notes",
+   "fieldtype": "Text",
+   "label": "Additional Notes"
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:31:54.728646",
+ "modified": "2020-06-16 05:01:27.027011",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Item",

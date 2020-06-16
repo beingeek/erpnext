@@ -72,6 +72,7 @@
   "items_section",
   "scan_barcode",
   "items",
+  "pricing_rules",
   "packing_list",
   "packed_items",
   "product_bundle_help",
@@ -184,6 +185,7 @@
   "inter_company_invoice_reference",
   "customer_group",
   "campaign",
+  "is_discounted",
   "col_break23",
   "status",
   "source",
@@ -1829,12 +1831,27 @@
    "fieldname": "sec_flags",
    "fieldtype": "Section Break",
    "label": "Flags"
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Table",
+   "label": "Pricing Rule Detail",
+   "options": "Pricing Rule Detail",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_discounted",
+   "fieldtype": "Check",
+   "label": "Is Discounted",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 181,
  "is_submittable": 1,
- "modified": "2020-06-04 06:37:38.139963",
+ "modified": "2020-06-16 04:57:12.942118",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

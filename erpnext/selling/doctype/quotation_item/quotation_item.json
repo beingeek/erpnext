@@ -86,6 +86,8 @@
   "col_break_net",
   "base_net_rate",
   "base_net_amount",
+  "pricing_rules",
+  "is_free_item",
   "item_balance",
   "warehouse",
   "column_break_30",
@@ -100,7 +102,8 @@
   "item_tax_template",
   "page_break",
   "item_group",
-  "brand"
+  "brand",
+  "additional_notes"
  ],
  "fields": [
   {
@@ -864,11 +867,32 @@
    "print_width": "150px",
    "read_only": 1,
    "width": "150px"
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Pricing Rules",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_free_item",
+   "fieldtype": "Check",
+   "label": "Is Free Item",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "additional_notes",
+   "fieldtype": "Text",
+   "label": "Additional Notes"
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:32:11.459569",
+ "modified": "2020-06-16 05:01:08.520371",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation Item",

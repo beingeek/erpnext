@@ -5,9 +5,11 @@
  "creation": "2013-02-22 01:27:54",
  "doctype": "DocType",
  "document_type": "Setup",
+ "engine": "InnoDB",
  "field_order": [
   "brand",
-  "description"
+  "description",
+  "brand_defaults"
  ],
  "fields": [
   {
@@ -27,11 +29,17 @@
    "oldfieldname": "description",
    "oldfieldtype": "Text",
    "width": "300px"
+  },
+  {
+   "fieldname": "brand_defaults",
+   "fieldtype": "Table",
+   "label": "Brand Defaults",
+   "options": "Item Default"
   }
  ],
  "icon": "fa fa-certificate",
  "idx": 1,
- "modified": "2020-06-04 06:56:13.322931",
+ "modified": "2020-06-16 05:01:29.245584",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Brand",
@@ -81,5 +89,6 @@
  ],
  "quick_entry": 1,
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "ASC"
 }

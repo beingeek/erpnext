@@ -81,6 +81,8 @@
   "tax_exclusive_amount",
   "col_break3",
   "base_amount",
+  "pricing_rules",
+  "is_free_item",
   "base_tax_exclusive_amount",
   "pricing_rule",
   "section_break_21",
@@ -94,6 +96,7 @@
   "accounting",
   "income_account",
   "expense_account",
+  "finance_book",
   "col_break4",
   "cost_center",
   "item_tax_template",
@@ -1078,11 +1081,34 @@
    "no_copy": 1,
    "print_hide": 1,
    "report_hide": 1
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Pricing Rules",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_free_item",
+   "fieldtype": "Check",
+   "label": "Is Free Item",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "asset",
+   "fieldname": "finance_book",
+   "fieldtype": "Link",
+   "label": "Finance Book",
+   "options": "Finance Book"
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-04 06:53:23.129766",
+ "modified": "2020-06-16 04:57:54.806906",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",

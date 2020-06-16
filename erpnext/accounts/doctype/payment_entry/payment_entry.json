@@ -3,6 +3,7 @@
  "autoname": "naming_series:",
  "creation": "2019-04-14 20:55:49.708565",
  "doctype": "DocType",
+ "engine": "InnoDB",
  "field_order": [
   "type_of_payment",
   "payment_type",
@@ -16,7 +17,6 @@
   "party_type",
   "party",
   "party_name",
-  "bank_account",
   "party_bank_account",
   "contact_person",
   "contact_email",
@@ -61,7 +61,6 @@
   "accounting_dimensions_section",
   "project",
   "dimension_col_break",
-  "cost_center",
   "section_break_12",
   "status",
   "remarks",
@@ -564,10 +563,17 @@
    "label": "Status",
    "options": "\nDraft\nSubmitted\nCancelled",
    "read_only": 1
+  },
+  {
+   "depends_on": "party",
+   "fieldname": "party_bank_account",
+   "fieldtype": "Link",
+   "label": "Party Bank Account",
+   "options": "Bank Account"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-06-04 06:53:38.094714",
+ "modified": "2020-06-16 04:54:00.876964",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",

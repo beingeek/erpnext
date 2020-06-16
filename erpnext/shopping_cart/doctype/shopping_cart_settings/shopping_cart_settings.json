@@ -3,6 +3,7 @@
  "description": "Default settings for Shopping Cart",
  "doctype": "DocType",
  "document_type": "System",
+ "engine": "InnoDB",
  "field_order": [
   "enabled",
   "display_settings",
@@ -10,7 +11,11 @@
   "show_price",
   "column_break_5",
   "show_stock_availability",
+  "show_configure_button",
+  "show_contact_us_button",
   "show_quantity_in_website",
+  "show_apply_coupon_code_in_website",
+  "allow_items_not_in_stock",
   "section_break_2",
   "company",
   "price_list",
@@ -25,6 +30,7 @@
  ],
  "fields": [
   {
+   "default": "0",
    "fieldname": "enabled",
    "fieldtype": "Check",
    "in_list_view": 1,
@@ -36,11 +42,13 @@
    "label": "Display Settings"
   },
   {
+   "default": "0",
    "fieldname": "show_attachments",
    "fieldtype": "Check",
    "label": "Show Public Attachments"
   },
   {
+   "default": "0",
    "depends_on": "eval:doc.enabled==0",
    "fieldname": "show_price",
    "fieldtype": "Check",
@@ -51,11 +59,13 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "0",
    "fieldname": "show_stock_availability",
    "fieldtype": "Check",
    "label": "Show Stock Availability"
   },
   {
+   "default": "0",
    "depends_on": "show_stock_availability",
    "fieldname": "show_quantity_in_website",
    "fieldtype": "Check",
@@ -107,6 +117,7 @@
    "label": "Checkout Settings"
   },
   {
+   "default": "0",
    "fieldname": "enable_checkout",
    "fieldtype": "Check",
    "label": "Enable Checkout"
@@ -128,12 +139,36 @@
    "fieldtype": "Link",
    "label": "Payment Gateway Account",
    "options": "Payment Gateway Account"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_configure_button",
+   "fieldtype": "Check",
+   "label": "Show Configure Button"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_contact_us_button",
+   "fieldtype": "Check",
+   "label": "Show Contact Us Button"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_apply_coupon_code_in_website",
+   "fieldtype": "Check",
+   "label": "Show Apply Coupon Code"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_items_not_in_stock",
+   "fieldtype": "Check",
+   "label": "Allow items not in stock to be added to cart"
   }
  ],
  "icon": "fa fa-shopping-cart",
  "idx": 1,
  "issingle": 1,
- "modified": "2020-06-04 06:58:28.436938",
+ "modified": "2020-06-16 05:02:00.859760",
  "modified_by": "Administrator",
  "module": "Shopping Cart",
  "name": "Shopping Cart Settings",
@@ -149,5 +184,6 @@
    "write": 1
   }
  ],
+ "sort_field": "modified",
  "sort_order": "ASC"
 }

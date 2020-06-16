@@ -4,6 +4,7 @@
  "creation": "2013-05-21 16:16:39",
  "doctype": "DocType",
  "document_type": "Document",
+ "engine": "InnoDB",
  "field_order": [
   "title",
   "supplier",
@@ -16,6 +17,7 @@
   "is_return",
   "reopen_order",
   "apply_tds",
+  "tax_withholding_category",
   "column_break_10",
   "order_type",
   "actual_pallets",
@@ -48,6 +50,7 @@
   "column_break_38",
   "shipping_address_name",
   "shipping_address",
+  "shipping_address_display",
   "column_break_41",
   "contact_person",
   "contact_display",
@@ -100,6 +103,7 @@
   "scan_barcode",
   "items",
   "section_break_42",
+  "pricing_rules",
   "raw_materials_supplied",
   "supplied_items",
   "section_break_126",
@@ -168,6 +172,7 @@
   "payments_section",
   "mode_of_payment",
   "cash_bank_account",
+  "clearance_date",
   "col_br_payments",
   "paid_amount",
   "base_paid_amount",
@@ -1711,12 +1716,40 @@
    "fieldname": "update_auto_repeat_reference",
    "fieldtype": "Button",
    "label": "Update Auto Repeat Reference"
+  },
+  {
+   "fieldname": "tax_withholding_category",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Tax Withholding Category",
+   "options": "Tax Withholding Category",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "shipping_address_display",
+   "fieldtype": "Small Text",
+   "label": "Shipping Address",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Table",
+   "label": "Pricing Rule Detail",
+   "options": "Pricing Rule Detail",
+   "read_only": 1
+  },
+  {
+   "fieldname": "clearance_date",
+   "fieldtype": "Date",
+   "hidden": 1,
+   "label": "Clearance Date"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 204,
  "is_submittable": 1,
- "modified": "2020-06-04 06:32:20.436906",
+ "modified": "2020-06-16 04:56:27.503543",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",

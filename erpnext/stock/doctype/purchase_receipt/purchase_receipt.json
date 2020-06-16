@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "document_type": "Document",
  "editable_grid": 1,
+ "engine": "InnoDB",
  "field_order": [
   "supplier_section",
   "column_break0",
@@ -41,6 +42,7 @@
   "column_break_21",
   "shipping_address_name",
   "shipping_address",
+  "shipping_address_display",
   "column_break_33",
   "contact_person",
   "contact_display",
@@ -59,7 +61,9 @@
   "is_subcontracted",
   "supplier_warehouse",
   "items_section",
+  "scan_barcode",
   "items",
+  "pricing_rules",
   "get_current_stock",
   "raw_material_details",
   "supplied_items",
@@ -1332,12 +1336,31 @@
    "oldfieldtype": "Date",
    "print_width": "100px",
    "width": "100px"
+  },
+  {
+   "fieldname": "shipping_address_display",
+   "fieldtype": "Small Text",
+   "label": "Shipping Address",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "scan_barcode",
+   "fieldtype": "Data",
+   "label": "Scan Barcode"
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Table",
+   "label": "Pricing Rule Detail",
+   "options": "Pricing Rule Detail",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-truck",
  "idx": 261,
  "is_submittable": 1,
- "modified": "2020-06-04 06:41:29.150627",
+ "modified": "2020-06-16 05:05:19.704100",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt",

@@ -4,6 +4,7 @@
  "creation": "2013-05-21 16:16:39",
  "doctype": "DocType",
  "document_type": "Document",
+ "engine": "InnoDB",
  "field_order": [
   "supplier_section",
   "title",
@@ -47,6 +48,7 @@
   "column_break_28",
   "shipping_address_name",
   "shipping_address",
+  "shipping_address_display",
   "column_break_41",
   "contact_person",
   "contact_display",
@@ -69,7 +71,9 @@
   "items",
   "get_last_purchase_rate",
   "link_to_mrs",
+  "pricing_rules",
   "raw_material_details",
+  "set_reserve_warehouse",
   "supplied_items_section",
   "supplied_items",
   "sec_before_discount",
@@ -143,6 +147,7 @@
   "status",
   "ref_sq",
   "party_account_currency",
+  "inter_company_order_reference",
   "column_break_74",
   "per_received",
   "per_billed",
@@ -1346,12 +1351,39 @@
    "fieldname": "col_number",
    "fieldtype": "Data",
    "label": "Col Number"
+  },
+  {
+   "fieldname": "shipping_address_display",
+   "fieldtype": "Small Text",
+   "label": "Shipping Address",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Table",
+   "label": "Purchase Order Pricing Rule",
+   "options": "Pricing Rule Detail",
+   "read_only": 1
+  },
+  {
+   "depends_on": "supplied_items",
+   "fieldname": "set_reserve_warehouse",
+   "fieldtype": "Link",
+   "label": "Set Reserve Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "inter_company_order_reference",
+   "fieldtype": "Link",
+   "label": "Inter Company Order Reference",
+   "options": "Sales Order"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-06-04 06:32:13.129558",
+ "modified": "2020-06-16 04:58:09.910579",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
