@@ -130,7 +130,6 @@ class Item(WebsiteGenerator):
 		self.validate_uom_additional_cost()
 		self.validate_customer_provided_part()
 		self.update_defaults_from_item_group()
-		self.validate_stock_for_has_batch_and_has_serial()
 		self.calculate_volume()
 		self.validate_auto_reorder_enabled_in_stock_settings()
 		self.cant_change()
@@ -1014,7 +1013,7 @@ class Item(WebsiteGenerator):
 
 	def cant_change(self):
 		if not self.get("__islocal"):
-			fields = ("has_serial_no", "is_stock_item", "valuation_method", "has_batch_no")
+			fields = ("has_serial_no", "is_stock_item", "valuation_method", "has_batch_no", "batch_wise_valuation")
 
 			values = frappe.db.get_value("Item", self.name, fields, as_dict=True)
 			if not values.get('valuation_method') and self.get('valuation_method'):

@@ -423,6 +423,12 @@ class StockController(AccountsController):
 		for blanket_order in blanket_orders:
 			frappe.get_doc("Blanket Order", blanket_order).update_ordered_qty()
 
+	def validate_customer_provided_item(self):
+		for d in self.get('items'):
+			# Customer Provided parts will have zero valuation rate
+			if frappe.db.get_value('Item', d.item_code, 'is_customer_provided_item'):
+				d.allow_zero_valuation_rate = 1
+
 def update_gl_entries_after(posting_date, posting_time, iwb=None,
 		warehouse_account=None, company=None):
 	def _delete_gl_entries(voucher_type, voucher_no):
