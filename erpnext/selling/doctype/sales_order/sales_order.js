@@ -352,6 +352,8 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 					// sales invoice
 					if(flt(doc.per_completed, 6) < 100) {
 						this.frm.add_custom_button(__('Invoice'), () => me.make_sales_invoice(), __('Create'));
+
+						this.frm.add_custom_button(__('Make Invoice'), function() { me.make_sales_invoice() });
 					}
 
 					// material request
