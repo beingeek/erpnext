@@ -131,7 +131,7 @@ class BuyingController(StockController):
 			frappe.throw(_("Can only set Landed Cost Voucher Amount for Purchase Receipt or Purchase Invoice or Purchase Order"))
 
 		docstatus_condition = "docstatus = 1 and" if self.doctype != "Purchase Order" else "docstatus < 2 and"
-		exclude_condition = "and parent != '{0}'".format(frappe.db.escape(exclude)) if exclude else ""
+		exclude_condition = "and parent != {0}".format(frappe.db.escape(exclude)) if exclude else ""
 		for d in self.get("items"):
 			lc_voucher_data = frappe.db.sql("""select sum(applicable_charges), cost_center
 				from `tabLanded Cost Item`

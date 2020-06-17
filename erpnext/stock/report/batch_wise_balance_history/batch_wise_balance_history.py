@@ -77,7 +77,7 @@ def get_item_conditions(filters):
 	item_conditions_sql = ''
 	if items:
 		item_conditions_sql = ' and sle.item_code in ({})' \
-			.format(', '.join(['"' + frappe.db.escape(i, percent=False) + '"' for i in items]))
+			.format(', '.join([frappe.db.escape(i) for i in items]))
 
 	return item_conditions_sql
 

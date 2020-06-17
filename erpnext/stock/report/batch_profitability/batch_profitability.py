@@ -101,7 +101,7 @@ def apply_source_repack_contribution(data, source_batch, target_batch_source_con
 
 def get_pinv_data(batch_nos, exclude_pinv=None):
 	if batch_nos:
-		exclude_pinv_cond = " and inv.name != '{0}'".format(frappe.db.escape(exclude_pinv)) if exclude_pinv else ""
+		exclude_pinv_cond = " and inv.name != {0}".format(frappe.db.escape(exclude_pinv)) if exclude_pinv else ""
 
 		return frappe.db.sql("""
 			select 'Purchase Invoice' as doctype, 'Supplier' as party_type, inv.supplier as party,

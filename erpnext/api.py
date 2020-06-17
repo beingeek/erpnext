@@ -130,7 +130,7 @@ def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
 		group by i.item_code, po.schedule_date
 	""".format(", ".join(['%s']*len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
 
-	exclude_so_cond = " and so.name != '{0}'".format(frappe.db.escape(exclude_so)) if exclude_so else ""
+	exclude_so_cond = " and so.name != {0}".format(frappe.db.escape(exclude_so)) if exclude_so else ""
 
 	so_data = frappe.db.sql("""
 		select

@@ -128,8 +128,8 @@ class PaymentReconciliation(Document):
 			frappe.throw(_("Please select Allocated Amount, Invoice Type and Invoice Number in atleast one row"))
 
 	def check_condition(self):
-		cond = " and posting_date >= '{0}'".format(frappe.db.escape(self.from_date)) if self.from_date else ""
-		cond += " and posting_date <= '{0}'".format(frappe.db.escape(self.to_date)) if self.to_date else ""
+		cond = " and posting_date >= {0}".format(frappe.db.escape(self.from_date)) if self.from_date else ""
+		cond += " and posting_date <= {0}".format(frappe.db.escape(self.to_date)) if self.to_date else ""
 		dr_or_cr = ("debit_in_account_currency" if erpnext.get_party_account_type(self.party_type) == 'Receivable'
 			else "credit_in_account_currency")
 

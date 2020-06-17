@@ -71,7 +71,7 @@ def get_data(filters):
 	show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
 
 	price_lists, selected_price_list = get_price_lists(filters)
-	price_lists_cond = " and p.price_list in ('{0}')".format("', '".join([frappe.db.escape(d) for d in price_lists]))
+	price_lists_cond = " and p.price_list in ({0})".format(", ".join([frappe.db.escape(d) for d in price_lists]))
 
 	item_data = frappe.db.sql("""
 		select item.name as item_code, item.item_name, upper(c.code) as origin, item.item_group, item.print_in_price_list,
@@ -285,7 +285,7 @@ def get_item_conditions(filters, use_doc_name):
 			conditions.append(get_item_group_condition(filters.get("item_group")))
 
 	if filters.get("item_groups_excluded"):
-		conditions.append("item.item_group not in ('{}')".format("', '".join([frappe.db.escape(d) for d in filters.get("item_groups_excluded")])))
+		conditions.append("item.item_group not in ({})".format(", ".join([frappe.db.escape(d) for d in filters.get("item_groups_excluded")])))
 
 	if use_doc_name and filters.get("filter_items_without_print"):
 		conditions.append("item.print_in_price_list = 1")
