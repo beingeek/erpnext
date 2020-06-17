@@ -70,6 +70,9 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 			return;
 		}
 
+		let current_pricing_rule = cstr(item.pricing_rules).split(`
+`)[0];
+
 		var dialog = new frappe.ui.Dialog({
 			title: __("Set Special Price"),
 			fields: [
@@ -82,7 +85,7 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 				{"fieldtype": "Date", "label": __("To Date"), "fieldname": "valid_upto", "reqd":true, "default": me.frm.doc.pricing_rule ? "" : me.frm.doc.delivery_date},
 				{"fieldtype": "Section Break", "fieldname": "sec_break1"},
 				{"fieldtype": "Button", "label": __("Ignore Pricing Rule"), "fieldname": "ignore_pricing_rule"},
-				{"fieldtype": "Link", "label": __("Existing Pricing Rule"), "fieldname": "pricing_rule", "options": "Pricing Rule", "read_only":true, "default": item.pricing_rule},
+				{"fieldtype": "Link", "label": __("Existing Pricing Rule"), "fieldname": "pricing_rule", "options": "Pricing Rule", "read_only":true, "default": current_pricing_rule},
 				{"fieldtype": "Check", "label": __("Create New Pricing Rule"), "fieldname": "create_new", "depends_on":"pricing_rule"},
 				{"fieldtype": "Column Break", "fieldname": "col_break1"},
 				{"fieldtype": "Currency", "label": __("New Rate (As Per Selected UOM)"), "fieldname": "new_uom_rate", "read_only":true, "default": item.rate},
@@ -100,12 +103,12 @@ Customer Request`}
 			dialog.cancel();
 		};
 
-		if (item.pricing_rule) {
+		if (current_pricing_rule) {
 			frappe.call({
 				method: 'frappe.client.get_value',
 				args: {
 					doctype: 'Pricing Rule',
-					filters: { name: item.pricing_rule },
+					filters: { name: current_pricing_rule },
 					fieldname:['valid_from','valid_upto', 'reason']
 				},
 				callback: function(res) {
@@ -162,7 +165,7 @@ Customer Request`}
 			var color = 'inherit';
 			var background = 'inherit';
 
-			if (item.requires_authorization || (item.item_code && !item.rate) || item.override_price_list_rate || item.pricing_rule) {
+			if (item.requires_authorization || (item.item_code && !item.rate) || item.override_price_list_rate || item.pricing_rules) {
 				color = 'red';
 			}
 			if (item.item_code && !item.rate) {

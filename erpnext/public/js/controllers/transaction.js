@@ -24,7 +24,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 						precision("margin_rate_or_amount", item));
 					item.rate_with_margin = item.rate;
 				} else {
-					item.discount_amount = flt(item.price_list_rate - item.rate);
 					item.discount_percentage = flt((1 - item.rate / item.price_list_rate) * 100.0,
 						precision("discount_percentage", item));
 					item.discount_amount = flt(item.price_list_rate) - flt(item.rate);
@@ -1628,10 +1627,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			}
 
 			// if pricing rule set as blank from an existing value, apply price_list
-			if(!me.frm.doc.ignore_pricing_rule && existing_pricing_rule && !d.pricing_rules) {
-				if (!item_doc.override_price_list_rate) {
-					me.apply_price_list(frappe.get_doc(d.doctype, d.name));
-				}
+			if(!(me.frm.doc.ignore_pricing_rule || d.override_price_list_rate) && existing_pricing_rule && !d.pricing_rules) {
+				me.apply_price_list(frappe.get_doc(d.doctype, d.name));
 			} else if(!d.pricing_rules) {
 				me.remove_pricing_rule(frappe.get_doc(d.doctype, d.name));
 			}

@@ -273,7 +273,7 @@ def remove_item_codes_from_party_default_items(party_type, party, item_codes):
 
 @frappe.whitelist()
 def update_special_price(args):
-	from erpnext.accounts.doctype.pricing_rule.pricing_rule import get_pricing_rules, filter_pricing_rules
+	from erpnext.accounts.doctype.pricing_rule.utils import get_pricing_rules
 	from erpnext.stock.get_item_details import process_args
 
 	if isinstance(args, string_types):
@@ -283,17 +283,20 @@ def update_special_price(args):
 	args = process_args(args)
 
 	pricing_rules = get_pricing_rules(args)
-	existing_pricing_rule = filter_pricing_rules(args, pricing_rules)
+	existing_pricing_rule = pricing_rules[0] if pricing_rules else None
 
 	if not existing_pricing_rule or cint(args.create_new):
 		doc = frappe.new_doc("Pricing Rule")
 		doc.update({
+			"price_or_product_discount": "Price",
 			"applicable_for": "Customer",
 			"customer": args.customer,
 			"apply_on": "Item Code",
-			"item_code": args.item_code,
 			"title": frappe.model.naming.make_autoname("{}/{}".format(args.customer, args.item_code) + "-.#####", "Pricing Rule"),
 			"selling": 1
+		})
+		doc.append('items', {
+			"item_code": args.item_code
 		})
 
 		if existing_pricing_rule:

@@ -157,10 +157,10 @@ def get_other_conditions(conditions, values, args):
 		if group_condition:
 			conditions += " and " + group_condition
 
-	if args.get("transaction_date"):
+	if args.get("delivery_date") or args.get("transaction_date"):
 		conditions += """ and %(transaction_date)s between ifnull(`tabPricing Rule`.valid_from, '2000-01-01')
 			and ifnull(`tabPricing Rule`.valid_upto, '2500-12-31')"""
-		values['transaction_date'] = args.get('transaction_date')
+		values['transaction_date'] = args.get("delivery_date") or args.get("transaction_date")
 
 	return conditions
 
@@ -366,8 +366,12 @@ def get_qty_amount_data_for_cumulative(pr_doc, doc, items=[]):
 	sum_qty, sum_amt = [0, 0]
 	doctype = doc.get('parenttype') or doc.doctype
 
-	date_field = ('transaction_date'
-		if doc.get('transaction_date') else 'posting_date')
+	meta = frappe.get_meta(doctype)
+	if meta.has_field('delivery_date'):
+		date_field = 'delivery_date'
+	else:
+		date_field = ('transaction_date'
+			if doc.get('transaction_date') else 'posting_date')
 
 	child_doctype = '{0} Item'.format(doctype)
 	apply_on = frappe.scrub(pr_doc.get('apply_on'))
