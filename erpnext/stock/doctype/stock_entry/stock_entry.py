@@ -64,6 +64,7 @@ class StockEntry(StockController):
 		self.validate_inspection()
 		self.validate_fg_completed_qty()
 		self.validate_difference_account()
+		self.set_missing_additional_cost_account()
 		self.set_job_card_data()
 		self.set_purpose_for_stock_entry()
 
@@ -258,6 +259,17 @@ class StockEntry(StockController):
 
 			elif self.is_opening == "Yes" and frappe.db.get_value("Account", d.expense_account, "report_type") == "Profit and Loss":
 				frappe.throw(_("Difference Account must be a Asset/Liability type account, since this Stock Entry is an Opening Entry"), OpeningEntryAccountError)
+
+	def set_missing_additional_cost_account(self):
+		company = frappe.get_cached_doc("Company", self.company)
+		default_account = company.get('stock_entry_additional_cost_account') or company.get("expenses_included_in_valuation")
+
+		for d in self.additional_costs:
+			if not d.expense_account:
+				if default_account:
+					d.expense_account = default_account
+				else:
+					frappe.throw(_("Row #{0}: Please set expense account for Additional Cost").format(d.idx))
 
 	def validate_warehouse(self):
 		"""perform various (sometimes conditional) validations on warehouse"""
@@ -780,8 +792,8 @@ class StockEntry(StockController):
 			'sample_quantity'		: item.sample_quantity
 		})
 
-		if not ret["expense_account"]:
-			ret["expense_account"] = frappe.get_cached_value('Company',  self.company,  "stock_adjustment_account")
+		if not ret.expense_account:
+			ret.expense_account = frappe.get_cached_value('Company',  self.company,  "stock_adjustment_account")
 
 		for d in [["Account", "expense_account", "default_expense_account"],
 			["Cost Center", "cost_center", "cost_center"]]:
@@ -1439,6 +1451,26 @@ def get_work_order_details(work_order, company):
 		"fg_warehouse": work_order.fg_warehouse,
 		"fg_completed_qty": pending_qty_to_produce
 	}
+
+def get_additional_costs(work_order=None, bom_no=None, fg_qty=None):
+	additional_costs = []
+	operating_cost_per_unit = get_operating_cost_per_unit(work_order, bom_no)
+	if operating_cost_per_unit:
+		additional_costs.append({
+			"description": "Operating Cost as per Work Order / BOM",
+			"amount": operating_cost_per_unit * flt(fg_qty)
+		})
+
+	if work_order and work_order.additional_operating_cost and work_order.qty:
+		additional_operating_cost_per_unit = \
+			flt(work_order.additional_operating_cost) / flt(work_order.qty)
+
+		additional_costs.append({
+			"description": "Additional Operating Cost",
+			"amount": additional_operating_cost_per_unit * flt(fg_qty)
+		})
+
+	return additional_costs
 
 def get_operating_cost_per_unit(work_order=None, bom_no=None):
 	operating_cost_per_unit = 0
