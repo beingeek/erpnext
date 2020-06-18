@@ -677,28 +677,48 @@ class StockEntry(StockController):
 		self.make_sl_entries(sl_entries, self.amended_from and 'Yes' or 'No')
 
 	def get_gl_entries(self, warehouse_account):
-		expenses_included_in_valuation = self.get('additional_cost_account') or self.get_company_default("expenses_included_in_valuation")
-
 		gl_entries = super(StockEntry, self).get_gl_entries(warehouse_account)
 
-		for d in self.get("items"):
-			additional_cost = flt(d.additional_cost, d.precision("additional_cost"))
-			if additional_cost:
-				gl_entries.append(self.get_gl_dict({
-					"account": expenses_included_in_valuation,
-					"against": d.expense_account,
-					"cost_center": d.cost_center,
-					"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
-					"credit": additional_cost
-				}))
+		total_basic_amount = sum([flt(t.basic_amount) for t in self.get("items") if t.t_warehouse])
+		divide_based_on = total_basic_amount
 
-				gl_entries.append(self.get_gl_dict({
-					"account": d.expense_account,
-					"against": expenses_included_in_valuation,
-					"cost_center": d.cost_center,
-					"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
-					"credit": -1 * additional_cost # put it as negative credit instead of debit purposefully
-				}))
+		if self.get("additional_costs") and not total_basic_amount:
+			# if total_basic_amount is 0, distribute additional charges based on qty
+			divide_based_on = sum(item.qty for item in list(self.get("items")))
+
+		item_account_wise_additional_cost = {}
+
+		for t in self.get("additional_costs"):
+			for d in self.get("items"):
+				if d.t_warehouse:
+					item_account_wise_additional_cost.setdefault((d.item_code, d.name), {})
+					item_account_wise_additional_cost[(d.item_code, d.name)].setdefault(t.expense_account, 0.0)
+
+					multiply_based_on = d.basic_amount if total_basic_amount else d.qty
+
+					item_account_wise_additional_cost[(d.item_code, d.name)][t.expense_account] += \
+						(t.amount * multiply_based_on) / divide_based_on
+
+		if item_account_wise_additional_cost:
+			for d in self.get("items"):
+				for account, amount in iteritems(item_account_wise_additional_cost.get((d.item_code, d.name), {})):
+					if not amount: continue
+
+					gl_entries.append(self.get_gl_dict({
+						"account": account,
+						"against": d.expense_account,
+						"cost_center": d.cost_center,
+						"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
+						"credit": amount
+					}, item=d))
+
+					gl_entries.append(self.get_gl_dict({
+						"account": d.expense_account,
+						"against": account,
+						"cost_center": d.cost_center,
+						"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
+						"credit": -1 * amount # put it as negative credit instead of debit purposefully
+					}, item=d))
 
 		return gl_entries
 

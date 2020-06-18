@@ -1,11 +1,12 @@
 {
- "creation": "2019-01-14 01:58:43.133869",
+ "creation": "2014-07-11 11:51:00.453717",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "expense_account",
   "description",
-  "col_break",
+  "col_break3",
   "amount"
  ],
  "fields": [
@@ -13,29 +14,40 @@
    "fieldname": "description",
    "fieldtype": "Small Text",
    "in_list_view": 1,
-   "label": "Description"
+   "label": "Description",
+   "reqd": 1
   },
   {
-   "fieldname": "col_break",
-   "fieldtype": "Column Break"
+   "fieldname": "col_break3",
+   "fieldtype": "Column Break",
+   "width": "50%"
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Amount",
-   "options": "Company:company:default_currency"
+   "options": "Company:company:default_currency",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "company.stock_entry_additional_cost_account",
+   "fetch_if_empty": 1,
+   "fieldname": "expense_account",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Expense Account",
+   "options": "Account",
+   "reqd": 1
   }
  ],
  "istable": 1,
- "modified": "2020-06-04 06:56:12.806687",
+ "modified": "2020-06-18 06:41:44.013440",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Entry Taxes and Charges",
  "owner": "Administrator",
  "permissions": [],
- "quick_entry": 1,
  "sort_field": "modified",
- "sort_order": "DESC",
- "track_changes": 1
+ "sort_order": "DESC"
 }

@@ -52,7 +52,6 @@
   "additional_costs_section",
   "additional_costs",
   "total_additional_costs",
-  "additional_cost_account",
   "contact_section",
   "supplier",
   "supplier_name",
@@ -434,14 +433,6 @@
    "read_only": 1
   },
   {
-   "fetch_from": "company.stock_entry_additional_cost_account",
-   "fetch_if_empty": 1,
-   "fieldname": "additional_cost_account",
-   "fieldtype": "Link",
-   "label": "Additional Cost Account",
-   "options": "Account"
-  },
-  {
    "collapsible": 1,
    "depends_on": "eval: in_list([\"Sales Return\", \"Purchase Return\", \"Send to Subcontractor\"], doc.purpose)",
    "fieldname": "contact_section",
@@ -643,7 +634,7 @@
  "icon": "fa fa-file-text",
  "idx": 1,
  "is_submittable": 1,
- "modified": "2019-09-27 14:38:20.801420",
+ "modified": "2020-06-18 06:41:34.070084",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Entry",
