@@ -1258,3 +1258,171 @@ frappe.ui.form.on('Payment Entry', {
 		}
 	},
 })
+
+frappe.ui.form.on("Payment Entry", {
+	'onload_post_render': function(frm) {
+
+		    frm.fields_dict.references.grid.wrapper.on('click', '.grid-row-check', function(e) {
+			if(frm.doc.payment_type == 'Internal Transfer')
+			{
+				frm.events.allocate_party_amount_against_ref_docs(frm, frm.doc.paid_amount);
+			}
+			else
+			{
+				frm.events.allocate_party_amount_against_ref_docs(frm, frm.doc.received_amount);
+			}
+			frm.events.get_selected_totals(frm);
+
+		});
+	},
+	is_reverse: function(frm) {
+		frm.events.allocate_party_amount_against_ref_docs(frm, frm.doc.received_amount);
+		frm.events.get_selected_totals(frm);
+	},
+	allocate_payment_amount: function(frm) {
+		frm.events.get_selected_totals(frm);
+	},
+	'get_selected_totals': function(frm) {
+		var ttl = 0;
+			(frm.fields_dict.references.grid.grid_rows || []).forEach(function(row) {
+				if(row.doc.__checked)
+				{
+					var amount = flt(row.doc.allocated_amount);
+					//console.log(amount);
+					ttl = ttl+amount;
+				}
+
+			})
+			frm.refresh_field("references");
+			frm.refresh_fields();
+			frm.set_value("total_selected_allocated_amount", ttl.toFixed(2));
+	},
+	'refresh': function(frm) {
+		frm.page.sidebar.remove(); // this removes the sidebar
+    		frm.page.wrapper.find(".layout-main-section-wrapper").removeClass("col-md-10");
+    		frm.page.wrapper.find(".layout-main-section-wrapper").addClass("col-md-12");
+			frm.events.set_dynamic_labels1(frm);
+
+		if(frm.doc.payment_type=="Receive")
+		{
+
+			//$('div[data-fieldname="paid_amount"] .control-label').html("Received Amount (" + frm.doc.paid_to_account_currency+ ")");
+			$('.grid-heading-row div[data-fieldname="due_date"] .static-area').html("Posting Date");
+			$('div[data-fieldname="party"] .control-label').html("Customer");
+
+			if(!frm.doc.reference_date)
+			{
+				frm.doc.reference_date = frm.doc.posting_date;
+			}
+			if(!frm.doc.reference_no)
+			{
+				//frm.doc.reference_no = frm.doc.posting_date;
+			}
+		}
+		else
+		{
+			//$('div[data-fieldname="paid_amount"] .control-label').html("Paid Amount (" + frm.doc.paid_from_account_currency+ ")");
+			$('.grid-heading-row div[data-fieldname="due_date"] .static-area').html("Received Date");
+			$('div[data-fieldname="party"] .control-label').html("Supplier");
+		}
+	},
+	'set_dynamic_labels1':function(frm){
+
+		if(frm.doc.payment_type=="Receive")
+		{
+			//cur_frm.set_df_property("paid_amount", "options", "Received Amount" + //frm.doc.paid_to_account_currency);
+			if(frm.doc.paid_from_account_currency == frm.doc.paid_to_account_currency)
+			{
+				$('div[data-fieldname="paid_amount"] .control-label').html("Received Amount (" + frm.doc.paid_to_account_currency+ ")");
+			}
+			else
+			{
+				$('div[data-fieldname="paid_amount"] .control-label').html("Paid Amount (" + frm.doc.paid_from_account_currency+ ")");
+			}
+
+			$('.grid-heading-row div[data-fieldname="due_date"] .static-area').html("Posting Date");
+
+			$('div[data-fieldname="paid_from"] .control-label').html("Receivable Account");
+			$('div[data-fieldname="paid_to"] .control-label').html("Account Deposited To");
+		}
+		else
+		{
+			$('div[data-fieldname="paid_amount"] .control-label').html("Paid Amount (" + frm.doc.paid_from_account_currency+ ")");
+			$('.grid-heading-row div[data-fieldname="due_date"] .static-area').html("Account Paid From");
+
+			$('div[data-fieldname="paid_from"] .control-label').html("Account Paid From");
+			$('div[data-fieldname="paid_to"] .control-label').html("Payable Account");
+		}
+
+	},
+	payment_type: function(frm) {
+		if(frm.doc.payment_type == "Internal Transfer") {
+			frm.doc.naming_series = "PE-";
+			refresh_field("naming_series");
+		} else {
+			if(frm.doc.payment_type == "Receive")
+			{
+				frm.doc.party_type = "Customer";
+				frm.doc.naming_series = "PR-";
+				refresh_field("party_type");
+				refresh_field("naming_series");
+				$('div[data-fieldname="party"] .control-label').html("Customer");
+				if(!frm.doc.reference_date)
+				{
+					frm.doc.reference_date = frm.doc.posting_date;
+				}
+				if(!frm.doc.reference_no)
+				{
+					//frm.doc.reference_no = frm.doc.posting_date;
+				}
+			}
+			if(frm.doc.payment_type == "Pay")
+			{
+				frm.doc.party_type = "Supplier";
+				frm.doc.naming_series = "PE-";
+				refresh_field("party_type");
+				refresh_field("naming_series");
+				$('div[data-fieldname="party"] .control-label').html("Supplier");
+			}
+		}
+	},
+	mode_of_payment: function(frm) {
+		if(frm.doc.payment_type == "Internal Transfer")
+		{
+			frm.set_value("paid_from", null);
+			frm.set_value("paid_to", null);
+			frm.refresh_fields();
+		}
+	},
+	allocate_reference_and_dates: function(frm){
+		var idx = 0;
+		for(idx=0;idx<frm.doc.references.length;idx++)
+			{
+				if(frm.doc.references[idx].reference_name)
+				{
+					frappe.call({
+							method:'erpnext.api.paymentReferenceDate',
+							args: {
+								row: idx,
+								reference_doctype: frm.doc.references[idx].reference_doctype,
+								reference_name: frm.doc.references[idx].reference_name
+							},
+							callback: function(r) {
+								//console.log(r.message);
+								var idx = parseInt(r.message[0].row);
+								frm.doc.references[idx].due_date = r.message[0].due_date;
+								frm.doc.references[idx].cheque_no = r.message[0].cheque_no;
+								cur_frm.refresh_field("references");
+							}
+					});
+				}
+			}
+			cur_frm.refresh_field("references");
+
+	}
+});
+frappe.ui.form.on('Payment Entry Reference', {
+	allocated_amount: function(frm, cdt, cdn) {
+		frm.events.get_selected_totals(frm);
+	}
+});

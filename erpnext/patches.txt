@@ -615,7 +615,7 @@ erpnext.patches.v11_1.update_so_quotation_item_ref
 erpnext.patches.v11_1.woocommerce_set_creation_user
 erpnext.patches.v11_1.set_salary_details_submittable
 erpnext.patches.v11_1.rename_depends_on_lwp
-execute:frappe.delete_doc("Report", "Inactive Items")
+execute:frappe.delete_doc_if_exists("Report", "Inactive Items")
 erpnext.patches.v11_1.delete_scheduling_tool
 erpnext.patches.v12_0.rename_tolerance_fields
 execute:frappe.delete_doc_if_exists("Page", "support-analytics")
@@ -631,7 +631,7 @@ erpnext.patches.v12_0.set_quotation_status
 erpnext.patches.v12_0.set_priority_for_support
 erpnext.patches.v12_0.delete_priority_property_setter
 erpnext.patches.v12_0.set_default_batch_size
-execute:frappe.delete_doc("DocType", "Project Task")
+execute:frappe.delete_doc_if_exists("DocType", "Project Task")
 erpnext.patches.v11_1.update_default_supplier_in_item_defaults
 erpnext.patches.v12_0.update_due_date_in_gle
 erpnext.patches.v12_0.add_default_buying_selling_terms_in_company
@@ -678,3 +678,4 @@ execute:frappe.delete_doc_if_exists("Page", "appointment-analytic")
 erpnext.patches.v12_0.unset_customer_supplier_based_on_type_of_item_price
 erpnext.patches.v12_0.set_serial_no_status #2020-05-21
 erpnext.patches.v12_0.update_price_list_currency_in_bom
+execute:frappe.delete_doc_if_exists("Custom Script", "Payment Entry-Client")
