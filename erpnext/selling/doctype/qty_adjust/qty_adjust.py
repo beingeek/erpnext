@@ -14,7 +14,7 @@ import json
 
 class QtyAdjust(Document):
 	def qty_adjust_sales_orders(self):
-		sales_orders = filter(lambda d: d.docstatus == 0 and d.dt == "Sales Order", self.sales_orders)
+		sales_orders = list(filter(lambda d: d.docstatus == 0 and d.dt == "Sales Order", self.sales_orders))
 
 		# Validate
 		for d in sales_orders:
@@ -42,7 +42,7 @@ def change_item_code(sales_order, so_detail, new_item_code, old_item_code):
 	from erpnext.stock.get_item_details import get_item_details
 
 	doc = frappe.get_doc("Sales Order", sales_order)
-	row = filter(lambda d: d.name == so_detail, doc.items)
+	row = list(filter(lambda d: d.name == so_detail, doc.items))
 	if not row:
 		frappe.throw(_("Could not find Item {0} in {1}").format(old_item_code, sales_order))
 	else:
@@ -116,7 +116,7 @@ def qty_adjust_so_item(sales_order_name, so_detail, adjusted_qty, backorder_qty=
 	if sales_order.docstatus != 0:
 		return
 
-	so_item = filter(lambda d: d.name == so_detail, sales_order.items)
+	so_item = list(filter(lambda d: d.name == so_detail, sales_order.items))
 	if not so_item:
 		return
 
@@ -168,10 +168,10 @@ def create_backorder(sales_order, so_item, backorder_qty, backorder_date):
 
 	backorder.is_back_order = 1
 
-	backorder_item = filter(lambda d: d.item_code == so_item.item_code and d.uom == so_item.uom\
+	backorder_item = list(filter(lambda d: d.item_code == so_item.item_code and d.uom == so_item.uom\
 		and flt(d.alt_uom_size, d.precision('alt_uom_size')) == flt(d.alt_uom_size_std, d.precision('alt_uom_size'))
 		and not cint(d.override_price_list_rate)
-		and d.prevdoc_docname == so_item.prevdoc_docname, backorder.items)
+		and d.prevdoc_docname == so_item.prevdoc_docname, backorder.items))
 
 	if backorder_item:
 		backorder_item = backorder_item[0]
@@ -181,7 +181,8 @@ def create_backorder(sales_order, so_item, backorder_qty, backorder_date):
 			"item_name": so_item.item_name,
 			"uom": so_item.uom,
 			"qty": 0,
-			"prevdoc_docname": so_item.prevdoc_docname
+			"prevdoc_docname": so_item.prevdoc_docname,
+			"warehouse": so_item.warehouse
 		})
 
 	backorder_item.qty += backorder_qty
