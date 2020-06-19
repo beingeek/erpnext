@@ -50,7 +50,6 @@
   "col_break_pl_rate",
   "base_price_list_rate",
   "base_tax_exclusive_price_list_rate",
-  "pricing_rule",
   "override_price_list_rate",
   "requires_authorization",
   "discount_and_margin",
@@ -455,13 +454,6 @@
    "label": "Tax Exclusive Price List Rate (Company Currency)",
    "options": "Company:company:default_currency",
    "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "pricing_rule",
-   "fieldtype": "Link",
-   "label": "Pricing Rule",
-   "options": "Pricing Rule",
    "read_only": 1
   },
   {
@@ -892,7 +884,7 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-16 05:01:08.520371",
+ "modified": "2020-06-19 06:16:38.214871",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation Item",

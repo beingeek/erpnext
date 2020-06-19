@@ -84,7 +84,6 @@
   "column_break_64",
   "landed_cost_voucher_amount",
   "landed_rate",
-  "pricing_rule",
   "section_break_29",
   "net_rate",
   "net_amount",
@@ -696,13 +695,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "pricing_rule",
-   "fieldtype": "Link",
-   "label": "Pricing Rule",
-   "options": "Pricing Rule",
-   "read_only": 1
-  },
-  {
    "fieldname": "section_break_29",
    "fieldtype": "Section Break"
   },
@@ -1043,7 +1035,7 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-16 04:59:05.595952",
+ "modified": "2020-06-19 06:16:36.684463",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order Item",

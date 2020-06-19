@@ -85,7 +85,6 @@
   "col_break4",
   "billed_net_amount",
   "landed_cost_voucher_amount",
-  "pricing_rule",
   "section_break_29",
   "net_rate",
   "net_amount",
@@ -723,13 +722,6 @@
    "width": "251"
   },
   {
-   "fieldname": "pricing_rule",
-   "fieldtype": "Link",
-   "label": "Pricing Rule",
-   "options": "Pricing Rule",
-   "read_only": 1
-  },
-  {
    "fieldname": "section_break_29",
    "fieldtype": "Section Break"
   },
@@ -1176,7 +1168,7 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-16 05:05:44.394244",
+ "modified": "2020-06-19 06:16:38.646857",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt Item",

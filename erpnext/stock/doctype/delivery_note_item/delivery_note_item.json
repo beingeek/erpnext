@@ -54,7 +54,6 @@
   "base_tax_exclusive_rate",
   "base_amount",
   "base_tax_exclusive_amount",
-  "pricing_rule",
   "override_price_list_rate",
   "pricing_rules",
   "is_free_item",
@@ -837,13 +836,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "pricing_rule",
-   "fieldtype": "Link",
-   "label": "Pricing Rule",
-   "options": "Pricing Rule",
-   "read_only": 1
-  },
-  {
    "default": "0",
    "fieldname": "override_price_list_rate",
    "fieldtype": "Check",
@@ -953,7 +945,7 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-16 05:03:01.921460",
+ "modified": "2020-06-19 06:16:35.837788",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note Item",

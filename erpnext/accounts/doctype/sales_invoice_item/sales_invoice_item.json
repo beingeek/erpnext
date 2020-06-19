@@ -84,7 +84,6 @@
   "pricing_rules",
   "is_free_item",
   "base_tax_exclusive_amount",
-  "pricing_rule",
   "section_break_21",
   "net_rate",
   "net_amount",
@@ -707,13 +706,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "pricing_rule",
-   "fieldtype": "Link",
-   "label": "Pricing Rule",
-   "options": "Pricing Rule",
-   "read_only": 1
-  },
-  {
    "fieldname": "section_break_21",
    "fieldtype": "Section Break"
   },
@@ -1108,7 +1100,7 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-16 04:57:54.806906",
+ "modified": "2020-06-19 06:16:37.673782",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",

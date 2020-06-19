@@ -84,7 +84,6 @@
   "column_break_27",
   "net_amount",
   "base_net_amount",
-  "pricing_rule",
   "section_break_24",
   "warehouse_and_reference",
   "warehouse",
@@ -653,13 +652,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "pricing_rule",
-   "fieldtype": "Link",
-   "label": "Pricing Rule",
-   "options": "Pricing Rule",
-   "read_only": 1
-  },
-  {
    "fieldname": "section_break_24",
    "fieldtype": "Section Break"
   },
@@ -835,7 +827,7 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-16 04:59:30.481664",
+ "modified": "2020-06-19 06:16:36.252800",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Supplier Quotation Item",
