@@ -627,7 +627,6 @@ erpnext.patches.v11_1.set_missing_title_for_quotation
 erpnext.patches.v11_1.update_bank_transaction_status
 erpnext.patches.v11_1.renamed_delayed_item_report
 erpnext.patches.v11_1.set_missing_opportunity_from
-erpnext.patches.v12_0.set_quotation_status
 erpnext.patches.v12_0.set_priority_for_support
 erpnext.patches.v12_0.delete_priority_property_setter
 erpnext.patches.v12_0.set_default_batch_size
@@ -670,7 +669,6 @@ erpnext.patches.v12_0.recalculate_requested_qty_in_bin
 erpnext.patches.v12_0.rename_mws_settings_fields
 erpnext.patches.v12_0.set_correct_status_for_expense_claim
 erpnext.patches.v12_0.set_updated_purpose_in_pick_list
-erpnext.patches.v12_0.repost_stock_ledger_entries_for_target_warehouse
 erpnext.patches.v12_0.update_end_date_and_status_in_email_campaign
 erpnext.patches.v13_0.move_tax_slabs_from_payroll_period_to_income_tax_slab #123
 erpnext.patches.v12_0.remove_duplicate_leave_ledger_entries #2020-05-22
