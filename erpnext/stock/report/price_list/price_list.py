@@ -50,7 +50,7 @@ def execute(filters=None):
 def get_printable_data(columns, data, filters):
 	item_groups = OrderedDict()
 
-	data = filter(lambda d: d.print_in_price_list, data)
+	data = list(filter(lambda d: d.print_in_price_list, data))
 
 	for i in range(len(data)):
 		if not data[i].item_code:
@@ -246,7 +246,9 @@ def get_price_lists(filters):
 		else:
 			buying_selling_cond = ""
 
-	price_lists = [filters.standard_price_list]
+	price_lists = []
+	if filters.standard_price_list:
+		price_lists.append(filters.standard_price_list)
 
 	if filters.customer:
 		filters.selected_price_list = frappe.db.get_value("Customer", filters.customer, 'default_price_list')
@@ -350,7 +352,7 @@ def get_columns(filters, price_lists):
 	show_amounts_role = frappe.db.get_single_value("Stock Settings", "restrict_amounts_in_report_to_role")
 	show_amounts = show_amounts_role and show_amounts_role in frappe.get_roles()
 	if not show_amounts:
-		columns = filter(lambda d: not d.get('restricted'), columns)
+		columns = list(filter(lambda d: not d.get('restricted'), columns))
 		for c in columns:
 			if c.get('editable'):
 				del c['editable']
