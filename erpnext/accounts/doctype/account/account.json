@@ -1,5 +1,4 @@
 {
- "actions": [],
  "allow_copy": 1,
  "allow_import": 1,
  "creation": "2013-01-30 12:49:46",
@@ -198,8 +197,7 @@
  "icon": "fa fa-money",
  "idx": 1,
  "is_tree": 1,
- "links": [],
- "modified": "2020-03-18 18:26:03.992861",
+ "modified": "2020-06-19 12:12:58.527466",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Account",

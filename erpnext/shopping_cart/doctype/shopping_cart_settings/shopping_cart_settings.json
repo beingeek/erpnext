@@ -55,10 +55,6 @@
    "label": "Show Price"
   },
   {
-   "fieldname": "column_break_5",
-   "fieldtype": "Column Break"
-  },
-  {
    "default": "0",
    "fieldname": "show_stock_availability",
    "fieldtype": "Check",
@@ -66,10 +62,34 @@
   },
   {
    "default": "0",
+   "fieldname": "show_configure_button",
+   "fieldtype": "Check",
+   "label": "Show Configure Button"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_contact_us_button",
+   "fieldtype": "Check",
+   "label": "Show Contact Us Button"
+  },
+  {
+   "default": "0",
    "depends_on": "show_stock_availability",
    "fieldname": "show_quantity_in_website",
    "fieldtype": "Check",
    "label": "Show Stock Quantity"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_apply_coupon_code_in_website",
+   "fieldtype": "Check",
+   "label": "Show Apply Coupon Code"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_items_not_in_stock",
+   "fieldtype": "Check",
+   "label": "Allow items not in stock to be added to cart"
   },
   {
    "fieldname": "section_break_2",
@@ -141,34 +161,14 @@
    "options": "Payment Gateway Account"
   },
   {
-   "default": "0",
-   "fieldname": "show_configure_button",
-   "fieldtype": "Check",
-   "label": "Show Configure Button"
-  },
-  {
-   "default": "0",
-   "fieldname": "show_contact_us_button",
-   "fieldtype": "Check",
-   "label": "Show Contact Us Button"
-  },
-  {
-   "default": "0",
-   "fieldname": "show_apply_coupon_code_in_website",
-   "fieldtype": "Check",
-   "label": "Show Apply Coupon Code"
-  },
-  {
-   "default": "0",
-   "fieldname": "allow_items_not_in_stock",
-   "fieldtype": "Check",
-   "label": "Allow items not in stock to be added to cart"
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-shopping-cart",
  "idx": 1,
  "issingle": 1,
- "modified": "2020-06-16 05:02:00.859760",
+ "modified": "2020-06-19 12:13:16.074985",
  "modified_by": "Administrator",
  "module": "Shopping Cart",
  "name": "Shopping Cart Settings",

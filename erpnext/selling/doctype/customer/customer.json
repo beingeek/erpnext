@@ -1,5 +1,4 @@
 {
- "actions": [],
  "allow_events_in_timeline": 1,
  "allow_import": 1,
  "allow_rename": 1,
@@ -259,12 +258,6 @@
    "options": "Language"
   },
   {
-   "fieldname": "invoice_print_format",
-   "fieldtype": "Link",
-   "label": "Invoice Print Format",
-   "options": "Print Format"
-  },
-  {
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "address_contacts",
    "fieldtype": "Section Break",
@@ -487,13 +480,18 @@
    "fieldname": "dn_required",
    "fieldtype": "Check",
    "label": "Allow Sales Invoice Creation Without Delivery Note"
+  },
+  {
+   "fieldname": "invoice_print_format",
+   "fieldtype": "Link",
+   "label": "Invoice Print Format",
+   "options": "Print Format"
   }
  ],
  "icon": "fa fa-user",
  "idx": 363,
  "image_field": "image",
- "links": [],
- "modified": "2020-03-17 11:03:42.706907",
+ "modified": "2020-06-19 12:13:11.842596",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

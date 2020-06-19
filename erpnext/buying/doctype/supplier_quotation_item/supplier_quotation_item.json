@@ -107,19 +107,6 @@
   {
    "bold": 1,
    "columns": 1,
-   "fieldname": "qty",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Quantity",
-   "oldfieldname": "qty",
-   "oldfieldtype": "Currency",
-   "print_width": "60px",
-   "reqd": 1,
-   "width": "60px"
-  },
-  {
-   "bold": 1,
-   "columns": 1,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -131,94 +118,11 @@
    "search_index": 1
   },
   {
-   "fieldname": "col_break_3",
-   "fieldtype": "Column Break"
-  },
-  {
-   "columns": 1,
-   "fieldname": "uom",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "UOM",
-   "options": "UOM",
-   "print_hide": 1,
-   "print_width": "100px",
-   "reqd": 1,
-   "width": "100px"
-  },
-  {
    "fieldname": "supplier_part_no",
    "fieldtype": "Data",
    "hidden": 1,
    "label": "Supplier Part Number",
    "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "lead_time_days",
-   "fieldtype": "Int",
-   "label": "Lead Time in days"
-  },
-  {
-   "fieldname": "column_break_3",
-   "fieldtype": "Column Break"
-  },
-  {
-   "bold": 1,
-   "columns": 1,
-   "fieldname": "rate",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Unit Rate",
-   "oldfieldname": "import_rate",
-   "oldfieldtype": "Currency",
-   "options": "currency"
-  },
-  {
-   "fieldname": "base_rate",
-   "fieldtype": "Currency",
-   "label": "Unit Rate (Company Currency)",
-   "oldfieldname": "purchase_rate",
-   "oldfieldtype": "Currency",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "print_width": "100px",
-   "read_only": 1,
-   "reqd": 1,
-   "width": "100px"
-  },
-  {
-   "fieldname": "tax_exclusive_rate",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Rate",
-   "options": "currency",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "base_tax_exclusive_rate",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Rate (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_11",
-   "fieldtype": "Column Break"
-  },
-  {
-   "columns": 1,
-   "fieldname": "alt_uom_rate",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Rate/Contents",
-   "options": "currency"
-  },
-  {
-   "fieldname": "base_alt_uom_rate",
-   "fieldtype": "Currency",
-   "label": "Rate/Contents (Company Currency)",
-   "options": "Company:company:default_currency",
    "read_only": 1
   },
   {
@@ -232,6 +136,15 @@
    "oldfieldtype": "Data",
    "print_hide": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lead_time_days",
+   "fieldtype": "Int",
+   "label": "Lead Time in days"
   },
   {
    "collapsible": 1,
@@ -272,6 +185,19 @@
    "label": "Quantity and Rate"
   },
   {
+   "bold": 1,
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Quantity",
+   "oldfieldname": "qty",
+   "oldfieldtype": "Currency",
+   "print_width": "60px",
+   "reqd": 1,
+   "width": "60px"
+  },
+  {
    "fieldname": "stock_uom",
    "fieldtype": "Link",
    "label": "Stock UOM",
@@ -279,6 +205,43 @@
    "print_hide": 1,
    "read_only": 1,
    "reqd": 1
+  },
+  {
+   "fieldname": "price_list_rate",
+   "fieldtype": "Currency",
+   "label": "Price List Rate",
+   "options": "currency",
+   "print_hide": 1
+  },
+  {
+   "depends_on": "price_list_rate",
+   "fieldname": "discount_percentage",
+   "fieldtype": "Percent",
+   "label": "Discount on Price List Rate (%)"
+  },
+  {
+   "depends_on": "discount_percentage",
+   "fieldname": "discount_amount",
+   "fieldtype": "Currency",
+   "label": "Discount Amount",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "UOM",
+   "print_hide": 1,
+   "print_width": "100px",
+   "reqd": 1,
+   "width": "100px"
   },
   {
    "fieldname": "conversion_factor",
@@ -298,58 +261,121 @@
    "read_only": 1
   },
   {
-   "fieldname": "col_break2",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "alt_uom",
-   "fieldtype": "Link",
-   "label": "Contents UOM",
-   "options": "UOM",
+   "fieldname": "base_price_list_rate",
+   "fieldtype": "Currency",
+   "label": "Price List Rate (Company Currency)",
+   "options": "Company:company:default_currency",
    "print_hide": 1,
    "read_only": 1
   },
   {
-   "fieldname": "stock_alt_uom_size",
-   "fieldtype": "Float",
-   "hidden": 1,
-   "label": "Per Stock Unit",
-   "precision": "9",
-   "read_only": 1
+   "fieldname": "sec_break1",
+   "fieldtype": "Section Break"
   },
   {
-   "depends_on": "alt_uom",
-   "fieldname": "alt_uom_size",
-   "fieldtype": "Float",
-   "label": "Per Unit",
-   "print_hide": 1
+   "bold": 1,
+   "columns": 1,
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Unit Rate",
+   "oldfieldname": "import_rate",
+   "oldfieldtype": "Currency",
+   "options": "currency"
   },
   {
    "columns": 1,
-   "depends_on": "alt_uom",
-   "fieldname": "alt_uom_qty",
-   "fieldtype": "Float",
+   "fieldname": "amount",
+   "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Contents Qty",
-   "print_hide": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "alt_uom_qty_editable",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Allow Changing Contents Qty",
+   "label": "Amount",
+   "oldfieldname": "import_amount",
+   "oldfieldtype": "Currency",
+   "options": "currency",
    "read_only": 1
   },
   {
-   "fieldname": "col_break_add_uom",
+   "fieldname": "col_break3",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "weight_uom",
-   "fieldtype": "Link",
-   "label": "Gross Weight UOM",
-   "options": "UOM",
+   "fieldname": "base_rate",
+   "fieldtype": "Currency",
+   "label": "Unit Rate (Company Currency)",
+   "oldfieldname": "purchase_rate",
+   "oldfieldtype": "Currency",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "print_width": "100px",
+   "read_only": 1,
+   "reqd": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "base_amount",
+   "fieldtype": "Currency",
+   "label": "Amount (Company Currency)",
+   "oldfieldname": "amount",
+   "oldfieldtype": "Currency",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "pricing_rules",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Pricing Rules",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_free_item",
+   "fieldtype": "Check",
+   "label": "Is Free Item",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_24",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "net_rate",
+   "fieldtype": "Currency",
+   "label": "Net Rate",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "net_amount",
+   "fieldtype": "Currency",
+   "label": "Net Amount",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_27",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "base_net_rate",
+   "fieldtype": "Currency",
+   "label": "Net Rate (Company Currency)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_net_amount",
+   "fieldtype": "Currency",
+   "label": "Net Amount (Company Currency)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
    "read_only": 1
   },
   {
@@ -365,295 +391,11 @@
    "read_only": 1
   },
   {
-   "fieldname": "total_weight_kg",
-   "fieldtype": "Float",
-   "label": "Gross Weight (Kg)",
+   "fieldname": "weight_uom",
+   "fieldtype": "Link",
+   "label": "Gross Weight UOM",
+   "options": "UOM",
    "read_only": 1
-  },
-  {
-   "fieldname": "column_break_36",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "qty_per_pallet",
-   "fieldtype": "Float",
-   "label": "Units/Pallet As Per Stock UOM"
-  },
-  {
-   "fieldname": "pallets",
-   "fieldtype": "Float",
-   "label": "Pallets",
-   "read_only": 1
-  },
-  {
-   "fieldname": "stock_alt_uom_size_std",
-   "fieldtype": "Float",
-   "hidden": 1,
-   "label": "Per Stock Unit (Standard)",
-   "precision": "9",
-   "read_only": 1
-  },
-  {
-   "depends_on": "alt_uom",
-   "fieldname": "alt_uom_size_std",
-   "fieldtype": "Float",
-   "label": "Per Unit (Standard)",
-   "read_only": 1
-  },
-  {
-   "fieldname": "volume_section",
-   "fieldtype": "Section Break",
-   "label": "Volume"
-  },
-  {
-   "fieldname": "volume_per_unit_cuft",
-   "fieldtype": "Float",
-   "label": "Volume Per Unit (Cubic Feet)",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_43",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "volume_cuft",
-   "fieldtype": "Float",
-   "label": "Volume",
-   "read_only": 1
-  },
-  {
-   "fieldname": "sec_break_pl_rate",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "price_list_rate",
-   "fieldtype": "Currency",
-   "label": "Price List Rate",
-   "options": "currency",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "base_price_list_rate",
-   "fieldtype": "Currency",
-   "label": "Price List Rate (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "tax_exclusive_price_list_rate",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Price List Rate",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "base_tax_exclusive_price_list_rate",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Price List Rate (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "col_break_pl_rate",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "price_list_rate",
-   "fieldname": "discount_percentage",
-   "fieldtype": "Percent",
-   "label": "Discount on Price List Rate (%)"
-  },
-  {
-   "depends_on": "discount_percentage",
-   "fieldname": "discount_amount",
-   "fieldtype": "Currency",
-   "label": "Discount Amount",
-   "options": "currency",
-   "read_only": 1
-  },
-  {
-   "depends_on": "discount_percentage",
-   "fieldname": "tax_exclusive_discount_amount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Discount Amount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "sec_break_disc",
-   "fieldtype": "Section Break"
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "sec_before_discount",
-   "fieldtype": "Section Break",
-   "label": "Amount Before Discount"
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "amount_before_discount",
-   "fieldtype": "Currency",
-   "label": "Amount Before Discount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "tax_exclusive_amount_before_discount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Amount Before Discount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "total_discount",
-   "fieldtype": "Currency",
-   "label": "Total Discount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "tax_exclusive_total_discount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Total Discount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "col_break_before_discount",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "base_amount_before_discount",
-   "fieldtype": "Currency",
-   "label": "Amount Before Discount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "base_tax_exclusive_amount_before_discount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Amount before Discount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "base_total_discount",
-   "fieldtype": "Currency",
-   "label": "Total Discount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "depends_on": "total_discount",
-   "fieldname": "base_tax_exclusive_total_discount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Total Discount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "sec_break1",
-   "fieldtype": "Section Break"
-  },
-  {
-   "columns": 1,
-   "fieldname": "amount",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Amount",
-   "oldfieldname": "import_amount",
-   "oldfieldtype": "Currency",
-   "options": "currency",
-   "read_only": 1
-  },
-  {
-   "fieldname": "base_amount",
-   "fieldtype": "Currency",
-   "label": "Amount (Company Currency)",
-   "oldfieldname": "amount",
-   "oldfieldtype": "Currency",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "tax_exclusive_amount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Amount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "base_tax_exclusive_amount",
-   "fieldtype": "Currency",
-   "label": "Tax Exclusive Amount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "col_break3",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "net_rate",
-   "fieldtype": "Currency",
-   "label": "Net Rate",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "base_net_rate",
-   "fieldtype": "Currency",
-   "label": "Net Rate (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_27",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "net_amount",
-   "fieldtype": "Currency",
-   "label": "Net Amount",
-   "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "base_net_amount",
-   "fieldtype": "Currency",
-   "label": "Net Amount (Company Currency)",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "section_break_24",
-   "fieldtype": "Section Break"
   },
   {
    "fieldname": "warehouse_and_reference",
@@ -798,36 +540,294 @@
    "print_hide": 1
   },
   {
+   "fieldname": "manufacturer",
+   "fieldtype": "Link",
+   "label": "Manufacturer",
+   "options": "Manufacturer"
+  },
+  {
    "fieldname": "manufacturer_part_no",
    "fieldtype": "Data",
    "label": "Manufacturer Part Number"
   },
   {
-   "fieldname": "pricing_rules",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "label": "Pricing Rules",
+   "fieldname": "col_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tax_exclusive_rate",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Rate",
+   "options": "currency",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "base_tax_exclusive_rate",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Rate (Company Currency)",
+   "options": "Company:company:default_currency",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_11",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "alt_uom_rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rate/Contents",
+   "options": "currency"
+  },
+  {
+   "fieldname": "base_alt_uom_rate",
+   "fieldtype": "Currency",
+   "label": "Rate/Contents (Company Currency)",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "alt_uom",
+   "fieldtype": "Link",
+   "label": "Contents UOM",
+   "options": "UOM",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "stock_alt_uom_size",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Per Stock Unit",
+   "precision": "9",
+   "read_only": 1
+  },
+  {
+   "depends_on": "alt_uom",
+   "fieldname": "alt_uom_size",
+   "fieldtype": "Float",
+   "label": "Per Unit",
+   "print_hide": 1
+  },
+  {
+   "columns": 1,
+   "depends_on": "alt_uom",
+   "fieldname": "alt_uom_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Contents Qty",
+   "print_hide": 1
   },
   {
    "default": "0",
-   "fieldname": "is_free_item",
+   "fieldname": "alt_uom_qty_editable",
    "fieldtype": "Check",
-   "label": "Is Free Item",
+   "hidden": 1,
+   "label": "Allow Changing Contents Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_add_uom",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_weight_kg",
+   "fieldtype": "Float",
+   "label": "Gross Weight (Kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_36",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "qty_per_pallet",
+   "fieldtype": "Float",
+   "label": "Units/Pallet As Per Stock UOM"
+  },
+  {
+   "fieldname": "pallets",
+   "fieldtype": "Float",
+   "label": "Pallets",
+   "read_only": 1
+  },
+  {
+   "fieldname": "stock_alt_uom_size_std",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Per Stock Unit (Standard)",
+   "precision": "9",
+   "read_only": 1
+  },
+  {
+   "depends_on": "alt_uom",
+   "fieldname": "alt_uom_size_std",
+   "fieldtype": "Float",
+   "label": "Per Unit (Standard)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "volume_section",
+   "fieldtype": "Section Break",
+   "label": "Volume"
+  },
+  {
+   "fieldname": "volume_per_unit_cuft",
+   "fieldtype": "Float",
+   "label": "Volume Per Unit (Cubic Feet)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_43",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "volume_cuft",
+   "fieldtype": "Float",
+   "label": "Volume",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_break_pl_rate",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "tax_exclusive_price_list_rate",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Price List Rate",
+   "options": "currency",
    "print_hide": 1,
    "read_only": 1
   },
   {
-   "fieldname": "manufacturer",
-   "fieldtype": "Link",
-   "label": "Manufacturer",
-   "options": "Manufacturer"
+   "fieldname": "base_tax_exclusive_price_list_rate",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Price List Rate (Company Currency)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_pl_rate",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "discount_percentage",
+   "fieldname": "tax_exclusive_discount_amount",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Discount Amount",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_break_disc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sec_before_discount",
+   "fieldtype": "Section Break",
+   "label": "Amount Before Discount"
+  },
+  {
+   "depends_on": "total_discount",
+   "fieldname": "amount_before_discount",
+   "fieldtype": "Currency",
+   "label": "Amount Before Discount",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "total_discount",
+   "fieldname": "tax_exclusive_amount_before_discount",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Amount Before Discount",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "total_discount",
+   "fieldname": "total_discount",
+   "fieldtype": "Currency",
+   "label": "Total Discount",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "total_discount",
+   "fieldname": "tax_exclusive_total_discount",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Total Discount",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_before_discount",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "total_discount",
+   "fieldname": "base_amount_before_discount",
+   "fieldtype": "Currency",
+   "label": "Amount Before Discount (Company Currency)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "total_discount",
+   "fieldname": "base_tax_exclusive_amount_before_discount",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Amount before Discount (Company Currency)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "total_discount",
+   "fieldname": "base_total_discount",
+   "fieldtype": "Currency",
+   "label": "Total Discount (Company Currency)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "total_discount",
+   "fieldname": "base_tax_exclusive_total_discount",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Total Discount (Company Currency)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "tax_exclusive_amount",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Amount",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_tax_exclusive_amount",
+   "fieldtype": "Currency",
+   "label": "Tax Exclusive Amount (Company Currency)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-19 06:16:36.252800",
+ "modified": "2020-06-19 12:13:08.982033",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Supplier Quotation Item",

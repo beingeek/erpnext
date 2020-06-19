@@ -1,5 +1,4 @@
 {
- "actions": [],
  "allow_copy": 1,
  "allow_import": 1,
  "creation": "2013-01-23 19:57:17",
@@ -124,8 +123,7 @@
  "icon": "fa fa-money",
  "idx": 1,
  "is_tree": 1,
- "links": [],
- "modified": "2020-04-29 16:09:30.025214",
+ "modified": "2020-06-19 12:12:59.350397",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Cost Center",

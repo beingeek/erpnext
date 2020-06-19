@@ -174,23 +174,6 @@
    "search_index": 1
   },
   {
-   "fieldname": "reference_account",
-   "fieldtype": "Link",
-   "hidden": 1,
-   "in_filter": 1,
-   "label": "Reference Expense Account",
-   "options": "Account",
-   "print_hide": 1,
-   "search_index": 1
-  },
-  {
-   "depends_on": "eval:doc.voucher_type == \"Returned Cheque\"",
-   "fieldname": "return_against_pe",
-   "fieldtype": "Link",
-   "label": "Returned Against Payment Entry",
-   "options": "Payment Entry"
-  },
-  {
    "fieldname": "user_remark",
    "fieldtype": "Small Text",
    "label": "User Remark",
@@ -503,12 +486,29 @@
    "options": "Journal Entry",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "reference_account",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "in_filter": 1,
+   "label": "Reference Expense Account",
+   "options": "Account",
+   "print_hide": 1,
+   "search_index": 1
+  },
+  {
+   "depends_on": "eval:doc.voucher_type == \"Returned Cheque\"",
+   "fieldname": "return_against_pe",
+   "fieldtype": "Link",
+   "label": "Returned Against Payment Entry",
+   "options": "Payment Entry"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 176,
  "is_submittable": 1,
- "modified": "2020-01-16 13:05:30.634226",
+ "modified": "2020-06-19 12:12:59.969723",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Journal Entry",

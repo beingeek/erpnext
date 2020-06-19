@@ -4,6 +4,7 @@
  "description": "This tool helps you to update or fix the quantity and valuation of stock in the system. It is typically used to synchronise the system values and what actually exists in your warehouses.",
  "doctype": "DocType",
  "document_type": "Document",
+ "engine": "InnoDB",
  "field_order": [
   "naming_series",
   "company",
@@ -93,55 +94,6 @@
    "label": "Get Items From"
   },
   {
-   "fieldname": "default_warehouse",
-   "fieldtype": "Link",
-   "label": "Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "default": "1",
-   "fieldname": "get_batches",
-   "fieldtype": "Check",
-   "label": "Get Batches"
-  },
-  {
-   "fieldname": "get_items",
-   "fieldtype": "Button",
-   "label": "Get Items"
-  },
-  {
-   "fieldname": "column_break_11",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:!doc.selected_item_code",
-   "fieldname": "selected_item_group",
-   "fieldtype": "Link",
-   "label": "Item Group",
-   "options": "Item Group"
-  },
-  {
-   "fieldname": "selected_item_code",
-   "fieldtype": "Link",
-   "label": "Item Code",
-   "options": "Item"
-  },
-  {
-   "fieldname": "cb_23",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "Item Group",
-   "fieldname": "sort_by",
-   "fieldtype": "Select",
-   "label": "Sort By",
-   "options": "Item Code\nItem Group\nStock Qty"
-  },
-  {
-   "fieldname": "section_break_18",
-   "fieldtype": "Section Break"
-  },
-  {
    "allow_bulk_edit": 1,
    "fieldname": "items",
    "fieldtype": "Table",
@@ -196,13 +148,62 @@
    "options": "Stock Reconciliation",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "default": "1",
+   "fieldname": "get_batches",
+   "fieldtype": "Check",
+   "label": "Get Batches"
+  },
+  {
+   "fieldname": "get_items",
+   "fieldtype": "Button",
+   "label": "Get Items"
+  },
+  {
+   "fieldname": "column_break_11",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:!doc.selected_item_code",
+   "fieldname": "selected_item_group",
+   "fieldtype": "Link",
+   "label": "Item Group",
+   "options": "Item Group"
+  },
+  {
+   "fieldname": "selected_item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "cb_23",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Item Group",
+   "fieldname": "sort_by",
+   "fieldtype": "Select",
+   "label": "Sort By",
+   "options": "Item Code\nItem Group\nStock Qty"
+  },
+  {
+   "fieldname": "section_break_18",
+   "fieldtype": "Section Break"
   }
  ],
  "icon": "fa fa-upload-alt",
  "idx": 1,
  "is_submittable": 1,
  "max_attachments": 1,
- "modified": "2020-06-04 06:53:23.779501",
+ "modified": "2020-06-19 12:13:25.794821",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Reconciliation",

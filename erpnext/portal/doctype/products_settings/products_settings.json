@@ -31,26 +31,9 @@
   },
   {
    "default": "0",
-   "fieldname": "products_as_list",
-   "fieldtype": "Check",
-   "label": "Show Products as a List"
-  },
-  {
-   "default": "0",
    "fieldname": "show_availability_status",
    "fieldtype": "Check",
    "label": "Show Availability Status"
-  },
-  {
-   "fieldname": "item_groups_allowed_in_product_list_section",
-   "fieldtype": "Section Break",
-   "label": "Item Groups Allowed in Product List"
-  },
-  {
-   "fieldname": "item_groups_allowed",
-   "fieldtype": "Table",
-   "label": "Item Groups Allowed in Product List",
-   "options": "Customer Item Group"
   },
   {
    "fieldname": "section_break_5",
@@ -93,10 +76,27 @@
    "fieldname": "hide_variants",
    "fieldtype": "Check",
    "label": "Hide Variants"
+  },
+  {
+   "default": "0",
+   "fieldname": "products_as_list",
+   "fieldtype": "Check",
+   "label": "Show Products as a List"
+  },
+  {
+   "fieldname": "item_groups_allowed_in_product_list_section",
+   "fieldtype": "Section Break",
+   "label": "Item Groups Allowed in Product List"
+  },
+  {
+   "fieldname": "item_groups_allowed",
+   "fieldtype": "Table",
+   "label": "Item Groups Allowed in Product List",
+   "options": "Customer Item Group"
   }
  ],
  "issingle": 1,
- "modified": "2020-06-16 05:00:34.058232",
+ "modified": "2020-06-19 12:13:11.670826",
  "modified_by": "Administrator",
  "module": "Portal",
  "name": "Products Settings",

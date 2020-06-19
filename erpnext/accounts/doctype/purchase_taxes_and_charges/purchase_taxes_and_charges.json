@@ -151,15 +151,6 @@
    "read_only": 1
   },
   {
-   "columns": 2,
-   "fieldname": "displayed_total",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Total",
-   "options": "currency",
-   "read_only": 1
-  },
-  {
    "depends_on": "eval:doc.total != doc.displayed_total",
    "fieldname": "total",
    "fieldtype": "Currency",
@@ -181,22 +172,6 @@
    "print_hide": 1
   },
   {
-   "depends_on": "eval:parent.discount_amount",
-   "fieldname": "base_tax_amount_after_discount_amount",
-   "fieldtype": "Currency",
-   "label": "Tax Amount After Discount Amount",
-   "options": "Company:company:default_currency",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "base_displayed_total",
-   "fieldtype": "Currency",
-   "label": "Total (Company Currency)",
-   "options": "Company:company:default_currency",
-   "read_only": 1
-  },
-  {
    "depends_on": "eval:doc.total != doc.displayed_total",
    "fieldname": "base_total",
    "fieldtype": "Currency",
@@ -204,6 +179,15 @@
    "label": "Net Total (Company Currency)",
    "options": "Company:company:default_currency",
    "print_hide": 1
+  },
+  {
+   "depends_on": "eval:parent.discount_amount",
+   "fieldname": "base_tax_amount_after_discount_amount",
+   "fieldtype": "Currency",
+   "label": "Tax Amount After Discount Amount",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
   },
   {
    "fieldname": "item_wise_tax_detail",
@@ -232,15 +216,33 @@
   {
    "fieldname": "dimension_col_break",
    "fieldtype": "Column Break"
+  },
+  {
+   "columns": 2,
+   "fieldname": "displayed_total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_displayed_total",
+   "fieldtype": "Currency",
+   "label": "Total (Company Currency)",
+   "options": "Company:company:default_currency",
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2019-05-25 23:08:38.281025",
+ "modified": "2020-06-19 12:13:03.691469",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Taxes and Charges",
  "owner": "Administrator",
  "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
  "track_changes": 1
 }

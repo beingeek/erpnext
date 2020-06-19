@@ -65,6 +65,16 @@
    "label": "Selling"
   },
   {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "countries",
+   "fieldtype": "Table",
+   "label": "Applicable for Countries",
+   "options": "Price List Country"
+  },
+  {
    "default": "0",
    "fieldname": "prices_independent_of_base_price",
    "fieldtype": "Check",
@@ -81,22 +91,12 @@
    "fieldname": "price_not_uom_dependant",
    "fieldtype": "Check",
    "label": "Price Not UOM Dependant"
-  },
-  {
-   "fieldname": "column_break_3",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "countries",
-   "fieldtype": "Table",
-   "label": "Applicable for Countries",
-   "options": "Price List Country"
   }
  ],
  "icon": "fa fa-tags",
  "idx": 1,
  "max_attachments": 1,
- "modified": "2020-06-04 06:53:34.824046",
+ "modified": "2020-06-19 12:13:19.296668",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Price List",
@@ -139,5 +139,6 @@
  ],
  "search_fields": "currency",
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "ASC"
 }

@@ -175,30 +175,6 @@
    "read_only": 1
   },
   {
-   "default": "0",
-   "fieldname": "is_delivery",
-   "fieldtype": "Check",
-   "label": "Delivery"
-  },
-  {
-   "default": "0",
-   "fieldname": "is_packing",
-   "fieldtype": "Check",
-   "label": "Packing"
-  },
-  {
-   "default": "0",
-   "fieldname": "is_sales",
-   "fieldtype": "Check",
-   "label": "Sales"
-  },
-  {
-   "default": "0",
-   "fieldname": "is_warehouse",
-   "fieldtype": "Check",
-   "label": "Warehouse"
-  },
-  {
    "fetch_from": "user_id.user_image",
    "fetch_if_empty": 1,
    "fieldname": "image",
@@ -805,12 +781,36 @@
    "fieldtype": "Link",
    "label": "Leave Approver",
    "options": "User"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_delivery",
+   "fieldtype": "Check",
+   "label": "Delivery"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_packing",
+   "fieldtype": "Check",
+   "label": "Packing"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_sales",
+   "fieldtype": "Check",
+   "label": "Sales"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_warehouse",
+   "fieldtype": "Check",
+   "label": "Warehouse"
   }
  ],
  "icon": "fa fa-user",
  "idx": 24,
  "image_field": "image",
- "modified": "2020-01-09 04:23:55.611366",
+ "modified": "2020-06-19 12:13:09.564100",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Employee",

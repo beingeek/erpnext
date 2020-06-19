@@ -1,5 +1,4 @@
 {
- "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:company_name",
@@ -170,11 +169,6 @@
    "options": "Company"
   },
   {
-   "fieldname": "sb_about",
-   "fieldtype": "Section Break",
-   "label": "About the Company"
-  },
-  {
    "fieldname": "company_logo",
    "fieldtype": "Attach Image",
    "label": "Company Logo"
@@ -252,12 +246,6 @@
    "fieldname": "standard_working_hours",
    "fieldtype": "Float",
    "label": "Standard Working Hours"
-  },
-  {
-   "fieldname": "default_terms",
-   "fieldtype": "Link",
-   "label": "Default Terms",
-   "options": "Terms and Conditions"
   },
   {
    "fieldname": "default_warehouse_for_sales_return",
@@ -474,27 +462,6 @@
    "options": "Account"
   },
   {
-   "depends_on": "eval:!doc.__islocal",
-   "fieldname": "default_letter_of_credit_account",
-   "fieldtype": "Link",
-   "ignore_user_permissions": 1,
-   "label": "Default Letter of Credit Account",
-   "no_copy": 1,
-   "options": "Account"
-  },
-  {
-   "fieldname": "delivery_charges_account",
-   "fieldtype": "Link",
-   "label": "Delivery Charges Account",
-   "options": "Account"
-  },
-  {
-   "fieldname": "returned_cheque_charges_account",
-   "fieldtype": "Link",
-   "label": "Returned Cheque Charges Account",
-   "options": "Account"
-  },
-  {
    "fieldname": "section_break_22",
    "fieldtype": "Section Break"
   },
@@ -553,12 +520,6 @@
    "options": "Account"
   },
   {
-   "fieldname": "purchase_stock_adjustment_account",
-   "fieldtype": "Link",
-   "label": "Purchase Stock Adjustment Account",
-   "options": "Account"
-  },
-  {
    "fieldname": "column_break_32",
    "fieldtype": "Column Break"
   },
@@ -576,12 +537,6 @@
    "ignore_user_permissions": 1,
    "label": "Expenses Included In Valuation",
    "no_copy": 1,
-   "options": "Account"
-  },
-  {
-   "fieldname": "stock_entry_additional_cost_account",
-   "fieldtype": "Link",
-   "label": "Default Stock Entry Additional Cost Account",
    "options": "Account"
   },
   {
@@ -771,14 +726,57 @@
    "fieldtype": "Link",
    "label": "Default Buying Terms",
    "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "sb_about",
+   "fieldtype": "Section Break",
+   "label": "About the Company"
+  },
+  {
+   "fieldname": "default_terms",
+   "fieldtype": "Link",
+   "label": "Default Terms",
+   "options": "Terms and Conditions"
+  },
+  {
+   "depends_on": "eval:!doc.__islocal",
+   "fieldname": "default_letter_of_credit_account",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Default Letter of Credit Account",
+   "no_copy": 1,
+   "options": "Account"
+  },
+  {
+   "fieldname": "delivery_charges_account",
+   "fieldtype": "Link",
+   "label": "Delivery Charges Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "returned_cheque_charges_account",
+   "fieldtype": "Link",
+   "label": "Returned Cheque Charges Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "purchase_stock_adjustment_account",
+   "fieldtype": "Link",
+   "label": "Purchase Stock Adjustment Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "stock_entry_additional_cost_account",
+   "fieldtype": "Link",
+   "label": "Default Stock Entry Additional Cost Account",
+   "options": "Account"
   }
  ],
  "icon": "fa fa-building",
  "idx": 1,
  "image_field": "company_logo",
  "is_tree": 1,
- "links": [],
- "modified": "2020-03-22 18:26:03.145312",
+ "modified": "2020-06-19 12:13:14.921224",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Company",

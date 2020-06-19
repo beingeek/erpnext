@@ -38,22 +38,22 @@
    "options": "Mode of Payment Account"
   },
   {
-   "fieldname": "disable_past_entry",
-   "fieldtype": "Select",
-   "label": "Disable Past Entry",
-   "options": "\nFor Receive\nFor Pay\nFor All"
-  },
-  {
    "default": "1",
    "fieldname": "enabled",
    "fieldtype": "Check",
    "label": "Enabled"
+  },
+  {
+   "fieldname": "disable_past_entry",
+   "fieldtype": "Select",
+   "label": "Disable Past Entry",
+   "options": "\nFor Receive\nFor Pay\nFor All"
   }
  ],
  "icon": "fa fa-credit-card",
  "idx": 1,
- "modified": "2019-08-14 14:58:42.079115",
- "modified_by": "sammish.thundiyil@gmail.com",
+ "modified": "2020-06-19 12:13:00.628656",
+ "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Mode of Payment",
  "owner": "harshada@webnotestech.com",

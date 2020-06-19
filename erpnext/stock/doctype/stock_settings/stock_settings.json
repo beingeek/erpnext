@@ -88,27 +88,17 @@
    "options": "FIFO\nMoving Average"
   },
   {
-   "fieldname": "batch_wise_valuation",
-   "fieldtype": "Select",
-   "label": "Use Batch Costing By Default",
-   "options": "\nNo\nYes"
-  },
-  {
-   "fieldname": "empty_pallet_weight",
-   "fieldtype": "Float",
-   "label": "Empty Pallet Weight (lbs)"
-  },
-  {
    "description": "Percentage you are allowed to receive or deliver more against the quantity ordered. For example: If you have ordered 100 units. and your Allowance is 10% then you are allowed to receive 110 units.",
-   "fieldname": "tolerance",
+   "fieldname": "over_delivery_receipt_allowance",
    "fieldtype": "Float",
-   "label": "Limit Percent"
+   "label": "Over Delivery/Receipt Allowance (%)"
   },
   {
-   "fieldname": "restrict_amounts_in_report_to_role",
-   "fieldtype": "Link",
-   "label": "Restrict Valuation In Report To Role",
-   "options": "Role"
+   "default": "Stop",
+   "fieldname": "action_if_quality_inspection_is_not_submitted",
+   "fieldtype": "Select",
+   "label": "Action if Quality inspection is not submitted",
+   "options": "Stop\nWarn"
   },
   {
    "default": "1",
@@ -153,38 +143,6 @@
    "fieldname": "set_qty_in_transactions_based_on_serial_no_input",
    "fieldtype": "Check",
    "label": "Set Qty in Transactions based on Serial No Input"
-  },
-  {
-   "fieldname": "sec_price_list_note",
-   "fieldtype": "Section Break",
-   "label": "Price List Note"
-  },
-  {
-   "fieldname": "price_list_note",
-   "fieldtype": "Small Text",
-   "label": "Price List Note"
-  },
-  {
-   "fieldname": "price_list_item_groups_section",
-   "fieldtype": "Section Break",
-   "label": "Item Groups Order In Price List"
-  },
-  {
-   "fieldname": "price_list_order",
-   "fieldtype": "Table",
-   "label": "Item Groups Order",
-   "options": "Price List Item Group"
-  },
-  {
-   "fieldname": "items_groups_excluded_from_price_list_section",
-   "fieldtype": "Section Break",
-   "label": "Items Groups Excluded From Price List"
-  },
-  {
-   "fieldname": "price_list_excluded",
-   "fieldtype": "Table",
-   "label": "Item Groups Excluded",
-   "options": "Price List Item Group"
   },
   {
    "fieldname": "auto_material_request",
@@ -243,23 +201,65 @@
    "label": "Naming Series Prefix"
   },
   {
-   "description": "Percentage you are allowed to receive or deliver more against the quantity ordered. For example: If you have ordered 100 units. and your Allowance is 10% then you are allowed to receive 110 units.",
-   "fieldname": "over_delivery_receipt_allowance",
-   "fieldtype": "Float",
-   "label": "Over Delivery/Receipt Allowance (%)"
+   "fieldname": "batch_wise_valuation",
+   "fieldtype": "Select",
+   "label": "Use Batch Costing By Default",
+   "options": "\nNo\nYes"
   },
   {
-   "default": "Stop",
-   "fieldname": "action_if_quality_inspection_is_not_submitted",
-   "fieldtype": "Select",
-   "label": "Action if Quality inspection is not submitted",
-   "options": "Stop\nWarn"
+   "fieldname": "empty_pallet_weight",
+   "fieldtype": "Float",
+   "label": "Empty Pallet Weight (lbs)"
+  },
+  {
+   "description": "Percentage you are allowed to receive or deliver more against the quantity ordered. For example: If you have ordered 100 units. and your Allowance is 10% then you are allowed to receive 110 units.",
+   "fieldname": "tolerance",
+   "fieldtype": "Float",
+   "label": "Limit Percent"
+  },
+  {
+   "fieldname": "restrict_amounts_in_report_to_role",
+   "fieldtype": "Link",
+   "label": "Restrict Valuation In Report To Role",
+   "options": "Role"
+  },
+  {
+   "fieldname": "sec_price_list_note",
+   "fieldtype": "Section Break",
+   "label": "Price List Note"
+  },
+  {
+   "fieldname": "price_list_note",
+   "fieldtype": "Small Text",
+   "label": "Price List Note"
+  },
+  {
+   "fieldname": "price_list_item_groups_section",
+   "fieldtype": "Section Break",
+   "label": "Item Groups Order In Price List"
+  },
+  {
+   "fieldname": "price_list_order",
+   "fieldtype": "Table",
+   "label": "Item Groups Order",
+   "options": "Price List Item Group"
+  },
+  {
+   "fieldname": "items_groups_excluded_from_price_list_section",
+   "fieldtype": "Section Break",
+   "label": "Items Groups Excluded From Price List"
+  },
+  {
+   "fieldname": "price_list_excluded",
+   "fieldtype": "Table",
+   "label": "Item Groups Excluded",
+   "options": "Price List Item Group"
   }
  ],
  "icon": "icon-cog",
  "idx": 1,
  "issingle": 1,
- "modified": "2020-06-16 05:06:22.315478",
+ "modified": "2020-06-19 12:13:26.388150",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Settings",

@@ -95,6 +95,11 @@
    "read_only": 1
   },
   {
+   "fieldname": "image",
+   "fieldtype": "Attach",
+   "label": "Image"
+  },
+  {
    "fieldname": "uom",
    "fieldtype": "Link",
    "label": "Item UOM",
@@ -156,12 +161,6 @@
    "fieldname": "allow_alternative_item",
    "fieldtype": "Check",
    "label": "Allow Alternative Item"
-  },
-  {
-   "default": "0",
-   "fieldname": "allow_same_item_multiple_times",
-   "fieldtype": "Check",
-   "label": "Allow Same Item Multiple Times"
   },
   {
    "allow_on_submit": 1,
@@ -250,17 +249,6 @@
    "options": "BOM Operation"
   },
   {
-   "fieldname": "additional_costs_section",
-   "fieldtype": "Section Break",
-   "label": "Additional Costs"
-  },
-  {
-   "fieldname": "additional_costs",
-   "fieldtype": "Table",
-   "label": "Additional Costs",
-   "options": "BOM Additional Cost"
-  },
-  {
    "fieldname": "materials_section",
    "fieldtype": "Section Break",
    "label": "Materials",
@@ -344,21 +332,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "total_cost_of_bom",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "total_cost",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Total Cost",
-   "options": "currency",
-   "read_only": 1
-  },
-  {
-   "fieldname": "cost_per_unit",
-   "fieldtype": "Currency",
-   "label": "Cost Per Unit",
    "options": "currency",
    "read_only": 1
   },
@@ -373,17 +350,6 @@
    "options": "Company:company:default_currency",
    "print_hide": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "base_cost_per_unit",
-   "fieldtype": "Currency",
-   "label": "Cost Per Unit (Company Currency)",
-   "options": "Company:company:default_currency",
-   "read_only": 1
-  },
-  {
-   "fieldname": "more_info_section",
-   "fieldtype": "Section Break"
   },
   {
    "fieldname": "project",
@@ -404,10 +370,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "col_break23",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "section_break_25",
    "fieldtype": "Section Break"
   },
@@ -420,17 +382,6 @@
   {
    "fieldname": "column_break_27",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "image",
-   "fieldtype": "Attach",
-   "label": "Image"
-  },
-  {
-   "fieldname": "image_view",
-   "fieldtype": "Image",
-   "label": "Image View",
-   "options": "image"
   },
   {
    "depends_on": "eval:!doc.__islocal",
@@ -517,6 +468,13 @@
   {
    "allow_on_submit": 1,
    "depends_on": "eval:doc.rm_cost_as_per=='Price List'",
+   "fieldname": "plc_conversion_rate",
+   "fieldtype": "Float",
+   "label": "Price List Exchange Rate"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.rm_cost_as_per=='Price List'",
    "fieldname": "price_list_currency",
    "fieldtype": "Link",
    "label": "Price List Currency",
@@ -525,17 +483,59 @@
    "read_only": 1
   },
   {
-   "allow_on_submit": 1,
-   "depends_on": "eval:doc.rm_cost_as_per=='Price List'",
-   "fieldname": "plc_conversion_rate",
-   "fieldtype": "Float",
-   "label": "Price List Exchange Rate"
+   "default": "0",
+   "fieldname": "allow_same_item_multiple_times",
+   "fieldtype": "Check",
+   "label": "Allow Same Item Multiple Times"
+  },
+  {
+   "fieldname": "additional_costs_section",
+   "fieldtype": "Section Break",
+   "label": "Additional Costs"
+  },
+  {
+   "fieldname": "additional_costs",
+   "fieldtype": "Table",
+   "label": "Additional Costs",
+   "options": "BOM Additional Cost"
+  },
+  {
+   "fieldname": "total_cost_of_bom",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "cost_per_unit",
+   "fieldtype": "Currency",
+   "label": "Cost Per Unit",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_cost_per_unit",
+   "fieldtype": "Currency",
+   "label": "Cost Per Unit (Company Currency)",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "more_info_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "col_break23",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "image_view",
+   "fieldtype": "Image",
+   "label": "Image View",
+   "options": "image"
   }
  ],
  "icon": "fa fa-sitemap",
  "idx": 1,
  "is_submittable": 1,
- "modified": "2020-06-16 04:59:51.622019",
+ "modified": "2020-06-19 12:13:10.225412",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "BOM",

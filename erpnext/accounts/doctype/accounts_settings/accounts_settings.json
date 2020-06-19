@@ -77,11 +77,13 @@
    "options": "Role"
   },
   {
+   "default": "0",
    "fieldname": "check_supplier_invoice_uniqueness",
    "fieldtype": "Check",
    "label": "Check Supplier Invoice Number Uniqueness"
   },
   {
+   "default": "0",
    "fieldname": "make_payment_via_journal_entry",
    "fieldtype": "Check",
    "label": "Make Payment via Journal Entry"
@@ -105,6 +107,7 @@
    "label": "Book Asset Depreciation Entry Automatically"
   },
   {
+   "default": "0",
    "fieldname": "allow_cost_center_in_entry_of_bs_account",
    "fieldtype": "Check",
    "label": "Allow Cost Center In Entry of Balance Sheet Account"
@@ -121,6 +124,7 @@
    "label": "Print Settings"
   },
   {
+   "default": "0",
    "fieldname": "show_inclusive_tax_in_print",
    "fieldtype": "Check",
    "label": "Show Inclusive Tax In Print"
@@ -130,6 +134,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "0",
    "fieldname": "show_payment_schedule_in_print",
    "fieldtype": "Check",
    "label": "Show Payment Schedule in Print"
@@ -166,6 +171,7 @@
    "label": "Use Custom Cash Flow Format"
   },
   {
+   "default": "0",
    "fieldname": "automatically_fetch_payment_terms",
    "fieldtype": "Check",
    "label": "Automatically Fetch Payment Terms"
@@ -180,7 +186,7 @@
  "icon": "icon-cog",
  "idx": 1,
  "issingle": 1,
- "modified": "2019-07-04 18:20:55.789946",
+ "modified": "2020-06-19 12:12:58.963266",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",
@@ -205,6 +211,7 @@
   }
  ],
  "quick_entry": 1,
+ "sort_field": "modified",
  "sort_order": "ASC",
  "track_changes": 1
 }

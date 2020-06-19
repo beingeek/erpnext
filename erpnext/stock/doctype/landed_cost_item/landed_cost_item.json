@@ -38,6 +38,70 @@
    "width": "100px"
   },
   {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "label": "Rate",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "oldfieldname": "amount",
+   "oldfieldtype": "Currency",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "applicable_charges",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Applicable Charges",
+   "options": "Company:company:default_currency",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "purchase_receipt_item",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Purchase Receipt Item",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "default": "0",
+   "fetch_from": "item_code.is_fixed_asset",
+   "fieldname": "is_fixed_asset",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Is Fixed Asset",
+   "read_only": 1
+  },
+  {
    "columns": 1,
    "fieldname": "item_name",
    "fieldtype": "Data",
@@ -82,24 +146,6 @@
    "search_index": 1
   },
   {
-   "fieldname": "cost_center",
-   "fieldtype": "Link",
-   "label": "Cost Center",
-   "options": "Cost Center"
-  },
-  {
-   "fieldname": "col_break2",
-   "fieldtype": "Column Break"
-  },
-  {
-   "columns": 1,
-   "fieldname": "qty",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Qty",
-   "read_only": 1
-  },
-  {
    "columns": 1,
    "fieldname": "pallets",
    "fieldtype": "Float",
@@ -119,43 +165,6 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Gross Weight"
-  },
-  {
-   "fieldname": "rate",
-   "fieldtype": "Currency",
-   "label": "Rate",
-   "options": "Company:company:default_currency",
-   "read_only": 1
-  },
-  {
-   "columns": 1,
-   "fieldname": "amount",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Amount",
-   "oldfieldname": "amount",
-   "oldfieldtype": "Currency",
-   "options": "Company:company:default_currency",
-   "read_only": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "applicable_charges",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Applicable Charges",
-   "options": "Company:company:default_currency",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "purchase_receipt_item",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Purchase Receipt Item",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
   },
   {
    "fieldname": "purchase_invoice_item",
@@ -183,20 +192,11 @@
    "print_hide": 1,
    "read_only": 1,
    "report_hide": 1
-  },
-  {
-   "default": "0",
-   "fetch_from": "item_code.is_fixed_asset",
-   "fieldname": "is_fixed_asset",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Is Fixed Asset",
-   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-16 05:17:24.905358",
+ "modified": "2020-06-19 12:13:18.551199",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Landed Cost Item",

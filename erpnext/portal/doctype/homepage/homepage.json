@@ -27,6 +27,12 @@
    "reqd": 1
   },
   {
+   "fieldname": "hero_section_based_on",
+   "fieldtype": "Select",
+   "label": "Hero Section Based On",
+   "options": "Default\nSlideshow\nHomepage Section"
+  },
+  {
    "fieldname": "title",
    "fieldtype": "Data",
    "label": "TItle"
@@ -48,31 +54,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "products_section",
-   "fieldtype": "Section Break",
-   "label": "Products"
-  },
-  {
-   "default": "/products",
-   "fieldname": "products_url",
-   "fieldtype": "Data",
-   "label": "URL for \"All Products\""
-  },
-  {
-   "description": "Products to be shown on website homepage",
-   "fieldname": "products",
-   "fieldtype": "Table",
-   "label": "Products",
-   "options": "Homepage Featured Product",
-   "width": "40px"
-  },
-  {
-   "fieldname": "hero_section_based_on",
-   "fieldtype": "Select",
-   "label": "Hero Section Based On",
-   "options": "Default\nSlideshow\nHomepage Section"
-  },
-  {
    "depends_on": "eval:doc.hero_section_based_on === 'Default'",
    "fieldname": "hero_image",
    "fieldtype": "Attach Image",
@@ -91,10 +72,29 @@
    "fieldtype": "Link",
    "label": "Homepage Section",
    "options": "Homepage Section"
+  },
+  {
+   "fieldname": "products_section",
+   "fieldtype": "Section Break",
+   "label": "Products"
+  },
+  {
+   "default": "/products",
+   "fieldname": "products_url",
+   "fieldtype": "Data",
+   "label": "URL for \"All Products\""
+  },
+  {
+   "description": "Products to be shown on website homepage",
+   "fieldname": "products",
+   "fieldtype": "Table",
+   "label": "Products",
+   "options": "Homepage Featured Product",
+   "width": "40px"
   }
  ],
  "issingle": 1,
- "modified": "2020-06-16 05:00:07.987942",
+ "modified": "2020-06-19 12:13:11.482049",
  "modified_by": "Administrator",
  "module": "Portal",
  "name": "Homepage",
