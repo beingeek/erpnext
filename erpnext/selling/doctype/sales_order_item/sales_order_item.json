@@ -279,7 +279,9 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_on_submit": 1,
    "columns": 2,
+   "depends_on": "eval: !parent.skip_delivery_note",
    "fieldname": "delivery_date",
    "fieldtype": "Date",
    "hidden": 1,
@@ -1105,7 +1107,7 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-16 05:01:27.027011",
+ "modified": "2020-05-22 12:40:01.696076",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Item",

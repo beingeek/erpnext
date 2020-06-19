@@ -438,6 +438,7 @@
    "width": "100px"
   },
   {
+   "fetch_from": "customer.tax_id",
    "fieldname": "tax_id",
    "fieldtype": "Data",
    "label": "Tax Id",
@@ -1644,7 +1645,8 @@
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-06-16 05:01:23.360242",
+ "links": [],
+ "modified": "2020-05-19 21:36:57.437325",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

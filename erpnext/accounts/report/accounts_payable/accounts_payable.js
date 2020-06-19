@@ -103,3 +103,6 @@ frappe.query_reports["Accounts Payable"] = {
 		});
 	}
 }
+
+erpnext.utils.add_dimensions('Accounts Payable', 9);
+
