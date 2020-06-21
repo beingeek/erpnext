@@ -343,7 +343,7 @@ def get_item_details(args):
 
 	if args.item_code and args.warehouse:
 		out.current_qty, out.current_valuation_rate, out.current_amount = get_stock_balance_for(args.item_code, args.warehouse,
-			args.posting_date, args.posting_time, args.batch_no)
+			args.posting_date, args.posting_time, args.batch_no, with_valuation_rate=True)
 
 	if not item.has_batch_no or args.batch_no:
 		out.qty = flt(args.qty) or out.current_qty or None

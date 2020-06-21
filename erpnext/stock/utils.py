@@ -102,10 +102,10 @@ def get_stock_balance(item_code, warehouse, posting_date=None, posting_time=None
 				len(get_serial_nos_data(serial_nos)) < last_entry.qty_after_transaction):
 				serial_nos = get_serial_nos_data_after_transactions(args)
 
-			return ((last_entry.qty_after_transaction, last_entry.valuation_rate, serial_nos)
-				if last_entry else (0.0, 0.0, 0.0))
+			return ((last_entry.qty_after_transaction, last_entry.valuation_rate, last_entry.stock_value, serial_nos)
+				if last_entry else (0.0, 0.0, 0.0, 0.0))
 		else:
-			return (last_entry.qty_after_transaction, last_entry.valuation_rate) if last_entry else (0.0, 0.0)
+			return (last_entry.qty_after_transaction, last_entry.valuation_rate, last_entry.stock_value) if last_entry else (0.0, 0.0, 0.0)
 	else:
 		return last_entry.qty_after_transaction if last_entry else 0.0
 
