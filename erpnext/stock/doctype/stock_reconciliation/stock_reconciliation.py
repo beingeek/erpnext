@@ -13,6 +13,7 @@ from erpnext.stock.utils import get_stock_balance, get_incoming_rate
 from erpnext.stock.doctype.batch.batch import get_batch_qty_on
 from erpnext.stock.doctype.item.item import get_item_defaults
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
+from erpnext.setup.doctype.brand.brand import get_brand_defaults
 from erpnext.stock.get_item_details import get_default_cost_center
 from frappe.model.meta import get_field_precision
 import json
@@ -320,6 +321,7 @@ def get_item_details(args):
 	item = frappe.get_cached_doc("Item", args.item_code)
 	item_defaults = get_item_defaults(item.name, args.company)
 	item_group_defaults = get_item_group_defaults(item.name, args.company)
+	brand_defaults = get_brand_defaults(item.name, args.company)
 
 	out.item_code = args.item_code
 	out.item_name = args.item_name or item.item_name
@@ -337,7 +339,7 @@ def get_item_details(args):
 			item_group_defaults.get("default_warehouse")
 		args.warehouse = out.warehouse
 
-	out.cost_center = get_default_cost_center(args, item_defaults, item_group_defaults)
+	out.cost_center = get_default_cost_center(args, item_defaults, item_group_defaults, brand_defaults)
 
 	if args.item_code and args.warehouse:
 		out.current_qty, out.current_valuation_rate, out.current_amount = get_stock_balance_for(args.item_code, args.warehouse,
