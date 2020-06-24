@@ -176,37 +176,26 @@ $.extend(shopping_cart, {
 	},
 
 	bind_address_select: function() {
-		$(".cart-addresses").find('input[data-address-name]').on("click", function() {
-			if($(this).prop("checked")) {
-				var me = this;
-
-				// uncheck other shipping or billing addresses:
-				if ( $(this).is('input[data-fieldname=customer_address]') ) {
-					$('input[data-fieldname=customer_address]').not(this).prop('checked', false);
-				} else {
-					$('input[data-fieldname=shipping_address_name]').not(this).prop('checked', false);
-				}
-
-				return frappe.call({
-					type: "POST",
-					method: "erpnext.shopping_cart.cart.update_cart_address",
-					freeze: true,
-					args: {
-						address_fieldname: $(this).attr("data-fieldname"),
-						address_name: $(this).attr("data-address-name"),
-						name: shopping_cart.quotation_name
-					},
-					callback: function(r) {
-						if(!r.exc) {
-							$(".cart-tax-items").html(r.message.taxes);
-						}
+		$(".cart-addresses").on('click', '.address-card', function(e) {
+			const $card = $(e.currentTarget);
+			const address_type = $card.closest('[data-address-type]').attr('data-address-type');
+			const address_name = $card.closest('[data-address-name]').attr('data-address-name');
+			return frappe.call({
+				type: "POST",
+				method: "erpnext.shopping_cart.cart.update_cart_address",
+				freeze: true,
+				args: {
+					address_type,
+					address_name,
+					name: shopping_cart.quotation_name
+				},
+				callback: function(r) {
+					if(!r.exc) {
+						$(".cart-tax-items").html(r.message.taxes);
 					}
-				});
-			} else {
-				return false;
-			}
+				}
+			});
 		});
-
 	},
 
 	bind_place_order: function() {

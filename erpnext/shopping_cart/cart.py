@@ -191,22 +191,18 @@ def get_shopping_cart_menu(context=None):
 	return frappe.render_template('templates/includes/cart/cart_dropdown.html', context)
 
 @frappe.whitelist()
-def update_cart_address(address_fieldname, address_name, name=None):
+def update_cart_address(address_type, address_name, name=None):
 	quotation = _get_cart_quotation(name=name)
-
 	address_display = get_address_display(frappe.get_doc("Address", address_name).as_dict())
 
-	if address_fieldname == "shipping_address_name":
-		quotation.shipping_address_name = address_name
-		quotation.shipping_address = address_display
-
-		if not quotation.customer_address:
-			address_fieldname = "customer_address"
-
-	if address_fieldname == "customer_address":
+	if address_type.lower() == "billing":
 		quotation.customer_address = address_name
 		quotation.address_display = address_display
-
+		quotation.shipping_address_name == quotation.shipping_address_name or address_name
+	elif address_type.lower() == "shipping":
+		quotation.shipping_address_name = address_name
+		quotation.shipping_address = address_display
+		quotation.customer_address == quotation.customer_address or address_name
 
 	apply_cart_settings(quotation=quotation)
 
@@ -249,7 +245,7 @@ def _get_cart_quotation(party=None, name=None):
 
 	if not name:
 		quotation = frappe.get_all("Quotation", fields=["name"], filters=
-			{party.doctype.lower(): party.name, "order_type": "Shopping Cart", "docstatus": 0,
+			{'quotation_to': party.doctype, 'party_name': party.name, "order_type": "Shopping Cart", "docstatus": 0,
 			"confirmed_by_customer": 0},
 			order_by="modified desc", limit_page_length=1)
 
@@ -277,7 +273,7 @@ def _get_cart_quotation(party=None, name=None):
 			"status": "Draft",
 			"docstatus": 0,
 			"__islocal": 1,
-			(party.doctype.lower()): party.name
+			'party_name': party.name
 		})
 
 		qdoc.contact_person = frappe.db.get_value("Contact", {"email_id": frappe.session.user})
@@ -360,9 +356,9 @@ def _set_price_list(quotation, cart_settings):
 
 	# check if customer price list exists
 	selling_price_list = None
-	if quotation.customer:
+	if quotation.quotation_to and quotation.party_name:
 		from erpnext.accounts.party import get_default_price_list
-		selling_price_list = get_default_price_list(frappe.get_doc("Customer", quotation.customer))
+		selling_price_list = get_default_price_list(frappe.get_doc(quotation.quotation_to, quotation.party_name))
 
 	# else check for territory based price list
 	if not selling_price_list:
@@ -374,9 +370,9 @@ def set_taxes(quotation, cart_settings):
 	"""set taxes based on billing territory"""
 	from erpnext.accounts.party import set_taxes
 
-	customer_group = frappe.db.get_value("Customer", quotation.customer, "customer_group")
+	customer_group = frappe.db.get_value("Customer", quotation.party_name, "customer_group") if quotation.quotation_to == "Customer" else None
 
-	quotation.taxes_and_charges = set_taxes(quotation.customer, "Customer",
+	quotation.taxes_and_charges = set_taxes(quotation.party_name, quotation.quotation_to,
 		quotation.transaction_date, quotation.company, customer_group=customer_group, supplier_group=None,
 		tax_category=quotation.tax_category, billing_address=quotation.customer_address,
 		shipping_address=quotation.shipping_address_name, use_for_shopping_cart=1)
@@ -595,8 +591,8 @@ def get_default_items(with_items=False, item_group=None, name=None):
 		select cdi.item_code
 		from `tabCustomer Default Item` cdi
 		inner join `tabItem` i on i.name = cdi.item_code {0}
-		where i.disabled = 0 and cdi.parenttype = 'Customer' and cdi.parent = %s
-	""".format(item_group_join), quotation.customer	)
+		where i.disabled = 0 and cdi.parenttype = %s and cdi.parent = %s
+	""".format(item_group_join), quotation.quotation_to, quotation.party_name)
 
 	existing_item_codes = [d.item_code for d in quotation.items]
 
@@ -649,3 +645,15 @@ def copy_items_from_transaction(dt, dn):
 			quotation.append("items", {"item_code": item.item_code, "qty": 0})
 
 	return update_cart(quotation)
+
+
+@frappe.whitelist()
+def add_new_address(doc):
+	doc = frappe.parse_json(doc)
+	doc.update({
+		'doctype': 'Address'
+	})
+	address = frappe.get_doc(doc)
+	address.save(ignore_permissions=True)
+
+	return address
