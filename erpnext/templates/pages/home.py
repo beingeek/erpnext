@@ -30,6 +30,6 @@ def get_context(context):
 
 	context.homepage = homepage
 	add_sidebar_data(context)
-	context.slideshow = "Home Slides"
+	context.slideshow = homepage.slideshow or "Home Slides"
 	context.no_breadcrumbs = True
 	context.update(get_slideshow(context))
