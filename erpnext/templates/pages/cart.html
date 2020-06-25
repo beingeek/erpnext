@@ -56,7 +56,7 @@ shopping_cart.confirmed_by_customer = {{ doc.confirmed_by_customer|int }};
 {% endblock %}
 
 {% block header_actions %}
-<button class="btn btn-cancel-order btn-sm" type="button" style="display: none">
+<button class="btn btn-cancel-order btn-sm btn-outline-danger" type="button" style="display: none">
 	{{ _("Cancel Order") }}
 </button>
 <button class="btn btn-primary btn-place-order btn-sm" type="button" style="display: none">
@@ -89,7 +89,7 @@ shopping_cart.confirmed_by_customer = {{ doc.confirmed_by_customer|int }};
 		</div>
 
 		{% for dig in default_item_groups_allow %}
-		<button class="btn btn-default btn-get-default-items btn-sm margin-top" data-item-group="{{ dig.get('name') }}" type="button">
+		<button class="btn btn-default btn-get-default-items btn-outline-info btn-sm margin-top" data-item-group="{{ dig.get('name') }}" type="button">
 					Get Default {{ dig.get("name") }}</button>
 		{% endfor %}
 
@@ -114,10 +114,10 @@ shopping_cart.confirmed_by_customer = {{ doc.confirmed_by_customer|int }};
 			</table>
 		</div>
 
-		<button class="btn btn-default btn-add-items btn-sm" type="button">{{ _("Add Item") }}</button>
+		<button class="btn btn-default btn-outline-primary btn-add-items btn-sm" type="button">{{ _("Add Item") }}</button>
 
 		<!-- taxes -->
-		<div class="row cart-taxes">
+		<div class="row cart-taxes mt-3">
 			<div class="col-sm-12 text-right cart-tax-items">
 				{% include "templates/includes/order/order_taxes.html" %}
 			</div>
@@ -134,7 +134,7 @@ shopping_cart.confirmed_by_customer = {{ doc.confirmed_by_customer|int }};
 		{% endif %}
 
 		<p class="cart-footer text-right">
-			<button class="btn btn-cancel-order btn-sm" type="button" style="display: none">
+			<button class="btn btn-cancel-order btn-outline-danger btn-sm" type="button" style="display: none">
 				{{ _("Cancel Order") }}
 			</button>
 			<button class="btn btn-primary btn-place-order btn-sm" type="button" style="display: none">

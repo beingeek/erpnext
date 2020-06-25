@@ -607,6 +607,10 @@ class Item(WebsiteGenerator):
 		context.metatags['og:type'] = 'product'
 		context.metatags['og:site_name'] = 'ERPNext'
 
+	def set_shopping_cart_data(self, context):
+		from erpnext.shopping_cart.product_info import get_product_info_for_website
+		context.shopping_cart = get_product_info_for_website(self.name, skip_quotation_creation=True)
+
 	def update_show_in_website(self):
 		if self.disabled:
 			self.show_in_website = False

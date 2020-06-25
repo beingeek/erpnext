@@ -14,31 +14,33 @@
 		</div>
 </div>
 {% endif %}
-<div class="mb-3" data-section="shipping-address">
-	<h6 class="text-uppercase">{{ _("Shipping Address") }}</h6>
-	<div class="row no-gutters" data-fieldname="shipping_address_name">
-		{% for address in shipping_addresses %}
-			<div class="mr-3 mb-3 w-25" data-address-name="{{address.name}}" data-address-type="shipping" {% if doc.shipping_address_name == address.name %} data-active {% endif %}>
-				{% include "templates/includes/cart/address_card.html" %}
-			</div>
-		{% endfor %}
+<div class="row mt-3 mb-2">
+	<div class="col-sm-6" data-section="shipping-address">
+		<h6 class="text-uppercase">{{ _("Shipping Address") }}</h6>
+		<div class="row no-gutters" data-fieldname="shipping_address_name">
+			{% for address in shipping_addresses %}
+				<div class="col-sm-6">
+					<div class="mb-2 mr-2 h-100" data-address-name="{{address.name}}" data-address-type="shipping" {% if doc.shipping_address_name == address.name %} data-active {% endif %}>
+						{% include "templates/includes/cart/address_card.html" %}
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+	<div class="col-sm-6" data-section="billing-address">
+		<h6 class="text-uppercase">{{ _("Billing Address") }}</h6>
+		<div class="row no-gutters" data-fieldname="customer_address">
+			{% for address in billing_addresses %}
+				<div class="col-sm-6">
+					<div class="mb-2 mr-2 h-100" data-address-name="{{address.name}}" data-address-type="billing" {% if doc.customer_address == address.name %} data-active {% endif %}>
+						{% include "templates/includes/cart/address_card.html" %}
+					</div>
+				</div>
+			{% endfor %}
+		</div>
 	</div>
 </div>
-<div class="mb-3" data-section="billing-address">
-	<h6 class="text-uppercase">{{ _("Billing Address") }}</h6>
-	<div class="row no-gutters" data-fieldname="customer_address">
-		{% for address in billing_addresses %}
-			<div class="mr-3 mb-3 w-25" data-address-name="{{address.name}}" data-address-type="billing" {% if doc.customer_address == address.name %} data-active {% endif %}>
-				{% include "templates/includes/cart/address_card.html" %}
-			</div>
-		{% endfor %}
-	</div>
-</div>
-<div class="custom-control custom-checkbox">
-	<input type="checkbox" class="custom-control-input" id="input_same_billing" checked>
-	<label class="custom-control-label" for="input_same_billing">{{ _('Billing Address is same as Shipping Address') }}</label>
-</div>
-<button class="btn btn-outline-primary btn-sm mt-3 btn-new-address">{{ _("Add a new address") }}</button>
+<button class="btn btn-outline-primary btn-sm mt-1 btn-new-address">{{ _("Add a new address") }}</button>
 
 <script>
 frappe.ready(() => {
@@ -47,11 +49,6 @@ frappe.ready(() => {
 		const $section = $target.closest('[data-section]');
 		$section.find('.address-card').removeClass('active');
 		$target.addClass('active');
-	});
-
-	$('#input_same_billing').change((e) => {
-		const $check = $(e.target);
-		toggle_billing_address_section(!$check.is(':checked'));
 	});
 
 	$('.btn-new-address').click(() => {
@@ -148,12 +145,6 @@ frappe.ready(() => {
 
 		const billing_address = $('[data-section="billing-address"]')
 			.find('[data-address-name][data-active]').attr('data-address-name');
-
-		$('#input_same_billing').prop('checked', shipping_address === billing_address).trigger('change');
-
-		if (!shipping_address && !billing_address) {
-			$('#input_same_billing').prop('checked', true).trigger('change');
-		}
 
 		if (shipping_address) {
 			$(`[data-section="shipping-address"] [data-address-name="${shipping_address}"] .address-card`).addClass('active');

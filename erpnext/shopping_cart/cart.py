@@ -334,7 +334,8 @@ def apply_cart_settings(party=None, quotation=None):
 def set_price_list_and_rate(quotation, cart_settings):
 	"""set price list based on billing territory"""
 
-	_set_price_list(quotation, cart_settings)
+	if not quotation.selling_price_list:
+		_set_price_list(cart_settings, quotation)
 
 	# reset values
 	quotation.price_list_currency = quotation.currency = \
@@ -349,22 +350,24 @@ def set_price_list_and_rate(quotation, cart_settings):
 		# set it in cookies for using in product page
 		frappe.local.cookie_manager.set_cookie("selling_price_list", quotation.selling_price_list)
 
-def _set_price_list(quotation, cart_settings):
+def _set_price_list(cart_settings, quotation=None):
 	"""Set price list based on customer or shopping cart default"""
-	if quotation.selling_price_list:
-		return
-
-	# check if customer price list exists
+	from erpnext.accounts.party import get_default_price_list
+	party_name = quotation.get("party_name") if quotation else get_party().get("name")
 	selling_price_list = None
-	if quotation.quotation_to and quotation.party_name:
-		from erpnext.accounts.party import get_default_price_list
-		selling_price_list = get_default_price_list(frappe.get_doc(quotation.quotation_to, quotation.party_name))
 
-	# else check for territory based price list
+	# check if default customer price list exists
+	if party_name:
+		selling_price_list = get_default_price_list(frappe.get_doc("Customer", party_name))
+
+	# check default price list in shopping cart
 	if not selling_price_list:
 		selling_price_list = cart_settings.price_list
 
-	quotation.selling_price_list = selling_price_list
+	if quotation:
+		quotation.selling_price_list = selling_price_list
+
+	return selling_price_list
 
 def set_taxes(quotation, cart_settings):
 	"""set taxes based on billing territory"""

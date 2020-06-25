@@ -49,7 +49,6 @@
   },
   {
    "default": "0",
-   "depends_on": "eval:doc.enabled==0",
    "fieldname": "show_price",
    "fieldtype": "Check",
    "label": "Show Price"
@@ -168,7 +167,7 @@
  "icon": "fa fa-shopping-cart",
  "idx": 1,
  "issingle": 1,
- "modified": "2020-06-19 12:13:16.074985",
+ "modified": "2020-06-25 07:01:04.651349",
  "modified_by": "Administrator",
  "module": "Shopping Cart",
  "name": "Shopping Cart Settings",
