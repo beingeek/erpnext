@@ -952,7 +952,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 				if (!cint(this.frm.doc.calculate_tax_on_company_currency)) {
 					this.set_actual_charges_based_on_currency();
 				}
-				this.apply_price_list();
+				// this.apply_price_list();
 			}
 
 		}
@@ -1059,7 +1059,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 
 		if(!this.in_apply_price_list) {
-			this.apply_price_list();
+			// this.apply_price_list();
 		}
 	},
 
