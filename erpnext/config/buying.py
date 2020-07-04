@@ -10,13 +10,6 @@ def get_data():
 			"items": [
 				{
 					"type": "doctype",
-					"name": "Material Request",
-					"onboard": 1,
-					"dependencies": ["Item"],
-					"description": _("Request for purchase."),
-				},
-				{
-					"type": "doctype",
 					"name": "Purchase Order",
 					"onboard": 1,
 					"dependencies": ["Item", "Supplier"],
@@ -24,9 +17,26 @@ def get_data():
 				},
 				{
 					"type": "doctype",
+					"name": "Purchase Receipt",
+					"onboard": 1,
+					"dependencies": ["Item", "Supplier"]
+				},
+				{
+					"type": "doctype",
 					"name": "Purchase Invoice",
 					"onboard": 1,
 					"dependencies": ["Item", "Supplier"]
+				},
+				{
+					"type": "doctype",
+					"name": "Landed Cost Voucher",
+				},
+				{
+					"type": "doctype",
+					"name": "Material Request",
+					"onboard": 1,
+					"dependencies": ["Item"],
+					"description": _("Request for purchase."),
 				},
 				{
 					"type": "doctype",
