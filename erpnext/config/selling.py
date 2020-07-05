@@ -180,6 +180,24 @@ def get_data():
 			]
 		},
 		{
+			"label": _("Delivery"),
+			"icon": "fa fa-cog",
+			"items": [
+				{
+					"type": "link",
+					"doctype": "Sales Order",
+					"label": _("Sales Order Route Map"),
+					"route": "/sales_order"
+				},
+				{
+					"type": "link",
+					"doctype": "Sales Invoice",
+					"label": _("Sales Invoice Route Map"),
+					"route": "/sales_invoice"
+				},
+			]
+		},
+		{
 			"label": _("Settings"),
 			"icon": "fa fa-cog",
 			"items": [
