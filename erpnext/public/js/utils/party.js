@@ -16,8 +16,8 @@ erpnext.utils.get_party_details = function(frm, method, args, callback) {
 		}
 
 		if (in_list(['Purchase Invoice', 'Purchase Order', 'Purchase Receipt'], frm.doc.doctype)) {
-			if (frm.doc.shipping_address && (!args.shipping_address)) {
-				args.shipping_address = frm.doc.shipping_address;
+			if (frm.doc.shipping_address_name && (!args.shipping_address)) {
+				args.shipping_address = frm.doc.shipping_address_name;
 			}
 		}
 	}
@@ -69,8 +69,8 @@ erpnext.utils.get_party_details = function(frm, method, args, callback) {
 				}
 			}
 
-			if (frm.doc.shipping_address && (!args.shipping_address)) {
-				args.shipping_address = frm.doc.shipping_address;
+			if (frm.doc.shipping_address_name && (!args.shipping_address)) {
+				args.shipping_address = frm.doc.shipping_address_name;
 			}
 		}
 

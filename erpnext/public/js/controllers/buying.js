@@ -36,8 +36,8 @@ erpnext.buying.BuyingController = erpnext.TransactionController.extend({
 
 		/* eslint-disable */
 		// no idea where me is coming from
-		if(this.frm.get_field('shipping_address')) {
-			this.frm.set_query("shipping_address", function() {
+		if(this.frm.get_field('shipping_address_name')) {
+			this.frm.set_query("shipping_address_name", function() {
 				if(me.frm.doc.customer) {
 					return {
 						query: 'frappe.contacts.doctype.address.address.address_query',
@@ -285,7 +285,7 @@ erpnext.buying.BuyingController = erpnext.TransactionController.extend({
 		}, __("Get items from"));
 	},
 
-	shipping_address: function(){
+	shipping_address_name: function(){
 		var me = this;
 		erpnext.utils.get_address_display(this.frm, "shipping_address_name",
 			"shipping_address", true);
