@@ -472,3 +472,24 @@ def get_batches(item_code, warehouse):
 	""", (item_code, warehouse), as_dict=True)
 
 	return sorted(batches, key=lambda d: (d.expiry_date, d.received_date))
+
+@frappe.whitelist()
+def get_batch_print_raw_commands(batch_args, print_format=None):
+	from frappe.www.printview import get_rendered_raw_commands
+	import json
+
+	if not batch_args:
+		return ""
+
+	if isinstance(batch_args, string_types):
+		batch_args = json.loads(batch_args)
+
+	raw_commands = []
+	for b in batch_args:
+		qty = cint(b.get('print_qty'))
+		if b.get('batch_no') and qty > 0:
+			b['print_qty'] = qty
+			print_data = get_rendered_raw_commands("Batch", b.get('batch_no'), print_format, args={"transaction": b})
+			raw_commands.append(print_data['raw_commands'])
+
+	return raw_commands
