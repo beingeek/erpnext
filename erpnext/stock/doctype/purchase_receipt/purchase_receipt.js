@@ -170,14 +170,16 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 
 			me.batch_print_data = [];
 			$.each(me.frm.doc.items || [], function (i, d) {
-				me.batch_print_data.push({
-					'item_code': d.item_code,
-					'item_name': d.item_name,
-					'batch_no': d.batch_no,
-					'print_qty': Math.ceil(d.qty),
-					'alt_uom': d.alt_uom,
-					'alt_uom_qty': d.alt_uom_qty
-				});
+				if (d.item_code && d.batch_no) {
+					me.batch_print_data.push({
+						'item_code': d.item_code,
+						'item_name': d.item_name,
+						'batch_no': d.batch_no,
+						'print_qty': Math.ceil(d.qty),
+						'alt_uom': d.alt_uom,
+						'alt_uom_qty': d.alt_uom_qty
+					});
+				}
 			});
 
 			var dialog = new frappe.ui.Dialog({
