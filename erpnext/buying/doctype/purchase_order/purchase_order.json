@@ -1107,7 +1107,8 @@
   {
    "fieldname": "pickup_no",
    "fieldtype": "Data",
-   "label": "Pickup #"
+   "label": "Pickup #",
+   "no_copy": 1
   },
   {
    "fieldname": "empty_pallet_weight",
@@ -1117,7 +1118,8 @@
   {
    "fieldname": "note",
    "fieldtype": "Data",
-   "label": "Note"
+   "label": "Note",
+   "no_copy": 1
   },
   {
    "fieldname": "column_break_16",
@@ -1146,12 +1148,14 @@
    "fieldtype": "Float",
    "hidden": 1,
    "label": "Actual # Of Pallets For Pick Up",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "total_packed_pallets",
    "fieldtype": "Float",
-   "label": "Actual # Of Pallets For Pick Up"
+   "label": "Actual # Of Pallets For Pick Up",
+   "no_copy": 1
   },
   {
    "fieldname": "column_break_14",
@@ -1383,7 +1387,7 @@
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-06-19 12:13:06.602244",
+ "modified": "2020-07-06 11:51:35.929250",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
