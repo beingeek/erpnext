@@ -66,7 +66,8 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		if(doc.update_stock) this.show_stock_ledger();
 
 		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
-			this.frm.add_custom_button(__('Print Batch Labels'), () => this.show_print_batch_labels_dialog());
+			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_batch_labels_dialog('box'));
+			this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_pallet_label_dialog('pallet'));
 		}
 
 		if (doc.docstatus == 1 && doc.outstanding_amount!=0
@@ -199,7 +200,41 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		}
 	},
 
-	show_print_batch_labels_dialog: function() {
+	show_print_pallet_label_dialog: function(medium) {
+		let me = this;
+		let available_print_formats = me.frm.meta.__print_formats.filter(d => d.name.toLowerCase().includes(medium)).map(d => d.name);
+		let default_print_format = available_print_formats ? available_print_formats[0] : "";
+		let dialog = new frappe.ui.Dialog({
+			title: __("Pallet Label Print"),
+			fields: [
+				{
+					fieldname: "print_format",
+					fieldtype: "Select",
+					label: __("Print Format"),
+					options: available_print_formats,
+					default: default_print_format,
+					reqd: 1
+				},
+				{
+					fieldname: "print_qty",
+					fieldtype: "Int",
+					label: __("Print Qty"),
+					default: 1
+				}
+			]
+		});
+		dialog.set_primary_action(__("Print"), function () {
+			let print_qty = cint(dialog.get_value('print_qty'));
+			if (print_qty > 0) {
+				me.frm.print_preview.print_sel.setValue(dialog.get_value('print_format'));
+				me.frm.print_preview.printit({print_qty: print_qty});
+			}
+			dialog.hide();
+		});
+		dialog.show();
+	},
+
+	show_print_batch_labels_dialog: function(medium) {
 		const me = this;
 		this.build_print_batch_labels_dialog(function () {
 			let out = [];
@@ -253,7 +288,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 				in_list_view: 1,
 				label: __('Print Qty')
 			}]
-		});
+		}, d => d.name.toLowerCase().includes(medium));
 	},
 
 	set_naming_series: function() {
