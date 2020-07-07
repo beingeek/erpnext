@@ -142,7 +142,7 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 
 							if (printer) {
 								// set printer mapping
-								let print_format_printer_map = me.get_print_format_printer_map();
+								let print_format_printer_map = me.frm.print_preview.get_print_format_printer_map();
 								if (!print_format_printer_map['Batch']) {
 									print_format_printer_map['Batch'] = [];
 								}
