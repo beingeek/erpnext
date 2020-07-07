@@ -165,13 +165,11 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 
 	show_print_batch_labels_dialog: function() {
 		const me = this;
-		frappe.model.with_doctype("Batch", () => {
-			const meta = frappe.get_meta("Batch");
-
-			me.batch_print_data = [];
+		this.build_print_batch_labels_dialog(function () {
+			let out = [];
 			$.each(me.frm.doc.items || [], function (i, d) {
 				if (d.item_code && d.batch_no) {
-					me.batch_print_data.push({
+					out.push({
 						'item_code': d.item_code,
 						'item_name': d.item_name,
 						'batch_no': d.batch_no,
@@ -181,111 +179,44 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 					});
 				}
 			});
-
-			var dialog = new frappe.ui.Dialog({
-				title: __("Batch Print"),
-				fields: [
-					{fieldtype: "Select", fieldname: "print_format", label: __("Print Format"), "reqd": 1,
-						"default": meta.__print_formats.filter(d => d.raw_printing).includes(meta.default_print_format) ? meta.default_print_format : "",
-						"options": meta.__print_formats.filter(d => d.raw_printing).map(d => d.name)},
-					{fieldtype: 'Section Break'},
-					{
-						fieldname: "batch_args",
-						fieldtype: "Table",
-						label: __('Batches'),
-						in_place_edit: true,
-						cannot_add_rows: true,
-						data: me.batch_print_data,
-						get_data: () => {
-							return me.batch_print_data;
-						},
-						fields: [{
-							fieldtype: 'Link',
-							fieldname: "batch_no",
-							options: "Batch",
-							read_only: 1,
-							in_list_view: 1,
-							label: __('Batch')
-						}, {
-							fieldtype: 'Link',
-							fieldname: "item_code",
-							options: "Item",
-							read_only: 1,
-							label: __('Item Code')
-						}, {
-							fieldtype: 'Data',
-							fieldname: "item_name",
-							read_only: 1,
-							in_list_view: 1,
-							label: __('Item Name')
-						}, {
-							fieldtype: 'Link',
-							fieldname: "alt_uom",
-							read_only: 1,
-							options: "UOM",
-							label: __('Contents UOM')
-						}, {
-							fieldtype: 'Float',
-							fieldname: "alt_uom_qty",
-							read_only: 1,
-							label: __('Contents Qty')
-						}, {
-							fieldtype: 'Float',
-							fieldname: "print_qty",
-							in_list_view: 1,
-							label: __('Print Qty')
-						}]
-					}
-				]
-			});
-			dialog.set_primary_action(__("Print"), function() {
-				let batch_args = dialog.get_values()["batch_args"];
-				let print_format = dialog.get_value('print_format');
-				let printer = me.get_mapped_printer("Batch", print_format);
-
-				if (printer) {
-					me.print_batch_labels(batch_args, print_format, printer);
-				} else {
-					frappe.ui.form.qz_get_printer_list().then((data) => {
-						let printer_dialog = new frappe.ui.Dialog({
-							title: __("Select Printer"),
-							fields: [{fieldtype: "Select", fieldname: "printer", label: __("Printer"), "reqd": 1,
-								"options": data || ""
-							}]
-						});
-						printer_dialog.set_primary_action(__("Print"), function () {
-							printer = printer_dialog.get_value('printer');
-							if (printer) {
-								me.print_batch_labels(batch_args, print_format, printer);
-							}
-							printer_dialog.hide();
-						});
-					});
-				}
-
-				dialog.hide();
-			});
-			dialog.show();
-		});
-	},
-
-	print_batch_labels: function(batch_args, print_format, printer) {
-		frappe.call({
-			method: "erpnext.stock.doctype.batch.batch.get_batch_print_raw_commands",
-			args: {
-				"batch_args": batch_args,
-				"print_format": print_format
-			},
-			callback: function (r) {
-				if (r.message && r.message.length) {
-					frappe.ui.form.qz_connect().then(function () {
-						let config = qz.configs.create(printer);
-						return qz.print(config, r.message);
-					}).then(frappe.ui.form.qz_success).catch((err) => {
-						frappe.ui.form.qz_fail(err);
-					});
-				}
-			}
+			return out;
+		}, {
+			fields: [{
+				fieldtype: 'Link',
+				fieldname: "batch_no",
+				options: "Batch",
+				read_only: 1,
+				in_list_view: 1,
+				label: __('Batch')
+			}, {
+				fieldtype: 'Link',
+				fieldname: "item_code",
+				options: "Item",
+				read_only: 1,
+				label: __('Item Code')
+			}, {
+				fieldtype: 'Data',
+				fieldname: "item_name",
+				read_only: 1,
+				in_list_view: 1,
+				label: __('Item Name')
+			}, {
+				fieldtype: 'Link',
+				fieldname: "alt_uom",
+				read_only: 1,
+				options: "UOM",
+				label: __('Contents UOM')
+			}, {
+				fieldtype: 'Float',
+				fieldname: "alt_uom_qty",
+				read_only: 1,
+				label: __('Contents Qty')
+			}, {
+				fieldtype: 'Float',
+				fieldname: "print_qty",
+				in_list_view: 1,
+				label: __('Print Qty')
+			}]
 		});
 	},
 
