@@ -212,7 +212,7 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 				read_only: 1,
 				label: __('Contents Qty')
 			}, {
-				fieldtype: 'Float',
+				fieldtype: 'Int',
 				fieldname: "print_qty",
 				in_list_view: 1,
 				label: __('Print Qty')
