@@ -65,6 +65,10 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 
 		if(doc.update_stock) this.show_stock_ledger();
 
+		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
+			this.frm.add_custom_button(__('Print Batch Labels'), () => this.show_print_batch_labels_dialog());
+		}
+
 		if (doc.docstatus == 1 && doc.outstanding_amount!=0
 			&& !(cint(doc.is_return) && doc.return_against)) {
 			cur_frm.add_custom_button(__('Payment'),
@@ -193,6 +197,63 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 				}
 			});
 		}
+	},
+
+	show_print_batch_labels_dialog: function() {
+		const me = this;
+		this.build_print_batch_labels_dialog(function () {
+			let out = [];
+			$.each(me.frm.doc.items || [], function (i, d) {
+				if (d.item_code && d.batch_no) {
+					out.push({
+						'item_code': d.item_code,
+						'item_name': d.item_name,
+						'batch_no': d.batch_no,
+						'print_qty': Math.ceil(d.qty),
+						'alt_uom': d.alt_uom,
+						'alt_uom_qty': d.alt_uom_qty
+					});
+				}
+			});
+			return out;
+		}, {
+			fields: [{
+				fieldtype: 'Link',
+				fieldname: "batch_no",
+				options: "Batch",
+				read_only: 1,
+				in_list_view: 1,
+				label: __('Batch')
+			}, {
+				fieldtype: 'Link',
+				fieldname: "item_code",
+				options: "Item",
+				read_only: 1,
+				label: __('Item Code')
+			}, {
+				fieldtype: 'Data',
+				fieldname: "item_name",
+				read_only: 1,
+				in_list_view: 1,
+				label: __('Item Name')
+			}, {
+				fieldtype: 'Link',
+				fieldname: "alt_uom",
+				read_only: 1,
+				options: "UOM",
+				label: __('Contents UOM')
+			}, {
+				fieldtype: 'Float',
+				fieldname: "alt_uom_qty",
+				in_list_view: 1,
+				label: __('Contents Qty')
+			}, {
+				fieldtype: 'Float',
+				fieldname: "print_qty",
+				in_list_view: 1,
+				label: __('Print Qty')
+			}]
+		});
 	},
 
 	set_naming_series: function() {
