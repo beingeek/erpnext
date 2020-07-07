@@ -176,7 +176,7 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 						'print_qty': Math.ceil(d.qty),
 						'alt_uom': d.alt_uom,
 						'alt_uom_size': d.alt_uom_size_std,
-						'supplier_name': this.frm.doc.supplier_name || this.frm.doc.supplier
+						'supplier_name': me.frm.doc.supplier_name || me.frm.doc.supplier
 					});
 				}
 			});
