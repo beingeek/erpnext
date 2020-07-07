@@ -226,7 +226,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		dialog.set_primary_action(__("Print"), function () {
 			let print_qty = cint(dialog.get_value('print_qty'));
 			if (print_qty > 0) {
-				me.frm.print_preview.print_sel.setValue(dialog.get_value('print_format'));
+				me.frm.print_preview.print_sel.val(dialog.get_value('print_format'));
 				me.frm.print_preview.printit({print_qty: print_qty});
 			}
 			dialog.hide();

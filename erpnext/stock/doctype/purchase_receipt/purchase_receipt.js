@@ -156,17 +156,6 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 		this.set_naming_series();
 	},
 
-	get_mapped_printer: function(doctype, print_format) {
-		let printers = [];
-		let print_format_printer_map = me.frm.print_preview.get_print_format_printer_map();
-		if (print_format_printer_map["Batch"]) {
-			printers = print_format_printer_map["Batch"].filter(
-				(printer_map) => printer_map.print_format == print_format);
-		}
-
-		return printers.length ? printers[0].printer : "";
-	},
-
 	show_print_batch_labels_dialog: function(medium) {
 		const me = this;
 		this.build_print_batch_labels_dialog(function () {
