@@ -211,7 +211,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 						'batch_no': d.batch_no,
 						'print_qty': Math.ceil(d.qty),
 						'alt_uom': d.alt_uom,
-						'alt_uom_qty': d.alt_uom_qty
+						'alt_uom_size': d.alt_uom_size_std
 					});
 				}
 			});
@@ -237,16 +237,16 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 				in_list_view: 1,
 				label: __('Item Name')
 			}, {
+				fieldtype: 'Float',
+				fieldname: "alt_uom_size",
+				in_list_view: 1,
+				label: __('Per Unit')
+			}, {
 				fieldtype: 'Link',
 				fieldname: "alt_uom",
 				read_only: 1,
 				options: "UOM",
 				label: __('Contents UOM')
-			}, {
-				fieldtype: 'Float',
-				fieldname: "alt_uom_qty",
-				in_list_view: 1,
-				label: __('Contents Qty')
 			}, {
 				fieldtype: 'Int',
 				fieldname: "print_qty",
