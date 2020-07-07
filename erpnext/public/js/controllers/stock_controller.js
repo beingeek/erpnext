@@ -155,6 +155,7 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 							}
 							printer_dialog.hide();
 						});
+						printer_dialog.show();
 					});
 				}
 
