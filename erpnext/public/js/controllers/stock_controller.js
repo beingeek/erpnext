@@ -90,10 +90,12 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 				me.batch_print_dialog_data = get_data();
 			}
 
+			let available_print_formats = meta.__print_formats.filter(d => d.raw_printing).map(d => d.name);
+
 			let fields = [
 				{fieldtype: "Select", fieldname: "print_format", label: __("Print Format"), "reqd": 1,
-					"default": meta.__print_formats.filter(d => d.raw_printing).includes(meta.default_print_format) ? meta.default_print_format : "",
-					"options": meta.__print_formats.filter(d => d.raw_printing).map(d => d.name)},
+					"default": available_print_formats.includes(meta.default_print_format) ? meta.default_print_format : "",
+					"options": available_print_formats},
 				{fieldtype: 'Section Break'}
 			];
 			table_fields = Object.assign({
