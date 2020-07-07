@@ -80,7 +80,7 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 		}
 	},
 
-	build_print_batch_labels_dialog(get_data, table_fields) {
+	build_print_batch_labels_dialog(get_data, table_fields, print_format_filter) {
 		const me = this;
 		frappe.model.with_doctype("Batch", () => {
 			const meta = frappe.get_meta("Batch");
@@ -90,11 +90,20 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 				me.batch_print_dialog_data = get_data();
 			}
 
-			let available_print_formats = meta.__print_formats.filter(d => d.raw_printing).map(d => d.name);
+			let available_print_formats = meta.__print_formats.filter(d => d.raw_printing);
+			if (print_format_filter) {
+				available_print_formats = available_print_formats.filter(print_format_filter);
+			}
+			available_print_formats = available_print_formats.map(d => d.name);
+
+			let default_print_format = available_print_formats.includes(meta.default_print_format) ? meta.default_print_format : "";
+			if (!default_print_format && available_print_formats.length) {
+				default_print_format = available_print_formats[0];
+			}
 
 			let fields = [
 				{fieldtype: "Select", fieldname: "print_format", label: __("Print Format"), "reqd": 1,
-					"default": available_print_formats.includes(meta.default_print_format) ? meta.default_print_format : "",
+					"default": default_print_format,
 					"options": available_print_formats},
 				{fieldtype: 'Section Break'}
 			];

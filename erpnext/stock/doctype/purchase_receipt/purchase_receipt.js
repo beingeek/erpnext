@@ -73,6 +73,14 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 	refresh: function() {
 		var me = this;
 		this._super();
+
+		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
+			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_batch_labels_dialog("box"));
+		}
+		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
+			this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_batch_labels_dialog("pallet"));
+		}
+
 		if(this.frm.doc.docstatus===1) {
 			this.show_stock_ledger();
 			//removed for temporary
@@ -91,10 +99,6 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 				};
 				frappe.set_route("List", "Asset Movement");
 			}, __("View"));
-		}
-
-		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
-			this.frm.add_custom_button(__('Print Batch Labels'), () => this.show_print_batch_labels_dialog());
 		}
 
 		if(!this.frm.doc.is_return && this.frm.doc.status!="Closed") {
@@ -163,7 +167,7 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 		return printers.length ? printers[0].printer : "";
 	},
 
-	show_print_batch_labels_dialog: function() {
+	show_print_batch_labels_dialog: function(medium) {
 		const me = this;
 		this.build_print_batch_labels_dialog(function () {
 			let out = [];
@@ -173,10 +177,11 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 						'item_code': d.item_code,
 						'item_name': d.item_name,
 						'batch_no': d.batch_no,
-						'print_qty': Math.ceil(d.qty),
+						'print_qty': medium == "pallet" ? Math.ceil(d.pallets) : Math.ceil(d.qty),
 						'alt_uom': d.alt_uom,
 						'alt_uom_size': d.alt_uom_size_std,
-						'supplier_name': me.frm.doc.supplier_name || me.frm.doc.supplier
+						'supplier_name': me.frm.doc.supplier_name || me.frm.doc.supplier,
+						'received_date': me.frm.doc.posting_date
 					});
 				}
 			});
@@ -222,8 +227,13 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 				fieldname: "supplier_name",
 				read_only: 1,
 				label: __('Supplier Name')
+			}, {
+				fieldtype: 'Date',
+				fieldname: "received_date",
+				read_only: 1,
+				label: __('Received Date')
 			}]
-		});
+		}, d => d.name.toLowerCase().includes(medium));
 	},
 
 	set_naming_series: function() {
