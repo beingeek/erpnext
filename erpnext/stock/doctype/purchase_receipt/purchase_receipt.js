@@ -175,7 +175,8 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 						'batch_no': d.batch_no,
 						'print_qty': Math.ceil(d.qty),
 						'alt_uom': d.alt_uom,
-						'alt_uom_size': d.alt_uom_size_std
+						'alt_uom_size': d.alt_uom_size_std,
+						'supplier_name': this.frm.doc.supplier_name || this.frm.doc.supplier
 					});
 				}
 			});
@@ -216,6 +217,11 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 				fieldname: "print_qty",
 				in_list_view: 1,
 				label: __('Print Qty')
+			}, {
+				fieldtype: 'Data',
+				fieldname: "supplier_name",
+				read_only: 1,
+				label: __('Supplier Name')
 			}]
 		});
 	},
