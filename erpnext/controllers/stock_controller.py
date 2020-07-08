@@ -258,19 +258,24 @@ class StockController(AccountsController):
 					_(self.doctype), self.name, item.get("item_code")))
 
 	def delete_auto_created_batches(self):
+		batch_nos = set()
+		for data in frappe.get_all("Batch",
+			{'reference_name': self.name, 'reference_doctype': self.doctype}):
+			batch_nos.add(data.name)
+
 		for d in self.items:
 			if not d.batch_no: continue
 
-			serial_nos = [sr.name for sr in frappe.get_all("Serial No", {'batch_no': d.batch_no})]
-			if serial_nos:
-				frappe.db.set_value("Serial No", { 'name': ['in', serial_nos] }, "batch_no", None)
+			if d.batch_no in batch_nos:
+				serial_nos = [sr.name for sr in frappe.get_all("Serial No", {'batch_no': d.batch_no})]
+				if serial_nos:
+					frappe.db.set_value("Serial No", { 'name': ['in', serial_nos] }, "batch_no", None)
 
-			d.batch_no = None
-			d.db_set("batch_no", None)
+				d.batch_no = None
+				d.db_set("batch_no", None)
 
-		for data in frappe.get_all("Batch",
-			{'reference_name': self.name, 'reference_doctype': self.doctype}):
-			frappe.delete_doc("Batch", data.name)
+		for batch_no in batch_nos:
+			frappe.delete_doc("Batch", batch_no)
 
 	def get_sl_entries(self, d, args):
 		sl_dict = frappe._dict({
