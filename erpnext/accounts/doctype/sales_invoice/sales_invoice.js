@@ -65,7 +65,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 
 		if(doc.update_stock) this.show_stock_ledger();
 
-		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
+		if (this.frm.doc.docstatus < 2 && !this.frm.doc.is_return) {
 			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_batch_labels_dialog('box'));
 			this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_pallet_label_dialog('pallet'));
 		}
@@ -228,7 +228,11 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 			if (print_qty > 0) {
 				me.frm.print_preview.refresh_print_options();
 				me.frm.print_preview.print_sel.val(dialog.get_value('print_format'));
-				me.frm.print_preview.printit({print_qty: print_qty, po_no: me.frm.doc.po_no});
+				me.frm.print_preview.printit({
+					print_qty: print_qty,
+					po_no: me.frm.doc.po_no,
+					total_boxes: Math.ceil(me.frm.doc.total_boxes || me.frm.doc.qty)
+				});
 			}
 			dialog.hide();
 		});
@@ -245,7 +249,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 						'item_code': d.item_code,
 						'item_name': d.item_name,
 						'batch_no': d.batch_no,
-						'print_qty': Math.ceil(d.qty),
+						'print_qty': Math.ceil(d.boxes || d.qty),
 						'alt_uom': d.alt_uom,
 						'alt_uom_size': d.alt_uom_size_std,
 						'packed_date': me.frm.doc.posting_date,
