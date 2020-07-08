@@ -231,7 +231,8 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 				me.frm.print_preview.printit({
 					print_qty: print_qty,
 					po_no: me.frm.doc.po_no,
-					total_boxes: Math.ceil(me.frm.doc.total_boxes || me.frm.doc.qty)
+					total_boxes: Math.ceil(me.frm.doc.total_boxes || me.frm.doc.qty),
+					shipping_address_name: me.frm.doc.shipping_address_name
 				});
 			}
 			dialog.hide();
