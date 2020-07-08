@@ -228,7 +228,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 			if (print_qty > 0) {
 				me.frm.print_preview.refresh_print_options();
 				me.frm.print_preview.print_sel.val(dialog.get_value('print_format'));
-				me.frm.print_preview.printit({print_qty: print_qty});
+				me.frm.print_preview.printit({print_qty: print_qty, po_no: me.frm.doc.po_no});
 			}
 			dialog.hide();
 		});
@@ -247,7 +247,9 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 						'batch_no': d.batch_no,
 						'print_qty': Math.ceil(d.qty),
 						'alt_uom': d.alt_uom,
-						'alt_uom_size': d.alt_uom_size_std
+						'alt_uom_size': d.alt_uom_size_std,
+						'packed_date': me.frm.doc.posting_date,
+						'po_no': me.frm.doc.po_no
 					});
 				}
 			});
@@ -288,6 +290,16 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 				fieldname: "print_qty",
 				in_list_view: 1,
 				label: __('Print Qty')
+			}, {
+				fieldtype: 'Date',
+				fieldname: "packed_date",
+				read_only: 1,
+				label: __('Packed Date')
+			}, {
+				fieldtype: 'Data',
+				fieldname: "po_no",
+				read_only: 1,
+				label: __("Customer's PO No")
 			}]
 		}, d => d.name.toLowerCase().includes(medium));
 	},
