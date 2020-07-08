@@ -2188,6 +2188,9 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 								delete item_data['doctype'];
 								delete item_data['name'];
+								delete item_data['parentfield'];
+								delete item_data['parenttype'];
+								delete item_data['parent'];
 								Object.assign(item, item_data);
 
 								frappe.run_serially([
