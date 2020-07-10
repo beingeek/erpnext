@@ -65,7 +65,8 @@ frappe.ui.form.on("Stock Reconciliation", {
 					item_group: frm.doc.selected_item_group,
 					item_code: frm.doc.selected_item_code,
 					get_batches: cint(frm.doc.get_batches),
-					sort_by: frm.doc.sort_by
+					sort_by: frm.doc.sort_by,
+					positive_or_negative: frm.doc.positive_or_negative
 				}
 			},
 			callback: function(r) {
