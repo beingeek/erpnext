@@ -259,11 +259,24 @@ def get_items(args):
 
 	conditions = "and {0}".format(" and ".join(conditions)) if conditions else ""
 
+	qty_condition = "positive"
+	if args.positive_or_negative == "Negative Only":
+		qty_condition = "negative"
+	elif args.positive_or_negative == "Positive and Negative":
+		qty_condition = "both"
+
+	has_batch_no_condition = "or i.has_batch_no = 1" if cint(args.get_batches) else ""
+	bin_qty_condition = "and (bin.actual_qty > 0 {0})".format(has_batch_no_condition)
+	if qty_condition == "negative":
+		bin_qty_condition = "and (bin.actual_qty < 0 {0})".format(has_batch_no_condition)
+	elif qty_condition == "both":
+		bin_qty_condition = "and (bin.actual_qty != 0 {0})".format(has_batch_no_condition)
+
 	items = frappe.db.sql("""
 		select i.name, bin.warehouse
 		from tabBin bin, tabItem i
-		where i.name=bin.item_code and i.disabled=0 and actual_qty > 0 {0}
-	""".format(conditions), args)
+		where i.name=bin.item_code and i.disabled=0 {0} {1}
+	""".format(bin_qty_condition, conditions), args)
 
 	res = []
 	for d in set(items):
@@ -279,7 +292,7 @@ def get_items(args):
 		batch_list = []
 
 		if frappe.get_cached_value("Item", item_code, "has_batch_no") and cint(args.get_batches):
-			batches = get_batches(item_code, warehouse, show_negative=True)
+			batches = get_batches(item_code, warehouse, qty_condition=qty_condition)
 			for b in batches:
 				batch_list.append({'batch_no': b.name, 'batch_date': b.received_date})
 		else:

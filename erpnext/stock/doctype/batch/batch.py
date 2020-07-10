@@ -460,9 +460,12 @@ def get_batch_received_date(batch_no, warehouse):
 
 	return date[0][0] if date else None
 
-def get_batches(item_code, warehouse, show_negative=False):
-	having = ""
-	if not show_negative:
+def get_batches(item_code, warehouse, qty_condition="positive"):
+	if qty_condition == "both":
+		having = "having qty != 0"
+	elif qty_condition == "negative":
+		having = "having qty < 0"
+	else:
 		having = "having qty > 0"
 
 	batches = frappe.db.sql("""
