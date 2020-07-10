@@ -22,6 +22,7 @@
   "selected_item_code",
   "cb_23",
   "sort_by",
+  "positive_or_negative",
   "section_break_18",
   "items",
   "section_break_9",
@@ -197,13 +198,20 @@
   {
    "fieldname": "section_break_18",
    "fieldtype": "Section Break"
+  },
+  {
+   "default": "Positive Only",
+   "fieldname": "positive_or_negative",
+   "fieldtype": "Select",
+   "label": "Positive or Negative Qty",
+   "options": "Positive Only\nNegative Only\nPositive and Negative"
   }
  ],
  "icon": "fa fa-upload-alt",
  "idx": 1,
  "is_submittable": 1,
  "max_attachments": 1,
- "modified": "2020-06-19 12:13:25.794821",
+ "modified": "2020-07-10 09:04:56.183390",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Reconciliation",
