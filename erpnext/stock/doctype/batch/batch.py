@@ -446,7 +446,11 @@ def get_batch_received_date(batch_no, warehouse):
 
 	return date[0][0] if date else None
 
-def get_batches(item_code, warehouse):
+def get_batches(item_code, warehouse, show_negative=False):
+	having = ""
+	if not show_negative:
+		having = "having qty > 0"
+
 	batches = frappe.db.sql("""
 		select b.name, sum(sle.actual_qty) as qty, b.expiry_date,
 			min(timestamp(sle.posting_date, sle.posting_time)) received_date
@@ -454,7 +458,7 @@ def get_batches(item_code, warehouse):
 		join `tabStock Ledger Entry` sle ignore index (item_code, warehouse) on b.name = sle.batch_no
 		where sle.item_code = %s and sle.warehouse = %s and (b.expiry_date >= CURDATE() or b.expiry_date IS NULL)
 		group by b.name
-		having qty > 0
-	""", (item_code, warehouse), as_dict=True)
+		{0}
+	""".format(having), (item_code, warehouse), as_dict=True)
 
 	return sorted(batches, key=lambda d: (d.expiry_date, d.received_date))

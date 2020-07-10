@@ -278,7 +278,7 @@ def get_items(args):
 		batch_list = []
 
 		if frappe.get_cached_value("Item", item_code, "has_batch_no") and cint(args.get_batches):
-			batches = get_batches(item_code, warehouse)
+			batches = get_batches(item_code, warehouse, show_negative=True)
 			for b in batches:
 				batch_list.append({'batch_no': b.name, 'batch_date': b.received_date})
 		else:
