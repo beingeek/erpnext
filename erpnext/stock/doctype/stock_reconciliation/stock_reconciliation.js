@@ -18,6 +18,8 @@ frappe.ui.form.on("Stock Reconciliation", {
 			}
 		});
 
+		var me = this;
+
 		frm.set_query("batch_no", "items", function(doc, cdt, cdn) {
 			var item = frappe.get_doc(cdt, cdn);
 			let filters = {
@@ -31,11 +33,11 @@ frappe.ui.form.on("Stock Reconciliation", {
 			}
 		});
 
-		if (frm.doc.company) {
-			erpnext.queries.setup_queries(frm, "Warehouse", function() {
-				return erpnext.queries.warehouse(frm.doc);
-			});
-		}
+		frm.set_query("default_warehouse", function() {
+			return {
+				filters: ["Warehouse", "company", "in", ["", cstr(frm.doc.company)]]
+			}
+		});
 
 		if (!frm.doc.expense_account) {
 			frm.trigger("set_expense_account");
