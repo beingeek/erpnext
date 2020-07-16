@@ -163,6 +163,7 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 			$.each(me.frm.doc.items || [], function (i, d) {
 				if (d.item_code && d.batch_no) {
 					out.push({
+						'name': d.name,
 						'item_code': d.item_code,
 						'item_name': d.item_name,
 						'batch_no': d.batch_no,

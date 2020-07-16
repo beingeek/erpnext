@@ -247,6 +247,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		$.each(me.frm.doc.items || [], function (i, d) {
 			if (d.item_code && d.batch_no) {
 				item_data.push({
+					'name': d.name,
 					'item_code': d.item_code,
 					'item_name': d.item_name,
 					'batch_no': d.batch_no,
