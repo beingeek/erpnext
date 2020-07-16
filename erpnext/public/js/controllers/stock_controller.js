@@ -80,7 +80,7 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 		}
 	},
 
-	build_print_batch_labels_dialog(get_data, table_fields, print_format_filter) {
+	build_print_batch_labels_dialog(get_data, table_fields, print_format_filter, show_callback) {
 		const me = this;
 		frappe.model.with_doctype("Batch", () => {
 			const meta = frappe.get_meta("Batch");
@@ -161,7 +161,11 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 
 				dialog.hide();
 			});
-			dialog.show();
+
+			if (show_callback) {
+				show_callback(dialog);
+			}
+			dialog.show({backdrop: 'static', keyboard: false});
 		});
 	},
 

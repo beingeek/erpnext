@@ -242,71 +242,105 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 
 	show_print_batch_labels_dialog: function(medium) {
 		const me = this;
-		this.build_print_batch_labels_dialog(function () {
-			let out = [];
-			$.each(me.frm.doc.items || [], function (i, d) {
-				if (d.item_code && d.batch_no) {
-					out.push({
-						'item_code': d.item_code,
-						'item_name': d.item_name,
-						'batch_no': d.batch_no,
-						'print_qty': Math.ceil(d.boxes || d.qty),
-						'alt_uom': d.alt_uom,
-						'alt_uom_size': d.alt_uom_size_std,
-						'packed_date': me.frm.doc.posting_date,
-						'po_no': me.frm.doc.po_no
+
+		let item_data = [];
+		$.each(me.frm.doc.items || [], function (i, d) {
+			if (d.item_code && d.batch_no) {
+				item_data.push({
+					'item_code': d.item_code,
+					'item_name': d.item_name,
+					'batch_no': d.batch_no,
+					'print_qty': Math.ceil(d.boxes || d.qty),
+					'alt_uom': d.alt_uom,
+					'alt_uom_size': d.alt_uom_size_std,
+					'packed_date': me.frm.doc.posting_date,
+					'po_no': me.frm.doc.po_no
+				});
+			}
+		});
+
+		frappe.call({
+			method: "erpnext.stock.doctype.item.item.get_item_batch_country_of_origin",
+			args: {
+				args: item_data
+			},
+			callback: function (r) {
+				if (r && r.message) {
+					$.each(item_data, function (i, d) {
+						if (r.message.item_code_country[d.item_code]) {
+							d.country_of_origin = r.message.item_code_country[d.item_code];
+						}
+						if (r.message.batch_no_country.hasOwnProperty(d.batch_no)) {
+							d.country_of_origin = r.message.batch_no_country[d.batch_no];
+						}
 					});
 				}
-			});
-			return out;
-		}, {
-			fields: [{
-				fieldtype: 'Link',
-				fieldname: "batch_no",
-				options: "Batch",
-				read_only: 1,
-				in_list_view: 1,
-				label: __('Batch')
-			}, {
-				fieldtype: 'Link',
-				fieldname: "item_code",
-				options: "Item",
-				read_only: 1,
-				label: __('Item Code')
-			}, {
-				fieldtype: 'Data',
-				fieldname: "item_name",
-				read_only: 1,
-				in_list_view: 1,
-				label: __('Item Name')
-			}, {
-				fieldtype: 'Float',
-				fieldname: "alt_uom_size",
-				in_list_view: 1,
-				label: __('Per Unit')
-			}, {
-				fieldtype: 'Link',
-				fieldname: "alt_uom",
-				read_only: 1,
-				options: "UOM",
-				label: __('Contents UOM')
-			}, {
-				fieldtype: 'Int',
-				fieldname: "print_qty",
-				in_list_view: 1,
-				label: __('Print Qty')
-			}, {
-				fieldtype: 'Date',
-				fieldname: "packed_date",
-				read_only: 1,
-				label: __('Packed Date')
-			}, {
-				fieldtype: 'Data',
-				fieldname: "po_no",
-				read_only: 1,
-				label: __("Customer's PO No")
-			}]
-		}, d => d.name.toLowerCase().includes(medium));
+
+				me.build_print_batch_labels_dialog(function () {
+					return item_data;
+				}, {
+					fields: [{
+						fieldtype: 'Link',
+						fieldname: "batch_no",
+						options: "Batch",
+						read_only: 1,
+						in_list_view: 1,
+						columns: 3,
+						label: __('Batch')
+					}, {
+						fieldtype: 'Link',
+						fieldname: "item_code",
+						options: "Item",
+						read_only: 1,
+						label: __('Item Code')
+					}, {
+						fieldtype: 'Data',
+						fieldname: "item_name",
+						read_only: 1,
+						in_list_view: 1,
+						columns: 3,
+						label: __('Item Name')
+					}, {
+						fieldtype: 'Float',
+						fieldname: "alt_uom_size",
+						in_list_view: 1,
+						columns: 1,
+						label: __('Per Unit')
+					}, {
+						fieldtype: 'Link',
+						fieldname: "alt_uom",
+						read_only: 1,
+						options: "UOM",
+						label: __('Contents UOM')
+					}, {
+						fieldtype: 'Link',
+						options: 'Country',
+						fieldname: "country_of_origin",
+						in_list_view: 1,
+						columns: 2,
+						label: __('Country Of Origin')
+					}, {
+						fieldtype: 'Int',
+						fieldname: "print_qty",
+						in_list_view: 1,
+						columns: 1,
+						label: __('Print Qty')
+					}, {
+						fieldtype: 'Date',
+						fieldname: "packed_date",
+						read_only: 1,
+						label: __('Packed Date')
+					}, {
+						fieldtype: 'Data',
+						fieldname: "po_no",
+						read_only: 1,
+						label: __("Customer's PO No")
+					}]
+				}, d => d.name.toLowerCase().includes(medium), function (dialog) {
+					$(".modal-dialog", dialog.$wrapper).css("width", "1000px");
+				});
+			}
+		});
 	},
 
 	set_naming_series: function() {
