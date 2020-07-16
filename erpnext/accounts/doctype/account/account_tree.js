@@ -166,7 +166,7 @@ frappe.treeview_settings["Account"] = {
 					"account": node.label,
 					"from_date": new Date(d.getFullYear(),d.getMonth(),1),
 					"to_date": frappe.datetime.get_today(),
-					"company": frappe.treeview_settings['Account'].page.fields_dict.company.get_value()
+					"company": frappe.treeview_settings['Account'].treeview.page.fields_dict.company.get_value()
 				};
 			//	frappe.set_route("query-report", "General Ledger");
 				frappe.set_route("query-report", "General Ledger SD");
