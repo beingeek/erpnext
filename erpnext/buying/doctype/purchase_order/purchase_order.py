@@ -58,6 +58,7 @@ class PurchaseOrder(BuyingController):
 		self.validate_bom_for_subcontracting_items()
 		self.create_raw_materials_supplied("supplied_items")
 		self.set_received_qty_for_drop_ship_items()
+		self.validate_b3_information()
 		validate_inter_company_party(self.doctype, self.supplier, self.company, self.inter_company_order_reference)
 
 	def on_change(self):
@@ -69,6 +70,16 @@ class PurchaseOrder(BuyingController):
 				"landed_rate": d.landed_rate,
 			}, update_modified=False)
 
+	def validate_b3_information(self):
+		import re
+		if self.carrier_code:
+			if len(self.carrier_code) != 3:
+				frappe.throw(_("Carrier Code must be 3 digits long"))
+		
+		if self.airway_bill_no:
+			if len(self.airway_bill_no) != 9 or not re.search("[0-9]{4}-[0-9]{4}", self.airway_bill_no):
+				frappe.throw(_("Airway Bill No must be in the format ####-####"))
+	
 	def update_lcv_values(self):
 		lcvs_to_update = frappe.db.sql_list("""
 			select distinct parent
@@ -82,6 +93,31 @@ class PurchaseOrder(BuyingController):
 			doc.calculate_taxes_and_totals()
 			doc.save()
 
+	def before_print(self):
+		super(PurchaseOrder, self).before_print()
+
+		self.items_by_hs_code = {}
+
+		add_fields = ["qty", "alt_uom_qty", "amount"]
+		empty_dict = frappe._dict()
+		for fn in add_fields:
+			empty_dict[fn] = 0
+
+		for d in self.items:
+			if d.item_code:
+				item_doc = frappe.get_cached_doc("Item", d.item_code)
+				country_code = frappe.get_cached_value("Country", item_doc.country_of_origin, "code").upper() if item_doc.country_of_origin else ""
+ 
+				current_row = self.items_by_hs_code.setdefault((item_doc.customs_tariff_number, country_code), empty_dict.copy())
+				for fn in add_fields:
+					current_row[fn] += flt(d.get(fn))
+
+		for key, current_row in self.items_by_hs_code.items():
+			current_row.hs_code, current_row.country_code = key
+			current_row.rate = current_row.amount / current_row.qty if current_row.qty else 0
+
+			if current_row.hs_code:
+				current_row.description = frappe.get_cached_value("Customs Tariff Number", key[0], "description")
 
 	def validate_with_previous_doc(self):
 		super(PurchaseOrder, self).validate_with_previous_doc({

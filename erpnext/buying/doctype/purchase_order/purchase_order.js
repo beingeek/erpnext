@@ -86,6 +86,18 @@ frappe.ui.form.on("Purchase Order", {
 				grid_row.remove();
 			}
 		}
+	},
+
+	airway_bill_no: function(frm) {
+		let value = frm.doc.airway_bill_no;
+
+		if (value) {
+			value = value.replace(/[^0-9]+/g, "");
+			if(value.length >= 4) {
+				value = value.slice(0,4) + "-" + value.slice(4);
+			}
+		}
+		frm.set_value("airway_bill_no", value)
 	}
 });
 
