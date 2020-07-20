@@ -265,14 +265,23 @@ def get_delivery_notes_to_be_billed(doctype, txt, searchfield, start, page_len, 
 
 def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 	cond = ""
+	sle_cond = ""
+
 	if filters.get("posting_date"):
 		cond = "and (batch.expiry_date is null or batch.expiry_date >= %(posting_date)s)"
+		if filters.get("posting_time"):
+			sle_cond += " and (sle.posting_date, sle.posting_time) <= (%(posting_date)s, %(posting_time)s)"
+		else:
+			sle_cond = " and sle.posting_date <= %(posting_date)s"
+
+	having = "sum(sle.actual_qty) != 0" if filters.get('show_negative') else "sum(sle.actual_qty) > 0"
 
 	batch_nos = None
 	args = {
 		'item_code': filters.get("item_code"),
 		'warehouse': filters.get("warehouse"),
 		'posting_date': filters.get('posting_date'),
+		'posting_time': filters.get('posting_time'),
 		'txt': "%{0}%".format(txt),
 		"start": start,
 		"page_len": page_len
@@ -289,11 +298,12 @@ def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 					and (sle.batch_no like %(txt)s
 					or batch.manufacturing_date like %(txt)s)
 					and batch.docstatus < 2
-					{0}
+					{0} {1}
 					{match_conditions}
-				group by batch_no having sum(sle.actual_qty) > 0
-				order by batch.expiry_date, sle.batch_no desc
-				limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype)), args)
+				group by batch_no
+				having {having}
+				order by batch.expiry_date, min(sle.posting_date), sle.batch_no desc
+				limit %(start)s, %(page_len)s""".format(cond, sle_cond, match_conditions=get_match_cond(doctype), having=having), args, debug=1)
 
 	if batch_nos:
 		return batch_nos
