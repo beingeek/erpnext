@@ -303,7 +303,7 @@ def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 				group by batch_no
 				having {having}
 				order by batch.expiry_date, min(sle.posting_date), sle.batch_no desc
-				limit %(start)s, %(page_len)s""".format(cond, sle_cond, match_conditions=get_match_cond(doctype), having=having), args, debug=1)
+				limit %(start)s, %(page_len)s""".format(cond, sle_cond, match_conditions=get_match_cond(doctype), having=having), args)
 
 	if batch_nos:
 		return batch_nos
