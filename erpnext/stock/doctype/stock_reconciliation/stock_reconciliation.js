@@ -24,7 +24,9 @@ frappe.ui.form.on("Stock Reconciliation", {
 			var item = frappe.get_doc(cdt, cdn);
 			let filters = {
 				'item_code': item.item_code,
-				'posting_date': me.frm.doc.posting_date || frappe.datetime.nowdate(),
+				'posting_date': doc.posting_date || frappe.datetime.nowdate(),
+				'posting_time': doc.posting_time,
+				'show_negative': 1
 			};
 			if (item.warehouse) filters["warehouse"] = item.warehouse;
 			return {
