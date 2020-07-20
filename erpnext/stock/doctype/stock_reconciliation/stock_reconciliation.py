@@ -246,14 +246,14 @@ def get_items(args):
 
 	if args.warehouse:
 		lft, rgt = frappe.db.get_value("Warehouse", args.warehouse, ["lft", "rgt"])
-		conditions.append("exists(select name from `tabWarehouse` where lft >= {0} and rgt <= {1} and name=bin.warehouse)"
+		conditions.append("exists(select wh.name from `tabWarehouse` wh where wh.lft >= {0} and wh.rgt <= {1} and wh.name=bin.warehouse)"
 			.format(lft, rgt))
 
 	if args.item_code:
-		conditions.append("i.item_code = %(item_code)s")
+		conditions.append("i.name = %(item_code)s")
 	elif args.item_group:
 		lft, rgt = frappe.db.get_value("Item Group", args.item_group, ["lft", "rgt"])
-		conditions.append("exists (select name from `tabItem Group` where lft >= {0} and rgt <= {1} and name=i.item_group)"
+		conditions.append("exists (select ig.name from `tabItem Group` ig where ig.lft >= {0} and ig.rgt <= {1} and ig.name=i.item_group)"
 			.format(lft, rgt))
 
 	conditions = "and {0}".format(" and ".join(conditions)) if conditions else ""
@@ -291,7 +291,8 @@ def get_items(args):
 		batch_list = []
 
 		if frappe.get_cached_value("Item", item_code, "has_batch_no") and cint(args.get_batches):
-			batches = get_batches(item_code, warehouse, qty_condition=qty_condition)
+			batches = get_batches(item_code, warehouse, posting_date=args.posting_date, posting_time=args.posting_time,
+				qty_condition=qty_condition)
 			for b in batches:
 				batch_list.append({'batch_no': b.name, 'batch_date': b.received_date})
 		else:

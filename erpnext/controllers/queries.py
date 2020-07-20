@@ -270,7 +270,7 @@ def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 	if filters.get("posting_date"):
 		cond = "and (batch.expiry_date is null or batch.expiry_date >= %(posting_date)s)"
 		if filters.get("posting_time"):
-			sle_cond += " and (sle.posting_date, sle.posting_time) <= (%(posting_date)s, %(posting_time)s)"
+			sle_cond = " and (sle.posting_date, sle.posting_time) <= (%(posting_date)s, %(posting_time)s)"
 		else:
 			sle_cond = " and sle.posting_date <= %(posting_date)s"
 
