@@ -1,23 +1,35 @@
 <!-- Form2 display-->
+
+
 <div class="page-break">
-	<div>
-		<table class="pull-right" style="width: 15%; border:0">
-			<tr>
-				<td style="border-bottom: 0; margin: 0 !important; padding: 0 !important;">
-					<p class="form2label" style="margin: 0 !important; padding: 0 !important;">Page</p>
-					<p class="form2data" style="margin: 0 !important; padding: 0 !important;">1</p>
-				</td>
-				<td
-					style="border-bottom: 0; margin: 0 !important; padding: 0 !important; vertical-align:bottom !important">
-					<p class="form2label" style="margin: 0 !important; padding: 0 !important; text-align: center;">of
-						<br> de</p>
-				</td>
-				<td
-					style="border-bottom: 0; margin: 0 !important; padding: 0 !important; vertical-align:bottom !important">
-					<p class="form2data" style="margin: 0 !important; padding: 0 !important; text-align: center;">2</p>
-				</td>
-			</tr>
-		</table>
+
+	<div id="header-html" class="hidden-pdf">
+		<div class="letter-head">
+			<div class="clearfix">
+				
+				<div class="pull-left">
+					<h3 style="text-align: center !important;">CANADA CUSTOMS INVOICE<br>FACTURE DES DOUANES CANADIENNES</h3>
+				</div>
+
+				<table class="pull-right page-number visible-pdf" style="width: 15%; border:0">
+					<tr>
+						<td style="margin: 0 !important; padding: 0 !important;">
+							<p class="form2label" style="margin: 0 !important; padding: 0 !important;">Page</p>
+							<p class="form2data" style="margin: 0 !important; padding: 0 !important;"><span class="page"></span></p>
+						</td>
+						<td
+							style="margin: 0 !important; padding: 0 !important; vertical-align:bottom !important">
+							<p class="form2label" style="margin: 0 !important; padding: 0 !important; text-align: center;">of
+								<br> de</p>
+						</td>
+						<td
+							style="margin: 0 !important; padding: 0 !important; vertical-align:bottom !important">
+							<p class="form2data" style="margin: 0 !important; padding: 0 !important; text-align: center;"><span class="topage"></span></p>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
 	</div>
 	<div class="clearfix"></div>
 	<table>
@@ -100,7 +112,7 @@
 
 		<tr>
 			<td rowspan="2" style="width: 10%;">
-				<p class="form2label">11. <br>
+				<p class="form2label" style="text-align: center;">11. <br>
 					Number of
 					packages <br>
 					Nombre
@@ -125,12 +137,12 @@
 		</tr>
 
 		<tr>
-			<td>
+			<td colspan="2">
 				<p class="form2label">14. Unit price <br>
 					Prix unitaire
 				</p>
 			</td>
-			<td>
+			<td colspan="">
 				<p class="form2label">15. Total</p>
 			</td>
 		</tr>
@@ -146,9 +158,9 @@
 				<p class="form2data">{{ frappe.format_value(row.alt_uom_qty) }}</p>
 			</td>
 			<td style="border-left: 0;">
-				<p class="form2data">kg</p>
+				<p class="form2data">{{ row.alt_uom }}</p>
 			</td>
-			<td>
+			<td colspan="2">
 				<p class="form2data">{{ frappe.format_value(row.rate, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
 			</td>
 			<td>
@@ -170,7 +182,7 @@
 							</p>
 						</td>
 						<td style="border:1px; text-align:center; vertical-align: middle !important;">
-							<input type="checkbox" style="transform: scale(2);" checked>
+							<input type="checkbox"  checked>
 						</td>
 					</tr>
 				</table>
@@ -187,12 +199,12 @@
 							<i class="fa fa-caret-right" style="font-size:30px"></i>
 						</td>
 						<td style="border: 0; width: 50%; vertical-align: middle !important;">
-							<p class="form2data"> data</p>
+							<p class="form2data"> </p>
 						</td>
 					</tr>
 				</table>
 			</td>
-			<td colspan="3">
+			<td colspan="4">
 				<p class="form2label">
 					16. Total weight - Poids total
 				</p>
@@ -201,17 +213,25 @@
 				<p class="form2label">17. Invoice total <br>
 					Total de la facture
 				</p>
-				<p class="form2data"> $6605</p>
+				<p class="form2data">{{ doc.get_formatted('total')}}</p>
 			</td>
 		</tr>
 		<tr>
-			<td colspan="2">
+			<td style="border-right:0;">
 				<p class="form2label">Net</p>
 				<p class="form2data">{{ doc.get_formatted('total_alt_uom_qty') }}</p>
 			</td>
-			<td>
-				<p class="form2label">Gross</p>
+			<td style="border-left: 0;">
+				<br>
+				<p class="form2data">KG</p>
+			</td>
+			<td style="border-right: 0;">
+				<p class="form2label">Gross - Brut</p>
 				<p class="form2data">{{ doc.get_formatted('awb_gross_weight')}}</p>
+			</td>
+			<td style="border-left: 0;">
+				<br>
+				<p class="form2data">KG</p>
 			</td>
 		</tr>
 		<tr>
@@ -220,20 +240,20 @@
 					19. Exporter's name and address (if other than vendor) <br>
 					Nom et adresse de l'exportateur (s'il diffère du vendeur)
 				</p>
-				<p class="form2data">exporter name <br> address</p>
+				<p class="form2data"><br></p>
 			</td>
 			<td colspan="6">
 				<p class="form2label">
 					20. Originator (name and address) - Expéditeur d'origine (nom et adresse)
 				</p>
-				<p class="form2data">Originator name <br> address</p>
+				<p class="form2data"></p>
 			</td>
 		</tr>
 
 		<tr>
 			<td colspan="6">
 				<p class="form2label">21. CCRA ruling (if applicable) - Décision de l'Agence (s'il y a lieu)</p>
-				<p class="form2data"> data</p>
+				<p class="form2data"> </p>
 			</td>
 			<td colspan="6">
 				<table style="border: 0; width: 100%;">
@@ -245,17 +265,12 @@
 							</p>
 						</td>
 						<td style="border:0; vertical-align: middle !important; text-align: center;">
-							<input type="checkbox" style="transform: scale(2); ">
+							<input type="checkbox">
 						</td>
 					</tr>
 				</table>
 			</td>
 		</tr>
-
-
-
-
-
 		<tr>
 			<td colspan="4" style="width: 34%;">
 				<p class="form2label"> 23. If included in field 17 indicate amount:</p>
@@ -264,27 +279,27 @@
 					(i) Transportation charges, expenses and insurance from the
 					place of direct shipment to Canada <br>
 					Les frais de transport, dépenses et assurances à partir du point d'expédition directe
-					vers le Canada
+					vers le Canada <br> <br>
 				</p>
-				<p class="form2data" style="vertical-align: bottom !important;">d
+				<p class="form2data" style="vertical-align: bottom !important;">
 					<hr style="height: 1px; background-color: black;" class="MarBorPadZero">
 				</p>
 				<p class="form2label" style="margin-left: 20px; margin-right: 2px;">
 					(ii) Costs for construction, erection and assembly
 					incurred after importation into Canada <br>
 					Les coûts de construction, d'érection et
-					d'assemblage après importation au Canada
+					d'assemblage après importation au Canada  <br> <br>
 				</p>
-				<p class="form2data" style="vertical-align: bottom !important;">d
+				<p class="form2data" style="vertical-align: bottom !important;">
 					<hr style="height: 1px; background-color: black;" class="MarBorPadZero">
 				</p>
 
 				<p class="form2label" style="margin-left: 20px; margin-right: 2px;">
 					(iii) Export packing <br>
-					Le coût de l'emballage d'exportation
+					Le coût de l'emballage d'exportation  <br> <br>
 				</p>
 
-				<p class="form2data" style="vertical-align: bottom !important;">d
+				<p class="form2data" style="vertical-align: bottom !important;">
 					<hr style="height: 1px; background-color: black;" class="MarBorPadZero">
 				</p>
 			</td>
@@ -296,27 +311,27 @@
 					(i) Transportation charges, expenses and insurance
 					to the place of direct shipment to Canada <br>
 					Les frais de transport, dépenses et assurances
-					jusqu'au point d'expédition directe vers le Canada
+					jusqu'au point d'expédition directe vers le Canada  <br> <br>
 				</p>
-				<p class="form2data" style="vertical-align: bottom !important;">d
+				<p class="form2data" style="vertical-align: bottom !important;">
 					<hr style="height: 1px; background-color: black;" class="MarBorPadZero">
 				</p>
 				<p class="form2label" style="margin-left: 20px; margin-right: 2px; ">
 					(ii) Amounts for commissions other than buying
 					commissions <br>
 					Les commissions autres que celles versées <br>
-					pour l'achat
+					pour l'achat <br><br>  <br>
 				</p>
-				<p class="form2data" style="vertical-align: bottom !important;">d
+				<p class="form2data" style="vertical-align: bottom !important;">
 					<hr style="height: 1px; background-color: black;" class="MarBorPadZero">
 				</p>
 
 				<p class="form2label" style="margin-left: 20px; margin-right: 2px;">
 					(iii) Export packing <br>
-					Le coût de l'emballage d'exportation
+					Le coût de l'emballage d'exportation <br><br>
 				</p>
 
-				<p class="form2data" style="vertical-align: bottom !important;">d
+				<p class="form2data" style="vertical-align: bottom !important;">
 					<hr style="height: 1px; background-color: black;" class="MarBorPadZero">
 				</p>
 			</td>
@@ -330,7 +345,7 @@
 					versés par l'acheteur
 				</p>
 				<p style="margin: 10px;">
-					<input type="checkbox" style="">
+					<input type="checkbox">
 				</p>
 				<p class="form2label" style="margin-left: 18px; margin-right: 2px; ">
 					(ii) The purchaser has supplied goods or services
@@ -340,154 +355,11 @@
 					marchandises
 				</p>
 				<p style="margin: 10px;">
-					<input type="checkbox" style="">
+					<input type="checkbox">
 				</p>
 			</td>
 		</tr>
-		<!-- <tr>
-			<td style="width: 36%;" colspan="4">
-				<table style="border: 0;">
-					<p class="form2label">
-						23. If included in field 17 indicate amount: <br>
-						Si compris dans le total à la zone 17, précisez :
-					</p>
-					<tr>
-						<td style="border: 0;"></td>
-						<td style="border: 0;">
-							<p class="form2label">
-								(i) Transportation charges, expenses and insurance
-								from the place of direct shipment to Canada
-								Les frais de transport, dépenses et assurances
-								à partir du point d'expédition directe vers le Canada
-							</p>
-							<p class="form2data" style="vertical-align: bottom !important;">d
-								<hr style="height: 1px; background-color: black; border: none;">
-							</p>
 
-						</td>
-					</tr>
-					<tr>
-						<td style="border: 0;"></td>
-						<td style="border: 0;">
-							<p class="form2label">
-								(ii) Costs for construction, erection and assembly
-								incurred after importation into Canada
-								Les coûts de construction, d'érection et
-								d'assemblage après importation au Canada
-							</p>
-							<p class="form2data">d
-								<hr style="height: 1px; background-color: black; border: none;">
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td style="border: 0;"></td>
-						<td style="border: 0;">
-							<p class="form2label">
-								(iii) Export packing
-								Le coût de l'emballage d'exportation
-							</p>
-							<p class="form2data">d
-								<hr style="height: 1px; background-color: black; border: none;">
-							</p>
-						</td>
-					</tr>
-				</table>
-			</td>
-			<td style="width: 34%;" colspan="4">
-				<table style="border: 0;">
-					<p class="form2label">
-						24. If not included in field 17 indicate amount: <br>
-						Si non compris dans le total à la zone 17, précisez :
-					</p>
-					<tr>
-						<td style="border: 0;"></td>
-						<td style="border: 0;">
-							<p class="form2label">
-								(i) Transportation charges, expenses and insurance
-								to the place of direct shipment to Canada
-								Les frais de transport, dépenses et assurances
-								jusqu'au point d'expédition directe vers le Canada
-							</p>
-							<p class="form2data">d
-								<hr style="height: 1px; background-color: black; border: none;">
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td style="border: 0;"></td>
-						<td style="border: 0;">
-							<p class="form2label">
-								(ii) Amounts for commissions other than buying
-								commissions
-								Les commissions autres que celles versées
-								pour l'achat
-							</p>
-							<p class="form2data">d
-								<hr style="height: 1px; background-color: black; border: none;">
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td style="border: 0;"></td>
-						<td style="border: 0;">
-							<p class="form2label">
-								(iii) Export packing
-								Le coût de l'emballage d'exportation
-							</p>
-							<p class="form2data">d
-								<hr style="height: 1px; background-color: black; border: none;">
-							</p>
-						</td>
-					</tr>
-				</table>
-			</td>
-			<td style="width: 30%;" colspan="4">
-				<table style="border: 0;">
-					<p class="form2label">
-						25. Check (if applicable): <br>
-						Cochez (s'il y a lieu) :
-					</p>
-					<tr>
-						<td style="border: 0;"></td>
-						<td style="border: 0;">
-							<p class="form2label">
-								(i) Royalty payments or subsequent proceeds are
-								paid or payable by the purchaser
-								Des redevances ou produits ont été ou seront
-								versés par l'acheteur
-							</p>
-						</td>
-
-					</tr>
-					<tr>
-						<td colspan="2"
-							style="border: 0; text-align:center; transform: scale(2); padding: 28px !important;"><input
-								type="checkbox">
-						</td>
-					</tr>
-
-					<tr>
-						<td style="border: 0;"></td>
-						<td style="border: 0;">
-							<p class="form2label">
-								(ii) The purchaser has supplied goods or services
-								for use in the production of these goods
-								L'acheteur a fourni des marchandises ou des
-								services pour la production de ces
-								marchandises
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2"
-							style="border: 0; text-align:center; transform: scale(2); margin: 28px !important;">
-							<input type="checkbox">
-						</td>
-					</tr>
-				</table>
-			</td>
-		</tr> -->
 		<tr>
 			<td colspan="12">
 				<p style="text-align: center; font-size: 8px;">Dans ce formulaire, toutes les expressions désignant des

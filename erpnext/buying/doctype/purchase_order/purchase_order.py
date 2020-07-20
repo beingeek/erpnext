@@ -115,9 +115,12 @@ class PurchaseOrder(BuyingController):
 		for key, current_row in self.items_by_hs_code.items():
 			current_row.hs_code, current_row.country_code = key
 			current_row.rate = current_row.amount / current_row.qty if current_row.qty else 0
+			current_row.base_amount = current_row.amount * self.customs_exchange_rate
 
 			if current_row.hs_code:
 				current_row.description = frappe.get_cached_value("Customs Tariff Number", key[0], "description")
+
+		self.base_customs_total = self.total * self.customs_exchange_rate
 
 	def validate_with_previous_doc(self):
 		super(PurchaseOrder, self).validate_with_previous_doc({

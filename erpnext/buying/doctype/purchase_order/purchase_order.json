@@ -41,6 +41,8 @@
   "column_break_33",
   "country_of_transhipment",
   "awb_gross_weight",
+  "column_break_36",
+  "customs_exchange_rate",
   "drop_ship",
   "customer",
   "customer_name",
@@ -1421,12 +1423,22 @@
    "fieldname": "awb_gross_weight",
    "fieldtype": "Float",
    "label": "AWB Gross Weight"
+  },
+  {
+   "fieldname": "customs_exchange_rate",
+   "fieldtype": "Float",
+   "label": "Customs Exchange Rate",
+   "precision": "5"
+  },
+  {
+   "fieldname": "column_break_36",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-07-17 16:01:08.045835",
+ "modified": "2020-07-20 15:51:51.676007",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
