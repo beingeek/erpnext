@@ -155,16 +155,18 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 			}
 		} else {
 			var me = this;
-			frappe.model.with_doc("Customer", me.frm.doc.customer, function() {
-				var customer = frappe.model.get_doc("Customer", me.frm.doc.customer);
-				if (customer && customer.invoice_print_format) {
-					cur_frm.meta._default_print_format = cur_frm.meta.default_print_format;
-					cur_frm.meta.default_print_format = customer.invoice_print_format;
-				} else if(cur_frm.meta._default_print_format) {
-					cur_frm.meta.default_print_format = cur_frm.meta._default_print_format;
-					cur_frm.meta._default_print_format = null;
-				}
-			});
+			if (me.frm.doc.customer) {
+				frappe.model.with_doc("Customer", me.frm.doc.customer, function () {
+					var customer = frappe.model.get_doc("Customer", me.frm.doc.customer);
+					if (customer && customer.invoice_print_format) {
+						cur_frm.meta._default_print_format = cur_frm.meta.default_print_format;
+						cur_frm.meta.default_print_format = customer.invoice_print_format;
+					} else if (cur_frm.meta._default_print_format) {
+						cur_frm.meta.default_print_format = cur_frm.meta._default_print_format;
+						cur_frm.meta._default_print_format = null;
+					}
+				});
+			}
 		}
 	},
 
