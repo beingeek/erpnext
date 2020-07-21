@@ -13,6 +13,7 @@
   "supplier_name",
   "shipping_date",
   "schedule_date",
+  "actual_gross_weight",
   "get_items_from_open_material_requests",
   "order_confirmation_no",
   "order_confirmation_date",
@@ -34,6 +35,14 @@
   "currency",
   "conversion_rate",
   "amended_from",
+  "b3_information_section",
+  "carrier_code",
+  "airway_bill_no",
+  "column_break_33",
+  "country_of_transhipment",
+  "awb_gross_weight",
+  "column_break_36",
+  "customs_exchange_rate",
   "drop_ship",
   "customer",
   "customer_name",
@@ -1382,12 +1391,58 @@
    "fieldname": "col_number",
    "fieldtype": "Data",
    "label": "Col Number"
+  },
+  {
+   "fieldname": "actual_gross_weight",
+   "fieldtype": "Float",
+   "label": "Actual Gross Weight"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "b3_information_section",
+   "fieldtype": "Section Break",
+   "label": "B3 Information"
+  },
+  {
+   "fieldname": "carrier_code",
+   "fieldtype": "Data",
+   "label": "Carrier Code"
+  },
+  {
+   "fieldname": "airway_bill_no",
+   "fieldtype": "Data",
+   "label": "Airway Bill No"
+  },
+  {
+   "fieldname": "column_break_33",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "country_of_transhipment",
+   "fieldtype": "Link",
+   "label": "Country of Transhipment",
+   "options": "Country"
+  },
+  {
+   "fieldname": "awb_gross_weight",
+   "fieldtype": "Float",
+   "label": "AWB Gross Weight"
+  },
+  {
+   "fieldname": "customs_exchange_rate",
+   "fieldtype": "Float",
+   "label": "Customs Exchange Rate",
+   "precision": "5"
+  },
+  {
+   "fieldname": "column_break_36",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-07-06 11:51:35.929250",
+ "modified": "2020-07-20 15:51:51.676007",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
