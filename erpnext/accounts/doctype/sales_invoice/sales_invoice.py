@@ -183,6 +183,9 @@ class SalesInvoice(SellingController):
 			self.update_current_stock()
 			self.validate_delivery_note_if_update_stock()
 
+		if self._action != 'submit':
+			self.validate_no_update_stock()
+
 		# validate service stop date to lie in between start and end date
 		validate_service_stop_date(self)
 
@@ -642,6 +645,17 @@ class SalesInvoice(SellingController):
 			for d in self.get("items"):
 				if d.delivery_note:
 					msgprint(_("Stock cannot be updated against Delivery Note {0}").format(d.delivery_note), raise_exception=1)
+
+	def validate_no_update_stock(self):
+		if not cint(self.is_return) and not cint(self.update_stock):
+			no_delivery_notes = True
+			for d in self.get("items"):
+				if d.delivery_note:
+					no_delivery_notes = False
+					break
+
+			if no_delivery_notes:
+				frappe.msgprint(_("Update Stock is unchecked, please confirm."))
 
 	def validate_write_off_account(self):
 		if flt(self.write_off_amount) and not self.write_off_account:

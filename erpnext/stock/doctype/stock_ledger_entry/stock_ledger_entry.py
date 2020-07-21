@@ -31,6 +31,7 @@ class StockLedgerEntry(Document):
 		self.validate_batch()
 		validate_warehouse_company(self.warehouse, self.company)
 		self.scrub_posting_time()
+		self.validate_posting_date()
 		self.validate_and_set_fiscal_year()
 		self.block_transactions_against_group_warehouse()
 
@@ -112,6 +113,10 @@ class StockLedgerEntry(Document):
 	def scrub_posting_time(self):
 		if not self.posting_time or self.posting_time == '00:0':
 			self.posting_time = '00:00'
+
+	def validate_posting_date(self):
+		if self.posting_date and getdate(self.posting_date) > getdate():
+			frappe.throw(_("Stock Ledger Entry cannot be created for a future date: {0}").format(formatdate(self.posting_date)))
 
 	def validate_batch(self):
 		if self.batch_no and self.voucher_type != "Stock Entry":

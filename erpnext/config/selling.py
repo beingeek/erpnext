@@ -4,22 +4,9 @@ from frappe import _
 def get_data():
 	return [
 		{
-			"label": _("Sales"),
+			"label": _("Sales Transactions"),
 			"icon": "fa fa-star",
 			"items": [
-				{
-					"type": "doctype",
-					"name": "Customer",
-					"description": _("Customer Database."),
-					"onboard": 1,
-				},
-				{
-					"type": "doctype",
-					"name": "Quotation",
-					"description": _("Quotes to Leads or Customers."),
-					"onboard": 1,
-					"dependencies": ["Item", "Customer"],
-				},
 				{
 					"type": "doctype",
 					"name": "Sales Order",
@@ -36,16 +23,45 @@ def get_data():
 				},
 				{
 					"type": "doctype",
-					"name": "Blanket Order",
-					"description": _("Blanket Orders from Costumers."),
+					"name": "Quotation",
+					"description": _("Quotes to Leads or Customers."),
 					"onboard": 1,
 					"dependencies": ["Item", "Customer"],
 				},
 				{
 					"type": "doctype",
-					"name": "Sales Partner",
-					"description": _("Manage Sales Partners."),
-					"dependencies": ["Item"],
+					"name": "Blanket Order",
+					"description": _("Blanket Orders from Costumers."),
+					"onboard": 1,
+					"dependencies": ["Item", "Customer"],
+				},
+			]
+		},
+		{
+			"label": _("Sales Masters"),
+			"icon": "fa fa-star",
+			"items": [
+				{
+					"type": "doctype",
+					"name": "Customer",
+					"description": _("Customer Database."),
+					"onboard": 1,
+				},
+				{
+					"type": "doctype",
+					"label": _("Customer Group"),
+					"name": "Customer Group",
+					"icon": "fa fa-sitemap",
+					"link": "Tree/Customer Group",
+					"description": _("Manage Customer Group Tree."),
+				},
+				{
+					"type": "doctype",
+					"label": _("Territory"),
+					"name": "Territory",
+					"icon": "fa fa-sitemap",
+					"link": "Tree/Territory",
+					"description": _("Manage Territory Tree."),
 				},
 				{
 					"type": "doctype",
@@ -56,44 +72,46 @@ def get_data():
 					"description": _("Manage Sales Person Tree."),
 					"dependencies": ["Item", "Customer"],
 				},
+			]
+		},
+		{
+			"label": _("Qty Adjustment"),
+			"icon": "fa fa-star",
+			"items": [
 				{
 					"type": "report",
 					"is_query_report": True,
-					"name": "Territory Target Variance (Item Group-Wise)",
-					"route": "#query-report/Territory Target Variance Item Group-Wise",
-					"doctype": "Territory",
+					"name": "Qty Adjust",
+					"route": "#query-report/Qty Adjust",
+					"doctype": "Sales Order",
+				},
+				{
+					"type": "doctype",
+					"name": "Qty Adjustment Log",
+					"description": _("Qty Adjustment Log."),
 				},
 				{
 					"type": "report",
 					"is_query_report": True,
-					"name": "Sales Person Target Variance (Item Group-Wise)",
-					"route": "#query-report/Sales Person Target Variance Item Group-Wise",
-					"doctype": "Sales Person",
-					"dependencies": ["Sales Person"],
+					"name": "Qty Adjust Log Summary",
+					"route": "#query-report/Qty Adjust Log Summary",
+					"doctype": "Qty Adjustment Log",
+				},
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Sundine Inactive Customers",
+					"doctype": "Sales Order"
 				},
 			]
 		},
 		{
-			"label": _("Items and Pricing"),
+			"label": _("Items"),
 			"items": [
 				{
 					"type": "doctype",
 					"name": "Item",
 					"description": _("All Products or Services."),
-					"onboard": 1,
-				},
-				{
-					"type": "doctype",
-					"name": "Item Price",
-					"description": _("Multiple Item prices."),
-					"route": "#Report/Item Price",
-					"dependencies": ["Item", "Price List"],
-					"onboard": 1,
-				},
-				{
-					"type": "doctype",
-					"name": "Price List",
-					"description": _("Price List master."),
 					"onboard": 1,
 				},
 				{
@@ -110,6 +128,33 @@ def get_data():
 					"name": "Product Bundle",
 					"description": _("Bundle items at time of sale."),
 					"dependencies": ["Item"],
+				},
+			]
+		},
+		{
+			"label": _("Pricing"),
+			"items": [
+				{
+					"type": "doctype",
+					"name": "Price List",
+					"description": _("Price List master."),
+					"onboard": 1,
+				},
+				{
+					"type": "doctype",
+					"name": "Item Price",
+					"description": _("Multiple Item prices."),
+					"route": "#Report/Item Price",
+					"dependencies": ["Item", "Price List"],
+					"onboard": 1,
+				},
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Price List",
+					"route": "#query-report/Price List",
+					"label": _("Price List Editor"),
+					"doctype": "Item Price",
 				},
 				{
 					"type": "doctype",
@@ -135,6 +180,24 @@ def get_data():
 			]
 		},
 		{
+			"label": _("Delivery"),
+			"icon": "fa fa-cog",
+			"items": [
+				{
+					"type": "link",
+					"doctype": "Sales Order",
+					"label": _("Sales Order Route Map"),
+					"route": "/sales_order"
+				},
+				{
+					"type": "link",
+					"doctype": "Sales Invoice",
+					"label": _("Sales Invoice Route Map"),
+					"route": "/sales_invoice"
+				},
+			]
+		},
+		{
 			"label": _("Settings"),
 			"icon": "fa fa-cog",
 			"items": [
@@ -156,42 +219,6 @@ def get_data():
 					"name": "Sales Taxes and Charges Template",
 					"description": _("Tax template for selling transactions."),
 					"onboard": 1,
-				},
-				{
-					"type": "doctype",
-					"name": "Lead Source",
-					"description": _("Track Leads by Lead Source.")
-				},
-				{
-					"type": "doctype",
-					"label": _("Customer Group"),
-					"name": "Customer Group",
-					"icon": "fa fa-sitemap",
-					"link": "Tree/Customer Group",
-					"description": _("Manage Customer Group Tree."),
-				},
-				{
-					"type": "doctype",
-					"name": "Contact",
-					"description": _("All Contacts."),
-				},
-				{
-					"type": "doctype",
-					"name": "Address",
-					"description": _("All Addresses."),
-				},
-				{
-					"type": "doctype",
-					"label": _("Territory"),
-					"name": "Territory",
-					"icon": "fa fa-sitemap",
-					"link": "Tree/Territory",
-					"description": _("Manage Territory Tree."),
-				},
-				{
-					"type": "doctype",
-					"name": "Campaign",
-					"description": _("Sales campaigns."),
 				},
 			]
 		},
@@ -223,12 +250,6 @@ def get_data():
 				{
 					"type": "report",
 					"is_query_report": True,
-					"name": "Inactive Customers",
-					"doctype": "Sales Order"
-				},
-				{
-					"type": "report",
-					"is_query_report": True,
 					"name": "Ordered Items To Be Delivered",
 					"doctype": "Sales Order"
 				},
@@ -255,6 +276,44 @@ def get_data():
 					"is_query_report": True,
 					"name": "Sales Order Trends",
 					"doctype": "Sales Order"
+				},
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Inactive Customers",
+					"doctype": "Sales Order"
+				},
+			]
+		},
+		{
+			"label": _("Additional Documents"),
+			"icon": "fa fa-cog",
+			"items": [
+				{
+					"type": "doctype",
+					"name": "Contact",
+					"description": _("All Contacts."),
+				},
+				{
+					"type": "doctype",
+					"name": "Address",
+					"description": _("All Addresses."),
+				},
+				{
+					"type": "doctype",
+					"name": "Campaign",
+					"description": _("Sales campaigns."),
+				},
+				{
+					"type": "doctype",
+					"name": "Lead Source",
+					"description": _("Track Leads by Lead Source.")
+				},
+				{
+					"type": "doctype",
+					"name": "Sales Partner",
+					"description": _("Manage Sales Partners."),
+					"dependencies": ["Item"],
 				},
 			]
 		},

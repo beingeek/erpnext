@@ -460,15 +460,58 @@ def get_batch_received_date(batch_no, warehouse):
 
 	return date[0][0] if date else None
 
-def get_batches(item_code, warehouse):
+def get_batches(item_code, warehouse, posting_date=None, posting_time=None, qty_condition="positive"):
+	if qty_condition == "both":
+		having = "having qty != 0"
+	elif qty_condition == "negative":
+		having = "having qty < 0"
+	else:
+		having = "having qty > 0"
+
+	date_cond = ""
+	if posting_date:
+		date_cond = "and (b.expiry_date is null or b.expiry_date >= %(posting_date)s)"
+		if posting_time:
+			date_cond += " and (sle.posting_date, sle.posting_time) <= (%(posting_date)s, %(posting_time)s)"
+		else:
+			date_cond += " and sle.posting_date <= %(posting_date)s"
+
+	args = {
+		'item_code': item_code,
+		'warehouse': warehouse,
+		'posting_date': posting_date,
+		'posting_time': posting_time
+	}
+
 	batches = frappe.db.sql("""
 		select b.name, sum(sle.actual_qty) as qty, b.expiry_date,
 			min(timestamp(sle.posting_date, sle.posting_time)) received_date
 		from `tabBatch` b
 		join `tabStock Ledger Entry` sle ignore index (item_code, warehouse) on b.name = sle.batch_no
-		where sle.item_code = %s and sle.warehouse = %s and (b.expiry_date >= CURDATE() or b.expiry_date IS NULL)
+		where sle.item_code = %(item_code)s and sle.warehouse = %(warehouse)s {0}
 		group by b.name
-		having qty > 0
-	""", (item_code, warehouse), as_dict=True)
+		{1}
+	""".format(date_cond, having), args, as_dict=True)
 
 	return sorted(batches, key=lambda d: (d.expiry_date, d.received_date))
+
+@frappe.whitelist()
+def get_batch_print_raw_commands(batch_args, print_format=None):
+	from frappe.www.printview import get_rendered_raw_commands
+	import json
+
+	if not batch_args:
+		return ""
+
+	if isinstance(batch_args, string_types):
+		batch_args = json.loads(batch_args)
+
+	raw_commands = []
+	for b in batch_args:
+		qty = cint(b.get('print_qty'))
+		if b.get('batch_no') and qty > 0:
+			b['print_qty'] = qty
+			print_data = get_rendered_raw_commands("Batch", b.get('batch_no'), print_format, args={"transaction": b})
+			raw_commands.append(print_data['raw_commands'])
+
+	return raw_commands

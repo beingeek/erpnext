@@ -247,23 +247,36 @@ def get_items(args):
 
 	if args.warehouse:
 		lft, rgt = frappe.db.get_value("Warehouse", args.warehouse, ["lft", "rgt"])
-		conditions.append("exists(select name from `tabWarehouse` where lft >= {0} and rgt <= {1} and name=bin.warehouse)"
+		conditions.append("exists(select wh.name from `tabWarehouse` wh where wh.lft >= {0} and wh.rgt <= {1} and wh.name=bin.warehouse)"
 			.format(lft, rgt))
 
 	if args.item_code:
-		conditions.append("i.item_code = %(item_code)s")
+		conditions.append("i.name = %(item_code)s")
 	elif args.item_group:
 		lft, rgt = frappe.db.get_value("Item Group", args.item_group, ["lft", "rgt"])
-		conditions.append("exists (select name from `tabItem Group` where lft >= {0} and rgt <= {1} and name=i.item_group)"
+		conditions.append("exists (select ig.name from `tabItem Group` ig where ig.lft >= {0} and ig.rgt <= {1} and ig.name=i.item_group)"
 			.format(lft, rgt))
 
 	conditions = "and {0}".format(" and ".join(conditions)) if conditions else ""
 
+	qty_condition = "positive"
+	if args.positive_or_negative == "Negative Only":
+		qty_condition = "negative"
+	elif args.positive_or_negative == "Positive and Negative":
+		qty_condition = "both"
+
+	has_batch_no_condition = "or i.has_batch_no = 1" if cint(args.get_batches) else ""
+	bin_qty_condition = "and (bin.actual_qty > 0 {0})".format(has_batch_no_condition)
+	if qty_condition == "negative":
+		bin_qty_condition = "and (bin.actual_qty < 0 {0})".format(has_batch_no_condition)
+	elif qty_condition == "both":
+		bin_qty_condition = "and (bin.actual_qty != 0 {0})".format(has_batch_no_condition)
+
 	items = frappe.db.sql("""
 		select i.name, bin.warehouse
 		from tabBin bin, tabItem i
-		where i.name=bin.item_code and i.disabled=0 and actual_qty > 0 {0}
-	""".format(conditions), args)
+		where i.name=bin.item_code and i.disabled=0 {0} {1}
+	""".format(bin_qty_condition, conditions), args)
 
 	res = []
 	for d in set(items):
@@ -279,7 +292,8 @@ def get_items(args):
 		batch_list = []
 
 		if frappe.get_cached_value("Item", item_code, "has_batch_no") and cint(args.get_batches):
-			batches = get_batches(item_code, warehouse)
+			batches = get_batches(item_code, warehouse, posting_date=args.posting_date, posting_time=args.posting_time,
+				qty_condition=qty_condition)
 			for b in batches:
 				batch_list.append({'batch_no': b.name, 'batch_date': b.received_date})
 		else:

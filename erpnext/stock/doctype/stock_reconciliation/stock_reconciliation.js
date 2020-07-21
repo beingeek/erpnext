@@ -18,11 +18,15 @@ frappe.ui.form.on("Stock Reconciliation", {
 			}
 		});
 
+		var me = this;
+
 		frm.set_query("batch_no", "items", function(doc, cdt, cdn) {
 			var item = frappe.get_doc(cdt, cdn);
 			let filters = {
 				'item_code': item.item_code,
-				'posting_date': me.frm.doc.posting_date || frappe.datetime.nowdate(),
+				'posting_date': doc.posting_date || frappe.datetime.nowdate(),
+				'posting_time': doc.posting_time,
+				'show_negative': 1
 			};
 			if (item.warehouse) filters["warehouse"] = item.warehouse;
 			return {
@@ -31,11 +35,11 @@ frappe.ui.form.on("Stock Reconciliation", {
 			}
 		});
 
-		if (frm.doc.company) {
-			erpnext.queries.setup_queries(frm, "Warehouse", function() {
-				return erpnext.queries.warehouse(frm.doc);
-			});
-		}
+		frm.set_query("default_warehouse", function() {
+			return {
+				filters: ["Warehouse", "company", "in", ["", cstr(frm.doc.company)]]
+			}
+		});
 
 		if (!frm.doc.expense_account) {
 			frm.trigger("set_expense_account");
@@ -65,7 +69,8 @@ frappe.ui.form.on("Stock Reconciliation", {
 					item_group: frm.doc.selected_item_group,
 					item_code: frm.doc.selected_item_code,
 					get_batches: cint(frm.doc.get_batches),
-					sort_by: frm.doc.sort_by
+					sort_by: frm.doc.sort_by,
+					positive_or_negative: frm.doc.positive_or_negative
 				}
 			},
 			callback: function(r) {

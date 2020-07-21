@@ -21,7 +21,7 @@ from frappe.website.doctype.website_slideshow.website_slideshow import \
 from frappe.website.render import clear_cache
 from frappe.website.website_generator import WebsiteGenerator
 
-from six import iteritems
+from six import iteritems, string_types
 
 
 class DuplicateReorderRows(frappe.ValidationError):
@@ -1336,6 +1336,54 @@ def update_variants(variants, template, publish_progress=True):
 		count+=1
 		if publish_progress:
 				frappe.publish_progress(count*100/len(variants), title = _("Updating Variants..."))
+
+@frappe.whitelist()
+def get_item_batch_country_of_origin(args):
+	if isinstance(args, string_types):
+		args = json.loads(args)
+
+	item_codes = [d.get('item_code') for d in args if d.get('item_code')]
+	batch_nos = [d.get('batch_no') for d in args if d.get('batch_no')]
+
+	item_code_country = {}
+	for item_code in item_codes:
+		if item_code not in item_code_country:
+			item_code_country[item_code] = frappe.get_cached_value("Item", item_code, "country_of_origin")
+
+	batch_no_country = {}
+	if batch_nos:
+		repack_entry_data = frappe.db.sql("""
+			select ste.name, item.item_code, item.t_warehouse, item.s_warehouse, m.country_of_origin, m.is_sales_item, item.batch_no
+			from `tabStock Entry` ste, `tabStock Entry Detail` item, `tabItem` m
+			where ste.name = item.parent and m.name = item.item_code
+				and ste.docstatus = 1 and ste.purpose = 'Repack' and exists(
+				select src_item.name from `tabStock Entry Detail` src_item where src_item.parent = ste.name
+					and src_item.batch_no in %s and ifnull(src_item.s_warehouse, '') = '')
+		""", [batch_nos], as_dict=1)
+
+		repack_country = {}
+		for d in repack_entry_data:
+			repack_object = repack_country.setdefault(d.name, frappe._dict({'source_countries': set(), 'target_batches': set()}))
+
+			if d.t_warehouse and d.batch_no:
+				repack_object.target_batches.add(d.batch_no)
+
+			if d.s_warehouse and d.is_sales_item and d.country_of_origin:
+				repack_object.source_countries.add(d.country_of_origin)
+
+		for repack_object in repack_country.values():
+			if repack_object.target_batches and repack_object.source_countries:
+				for batch_no in repack_object.target_batches:
+					if len(repack_object.source_countries) == 1:
+						batch_no_country[batch_no] = list(repack_object.source_countries)[0]
+					else:
+						batch_no_country[batch_no] = ""
+
+	out = {
+		'item_code_country': item_code_country,
+		'batch_no_country': batch_no_country
+	}
+	return out
 
 def on_doctype_update():
 	# since route is a Text column, it needs a length for indexing

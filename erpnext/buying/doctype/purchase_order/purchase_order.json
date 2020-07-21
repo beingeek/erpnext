@@ -1116,7 +1116,8 @@
   {
    "fieldname": "pickup_no",
    "fieldtype": "Data",
-   "label": "Pickup #"
+   "label": "Pickup #",
+   "no_copy": 1
   },
   {
    "fieldname": "empty_pallet_weight",
@@ -1126,7 +1127,8 @@
   {
    "fieldname": "note",
    "fieldtype": "Data",
-   "label": "Note"
+   "label": "Note",
+   "no_copy": 1
   },
   {
    "fieldname": "column_break_16",
@@ -1155,12 +1157,14 @@
    "fieldtype": "Float",
    "hidden": 1,
    "label": "Actual # Of Pallets For Pick Up",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "total_packed_pallets",
    "fieldtype": "Float",
-   "label": "Actual # Of Pallets For Pick Up"
+   "label": "Actual # Of Pallets For Pick Up",
+   "no_copy": 1
   },
   {
    "fieldname": "column_break_14",

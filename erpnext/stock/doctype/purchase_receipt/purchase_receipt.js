@@ -73,6 +73,14 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 	refresh: function() {
 		var me = this;
 		this._super();
+
+		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
+			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_batch_labels_dialog("box"));
+		}
+		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
+			this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_batch_labels_dialog("pallet"));
+		}
+
 		if(this.frm.doc.docstatus===1) {
 			this.show_stock_ledger();
 			//removed for temporary
@@ -146,6 +154,76 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 		this.frm.toggle_reqd("supplier_warehouse", this.frm.doc.is_subcontracted==="Yes");
 
 		this.set_naming_series();
+	},
+
+	show_print_batch_labels_dialog: function(medium) {
+		const me = this;
+		this.build_print_batch_labels_dialog(function () {
+			let out = [];
+			$.each(me.frm.doc.items || [], function (i, d) {
+				if (d.item_code && d.batch_no) {
+					out.push({
+						'name': d.name,
+						'item_code': d.item_code,
+						'item_name': d.item_name,
+						'batch_no': d.batch_no,
+						'print_qty': medium == "pallet" ? Math.ceil(d.pallets) : Math.ceil(d.qty),
+						'alt_uom': d.alt_uom,
+						'alt_uom_size': d.alt_uom_size_std,
+						'supplier_name': me.frm.doc.supplier_name || me.frm.doc.supplier,
+						'received_date': me.frm.doc.posting_date
+					});
+				}
+			});
+			return out;
+		}, {
+			fields: [{
+				fieldtype: 'Link',
+				fieldname: "batch_no",
+				options: "Batch",
+				read_only: 1,
+				in_list_view: 1,
+				label: __('Batch')
+			}, {
+				fieldtype: 'Link',
+				fieldname: "item_code",
+				options: "Item",
+				read_only: 1,
+				label: __('Item Code')
+			}, {
+				fieldtype: 'Data',
+				fieldname: "item_name",
+				read_only: 1,
+				in_list_view: 1,
+				label: __('Item Name')
+			}, {
+				fieldtype: 'Float',
+				fieldname: "alt_uom_size",
+				read_only: 1,
+				label: __('Per Unit')
+			}, {
+				fieldtype: 'Link',
+				fieldname: "alt_uom",
+				read_only: 1,
+				options: "UOM",
+				label: __('Contents UOM')
+			}, {
+				fieldtype: 'Int',
+				fieldname: "print_qty",
+				in_list_view: 1,
+				label: __('Print Qty')
+			}, {
+				fieldtype: 'Data',
+				fieldname: "supplier_name",
+				read_only: 1,
+				label: __('Supplier Name')
+			}, {
+				fieldtype: 'Date',
+				fieldname: "received_date",
+				read_only: 1,
+				label: __('Received Date')
+			}]
+		}, d => d.name.toLowerCase().includes(medium));
 	},
 
 	set_naming_series: function() {

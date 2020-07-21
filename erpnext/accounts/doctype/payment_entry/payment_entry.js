@@ -200,7 +200,7 @@ frappe.ui.form.on('Payment Entry', {
 
 				if (returned_cheque_charges_account) {
 					var dialog = new frappe.ui.Dialog({
-						title: __("Quick Journal Entry"),
+						title: __("Create Returned Cheque"),
 						fields: [
 							{fieldtype: "Currency", fieldname: "charges", label: __("Returned Cheque Charges"), "default": 25},
 						]

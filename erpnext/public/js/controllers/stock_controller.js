@@ -78,5 +78,125 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 				frappe.set_route("query-report", "General Ledger");
 			}, __("View"));
 		}
-	}
+	},
+
+	build_print_batch_labels_dialog(get_data, table_fields, print_format_filter, show_callback) {
+		const me = this;
+		frappe.model.with_doctype("Batch", () => {
+			const meta = frappe.get_meta("Batch");
+
+			me.batch_print_dialog_data = [];
+			if (get_data) {
+				me.batch_print_dialog_data = get_data();
+			}
+
+			let available_print_formats = meta.__print_formats.filter(d => d.raw_printing);
+			if (print_format_filter) {
+				available_print_formats = available_print_formats.filter(print_format_filter);
+			}
+			available_print_formats = available_print_formats.map(d => d.name);
+
+			let default_print_format = available_print_formats.includes(meta.default_print_format) ? meta.default_print_format : "";
+			if (!default_print_format && available_print_formats.length) {
+				default_print_format = available_print_formats[0];
+			}
+
+			let fields = [
+				{fieldtype: "Select", fieldname: "print_format", label: __("Print Format"), "reqd": 1,
+					"default": default_print_format,
+					"options": available_print_formats},
+				{fieldtype: 'Section Break'}
+			];
+			table_fields = Object.assign({
+				label: __("Batches"),
+				fieldname: "batch_args",
+				fieldtype: "Table",
+				data: me.batch_print_dialog_data,
+				get_data: () => me.batch_print_dialog_data,
+				in_place_edit: true,
+				cannot_add_rows: true
+			}, table_fields);
+			fields.push(table_fields);
+
+			var dialog = new frappe.ui.Dialog({
+				title: __("Batch Print"),
+				fields: fields
+			});
+			dialog.set_primary_action(__("Print"), function() {
+				let batch_args = dialog.get_values()["batch_args"];
+				let print_format = dialog.get_value('print_format');
+				let printer = me.get_mapped_printer("Batch", print_format);
+
+				if (printer) {
+					me.print_batch_labels(batch_args, print_format, printer);
+				} else {
+					frappe.ui.form.qz_get_printer_list().then((data) => {
+						let printer_dialog = new frappe.ui.Dialog({
+							title: __("Select Printer"),
+							fields: [{fieldtype: "Select", fieldname: "printer", label: __("Printer"), "reqd": 1,
+								"options": data || ""
+							}]
+						});
+						printer_dialog.set_primary_action(__("Print"), function () {
+							printer = printer_dialog.get_value('printer');
+
+							if (printer) {
+								// set printer mapping
+								let print_format_printer_map = me.frm.print_preview.get_print_format_printer_map();
+								if (!print_format_printer_map['Batch']) {
+									print_format_printer_map['Batch'] = [];
+								}
+								print_format_printer_map['Batch'] = print_format_printer_map['Batch'].filter(d => d.printer != printer && d.print_format != print_format);
+								print_format_printer_map['Batch'].push({printer: printer, print_format: print_format});
+								localStorage.print_format_printer_map = JSON.stringify(print_format_printer_map);
+
+								// print
+								me.print_batch_labels(batch_args, print_format, printer);
+							}
+							printer_dialog.hide();
+						});
+						printer_dialog.show();
+					});
+				}
+
+				dialog.hide();
+			});
+
+			if (show_callback) {
+				show_callback(dialog);
+			}
+			dialog.show({backdrop: 'static', keyboard: false});
+		});
+	},
+
+	print_batch_labels: function(batch_args, print_format, printer) {
+		frappe.call({
+			method: "erpnext.stock.doctype.batch.batch.get_batch_print_raw_commands",
+			args: {
+				"batch_args": batch_args,
+				"print_format": print_format
+			},
+			callback: function (r) {
+				if (r.message && r.message.length) {
+					frappe.ui.form.qz_connect().then(function () {
+						let config = qz.configs.create(printer);
+						return qz.print(config, r.message);
+					}).then(frappe.ui.form.qz_success).catch((err) => {
+						frappe.ui.form.qz_fail(err);
+					});
+				}
+			}
+		});
+	},
+
+	get_mapped_printer: function(doctype, print_format) {
+		let printers = [];
+		let print_format_printer_map = this.frm.print_preview.get_print_format_printer_map();
+		if (print_format_printer_map["Batch"]) {
+			printers = print_format_printer_map["Batch"].filter(
+				(printer_map) => printer_map.print_format == print_format);
+		}
+
+		return printers.length ? printers[0].printer : "";
+	},
 });

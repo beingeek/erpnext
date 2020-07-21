@@ -70,7 +70,7 @@ def get_stock_ledger_entries(filters, items):
 	item_conditions_sql = ''
 	if items:
 		item_conditions_sql = 'and sle.item_code in ({})'\
-			.format(', '.join(['"' + frappe.db.escape(i) + '"' for i in items]))
+			.format(', '.join([frappe.db.escape(i) for i in items]))
 
 	date_condition = " and posting_date >= %(from_date)s"
 	if filters.to_date:

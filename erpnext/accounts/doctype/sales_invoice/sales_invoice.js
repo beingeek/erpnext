@@ -65,6 +65,11 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 
 		if(doc.update_stock) this.show_stock_ledger();
 
+		if (this.frm.doc.docstatus < 2 && !this.frm.doc.is_return) {
+			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_batch_labels_dialog('box'));
+			this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_pallet_label_dialog('pallet'));
+		}
+
 		if (doc.docstatus == 1 && doc.outstanding_amount!=0
 			&& !(cint(doc.is_return) && doc.return_against)) {
 			cur_frm.add_custom_button(__('Payment'),
@@ -182,17 +187,163 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 			}
 		} else {
 			var me = this;
-			frappe.model.with_doc("Customer", me.frm.doc.customer, function() {
-				var customer = frappe.model.get_doc("Customer", me.frm.doc.customer);
-				if (customer && customer.invoice_print_format) {
-					cur_frm.meta._default_print_format = cur_frm.meta.default_print_format;
-					cur_frm.meta.default_print_format = customer.invoice_print_format;
-				} else if(cur_frm.meta._default_print_format) {
-					cur_frm.meta.default_print_format = cur_frm.meta._default_print_format;
-					cur_frm.meta._default_print_format = null;
-				}
-			});
+			if (me.frm.doc.customer) {
+				frappe.model.with_doc("Customer", me.frm.doc.customer, function () {
+					var customer = frappe.model.get_doc("Customer", me.frm.doc.customer);
+					if (customer && customer.invoice_print_format) {
+						cur_frm.meta._default_print_format = cur_frm.meta.default_print_format;
+						cur_frm.meta.default_print_format = customer.invoice_print_format;
+					} else if (cur_frm.meta._default_print_format) {
+						cur_frm.meta.default_print_format = cur_frm.meta._default_print_format;
+						cur_frm.meta._default_print_format = null;
+					}
+				});
+			}
 		}
+	},
+
+	show_print_pallet_label_dialog: function(medium) {
+		let me = this;
+		let available_print_formats = me.frm.meta.__print_formats.filter(d => d.name.toLowerCase().includes(medium)).map(d => d.name);
+		let default_print_format = available_print_formats ? available_print_formats[0] : "";
+		let dialog = new frappe.ui.Dialog({
+			title: __("Pallet Label Print"),
+			fields: [
+				{
+					fieldname: "print_format",
+					fieldtype: "Select",
+					label: __("Print Format"),
+					options: available_print_formats,
+					default: default_print_format,
+					reqd: 1
+				},
+				{
+					fieldname: "print_qty",
+					fieldtype: "Int",
+					label: __("Print Qty"),
+					default: 1
+				}
+			]
+		});
+		dialog.set_primary_action(__("Print"), function () {
+			let print_qty = cint(dialog.get_value('print_qty'));
+			if (print_qty > 0) {
+				me.frm.print_preview.refresh_print_options();
+				me.frm.print_preview.print_sel.val(dialog.get_value('print_format'));
+				me.frm.print_preview.printit({
+					print_qty: print_qty,
+					po_no: me.frm.doc.po_no,
+					total_boxes: Math.ceil(me.frm.doc.total_boxes || me.frm.doc.qty),
+					shipping_address_name: me.frm.doc.shipping_address_name
+				});
+			}
+			dialog.hide();
+		});
+		dialog.show();
+	},
+
+	show_print_batch_labels_dialog: function(medium) {
+		const me = this;
+
+		let item_data = [];
+		$.each(me.frm.doc.items || [], function (i, d) {
+			if (d.item_code && d.batch_no) {
+				item_data.push({
+					'name': d.name,
+					'item_code': d.item_code,
+					'item_name': d.item_name,
+					'batch_no': d.batch_no,
+					'print_qty': Math.ceil(d.boxes || d.qty),
+					'alt_uom': d.alt_uom,
+					'alt_uom_size': d.alt_uom_size_std,
+					'packed_date': me.frm.doc.posting_date,
+					'po_no': me.frm.doc.po_no
+				});
+			}
+		});
+
+		frappe.call({
+			method: "erpnext.stock.doctype.item.item.get_item_batch_country_of_origin",
+			args: {
+				args: item_data
+			},
+			callback: function (r) {
+				if (r && r.message) {
+					$.each(item_data, function (i, d) {
+						if (r.message.item_code_country[d.item_code]) {
+							d.country_of_origin = r.message.item_code_country[d.item_code];
+						}
+						if (r.message.batch_no_country.hasOwnProperty(d.batch_no)) {
+							d.country_of_origin = r.message.batch_no_country[d.batch_no];
+						}
+					});
+				}
+
+				me.build_print_batch_labels_dialog(function () {
+					return item_data;
+				}, {
+					fields: [{
+						fieldtype: 'Link',
+						fieldname: "batch_no",
+						options: "Batch",
+						read_only: 1,
+						in_list_view: 1,
+						columns: 3,
+						label: __('Batch')
+					}, {
+						fieldtype: 'Link',
+						fieldname: "item_code",
+						options: "Item",
+						read_only: 1,
+						label: __('Item Code')
+					}, {
+						fieldtype: 'Data',
+						fieldname: "item_name",
+						read_only: 1,
+						in_list_view: 1,
+						columns: 3,
+						label: __('Item Name')
+					}, {
+						fieldtype: 'Float',
+						fieldname: "alt_uom_size",
+						in_list_view: 1,
+						columns: 1,
+						label: __('Per Unit')
+					}, {
+						fieldtype: 'Link',
+						fieldname: "alt_uom",
+						read_only: 1,
+						options: "UOM",
+						label: __('Contents UOM')
+					}, {
+						fieldtype: 'Link',
+						options: 'Country',
+						fieldname: "country_of_origin",
+						in_list_view: 1,
+						columns: 2,
+						label: __('Country Of Origin')
+					}, {
+						fieldtype: 'Int',
+						fieldname: "print_qty",
+						in_list_view: 1,
+						columns: 1,
+						label: __('Print Qty')
+					}, {
+						fieldtype: 'Date',
+						fieldname: "packed_date",
+						read_only: 1,
+						label: __('Packed Date')
+					}, {
+						fieldtype: 'Data',
+						fieldname: "po_no",
+						read_only: 1,
+						label: __("Customer's PO No")
+					}]
+				}, d => d.name.toLowerCase().includes(medium), function (dialog) {
+					$(".modal-dialog", dialog.$wrapper).css("width", "1000px");
+				});
+			}
+		});
 	},
 
 	set_naming_series: function() {
