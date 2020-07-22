@@ -1,14 +1,23 @@
-<!-- Form1 dispaly-->
+{% if doc.items_without_hs_code %}
+<h3>The following item(s) do not have HS Code set:</h3>
+<ol>
+	{% for row in doc.items_without_hs_code %}
+	<li><a href="#Form/Item/{{ row.item_code }}" target="_blank">{{ row.item_code }}: {{ row.item_name }}</a></li>
+	{% endfor %}
+</ol>
 
+Please set HS Codes and reload this print format.
+{% else %}
 <div class="page-break">
-
-
 	<div id="header-html" class="hidden-pdf">
 		<div class="letter-head">
 			<div class="clearfix">
-				<div class="pull-left">
-					<h3 style="text-align: center !important;">CONFIRMATION OF SALE <span style="display:inline-block;  margin-left: 40px; "> CONFIRMATION DE VENTE</span></h3>
+				<div class="pull-left" style="width: 70%;">
+					<h3>CONFIRMATION OF SALE<br>CONFIRMATION DE VENTE</h3>
 				</div>
+				<h5 class="pull-right page-number visible-pdf text-right" style="width: 30%;">
+					{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}
+				</h5>
 			</div>
 		</div>
 	</div>
@@ -292,13 +301,13 @@
 				<p class="form1data">{{ row.description }}</p>
 			</td>
 			<td>
-				<p class="form1data">{{ row.country_code }}</p>
+				<p class="form1data" style="text-align: center;">{{ row.country_code }}</p>
 			</td>
 			<td style="border-right: 0;">
-				<p class="form1data text-right">{{ frappe.format_value(row.alt_uom_qty) }}</p>
+				<p class="form1data text-right">{{ frappe.format(row.net_weight) }}</p>
 			</td>
 			<td style="border-left: 0;">
-				<p class="form1data">{{ row.alt_uom}}</p>
+				<p class="form1data">kg</p>
 			</td>
 			<td colspan="2">
 				<p class="form1data text-center">{{ frappe.format_value(row.qty) }}</p>
@@ -359,16 +368,16 @@
 			<td colspan="2">
 				<p class="form1data">{{doc.get_formatted('pickup_no')}}</p>
 			</td>
-			<td colspan="">
-				<p class="form1data">{{ doc.get_formatted('total_alt_uom_qty') }}</p>
+			<td style="border-right:0 !important;">
+				<p class="form1data" style="text-align: right;">{{ frappe.format(doc.total_net_weight) }}</p>
 			</td>
-			<td>
-				<p class="form1data">kg</p>
+			<td style="border-left:0 !important;">
+				<p class="form1data" >kg</p>
 			</td>
-			<td colspan="1">
-				<p class="form1data">{{ doc.get_formatted('awb_gross_weight')}}</p>
+			<td colspan="1" style="border-right:0 !important;">
+				<p class="form1data" style="text-align: right;">{{ doc.get_formatted('awb_gross_weight')}}</p>
 			</td>
-			<td>
+			<td style="border-left:0 !important;">
 				<p class="form1data">kg</p>
 			</td>
 		</tr>
@@ -458,39 +467,6 @@
 					<p class="form1data"></p>
 				</td>
 			</tr>
-			<!-- <tr>
-				<td colspan="6">
-					<p class="form1label">26. CROSS-OVER DECLARATION (If applicable) / DÉCLARATION DE
-						TRANSFERT (s'il y a lieu)
-					</p>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="2" style="width: 35.2%;">
-					<p class="form1label">For the purpose of the above transaction, I am crossing from a 
-						<br> Conformément à ce qui est susmentionné, je transfère mes activités de
-					</p>
-				</td>
-				<td colspan="2" style="width: 33.4%;">2</td>
-				<td colspan="2" style="width: 31.4%; /*border:0; border-left: 2px solid black;*/">
-					<span style="margin: 20px; border-top: 1px solid #000; width: 200px; text-align: center; float: left; margin-top: 3px;/**/">Signature</span>
-				</td>
-			</tr> -->
-			<!-- <tr>
-				<td colspan="2">
-					<p class="form1label">For the purpose of the above transaction, I am crossing from a</p>
-					<p class="form1label">Conformément à ce qui est susmentionné, je transfère mes activités
-						de
-					</p>
-				</td>
-				<td colspan="2">
-					<p class="form1label">For the</p>
-				</td>
-				<td colspan="2">
-					<p class="form1label">For the</p>
-				</td>
-				
-			</tr> -->
 
 			<tr>
 				<td colspan="6">
@@ -500,8 +476,10 @@
 					<table style="width: 100%;" class="MarBorPadZero">
 						<tr>
 							<td class="MarBorPadZero" style="width: 40%; vertical-align: middle !important;">
-								<p class="form1label MarBorPadZero">For the purpose of the above transaction, I am crossing from a</p>
-								<p class="form1label MarBorPadZero">Conformément à ce qui est susmentionné, je transfère mes activités
+								<p class="form1label MarBorPadZero">For the purpose of the above transaction, I am
+									crossing from a</p>
+								<p class="form1label MarBorPadZero">Conformément à ce qui est susmentionné, je transfère
+									mes activités
 									de
 								</p>
 							</td>
@@ -513,7 +491,7 @@
 								<table style="width: 100%;" class="MarBorPadZero">
 									<tr>
 										<td class="MarBorPadZero">
-											<p class="form1data"><input type="checkbox" id="26a" name="26a" ></p>
+											<p class="form1data"><input type="checkbox" id="26a" name="26a"></p>
 										</td>
 										<td class="MarBorPadZero">
 											<p class="form1label">Broker to Dealer / Courtier à Marchand</p>
@@ -521,7 +499,7 @@
 									</tr>
 									<tr>
 										<td class="MarBorPadZero">
-											<p class="form1data"><input type="checkbox" id="26b" name="26b" ></p>
+											<p class="form1data"><input type="checkbox" id="26b" name="26b"></p>
 										</td>
 										<td class="MarBorPadZero">
 											<p class="form1label">Dealer to Broker / Marchand à Courtier</p>
@@ -640,3 +618,4 @@
 	</table>
 
 </div>
+{% endif %}

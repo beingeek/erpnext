@@ -1,14 +1,22 @@
+{% if doc.items_without_hs_code %}
+<h3>The following item(s) do not have HS Code set:</h3>
+<ol>
+	{% for row in doc.items_without_hs_code %}
+	<li><a href="#Form/Item/{{ row.item_code }}" target="_blank">{{ row.item_code }}: {{ row.item_name }}</a></li>
+	{% endfor %}
+</ol>
+
+Please set HS Codes and reload this print format.
+{% else %}
 <!-- Form2 display-->
-
-
 <div class="page-break">
 
 	<div id="header-html" class="hidden-pdf">
 		<div class="letter-head">
 			<div class="clearfix">
 				
-				<div class="pull-left">
-					<h3 style="text-align: center !important;">CANADA CUSTOMS INVOICE<br>FACTURE DES DOUANES CANADIENNES</h3>
+				<div class="pull-left" style="width: 80%;">
+					<h3>CANADA CUSTOMS INVOICE<br>FACTURE DES DOUANES CANADIENNES</h3>
 				</div>
 
 				<table class="pull-right page-number visible-pdf" style="width: 15%; border:0">
@@ -149,22 +157,22 @@
 		{% for row in doc.items_by_hs_code.values() %}
 		<tr>
 			<td>
-				<p class="form2data">{{ frappe.format_value(row.qty) }}</p>
+				<p class="form2data" style="text-align:center;">{{ frappe.format_value(row.qty) }}</p>
 			</td>
 			<td colspan="6">
 				<p class="form2data">{{ row.description }}</p>
 			</td>
 			<td style="border-right: 0;">
-				<p class="form2data">{{ frappe.format_value(row.alt_uom_qty) }}</p>
+				<p class="form2data" style="text-align: right ;">{{  frappe.format(row.net_weight) }}</p>
 			</td>
 			<td style="border-left: 0;">
-				<p class="form2data">{{ row.alt_uom }}</p>
+				<p class="form2data">kg</p>
 			</td>
 			<td colspan="2">
-				<p class="form2data">{{ frappe.format_value(row.rate, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
+				<p class="form2data" style="text-align: right ;">{{ frappe.format_value(row.rate, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
 			</td>
 			<td>
-				<p class="form2data">{{ frappe.format_value(row.amount, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
+				<p class="form2data" style="text-align: right ;">{{ frappe.format_value(row.amount, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
 			</td>
 		</tr>
 		{% endfor %}
@@ -182,7 +190,7 @@
 							</p>
 						</td>
 						<td style="border:1px; text-align:center; vertical-align: middle !important;">
-							<input type="checkbox"  checked>
+							<input type="checkbox">
 						</td>
 					</tr>
 				</table>
@@ -199,7 +207,7 @@
 							<i class="fa fa-caret-right" style="font-size:30px"></i>
 						</td>
 						<td style="border: 0; width: 50%; vertical-align: middle !important;">
-							<p class="form2data"> </p>
+							<p class="form2data">{{doc.get_formatted('pickup_no')}}</p>
 						</td>
 					</tr>
 				</table>
@@ -213,25 +221,23 @@
 				<p class="form2label">17. Invoice total <br>
 					Total de la facture
 				</p>
-				<p class="form2data">{{ doc.get_formatted('total')}}</p>
+				<p class="form2data" style="text-align: right ;">{{ doc.get_formatted('total')}}</p>
 			</td>
 		</tr>
 		<tr>
 			<td style="border-right:0;">
 				<p class="form2label">Net</p>
-				<p class="form2data">{{ doc.get_formatted('total_alt_uom_qty') }}</p>
+				<p class="form2data" style="text-align: right ;">{{ frappe.format(doc.total_net_weight)}}</p>
 			</td>
 			<td style="border-left: 0;">
-				<br>
-				<p class="form2data">KG</p>
+				<p class="form2data" style="margin-top:18px">kg</p>
 			</td>
 			<td style="border-right: 0;">
 				<p class="form2label">Gross - Brut</p>
-				<p class="form2data">{{ doc.get_formatted('awb_gross_weight')}}</p>
+				<p class="form2data" style="text-align: right ;">{{ doc.get_formatted('awb_gross_weight')}}</p>
 			</td>
 			<td style="border-left: 0;">
-				<br>
-				<p class="form2data">KG</p>
+				<p class="form2data" style="margin-top:18px">kg</p>
 			</td>
 		</tr>
 		<tr>
@@ -370,3 +376,4 @@
 		</tr>
 	</table>
 </div>
+{% endif %}
