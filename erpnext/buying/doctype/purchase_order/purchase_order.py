@@ -97,9 +97,12 @@ class PurchaseOrder(BuyingController):
 		super(PurchaseOrder, self).before_print()
 
 		self.items_by_hs_code = {}
+		self.items_without_hs_code = [d for d in self.items if not frappe.get_cached_value('Item', d.item_code, 'customs_tariff_number')]
 
-		add_fields = ["qty", "alt_uom_qty", "amount"]
+		
+		add_fields = ["qty", "amount"]
 		empty_dict = frappe._dict()
+		empty_dict['net_weight'] = 0
 		for fn in add_fields:
 			empty_dict[fn] = 0
 
@@ -111,7 +114,16 @@ class PurchaseOrder(BuyingController):
 				current_row = self.items_by_hs_code.setdefault((item_doc.customs_tariff_number, country_code), empty_dict.copy())
 				for fn in add_fields:
 					current_row[fn] += flt(d.get(fn))
+				
+				if cstr(d.alt_uom).lower() in ['kgs', 'kg']:
+					current_row['net_weight'] += d.alt_uom_qty
+				elif d.alt_uom == 'lbs':
+					current_row['net_weight'] += d.alt_uom_qty * 0.45359237
+				else:
+					current_row['net_weight'] += d.total_weight_kg
 
+				current_row['net_weight'] = flt(current_row['net_weight'], 0)
+		
 		for key, current_row in self.items_by_hs_code.items():
 			current_row.hs_code, current_row.country_code = key
 			current_row.rate = current_row.amount / current_row.qty if current_row.qty else 0
@@ -120,6 +132,7 @@ class PurchaseOrder(BuyingController):
 			if current_row.hs_code:
 				current_row.description = frappe.get_cached_value("Customs Tariff Number", key[0], "description")
 
+		self.total_net_weight = sum([current_row['net_weight'] for current_row in self.items_by_hs_code.values()])
 		self.base_customs_total = self.total * self.customs_exchange_rate
 
 	def validate_with_previous_doc(self):

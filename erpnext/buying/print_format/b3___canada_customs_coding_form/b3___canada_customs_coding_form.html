@@ -1,11 +1,21 @@
+{% if doc.items_without_hs_code %}
+<h3>The following item(s) do not have HS Code set:</h3>
+<ol>
+	{% for row in doc.items_without_hs_code %}
+	<li><a href="#Form/Item/{{ row.item_code }}" target="_blank">{{ row.item_code }}: {{ row.item_name }}</a></li>
+	{% endfor %}
+</ol>
+
+Please set HS Codes and reload this print format.
+{% else %}
 <div class="page-break">
 	<div id="header-html" class="hidden-pdf">
 		<div class="letter-head">
 			<div class="clearfix">
-				<div class="pull-left">
+				<div class="pull-left" style="width: 70%;">
 					<h3>CANADA CUSTOMS CODING FORM<br>DOUANES CANADA - FORMULE DE CODAGE</h3>
 				</div>
-				<h5 class="pull-right page-number visible-pdf">
+				<h5 class="pull-right page-number visible-pdf text-right" style="width: 30%;">
 					{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}
 				</h5>
 			</div>
@@ -277,11 +287,11 @@
 					</td>
 					<td style="width:11.53%; border-bottom: 0;" colspan="12">
 						<p class="formlabel">29 QUANTITY <br> QUANTITÉ</p>
-						<p class="formdata">{{ frappe.format_value(row.alt_uom_qty) }}</p>
+						<p class="formdata">{{ frappe.format(row.net_weight) }}</p>
 					</td>
 					<td style="width:5.21%; border-bottom: 0;" colspan="5">
 						<p class="formlabel">30 <br> U - M</p>
-						<p class="formdata">{{ row.alt_uom }}</p>
+						<p class="formdata">kg</p>
 					</td>
 					<td style="width:7.21%; border-bottom: 0;" colspan="5">
 						<p class="formlabel">31 VFD CODE <br> CODE VD</p>
@@ -317,7 +327,7 @@
 						<td
 							style="width:1%; {% if loop.index % 2 == 0 %} border-top:0; {% else %} background-color: black;  {% endif %}">
 						</td>
-						<td>
+						<td style="">
 							<p class="formlabel">37 VALUE FOR DUTY <br> VALEUR EN DOUANE</p>
 							<p class="formdata">
 								{{ frappe.format_value(row.base_amount, df=doc.meta.get_field('amount'), currency=doc.currency) }}
@@ -451,5 +461,5 @@
 			</div>
 		</div>
 	</div>
-
 </div>
+{% endif %}
