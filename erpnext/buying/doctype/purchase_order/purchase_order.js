@@ -734,3 +734,33 @@ frappe.ui.form.on("Purchase Order", "is_subcontracted", function(frm) {
 		erpnext.buying.get_default_bom(frm);
 	}
 });
+
+frappe.ui.form.on("Purchase Order", "get_customs_exchange_rate", function (frm) {
+	var company_currency = frm.cscript.get_company_currency();
+
+	if (frm.doc.currency) {
+		if (frm.doc.currency == company_currency) {
+			frm.set_value("customs_exchange_rate", 1.0);
+		} else {
+			frappe.call({
+				method: "erpnext.buying.doctype.purchase_order.purchase_order.get_customs_exchange_rate",
+				args: {'from_currency': company_currency , 'to_currency': frm.doc.currency},
+				callback: function (r) {
+					if (r.message)
+						frm.set_value("customs_exchange_rate", r.message);
+				}
+			});
+		}
+	}
+});
+
+frappe.ui.form.on("Purchase Order", "get_b3_transaction_number", function (frm) {
+	frappe.call({
+		method: "erpnext.buying.doctype.purchase_order.purchase_order.generate_b3_transaction_no",
+		args: {'company': frm.doc.company},
+		callback: function (r) {
+			if (r.message)
+				frm.set_value("b3_transaction_no", r.message);
+		}
+	});
+});
