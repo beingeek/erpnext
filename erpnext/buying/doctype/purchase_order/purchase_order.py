@@ -81,8 +81,7 @@ class PurchaseOrder(BuyingController):
 				frappe.throw(_("Airway Bill No must be in the format ####-####"))
 
 		if self.b3_transaction_no:
-			b3_transaction_no = re.search('data-barcode-value="(.*?)"', self.b3_transaction_no)
-			b3_transaction_no = b3_transaction_no.group(1)
+			b3_transaction_no = self.get_b3_transaction_no()
 			if len(b3_transaction_no) != 14 or not b3_transaction_no.isdecimal():
 				frappe.throw(_("B3 Transaction Number must be 14 digits long"))
 
@@ -90,6 +89,14 @@ class PurchaseOrder(BuyingController):
 			if check_digit != b3_transaction_no[13]:
 				frappe.throw(_("Invalid B3 Transaction Number Check Digit"))
 
+	def get_b3_transaction_no(self):
+		import re
+		if not self.b3_transaction_no:
+			return ""
+		else:
+			b3_transaction_no = re.search('data-barcode-value="(.*?)"', self.b3_transaction_no)
+			b3_transaction_no = b3_transaction_no.group(1)
+			return b3_transaction_no
 	
 	def update_lcv_values(self):
 		lcvs_to_update = frappe.db.sql_list("""
@@ -104,13 +111,21 @@ class PurchaseOrder(BuyingController):
 			doc.calculate_taxes_and_totals()
 			doc.save()
 
+
+
 	def before_print(self):
 		super(PurchaseOrder, self).before_print()
 
 		self.items_by_hs_code = {}
 		self.items_without_hs_code = [d for d in self.items if not frappe.get_cached_value('Item', d.item_code, 'customs_tariff_number')]
 
-		
+		self.b3_transaction_no_value = self.get_b3_transaction_no()
+
+		if self.b3_transaction_no_value:
+			self.b3_transaction_no_formatted = self.b3_transaction_no_value[0:5] + "-" + self.b3_transaction_no_value[5:] + " / " + self.company
+		else:
+			self.b3_transaction_no_formatted = ""
+
 		add_fields = ["qty", "amount"]
 		empty_dict = frappe._dict()
 		empty_dict['net_weight'] = 0
@@ -668,3 +683,30 @@ def update_status(status, name):
 def make_inter_company_sales_order(source_name, target_doc=None):
 	from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_company_transaction
 	return make_inter_company_transaction("Purchase Order", source_name, target_doc)
+
+@frappe.whitelist()
+def get_customs_exchange_rate(from_currency, to_currency, transaction_date=None):
+	import requests 
+
+	if not transaction_date:
+		transaction_date = frappe.utils.today()
+
+	transaction_date = frappe.utils.add_days(transaction_date, -1)
+
+	try:
+		cache = frappe.cache()
+		key = "bank_of_canada_FX{0}:{1}:{2}".format(from_currency, to_currency, transaction_date)
+		value = flt(cache.get(key))
+		if not value:
+			url = "https://www.bankofcanada.ca/valet/observations/FX{0}{1}?start_date={2}&end_date={2}".format(from_currency, to_currency, transaction_date)
+
+			data = requests.get(url).json()
+			observation = data["observations"][0]
+			value = flt(observation["FX{0}{1}".format(from_currency, to_currency)]["v"])
+			cache.setex(key, value, 6 * 60 * 60)
+	except:
+		frappe.log_error(title="Get Exchange Rate")
+		frappe.msgprint(_("Unable to find exchange rate for {0} to {1} for key date {2}. Please set a Currency Exchange manually").format(from_currency, to_currency, transaction_date))
+		return 0.0
+
+	return value

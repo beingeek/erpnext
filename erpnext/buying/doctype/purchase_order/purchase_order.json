@@ -13,8 +13,8 @@
   "supplier_name",
   "shipping_date",
   "schedule_date",
-  "get_items_from_open_material_requests",
   "actual_gross_weight",
+  "get_items_from_open_material_requests",
   "order_confirmation_no",
   "order_confirmation_date",
   "column_break1",
@@ -37,6 +37,7 @@
   "amended_from",
   "b3_information_section",
   "b3_transaction_no",
+  "get_b3_transaction_number",
   "column_break_38",
   "carrier_code",
   "airway_bill_no",
@@ -45,6 +46,7 @@
   "awb_gross_weight",
   "column_break_36",
   "customs_exchange_rate",
+  "get_customs_exchange_rate",
   "drop_ship",
   "customer",
   "customer_name",
@@ -1442,6 +1444,11 @@
    "fieldtype": "Column Break"
   },
   {
+   "fieldname": "get_customs_exchange_rate",
+   "fieldtype": "Button",
+   "label": "Get Customs Exchange Rate"
+  },
+  {
    "fieldname": "column_break_38",
    "fieldtype": "Column Break"
   },
@@ -1450,12 +1457,17 @@
    "fieldtype": "Barcode",
    "label": "B3 Transaction Number",
    "options": "{\"format\": \"CODE128\", \"height\": 40, \"displayValue\": false}"
+  },
+  {
+   "fieldname": "get_b3_transaction_number",
+   "fieldtype": "Button",
+   "label": "Get B3 Transaction Number"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-07-24 05:06:22.307236",
+ "modified": "2020-07-24 15:45:51.840689",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
