@@ -75,10 +75,10 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 		this._super();
 
 		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
-			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_batch_labels_dialog("box"));
+			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_item_labels_dialog("box"));
 		}
 		if (this.frm.doc.docstatus === 1 && !this.frm.doc.is_return) {
-			this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_batch_labels_dialog("pallet"));
+			this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_item_labels_dialog("pallet"));
 		}
 
 		if(this.frm.doc.docstatus===1) {
@@ -156,9 +156,9 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 		this.set_naming_series();
 	},
 
-	show_print_batch_labels_dialog: function(medium) {
+	show_print_item_labels_dialog: function(medium) {
 		const me = this;
-		this.build_print_batch_labels_dialog(function () {
+		this.build_print_item_labels_dialog(function () {
 			let out = [];
 			$.each(me.frm.doc.items || [], function (i, d) {
 				if (d.item_code && d.batch_no) {

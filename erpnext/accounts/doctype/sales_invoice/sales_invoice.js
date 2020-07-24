@@ -66,7 +66,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		if(doc.update_stock) this.show_stock_ledger();
 
 		if (this.frm.doc.docstatus < 2 && !this.frm.doc.is_return) {
-			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_batch_labels_dialog('box'));
+			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_item_labels_dialog('box'));
 			this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_pallet_label_dialog('pallet'));
 		}
 
@@ -242,7 +242,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		dialog.show();
 	},
 
-	show_print_batch_labels_dialog: function(medium) {
+	show_print_item_labels_dialog: function(medium) {
 		const me = this;
 
 		let item_data = [];
@@ -279,7 +279,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 					});
 				}
 
-				me.build_print_batch_labels_dialog(function () {
+				me.build_print_item_labels_dialog(function () {
 					return item_data;
 				}, {
 					fields: [{

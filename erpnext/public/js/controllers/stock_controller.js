@@ -80,14 +80,14 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 		}
 	},
 
-	build_print_batch_labels_dialog(get_data, table_fields, print_format_filter, show_callback) {
+	build_print_item_labels_dialog(get_data, table_fields, print_format_filter, show_callback) {
 		const me = this;
-		frappe.model.with_doctype("Batch", () => {
-			const meta = frappe.get_meta("Batch");
+		frappe.model.with_doctype("Item", () => {
+			const meta = frappe.get_meta("Item");
 
-			me.batch_print_dialog_data = [];
+			me.item_print_dialog_data = [];
 			if (get_data) {
-				me.batch_print_dialog_data = get_data();
+				me.item_print_dialog_data = get_data();
 			}
 
 			let available_print_formats = meta.__print_formats.filter(d => d.raw_printing);
@@ -108,27 +108,27 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 				{fieldtype: 'Section Break'}
 			];
 			table_fields = Object.assign({
-				label: __("Batches"),
-				fieldname: "batch_args",
+				label: __("Labels"),
+				fieldname: "item_args",
 				fieldtype: "Table",
-				data: me.batch_print_dialog_data,
-				get_data: () => me.batch_print_dialog_data,
+				data: me.item_print_dialog_data,
+				get_data: () => me.item_print_dialog_data,
 				in_place_edit: true,
 				cannot_add_rows: true
 			}, table_fields);
 			fields.push(table_fields);
 
 			var dialog = new frappe.ui.Dialog({
-				title: __("Batch Print"),
+				title: __("Item Label Print"),
 				fields: fields
 			});
 			dialog.set_primary_action(__("Print"), function() {
-				let batch_args = dialog.get_values()["batch_args"];
+				let item_args = dialog.get_values()["item_args"];
 				let print_format = dialog.get_value('print_format');
-				let printer = me.get_mapped_printer("Batch", print_format);
+				let printer = me.get_mapped_printer("Item", print_format);
 
 				if (printer) {
-					me.print_batch_labels(batch_args, print_format, printer);
+					me.print_item_labels(item_args, print_format, printer);
 				} else {
 					frappe.ui.form.qz_get_printer_list().then((data) => {
 						let printer_dialog = new frappe.ui.Dialog({
@@ -143,15 +143,15 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 							if (printer) {
 								// set printer mapping
 								let print_format_printer_map = me.frm.print_preview.get_print_format_printer_map();
-								if (!print_format_printer_map['Batch']) {
-									print_format_printer_map['Batch'] = [];
+								if (!print_format_printer_map['Item']) {
+									print_format_printer_map['Item'] = [];
 								}
-								print_format_printer_map['Batch'] = print_format_printer_map['Batch'].filter(d => d.printer != printer && d.print_format != print_format);
-								print_format_printer_map['Batch'].push({printer: printer, print_format: print_format});
+								print_format_printer_map['Item'] = print_format_printer_map['Item'].filter(d => d.printer != printer && d.print_format != print_format);
+								print_format_printer_map['Item'].push({printer: printer, print_format: print_format});
 								localStorage.print_format_printer_map = JSON.stringify(print_format_printer_map);
 
 								// print
-								me.print_batch_labels(batch_args, print_format, printer);
+								me.print_item_labels(item_args, print_format, printer);
 							}
 							printer_dialog.hide();
 						});
@@ -169,11 +169,11 @@ erpnext.stock.StockController = frappe.ui.form.Controller.extend({
 		});
 	},
 
-	print_batch_labels: function(batch_args, print_format, printer) {
+	print_item_labels: function(item_args, print_format, printer) {
 		frappe.call({
-			method: "erpnext.stock.doctype.batch.batch.get_batch_print_raw_commands",
+			method: "erpnext.stock.doctype.item.item.get_item_print_raw_commands",
 			args: {
-				"batch_args": batch_args,
+				"item_args": item_args,
 				"print_format": print_format
 			},
 			callback: function (r) {

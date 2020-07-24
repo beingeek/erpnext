@@ -1385,6 +1385,29 @@ def get_item_batch_country_of_origin(args):
 	}
 	return out
 
+@frappe.whitelist()
+def get_item_print_raw_commands(item_args, print_format=None):
+	from frappe.www.printview import get_rendered_raw_commands
+	import json
+
+	if not item_args:
+		return ""
+
+	if isinstance(item_args, string_types):
+		item_args = json.loads(item_args)
+
+	raw_commands = []
+	for b in item_args:
+		qty = cint(b.get('print_qty'))
+		if b.get('item_code') and qty > 0:
+			b['print_qty'] = qty
+
+			doc = frappe.get_cached_doc("Item", b.get('item_code'))
+			print_data = get_rendered_raw_commands(doc, b.get('item_code'), print_format, args={"transaction": b})
+			raw_commands.append(print_data['raw_commands'])
+
+	return raw_commands
+
 def on_doctype_update():
 	# since route is a Text column, it needs a length for indexing
 	frappe.db.add_index("Item", ["route(500)"])
