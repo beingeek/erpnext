@@ -161,7 +161,7 @@ erpnext.stock.PurchaseReceiptController = erpnext.buying.BuyingController.extend
 		this.build_print_item_labels_dialog(function () {
 			let out = [];
 			$.each(me.frm.doc.items || [], function (i, d) {
-				if (d.item_code && d.batch_no) {
+				if (d.item_code) {
 					out.push({
 						'name': d.name,
 						'item_code': d.item_code,

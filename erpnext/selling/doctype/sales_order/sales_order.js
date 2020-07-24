@@ -237,6 +237,103 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		}
 	},
 
+	show_print_item_labels_dialog: function(medium) {
+		const me = this;
+
+		let item_data = [];
+		$.each(me.frm.doc.items || [], function (i, d) {
+			if (d.item_code) {
+				item_data.push({
+					'name': d.name,
+					'item_code': d.item_code,
+					'item_name': d.item_name,
+					'print_qty': Math.ceil(d.boxes || d.qty),
+					'alt_uom': d.alt_uom,
+					'alt_uom_size': d.alt_uom_size_std,
+					'packed_date': me.frm.doc.delivery_date,
+					'po_no': me.frm.doc.po_no
+				});
+			}
+		});
+
+		frappe.call({
+			method: "erpnext.stock.doctype.item.item.get_item_batch_country_of_origin",
+			args: {
+				args: item_data
+			},
+			callback: function (r) {
+				if (r && r.message) {
+					$.each(item_data, function (i, d) {
+						if (r.message.item_code_country[d.item_code]) {
+							d.country_of_origin = r.message.item_code_country[d.item_code];
+						}
+						if (r.message.batch_no_country.hasOwnProperty(d.batch_no)) {
+							d.country_of_origin = r.message.batch_no_country[d.batch_no];
+						}
+					});
+				}
+
+				me.build_print_item_labels_dialog(function () {
+					return item_data;
+				}, {
+					fields: [{
+						fieldtype: 'Link',
+						fieldname: "item_code",
+						options: "Item",
+						read_only: 1,
+						in_list_view: 1,
+						columns: 2,
+						label: __('Item Code')
+					}, {
+						fieldtype: 'Data',
+						fieldname: "item_name",
+						read_only: 1,
+						in_list_view: 1,
+						columns: 3,
+						label: __('Item Name')
+					}, {
+						fieldtype: 'Float',
+						fieldname: "alt_uom_size",
+						in_list_view: 1,
+						columns: 1,
+						label: __('Per Unit')
+					}, {
+						fieldtype: 'Link',
+						fieldname: "alt_uom",
+						read_only: 1,
+						options: "UOM",
+						label: __('Contents UOM')
+					}, {
+						fieldtype: 'Link',
+						options: 'Country',
+						fieldname: "country_of_origin",
+						in_list_view: 1,
+						columns: 2,
+						label: __('Country Of Origin')
+					}, {
+						fieldtype: 'Int',
+						fieldname: "print_qty",
+						in_list_view: 1,
+						columns: 2,
+						label: __('Print Qty')
+					}, {
+						fieldtype: 'Date',
+						fieldname: "packed_date",
+						read_only: 1,
+						label: __('Packed Date')
+					}, {
+						fieldtype: 'Data',
+						fieldname: "po_no",
+						read_only: 1,
+						label: __("Customer's PO No")
+					}]
+				}, d => d.name.toLowerCase().includes(medium), function (dialog) {
+					$(".modal-dialog", dialog.$wrapper).css("width", "1000px");
+				});
+			}
+		});
+	},
+
 	conversion_factor: function(doc, cdt, cdn, dont_fetch_price_list_rate) {
 		this._super(doc, cdt, cdn, dont_fetch_price_list_rate);
 		this.update_selected_item_fields();
@@ -327,6 +424,12 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 				   }, __("Status"));
 			   }
 			}
+
+			if (this.frm.doc.docstatus < 2) {
+				this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_item_labels_dialog('box'));
+				//this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_pallet_label_dialog('pallet'));
+			}
+
 			if(doc.status !== 'Closed') {
 				if(doc.status !== 'On Hold') {
 					allow_delivery = this.frm.doc.items.some(item => item.delivered_by_supplier === 0 && item.qty > flt(item.delivered_qty))
