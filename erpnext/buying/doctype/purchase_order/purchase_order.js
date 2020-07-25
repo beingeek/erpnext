@@ -744,7 +744,7 @@ frappe.ui.form.on("Purchase Order", "get_customs_exchange_rate", function (frm) 
 		} else {
 			frappe.call({
 				method: "erpnext.buying.doctype.purchase_order.purchase_order.get_customs_exchange_rate",
-				args: {'from_currency': company_currency , 'to_currency': frm.doc.currency},
+				args: {'from_currency': frm.doc.currency , 'to_currency': company_currency},
 				callback: function (r) {
 					if (r.message)
 						frm.set_value("customs_exchange_rate", r.message);
