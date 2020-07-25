@@ -47,11 +47,11 @@ Please set HS Codes and reload this print format.
 							2. TRANSACTION NO. - N° DE TRANSACTION
 						</p>
 						<div class="clearfix">
-							<div class="pull-left" style="margin-top: 20px;">
-								<p style="text-align: left;">{{ doc.b3_transaction_no_formatted or '' }}</p>
+							<div class="pull-left">
+								<p style="text-align: left;">{{ doc.b3_transaction_no or '' }}</p>
 							</div>
 							<div class="pull-right">
-								<p style="text-align: left;">{{ doc.b3_transaction_no or '' }}</p>
+								<p style="text-align: right;">{{ doc.b3_transaction_no_formatted or '' }}</p>
 							</div>
 						</div>
 					</td>
