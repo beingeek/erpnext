@@ -48,10 +48,10 @@ Please set HS Codes and reload this print format.
 						</p>
 						<div class="clearfix">
 							<div class="pull-left">
-								<p style="text-align: left;">{{ doc.b3_transaction_no or '' }}</p>
+								<p style="text-align: left;"><b>{{ doc.b3_transaction_no_formatted or '' }}</b></p>
 							</div>
 							<div class="pull-right">
-								<p style="text-align: right;">{{ doc.b3_transaction_no_formatted or '' }}</p>
+								<p style="text-align: right; padding-right: 5px;">{{ doc.b3_transaction_no or '' }}</p>
 							</div>
 						</div>
 					</td>

@@ -1403,7 +1403,7 @@
   },
   {
    "collapsible": 1,
-   "collapsible_depends_on": "b3_document_number",
+   "collapsible_depends_on": "b3_transaction_no",
    "fieldname": "b3_information_section",
    "fieldtype": "Section Break",
    "label": "B3 Information"
@@ -1456,7 +1456,7 @@
    "fieldname": "b3_transaction_no",
    "fieldtype": "Barcode",
    "label": "B3 Transaction Number",
-   "options": "{\"format\": \"CODE128\", \"height\": 40, \"displayValue\": false}"
+   "options": "{\"format\": \"CODE128\", \"height\": 40, \"displayValue\": false, \"margin\": 0}"
   },
   {
    "fieldname": "get_b3_transaction_number",
@@ -1467,7 +1467,7 @@
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-07-24 15:45:51.840689",
+ "modified": "2020-07-25 07:06:24.154879",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
