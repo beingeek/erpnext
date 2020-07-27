@@ -122,7 +122,7 @@ class PurchaseOrder(BuyingController):
 		self.b3_transaction_no_value = self.get_b3_transaction_no()
 
 		if self.b3_transaction_no_value:
-			self.b3_transaction_no_formatted = self.b3_transaction_no_value[0:5] + "-" + self.b3_transaction_no_value[5:]
+			self.b3_transaction_no_formatted = self.b3_transaction_no_value[0:5] + "-" + self.b3_transaction_no_value[5:] + " / " + self.company
 		else:
 			self.b3_transaction_no_formatted = ""
 
