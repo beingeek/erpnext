@@ -738,13 +738,18 @@ frappe.ui.form.on("Purchase Order", "is_subcontracted", function(frm) {
 frappe.ui.form.on("Purchase Order", "get_customs_exchange_rate", function (frm) {
 	var company_currency = frm.cscript.get_company_currency();
 
+	if (!frm.doc.shipping_date) {
+		frappe.msgprint(__("Please set Shipping Date first"));
+		return;
+	}
+
 	if (frm.doc.currency) {
 		if (frm.doc.currency == company_currency) {
 			frm.set_value("customs_exchange_rate", 1.0);
 		} else {
 			frappe.call({
 				method: "erpnext.buying.doctype.purchase_order.purchase_order.get_customs_exchange_rate",
-				args: {'from_currency': frm.doc.currency , 'to_currency': company_currency},
+				args: {'from_currency': frm.doc.currency , 'to_currency': company_currency, 'transaction_date': frm.doc.shipping_date},
 				callback: function (r) {
 					if (r.message)
 						frm.set_value("customs_exchange_rate", r.message);
