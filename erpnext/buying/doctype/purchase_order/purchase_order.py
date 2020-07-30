@@ -691,17 +691,22 @@ def get_customs_exchange_rate(from_currency, to_currency, transaction_date=None)
 	if not transaction_date:
 		transaction_date = frappe.utils.today()
 
-	transaction_date = frappe.utils.add_days(transaction_date, -1)
-
 	try:
 		cache = frappe.cache()
 		key = "bank_of_canada_FX{0}:{1}:{2}".format(from_currency, to_currency, transaction_date)
 		value = flt(cache.get(key))
 		if not value:
-			url = "https://www.bankofcanada.ca/valet/observations/FX{0}{1}?start_date={2}&end_date={2}".format(from_currency, to_currency, transaction_date)
+			start_date = end_date = frappe.utils.add_days(transaction_date, -1)
+			if frappe.utils.getdate(start_date).weekday() == 5:  # Saturday
+				start_date = frappe.utils.add_days(start_date, -1)
+			elif frappe.utils.getdate(start_date).weekday() == 6:  # Sunday
+				start_date = frappe.utils.add_days(start_date, -2)
+
+			url = "https://www.bankofcanada.ca/valet/observations/FX{0}{1}?start_date={2}&end_date={3}".format(from_currency,
+				to_currency, start_date, end_date)
 
 			data = requests.get(url).json()
-			observation = data["observations"][0]
+			observation = data["observations"][-1]
 			value = flt(observation["FX{0}{1}".format(from_currency, to_currency)]["v"])
 			cache.setex(key, value, 6 * 60 * 60)
 	except:
