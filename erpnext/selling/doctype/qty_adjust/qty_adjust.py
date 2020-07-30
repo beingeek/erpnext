@@ -37,6 +37,9 @@ class QtyAdjust(Document):
 
 		frappe.msgprint("Sales Orders Adjusted")
 
+	def validate(self):
+		frappe.throw(_("Cannot save Qty Adjust"))
+
 
 def change_item_code(sales_order, so_detail, new_item_code, old_item_code):
 	from erpnext.stock.get_item_details import get_item_details
