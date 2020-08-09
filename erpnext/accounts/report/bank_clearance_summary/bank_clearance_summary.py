@@ -20,7 +20,7 @@ def get_columns():
 		_("Payment Entry") + ":Dynamic Link/"+_("Payment Document")+":110",
 		_("Posting Date") + ":Date:100",
 		_("Cheque No") + "::120",
-		_("Cheque Date") + "::120",
+		_("Cheque Date") + ":Date:120",
 		_("Clearance Date") + ":Date:100",
 		_("Against Account") + ":Link/Account:170",
 		_("Amount") + ":Currency:120"
