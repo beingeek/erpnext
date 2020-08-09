@@ -7,14 +7,14 @@ frappe.query_reports["Bank Clearance Summary"] = {
 			"fieldname":"from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
-			"default": frappe.defaults.get_user_default("year_start_date"),
+			"default": "",
 			"width": "80"
 		},
 		{
 			"fieldname":"to_date",
 			"label": __("To Date"),
 			"fieldtype": "Date",
-			"default": frappe.datetime.get_today()
+			"default": ""
 		},
 		{
 			"fieldname":"account",
@@ -22,7 +22,7 @@ frappe.query_reports["Bank Clearance Summary"] = {
 			"fieldtype": "Link",
 			"options": "Account",
 			"reqd": 1,
-			"default": frappe.defaults.get_user_default("Company")? 
+			"default": frappe.defaults.get_user_default("Company")?
 				locals[":Company"][frappe.defaults.get_user_default("Company")]["default_bank_account"]: "",
 			"get_query": function() {
 				return {
@@ -34,5 +34,11 @@ frappe.query_reports["Bank Clearance Summary"] = {
 				}
 			}
 		},
+		{
+			"fieldname":"clearance_date",
+			"label": __("Clearance Date"),
+			"fieldtype": "Date",
+			"default": ""
+		}
 	]
 }
