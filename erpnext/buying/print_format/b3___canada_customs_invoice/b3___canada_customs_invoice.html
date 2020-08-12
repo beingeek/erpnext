@@ -50,7 +50,7 @@ Please set HS Codes and reload this print format.
 			<td colspan="6" style="width: 50%;">
 				<p class="form2label">2. Date of direct shipment to Canada - Date d'expédition directe vers le Canada
 				</p>
-				<p class="form2data" style="text-align: center;">{{ doc.get_formatted('shipping_date')}}</p>
+				<p class="form2data" style="text-align: center;">{{ frappe.format_date(doc.shipping_date, 'MM-dd-YYYY')}}</p>
 			</td>
 		</tr>
 		<tr>
@@ -203,7 +203,6 @@ Please set HS Codes and reload this print format.
 
 						</td>
 						<td style="width: 1%; vertical-align:middle !important; border: 0;">
-							<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.1/JsBarcode.all.min.js"></script>
 							<i class="fa fa-caret-right" style="font-size:30px"></i>
 						</td>
 						<td style="border: 0; width: 50%; vertical-align: middle !important;">

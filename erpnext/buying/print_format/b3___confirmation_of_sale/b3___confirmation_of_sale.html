@@ -66,7 +66,7 @@ Please set HS Codes and reload this print format.
 			<td colspan="6" style="width: 50%;">
 				<table style="border: 0; width: 100%;">
 					<tr>
-						<td style="border: 0; width: 40;">
+						<td style="border: 0;">
 							<table style="border: 0; width: 100%;">
 								<tr>
 									<td style="border: 0; width: 40%;">
@@ -74,8 +74,6 @@ Please set HS Codes and reload this print format.
 											véhicule</p>
 									</td>
 									<td style="border: 0; width: 1%; vertical-align:middle !important;">
-										<script
-											src="https://cdn.jsdelivr.net/jsbarcode/3.5.1/JsBarcode.all.min.js"></script>
 										<i class="fa fa-caret-right" style="font-size:30px"></i>
 									</td>
 									<td style="border: 0; width: 20%; vertical-align: middle !important;">
@@ -93,11 +91,11 @@ Please set HS Codes and reload this print format.
 			<!-- <td colspan="3" style="width: 25;"> <p>014 5452-7653</p> </td> -->
 			<td colspan="3" style="width: 25%;">
 				<p class="form1label">6a.Date of Direct Shipment to Canada Date d'expédition directe vers le Canada</p>
-				<p class="form1data">{{ doc.get_formatted('shipping_date')}}</p>
+				<p class="form1data">{{ frappe.format_date(doc.shipping_date, 'MM-dd-YYYY') }}</p>
 			</td>
 			<td colspan="3" style="width: 25%;">
 				<p class="form1label">6b. Date Purchased / Date de l'achat</p>
-				<p class="form1data">{{ doc.get_formatted('shipping_date')}}</p>
+				<p class="form1data">{{ frappe.format_date(doc.shipping_date, 'MM-dd-YYYY') }}</p>
 			</td>
 		</tr>
 
@@ -117,7 +115,6 @@ Please set HS Codes and reload this print format.
 							</p>
 						</td>
 						<td style="border: 0; width: 1%; vertical-align:middle !important;">
-							<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.1/JsBarcode.all.min.js"></script>
 							<i class="fa fa-caret-right" style="font-size:30px"></i>
 						</td>
 						<td style="border: 0; width: 50%; vertical-align: middle !important;">
@@ -343,7 +340,6 @@ Please set HS Codes and reload this print format.
 							<p class="form1label">21. Total cost all commodities Coût total tous produits</p>
 						</td>
 						<td style="border: 0; width: 1%; vertical-align:middle !important;">
-							<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.1/JsBarcode.all.min.js"></script>
 							<i class="fa fa-caret-right" style="font-size:30px"></i>
 						</td>
 						<td style="border: 0; width: 50%; vertical-align: middle !important;">
@@ -411,7 +407,6 @@ Please set HS Codes and reload this print format.
 								</p>
 							</td>
 							<td style="border: 0; width: 1%; vertical-align:middle !important;">
-								<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.1/JsBarcode.all.min.js"></script>
 								<i class="fa fa-caret-right" style="font-size:30px"></i>
 							</td>
 							<td style="border: 0; width: 54%; vertical-align: middle !important;">
@@ -484,7 +479,6 @@ Please set HS Codes and reload this print format.
 								</p>
 							</td>
 							<td class="MarBorPadZero" style="width: 1%; vertical-align: middle !important;">
-								<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.1/JsBarcode.all.min.js"></script>
 								<i class="fa fa-caret-right" style="font-size:35px"></i>
 							</td>
 							<td class="MarBorPadZero" style="width: 25%; vertical-align: middle !important;">
@@ -522,7 +516,7 @@ Please set HS Codes and reload this print format.
 							style="display: inline-block; border-bottom: 1px solid #000; width: 90px;"></span>
 					</span>
 					<span class="form1label">Date: <span
-							style="display: inline-block; border-bottom: 1px solid #000; width: 50px;">{{ doc.get_formatted('shipping_date')}}</span>
+							style="display: inline-block; border-bottom: 1px solid #000; width: 50px;">{{ frappe.format_date(doc.shipping_date, 'MM-dd-YYYY')}}</span>
 					</span>
 					<p class="form1label">Representing: <br> Agissant pour : <span
 							style="display: inline-block; border-bottom: 1px solid #000; width: 280px;">{{ doc.get_formatted('company')}}</span>

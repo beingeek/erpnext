@@ -385,7 +385,7 @@ Please set HS Codes and reload this print format.
 						ACCURATE AND COMPLETE. DÉCLARE QUE LES RENSEIGNEMENTS CI-DESSUS SONT VRAIS ET COMPLETS.
 					</p>
 					<br>
-					<p style="margin-left: 28px !important;">{{ doc.get_formatted('schedule_date')}}</p>
+					<p style="margin-left: 28px !important;">{{ frappe.format_date(doc.schedule_date, 'MM-dd-YYYY')}}</p>
 					<span
 						style="float: left; margin: 0 10px; border-top: 1px solid #000; width: 90px; text-align: center; font-size: 7px;">
 						<p>Date</p>
