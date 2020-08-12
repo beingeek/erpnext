@@ -134,6 +134,10 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			}
 		}
 
+		if (this.frm.doc.docstatus === 1) {
+			this.frm.add_custom_button(__('Print Barcode Labels'), () => this.show_print_barcode_label_dialog());
+		}
+
 		this.frm.set_df_property("drop_ship", "hidden", !is_drop_ship);
 
 		if(doc.docstatus == 1 && !in_list(["Closed", "Delivered"], doc.status)) {
@@ -295,6 +299,43 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 				});
 			});
 		}
+	},
+
+	show_print_barcode_label_dialog: function() {
+		let me = this;
+		let available_print_formats = me.frm.meta.__print_formats.filter(d => d.name.toLowerCase().includes('barcode')).map(d => d.name);
+		let default_print_format = available_print_formats ? available_print_formats[0] : "";
+		let dialog = new frappe.ui.Dialog({
+			title: __("Barcode Label Print"),
+			fields: [
+				{
+					fieldname: "print_format",
+					fieldtype: "Select",
+					label: __("Print Format"),
+					options: available_print_formats,
+					default: default_print_format,
+					reqd: 1
+				},
+				{
+					fieldname: "print_qty",
+					fieldtype: "Int",
+					label: __("Print Qty"),
+					default: 1
+				}
+			]
+		});
+		dialog.set_primary_action(__("Print"), function () {
+			let print_qty = cint(dialog.get_value('print_qty'));
+			if (print_qty > 0) {
+				me.frm.print_preview.refresh_print_options();
+				me.frm.print_preview.print_sel.val(dialog.get_value('print_format'));
+				me.frm.print_preview.printit({
+					print_qty: print_qty
+				});
+			}
+			dialog.hide();
+		});
+		dialog.show();
 	},
 
 	show_hide_add_remove_default_items: function() {
