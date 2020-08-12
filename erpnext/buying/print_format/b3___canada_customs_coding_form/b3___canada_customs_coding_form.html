@@ -103,7 +103,7 @@ Please set HS Codes and reload this print format.
 					</td>
 					<td style="border-top: 0;" colspan="7">
 						<p class="MarBorPadZero formdata">
-							{{frappe.format_value(doc.base_customs_total , df=doc.meta.get_field('total'), currency=doc.currency)}}
+							{{frappe.format_value(frappe.utils.flt(doc.base_customs_total, 0), df=doc.meta.get_field('total_qty'))}}
 						</p>
 
 					</td>
@@ -132,8 +132,9 @@ Please set HS Codes and reload this print format.
 					<td style="width: 11.11%; border-bottom: 0;" colspan="4">
 						<p class="formlabel">15 U.S. PORT OF EXIT <br> BUREAU DE SORTIE DES É.-U</p>
 					</td>
-					<td style="width: 19.44%;" rowspan="5" colspan="7">
-						<p class="fom3label">RESERVED</p>
+					<td style="width: 19.44%; vertical-align: middle !important;" rowspan="5" colspan="7">
+						<p class="fom3label" style="text-align: center; color: lightgrey; font-size:7px;">RESERVED FOR<br/>CCRA<br/>USE
+							<br/><br/>RÉSERVÉ À<br/>L'USAGE DE<br/>L'AGENCE</p>
 					</td>
 				</tr>
 				<tr>

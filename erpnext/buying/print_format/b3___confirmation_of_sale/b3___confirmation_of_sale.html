@@ -13,7 +13,7 @@ Please set HS Codes and reload this print format.
 		<div class="letter-head">
 			<div class="clearfix">
 				<div class="pull-left" style="width: 70%;">
-					<h3>CONFIRMATION OF SALE<br>CONFIRMATION DE VENTE</h3>
+					<h4 class="MarBorPadZero">CONFIRMATION OF SALE<br>CONFIRMATION DE VENTE</h4>
 				</div>
 				<h5 class="pull-right page-number visible-pdf text-right" style="width: 30%;">
 					{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}
@@ -291,30 +291,30 @@ Please set HS Codes and reload this print format.
 
 		{% for row in doc.items_by_hs_code.values() %}
 		<tr>
-			<td>
-				<p class="form1data">{{ row.hs_code }}</p>
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;">
+				<p class="form1data MarBorPadZero">{{ row.hs_code }}</p>
 			</td>
-			<td colspan="2">
-				<p class="form1data">{{ row.description }}</p>
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;" colspan="2">
+				<p class="form1data MarBorPadZero">{{ row.description }}</p>
 			</td>
-			<td>
-				<p class="form1data" style="text-align: center;">{{ row.country_code }}</p>
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;">
+				<p class="form1data MarBorPadZero" style="text-align: center;">{{ row.country_code }}</p>
 			</td>
-			<td style="border-right: 0;">
-				<p class="form1data text-right">{{ frappe.format(row.net_weight) }}</p>
+			<td style="border-bottom: 0; border-top: 0; border-right: 0; padding: 1px !important;">
+				<p class="form1data MarBorPadZero text-right">{{ frappe.format(row.net_weight) }}</p>
 			</td>
-			<td style="border-left: 0;">
-				<p class="form1data">kg</p>
+			<td style="border-bottom: 0; border-top: 0; border-left: 0; padding: 1px !important;">
+				<p class="form1data MarBorPadZero">kg</p>
 			</td>
-			<td colspan="2">
-				<p class="form1data text-center">{{ frappe.format_value(row.qty) }}</p>
+			<td colspan="2" style="border-bottom: 0; border-top: 0; padding: 1px !important;">
+				<p class="form1data MarBorPadZero text-center">{{ frappe.format_value(row.qty) }}</p>
 			</td>
-			<td>
-				<p class="form1data text-right">
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;">
+				<p class="form1data MarBorPadZero text-right">
 					{{ frappe.format_value(row.rate, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
 			</td>
-			<td>
-				<p class="form1data text-right">
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;">
+				<p class="form1data MarBorPadZero text-right">
 					{{ frappe.format_value(row.amount, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
 			</td>
 		</tr>
@@ -399,10 +399,10 @@ Please set HS Codes and reload this print format.
 
 			<tr>
 				<td colspan="3" style="width: 53%;">
-					<table style="border: 0; width: 100%;">
+					<table style="width: 100%;" class="MarBorPadZero">
 						<tr>
-							<td style="border: 0; width: 45%;">
-								<p class="form1label">23. <br> Date of delivery if delivered sale
+							<td style="border: 0; width: 45%; padding:0 !important;">
+								<p class="form1label MarBorPadZero">23. <br> Date of delivery if delivered sale
 									<br>Date d' arrivée si vente à la livraison
 								</p>
 							</td>
@@ -464,7 +464,7 @@ Please set HS Codes and reload this print format.
 			</tr>
 
 			<tr>
-				<td colspan="6">
+				<td colspan="6" style="vertical-align: bottom;">
 					<p class="form1label MarBorPadZero">26. CROSS-OVER DECLARATION (If applicable) / DÉCLARATION DE
 						TRANSFERT (s'il y a lieu)
 					</p>
@@ -485,7 +485,7 @@ Please set HS Codes and reload this print format.
 								<table style="width: 100%;" class="MarBorPadZero">
 									<tr>
 										<td class="MarBorPadZero">
-											<p class="form1data"><input type="checkbox" id="26a" name="26a"></p>
+											<p class="form1data MarBorPadZero"><input type="checkbox" id="26a" name="26a"></p>
 										</td>
 										<td class="MarBorPadZero">
 											<p class="form1label">Broker to Dealer / Courtier à Marchand</p>
@@ -493,7 +493,7 @@ Please set HS Codes and reload this print format.
 									</tr>
 									<tr>
 										<td class="MarBorPadZero">
-											<p class="form1data"><input type="checkbox" id="26b" name="26b"></p>
+											<p class="form1data MarBorPadZero"><input type="checkbox" id="26b" name="26b"></p>
 										</td>
 										<td class="MarBorPadZero">
 											<p class="form1label">Dealer to Broker / Marchand à Courtier</p>
@@ -501,9 +501,8 @@ Please set HS Codes and reload this print format.
 									</tr>
 								</table>
 							</td>
-							<td class="" style="width: 34%; border:0; border-left: 2px solid black;">
-								<span
-									style="margin: 20px; border-top: 1px solid #000; width: 200px; text-align: center; float: left; margin-top: 30px;">Signature</span>
+							<td style="width: 34%; border:0; border-left: 2px solid black; margin:0; padding:0 !important; vertical-align: bottom; text-align: center">
+								<span style="margin: 30px 30px 0 30px; border-top: 1px solid #000; width: 200px; text-align: center; float: left;">Signature</span>
 							</td>
 						</tr>
 					</table>

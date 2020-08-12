@@ -16,7 +16,7 @@ Please set HS Codes and reload this print format.
 			<div class="clearfix">
 				
 				<div class="pull-left" style="width: 80%;">
-					<h3>CANADA CUSTOMS INVOICE<br>FACTURE DES DOUANES CANADIENNES</h3>
+					<h4 class="MarBorPadZero">CANADA CUSTOMS INVOICE<br>FACTURE DES DOUANES CANADIENNES</h4>
 				</div>
 
 				<table class="pull-right page-number visible-pdf" style="width: 15%; border:0">
@@ -156,23 +156,23 @@ Please set HS Codes and reload this print format.
 		</tr>
 		{% for row in doc.items_by_hs_code.values() %}
 		<tr>
-			<td>
-				<p class="form2data" style="text-align:center;">{{ frappe.format_value(row.qty) }}</p>
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;">
+				<p class="form2data MarBorPadZero" style="text-align:center;">{{ frappe.format_value(row.qty) }}</p>
 			</td>
-			<td colspan="6">
-				<p class="form2data">{{ row.description }}</p>
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;" colspan="6">
+				<p class="form2data MarBorPadZero">{{ row.description }}</p>
 			</td>
-			<td style="border-right: 0;">
-				<p class="form2data" style="text-align: right ;">{{  frappe.format(row.net_weight) }}</p>
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important; border-right: 0;">
+				<p class="form2data MarBorPadZero" style="text-align: right ;">{{  frappe.format(row.net_weight) }}</p>
 			</td>
-			<td style="border-left: 0;">
-				<p class="form2data">kg</p>
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important; border-left: 0;">
+				<p class="form2data MarBorPadZero">kg</p>
 			</td>
-			<td colspan="2">
-				<p class="form2data" style="text-align: right ;">{{ frappe.format_value(row.rate, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;" colspan="2">
+				<p class="form2data MarBorPadZero" style="text-align: right ;">{{ frappe.format_value(row.rate, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
 			</td>
-			<td>
-				<p class="form2data" style="text-align: right ;">{{ frappe.format_value(row.amount, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
+			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;">
+				<p class="form2data MarBorPadZero" style="text-align: right ;">{{ frappe.format_value(row.amount, df=doc.meta.get_field('total'), currency=doc.currency) }}</p>
 			</td>
 		</tr>
 		{% endfor %}
@@ -194,18 +194,18 @@ Please set HS Codes and reload this print format.
 						</td>
 					</tr>
 				</table>
-				<table style="border: 0; width: 100%; border: 0;">
+				<table style="border: 0; width: 100%; padding: 0;">
 					<tr>
-						<td style="width:49%; border: 0;  vertical-align:middle !important;">
+						<td style="width:49%; border: 0; vertical-align:middle !important; padding: 0 !important;">
 							<p class="form2label">
 								Commercial Invoice No. - N° de la facture commerciale
 							</p>
 
 						</td>
-						<td style="width: 1%; vertical-align:middle !important; border: 0;">
+						<td style="width: 1%; vertical-align:middle !important; border: 0; padding: 0 !important;">
 							<i class="fa fa-caret-right" style="font-size:30px"></i>
 						</td>
-						<td style="border: 0; width: 50%; vertical-align: middle !important;">
+						<td style="border: 0; width: 50%; vertical-align: middle !important; padding: 0 !important;">
 							<p class="form2data">{{doc.get_formatted('pickup_no')}}</p>
 						</td>
 					</tr>
