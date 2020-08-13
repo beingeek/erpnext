@@ -168,7 +168,7 @@ Please set HS Codes and reload this print format.
 				<p class="form2data MarBorPadZero">{{ row.description }}</p>
 			</td>
 			<td style="border-bottom: 0; border-top: 0; padding: 1px !important; border-right: 0;">
-				<p class="form2data MarBorPadZero" style="text-align: right ;">{{  frappe.format(row.net_weight) }}</p>
+				<p class="form2data MarBorPadZero" style="text-align: right ;">{{  frappe.format(row.net_weight, df=doc.meta.get_field('total_qty')) }}</p>
 			</td>
 			<td style="border-bottom: 0; border-top: 0; padding: 1px !important; border-left: 0;">
 				<p class="form2data MarBorPadZero">kg</p>
@@ -231,7 +231,7 @@ Please set HS Codes and reload this print format.
 		<tr>
 			<td style="border-right:0;">
 				<p class="form2label">Net</p>
-				<p class="form2data" style="text-align: right ;">{{ frappe.format(doc.total_net_weight)}}</p>
+				<p class="form2data" style="text-align: right ;">{{ frappe.format(doc.total_net_weight, df=doc.meta.get_field('total_qty'))}}</p>
 			</td>
 			<td style="border-left: 0;">
 				<p class="form2data" style="margin-top:18px">kg</p>

@@ -305,13 +305,13 @@ Please set HS Codes and reload this print format.
 				<p class="form1data MarBorPadZero" style="text-align: center;">{{ row.country_code }}</p>
 			</td>
 			<td style="border-bottom: 0; border-top: 0; border-right: 0; padding: 1px !important;">
-				<p class="form1data MarBorPadZero text-right">{{ frappe.format(row.net_weight) }}</p>
+				<p class="form1data MarBorPadZero text-right">{{ frappe.format(row.net_weight, df=doc.meta.get_field('total_qty')) }}</p>
 			</td>
 			<td style="border-bottom: 0; border-top: 0; border-left: 0; padding: 1px !important;">
 				<p class="form1data MarBorPadZero">kg</p>
 			</td>
 			<td colspan="2" style="border-bottom: 0; border-top: 0; padding: 1px !important;">
-				<p class="form1data MarBorPadZero text-center">{{ frappe.format_value(row.qty) }}</p>
+				<p class="form1data MarBorPadZero text-center">{{ frappe.format_value(row.qty, df=doc.meta.get_field('total_qty')) }}</p>
 			</td>
 			<td style="border-bottom: 0; border-top: 0; padding: 1px !important;">
 				<p class="form1data MarBorPadZero text-right">
@@ -369,7 +369,7 @@ Please set HS Codes and reload this print format.
 				<p class="form1data">{{doc.get_formatted('pickup_no')}}</p>
 			</td>
 			<td style="border-right:0 !important;">
-				<p class="form1data" style="text-align: right;">{{ frappe.format(doc.total_net_weight) }}</p>
+				<p class="form1data" style="text-align: right;">{{ frappe.format(doc.total_net_weight, df=doc.meta.get_field('total_qty')) }}</p>
 			</td>
 			<td style="border-left:0 !important;">
 				<p class="form1data" >kg</p>
