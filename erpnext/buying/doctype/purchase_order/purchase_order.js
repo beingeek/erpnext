@@ -184,7 +184,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			if(!doc.auto_repeat) {
 				cur_frm.add_custom_button(__('Subscription'), function() {
 					erpnext.utils.make_subscription(doc.doctype, doc.name)
-				}, __("Make"))
+				}, __("Create"))
 			}
 
 			if(flt(doc.per_billed)==0 && flt(doc.per_completed, 2) < 100) {
