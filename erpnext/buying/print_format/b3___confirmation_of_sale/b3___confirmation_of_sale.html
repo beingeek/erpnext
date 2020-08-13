@@ -12,10 +12,14 @@ Please set HS Codes and reload this print format.
 	<div id="header-html" class="hidden-pdf">
 		<div class="letter-head">
 			<div class="clearfix">
-				<div class="pull-left" style="width: 70%;">
+				<div class="pull-left" style="width: 40%;">
 					<h4 class="MarBorPadZero">CONFIRMATION OF SALE<br>CONFIRMATION DE VENTE</h4>
 				</div>
-				<h5 class="pull-right page-number visible-pdf text-right" style="width: 30%;">
+				<div class="pull-left" style="width: 40%;">
+					{{ doc.b3_transaction_no or '' }}
+					<div style="font-size: 8pt; margin-top:-5px;">{{ doc.b3_transaction_no_formatted or '' }}</div>
+				</div>
+				<h5 class="pull-right page-number visible-pdf text-right" style="width: 20%;">
 					{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}
 				</h5>
 			</div>

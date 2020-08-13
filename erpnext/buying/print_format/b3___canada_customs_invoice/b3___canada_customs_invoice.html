@@ -15,8 +15,13 @@ Please set HS Codes and reload this print format.
 		<div class="letter-head">
 			<div class="clearfix">
 				
-				<div class="pull-left" style="width: 80%;">
+				<div class="pull-left" style="width: 45%;">
 					<h4 class="MarBorPadZero">CANADA CUSTOMS INVOICE<br>FACTURE DES DOUANES CANADIENNES</h4>
+				</div>
+
+				<div class="pull-left" style="width: 35%;">
+					{{ doc.b3_transaction_no or '' }}
+					<div style="font-size: 8pt; margin-top:-5px;">{{ doc.b3_transaction_no_formatted or '' }}</div>
 				</div>
 
 				<table class="pull-right page-number visible-pdf" style="width: 15%; border:0">
