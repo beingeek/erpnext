@@ -20,7 +20,7 @@ Please set HS Codes and reload this print format.
 		<div class="letter-head">
 			<div class="clearfix">
 				<div class="pull-left" style="width: 70%;">
-					<h3>CANADA CUSTOMS CODING FORM<br>DOUANES CANADA - FORMULE DE CODAGE</h3>
+					<h3 class="MarBorPadZero">CANADA CUSTOMS CODING FORM<br>DOUANES CANADA - FORMULE DE CODAGE</h3>
 				</div>
 				<h5 class="pull-right page-number visible-pdf text-right" style="width: 30%;">
 					{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}
@@ -101,9 +101,9 @@ Please set HS Codes and reload this print format.
 					<td style="border-top: 0;" colspan="2">
 						<p class="MarBorPadZero formdata"><br></p>
 					</td>
-					<td style="border-top: 0;" colspan="7">
+					<td style="border-top: 0; text-align: center;" colspan="7">
 						<p class="MarBorPadZero formdata">
-							{{frappe.format_value(frappe.utils.flt(doc.base_customs_total, 0), df=doc.meta.get_field('total_qty'))}}
+							<h3 class="MarBorPadZero">{{frappe.format_value(frappe.utils.flt(doc.base_customs_total, 0), df=doc.meta.get_field('total_qty'))}}</h3>
 						</p>
 
 					</td>
