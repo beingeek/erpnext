@@ -45,6 +45,7 @@
   "country_of_transhipment",
   "awb_gross_weight",
   "column_break_36",
+  "b3_warehouse_no",
   "customs_exchange_rate",
   "get_customs_exchange_rate",
   "drop_ship",
@@ -1462,12 +1463,17 @@
    "fieldname": "get_b3_transaction_number",
    "fieldtype": "Button",
    "label": "Get B3 Transaction Number"
+  },
+  {
+   "fieldname": "b3_warehouse_no",
+   "fieldtype": "Data",
+   "label": "Warehouse No"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-08-12 08:01:11.549020",
+ "modified": "2020-08-17 07:41:11.310226",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
