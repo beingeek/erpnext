@@ -149,7 +149,7 @@ Customer Request`}
 	override_price_list_rate: function(doc, cdt, cdn) {
 		var item = frappe.get_doc(cdt, cdn);
 		if (item.override_price_list_rate) {
-			frappe.model.set_value(item.doctype, item.name, "pricing_rule", "");
+			frappe.model.set_value(item.doctype, item.name, "pricing_rules", "");
 		} else {
 			this.apply_price_list(item);
 		}
