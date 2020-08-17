@@ -695,6 +695,9 @@ class BuyingController(StockController):
 				validate_expense_against_budget(args)
 
 	def update_item_prices(self):
+		if not frappe.get_cached_value("Stock Settings", None, "update_buying_prices_on_submission_of_purchase_order"):
+			return
+
 		from erpnext.stock.get_item_details import get_price_list_rate, process_args
 		from erpnext.stock.report.price_list.price_list import _set_item_pl_rate
 

@@ -720,13 +720,19 @@ def get_price_list_rate_for(args, item_code):
 		:param qty: Derised Qty
 		:param transaction_date: Date of the price
 	"""
+
+	if frappe.get_cached_value("Stock Settings", None, "get_prices_based_on_date") == "Delivery Date":
+		price_date = args.get('delivery_date') or args.get('transaction_date')
+	else:
+		price_date = args.get('transaction_date')
+
 	item_price_args = {
 			"item_code": item_code,
 			"price_list": args.get('price_list'),
 			"customer": args.get('customer'),
 			"supplier": args.get('supplier'),
 			"uom": args.get('uom'),
-			"transaction_date": args.get('delivery_date') or args.get('transaction_date'),
+			"transaction_date": price_date,
 	}
 
 	item_price_data = None
@@ -750,12 +756,13 @@ def get_price_list_rate_for(args, item_code):
 			item_price_data = general_price_list_rate
 
 	if item_price_data:
-		if args.doctype == "Purchase Order" and not args.skip_old_price_alert:
+		stale_price_days = frappe.get_cached_value("Stock Settings", None, "stale_price_days")
+		if args.doctype == "Purchase Order" and stale_price_days and not args.skip_old_price_alert:
 			if args.get('transaction_date') and frappe.utils.date_diff(frappe.utils.getdate(args.get('transaction_date')),
-					frappe.utils.getdate(item_price_data[0][3])) > 14:
+					frappe.utils.getdate(item_price_data[0][3])) > stale_price_days:
 				frappe.msgprint(
-					"Price for Item {0} has not been updated for more than 2 weeks. Please make sure the price is still valid."
-						.format(item_code))
+					"Price for Item {0} has not been updated for more than {1} days. Please make sure the price is still valid."
+						.format(item_code, stale_price_days))
 
 		if item_price_data[0][2] == args.get("uom"):
 			return item_price_data[0][1]

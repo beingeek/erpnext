@@ -9,22 +9,24 @@
   "stock_uom",
   "default_warehouse",
   "sample_retention_warehouse",
+  "show_barcode_field",
+  "clean_description_html",
+  "allow_negative_stock",
+  "automatically_set_serial_nos_based_on_fifo",
+  "set_qty_in_transactions_based_on_serial_no_input",
   "column_break_4",
   "valuation_method",
   "over_delivery_receipt_allowance",
   "action_if_quality_inspection_is_not_submitted",
   "batch_wise_valuation",
   "empty_pallet_weight",
-  "tolerance",
   "restrict_amounts_in_report_to_role",
-  "show_barcode_field",
-  "clean_description_html",
   "section_break_7",
   "auto_insert_price_list_rate_if_missing",
-  "allow_negative_stock",
+  "update_buying_prices_on_submission_of_purchase_order",
   "column_break_10",
-  "automatically_set_serial_nos_based_on_fifo",
-  "set_qty_in_transactions_based_on_serial_no_input",
+  "get_prices_based_on_date",
+  "stale_price_days",
   "sec_price_list_note",
   "price_list_note",
   "price_list_item_groups_section",
@@ -120,7 +122,7 @@
    "default": "0",
    "fieldname": "auto_insert_price_list_rate_if_missing",
    "fieldtype": "Check",
-   "label": "Auto insert Price List rate if missing"
+   "label": "Auto Insert Price List Rate If Missing"
   },
   {
    "default": "0",
@@ -201,6 +203,7 @@
    "label": "Naming Series Prefix"
   },
   {
+   "default": "Yes",
    "fieldname": "batch_wise_valuation",
    "fieldtype": "Select",
    "label": "Use Batch Costing By Default",
@@ -210,12 +213,6 @@
    "fieldname": "empty_pallet_weight",
    "fieldtype": "Float",
    "label": "Empty Pallet Weight (lbs)"
-  },
-  {
-   "description": "Percentage you are allowed to receive or deliver more against the quantity ordered. For example: If you have ordered 100 units. and your Allowance is 10% then you are allowed to receive 110 units.",
-   "fieldname": "tolerance",
-   "fieldtype": "Float",
-   "label": "Limit Percent"
   },
   {
    "fieldname": "restrict_amounts_in_report_to_role",
@@ -254,12 +251,31 @@
    "fieldtype": "Table",
    "label": "Item Groups Excluded",
    "options": "Price List Item Group"
+  },
+  {
+   "default": "0",
+   "fieldname": "update_buying_prices_on_submission_of_purchase_order",
+   "fieldtype": "Check",
+   "label": "Update Buying Prices on Submission of Purchase Order"
+  },
+  {
+   "default": "Transaction Date",
+   "fieldname": "get_prices_based_on_date",
+   "fieldtype": "Select",
+   "label": "Get Prices Based On Date",
+   "options": "Transaction Date\nDelivery Date"
+  },
+  {
+   "description": "Set 0 to disable warning",
+   "fieldname": "stale_price_days",
+   "fieldtype": "Int",
+   "label": "Warn If Buying Prices are Older Than Days"
   }
  ],
  "icon": "icon-cog",
  "idx": 1,
  "issingle": 1,
- "modified": "2020-06-19 12:13:26.388150",
+ "modified": "2020-08-17 05:59:56.852927",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Settings",
