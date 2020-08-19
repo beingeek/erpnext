@@ -9,7 +9,8 @@ frappe.query_reports["Price List"] = {
 			label: __("Price Effective Date"),
 			fieldtype: "Date",
 			default: frappe.datetime.nowdate(),
-			reqd: 1
+			reqd: 1,
+			auto_email_report_ignore: 1
 		},
 		{
 			fieldname: "valid_days",
@@ -22,20 +23,23 @@ frappe.query_reports["Price List"] = {
 		{
 			fieldname: "previous_price_date",
 			label: __("Price Ref Date for Increase/Decrease"),
-			fieldtype: "Date"
+			fieldtype: "Date",
+			auto_email_report_ignore: 1
 		},
 		{
 			fieldname: "po_from_date",
 			label: __("PO From Date"),
 			default: frappe.datetime.nowdate(),
 			fieldtype: "Date",
-			hidden: !cint(frappe.defaults.get_default("restrict_amounts_in_report_to_role") && frappe.user.has_role(frappe.defaults.get_default("restrict_amounts_in_report_to_role")))
+			hidden: !cint(frappe.defaults.get_default("restrict_amounts_in_report_to_role") && frappe.user.has_role(frappe.defaults.get_default("restrict_amounts_in_report_to_role"))),
+			auto_email_report_ignore: 1
 		},
 		{
 			fieldname: "po_to_date",
 			label: __("PO To Date"),
 			fieldtype: "Date",
-			hidden: !cint(frappe.defaults.get_default("restrict_amounts_in_report_to_role") && frappe.user.has_role(frappe.defaults.get_default("restrict_amounts_in_report_to_role")))
+			hidden: !cint(frappe.defaults.get_default("restrict_amounts_in_report_to_role") && frappe.user.has_role(frappe.defaults.get_default("restrict_amounts_in_report_to_role"))),
+			auto_email_report_ignore: 1
 		},
 		{
 			fieldname: "item_code",
@@ -108,23 +112,26 @@ frappe.query_reports["Price List"] = {
 			fieldname: "price_list_1",
 			label: __("Additional Price List 1"),
 			fieldtype: "Link",
-			options:"Price List"
+			options:"Price List",
+			auto_email_report_ignore: 1
 		},
 		{
 			fieldname: "price_list_2",
 			label: __("Additional Price List 2"),
 			fieldtype: "Link",
-			options:"Price List"
+			options:"Price List",
+			auto_email_report_ignore: 1
 		},
 		{
 			fieldname: "uom",
 			label: __("UOM"),
 			fieldtype: "Link",
-			options:"UOM"
+			options:"UOM",
+			auto_email_report_ignore: 1
 		},
 		{
 			fieldname: "default_uom",
-			label: __("Default UOM"),
+			label: __("Which UOM"),
 			fieldtype: "Select",
 			options: "Default UOM\nStock UOM\nContents UOM",
 			default: "Default UOM"
@@ -234,7 +241,7 @@ frappe.query_reports["Price List"] = {
 		});
 	},
 	onload: function(listview) {
-		listview.page.add_menu_item(__("Setup Auto Email"), function() {
+		listview && listview.page && listview.page.add_menu_item(__("Setup Auto Email"), function() {
 			var customer = frappe.query_report.get_filter_value("customer");
 			var title = "Price List";
 			if (customer) {
@@ -242,6 +249,13 @@ frappe.query_reports["Price List"] = {
 			}
 
 			frappe.model.with_doctype('Auto Email Report', function() {
+				var filter_values = frappe.query_report.get_filter_values();
+				var filter_meta = frappe.query_reports[frappe.query_report.report_name].filters;
+				var filter_ignore_values = filter_meta.filter(d => d.auto_email_report_ignore);
+				$.each(filter_ignore_values, function (i, d) {
+					delete filter_values[d.fieldname];
+				});
+
 				var doc = frappe.model.get_new_doc('Auto Email Report');
 				doc = Object.assign(doc,{
 					'report': frappe.query_report.report_name,
@@ -252,12 +266,12 @@ frappe.query_reports["Price List"] = {
 					'day_of_week': 'Tuesday',
 					'frequency': 'Weekly',
 					'format': 'PDF',
-					'filters': JSON.stringify(frappe.query_report.get_filter_values()),
+					'filters': JSON.stringify(filter_values),
 				});
 
 				frappe.run_serially([
 					() => frappe.set_route('Form', 'Auto Email Report', doc.name),
-					() => cur_frm.set_value('filters', JSON.stringify(frappe.query_report.get_filter_values()))
+					() => cur_frm.set_value('filters', JSON.stringify(filter_values))
 				]);
 			});
 		});
