@@ -128,7 +128,7 @@ Customer Request`}
 
 			dialog.hide();
 			return frappe.call({
-				method: "erpnext.api.update_special_price",
+				method: "erpnext.accounts.doctype.pricing_rule.utils.update_special_price",
 				args: {
 					args: args
 				},

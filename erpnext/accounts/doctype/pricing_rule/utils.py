@@ -548,3 +548,47 @@ def update_coupon_code_count(coupon_name,transaction_type):
 			if coupon.used>0:
 				coupon.used=coupon.used-1
 				coupon.save(ignore_permissions=True)
+
+
+@frappe.whitelist()
+def update_special_price(args):
+	from erpnext.stock.get_item_details import process_args
+	from frappe.model.naming import make_autoname
+
+	if isinstance(args, string_types):
+		args = json.loads(args)
+
+	args.update(args['items'][0])
+	args = process_args(args)
+
+	pricing_rules = get_pricing_rules(args)
+	existing_pricing_rule = pricing_rules[0] if pricing_rules else None
+
+	if not existing_pricing_rule or cint(args.create_new):
+		doc = frappe.new_doc("Pricing Rule")
+		doc.update({
+			"price_or_product_discount": "Price",
+			"applicable_for": "Customer",
+			"customer": args.customer,
+			"apply_on": "Item Code",
+			"title": make_autoname("{}/{}".format(args.customer, args.item_code) + "-.#####", "Pricing Rule"),
+			"selling": 1
+		})
+		doc.append('items', {
+			"item_code": args.item_code
+		})
+
+		if existing_pricing_rule:
+			priority = cint(frappe.db.get_value("Pricing Rule", existing_pricing_rule.name, "priority")) + 1
+			doc.priority = priority
+	else:
+		doc = frappe.get_doc("Pricing Rule", existing_pricing_rule.name)
+
+	doc.rate_or_discount = "Rate"
+	doc.rate = args.new_rate
+	doc.valid_from = args.valid_from
+	doc.valid_upto = args.valid_upto
+	doc.reason = args.reason
+
+	doc.margin_type = ""
+	doc.save()
