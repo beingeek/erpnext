@@ -179,7 +179,7 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 
 		if (me.frm.doc.from_date && me.frm.doc.item_code) {
 			return this.frm.call({
-				method: "erpnext.api.get_item_custom_projected_qty",
+				method: "erpnext.stock.get_item_details.get_item_custom_projected_qty",
 				freeze: true,
 				args: {
 					date: me.frm.doc.from_date,

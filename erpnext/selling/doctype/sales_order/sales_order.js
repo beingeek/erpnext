@@ -369,7 +369,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 
 			if(item_codes.length) {
 				return this.frm.call({
-					method: "erpnext.api.get_item_custom_projected_qty",
+					method: "erpnext.stock.get_item_details.get_item_custom_projected_qty",
 					args: {
 						date: me.frm.doc.transaction_date,
 						item_codes: item_codes,

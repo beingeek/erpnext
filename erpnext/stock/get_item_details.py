@@ -14,7 +14,6 @@ from erpnext import get_company_currency
 from erpnext.stock.doctype.item.item import get_item_defaults, get_uom_conv_factor, convert_item_uom_for
 from erpnext.stock.doctype.price_list.price_list import get_price_list_details
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
-from erpnext.api import get_item_custom_projected_qty
 from erpnext.setup.doctype.brand.brand import get_brand_defaults
 from erpnext.stock.doctype.item_manufacturer.item_manufacturer import get_item_manufacturer_part_no
 
@@ -1222,3 +1221,90 @@ def validate_price_change(item_code, price_list_rate, rate):
 		return cint(difference > allowed_change)
 	else:
 		return 0
+
+@frappe.whitelist()
+def get_item_custom_projected_qty(date, item_codes, exclude_so=None):
+	from_date = frappe.utils.getdate(date)
+	to_date = frappe.utils.add_days(from_date, 4)
+
+	if isinstance(item_codes, string_types):
+		item_codes = json.loads(item_codes)
+
+	po_data = frappe.db.sql("""
+		select
+			i.item_code, po.schedule_date as date,
+			sum((i.qty - ifnull(i.received_qty, 0)) * i.conversion_factor) as qty
+		from `tabPurchase Order Item` i
+		inner join `tabPurchase Order` po on po.name = i.parent
+		where po.docstatus < 2 and po.status != 'Closed' and ifnull(i.received_qty, 0) < ifnull(i.qty, 0)
+			and po.schedule_date between %s and %s and i.item_code in ({0})
+		group by i.item_code, po.schedule_date
+	""".format(", ".join(['%s']*len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
+
+	exclude_so_cond = " and so.name != {0}".format(frappe.db.escape(exclude_so)) if exclude_so else ""
+
+	so_data = frappe.db.sql("""
+		select
+			i.item_code, so.delivery_date as date,
+			sum((i.qty - ifnull(i.delivered_qty, 0)) * i.conversion_factor) as qty
+		from `tabSales Order Item` i
+		inner join `tabSales Order` so on so.name = i.parent
+		where so.docstatus < 2 and so.status != 'Closed' and ifnull(i.delivered_qty, 0) < ifnull(i.qty, 0)
+			and so.delivery_date between %s and %s and i.item_code in ({0}) {1}
+		group by i.item_code, so.delivery_date
+	""".format(", ".join(['%s'] * len(item_codes)), exclude_so_cond), [from_date, to_date] + item_codes, as_dict=1)
+
+	sinv_data = frappe.db.sql("""
+		select
+			i.item_code, sinv.delivery_date as date,
+			sum(i.stock_qty) as qty
+		from `tabSales Invoice Item` i
+		inner join `tabSales Invoice` sinv on sinv.name = i.parent
+		where sinv.docstatus = 0 and ifnull(i.sales_order, '') = ''
+			and sinv.delivery_date between %s and %s and i.item_code in ({0})
+		group by i.item_code, sinv.delivery_date
+	""".format(", ".join(['%s'] * len(item_codes))), [from_date, to_date] + item_codes, as_dict=1)
+
+	bin_data = frappe.db.sql("""
+		select item_code, sum(actual_qty) as actual_qty, sum(projected_qty) as projected_qty
+		from tabBin
+		where item_code in ({0})
+		group by item_code
+	""".format(", ".join(['%s']*len(item_codes))), item_codes, as_dict=1)
+
+	out = {}
+
+	template = {
+		"po_day_1": 0, "po_day_2": 0, "po_day_3": 0, "po_day_4": 0, "po_day_5": 0,
+		"so_day_1": 0, "so_day_2": 0, "so_day_3": 0, "so_day_4": 0, "so_day_5": 0,
+		"actual_qty": 0, "projected_qty": 0
+	}
+
+	for d in po_data:
+		out.setdefault(d.item_code, template.copy())
+		i = frappe.utils.date_diff(d.date, from_date)
+		out[d.item_code]['po_day_' + str(i+1)] = d.qty
+
+	for d in so_data:
+		out.setdefault(d.item_code, template.copy())
+		i = frappe.utils.date_diff(d.date, from_date)
+		out[d.item_code].setdefault('so_day_' + str(i+1), 0)
+		out[d.item_code]['so_day_' + str(i+1)] += d.qty
+
+	for d in sinv_data:
+		out.setdefault(d.item_code, template.copy())
+		i = frappe.utils.date_diff(d.date, from_date)
+		out[d.item_code].setdefault('so_day_' + str(i+1), 0)
+		out[d.item_code]['so_day_' + str(i+1)] += d.qty
+
+	for d in bin_data:
+		out.setdefault(d.item_code, template.copy())
+		out[d.item_code]['actual_qty'] = d.actual_qty
+
+	for item_code, d in iteritems(out):
+		d['projected_qty'] = d['actual_qty']
+		for i in range(2):
+			d['projected_qty'] += d['po_day_' + str(i+1)]
+			d['projected_qty'] -= d['so_day_' + str(i+1)]
+
+	return out
