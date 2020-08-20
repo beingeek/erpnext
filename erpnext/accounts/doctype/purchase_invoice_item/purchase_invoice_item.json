@@ -771,6 +771,7 @@
    "fieldtype": "Currency",
    "label": "Landed Cost Voucher Amount",
    "no_copy": 1,
+   "permlevel": 2,
    "print_hide": 1,
    "read_only": 1
   },
@@ -1165,110 +1166,128 @@
   {
    "fieldname": "gross_profitability_section",
    "fieldtype": "Section Break",
-   "label": "Gross Profitability"
+   "label": "Gross Profitability",
+   "permlevel": 3
   },
   {
    "fieldname": "source_sales_revenue",
    "fieldtype": "Currency",
    "label": "Direct Revenue",
    "options": "Company:company:default_currency",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "source_sales_qty",
    "fieldtype": "Float",
    "label": "Direct Qty Sold",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "column_break_136",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 3
   },
   {
    "fieldname": "repacked_sales_revenue",
    "fieldtype": "Currency",
    "label": "Repacked Revenue",
    "options": "Company:company:default_currency",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "source_repack_qty",
    "fieldtype": "Float",
    "label": "Qty Used For Repack",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "column_break_139",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 3
   },
   {
    "fieldname": "repacked_additional_cost",
    "fieldtype": "Currency",
    "label": "Repack Cost",
    "options": "Company:company:default_currency",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "source_reconciled_qty",
    "fieldtype": "Float",
    "label": "Qty Adjusted",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "column_break_142",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 3
   },
   {
    "fieldname": "source_lcv_cost",
    "fieldtype": "Currency",
    "label": "LCV Cost",
    "options": "Company:company:default_currency",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "source_actual_qty",
    "fieldtype": "Float",
    "label": "Remaining Stock",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "column_break_145",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 3
   },
   {
    "fieldname": "gross_profit_per_unit",
    "fieldtype": "Currency",
    "label": "Gross Profit / Unit",
    "options": "Company:company:default_currency",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "repacked_actual_qty",
    "fieldtype": "Float",
    "label": "Unsold Repacks",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "column_break_148",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 3
   },
   {
    "fieldname": "gross_profit",
    "fieldtype": "Currency",
    "label": "Gross Profit",
    "options": "Company:company:default_currency",
+   "permlevel": 3,
    "read_only": 1
   },
   {
    "fieldname": "per_gross_profit",
    "fieldtype": "Percent",
    "label": "Gross Profit (%)",
+   "permlevel": 3,
    "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-19 12:13:03.073120",
+ "modified": "2020-08-20 03:15:02.880992",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice Item",

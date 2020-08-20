@@ -399,6 +399,7 @@
    "fieldtype": "Link",
    "label": "Price List",
    "options": "Price List",
+   "permlevel": 1,
    "print_hide": 1
   },
   {
@@ -1360,7 +1361,7 @@
  "icon": "fa fa-truck",
  "idx": 261,
  "is_submittable": 1,
- "modified": "2020-06-19 12:13:19.570350",
+ "modified": "2020-08-20 03:15:06.313657",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt",

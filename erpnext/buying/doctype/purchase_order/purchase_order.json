@@ -452,6 +452,7 @@
    "fieldtype": "Link",
    "label": "Price List",
    "options": "Price List",
+   "permlevel": 1,
    "print_hide": 1
   },
   {
@@ -1473,7 +1474,7 @@
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-08-17 07:41:11.310226",
+ "modified": "2020-08-20 03:15:04.955758",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
