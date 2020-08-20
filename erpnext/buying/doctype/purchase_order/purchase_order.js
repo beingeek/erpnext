@@ -63,20 +63,26 @@ frappe.ui.form.on("Purchase Order", {
 
 	onload_post_render: function(frm) {
 		frm.fields_dict.items.grid.wrapper.on('click', '.grid-row-check', function(e) {
-			frm.cscript.show_hide_add_remove_default_items(frm);
-			frm.cscript.show_hide_add_update_item_prices(frm);
+			frm.cscript.show_hide_add_remove_default_items();
+			frm.cscript.show_hide_add_update_item_prices();
 		});
 
 		if (frm.doc.__onload && frm.doc.__onload.from_copy) {
 			frm.cscript.apply_price_list();
 		}
 
-		frm.fields_dict.items.grid.add_custom_button("Remove Supplier Default", frm.cscript.remove_selected_from_default_items).addClass('btn-set-default-items');
-		frm.fields_dict.items.grid.add_custom_button("Add Supplier Default", frm.cscript.add_selected_to_default_items).addClass('btn-set-default-items');
-		frm.fields_dict.items.grid.add_custom_button("Update Item Prices", frm.cscript.update_selected_item_prices).addClass('btn-update-item-prices');
+		frm.fields_dict.items.grid.add_custom_button("Remove Supplier Default",
+			() => frm.cscript.remove_selected_from_default_items("Supplier", "supplier")
+		).addClass('btn-set-default-items');
+		frm.fields_dict.items.grid.add_custom_button("Add Supplier Default",
+			() => frm.cscript.add_selected_to_default_items("Supplier", "supplier")
+		).addClass('btn-set-default-items');
 
-		frm.cscript.show_hide_add_remove_default_items(frm);
-		frm.cscript.show_hide_add_update_item_prices(frm);
+		frm.fields_dict.items.grid.add_custom_button("Update Item Prices",
+			frm.cscript.update_selected_item_prices).addClass('btn-update-item-prices');
+
+		frm.cscript.show_hide_add_remove_default_items();
+		frm.cscript.show_hide_add_update_item_prices();
 	},
 
 	validate: function(frm) {
@@ -336,49 +342,6 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			dialog.hide();
 		});
 		dialog.show();
-	},
-
-	show_hide_add_remove_default_items: function() {
-		var has_checked = this.frm.fields_dict.items.grid.grid_rows.some(row => row.doc.__checked);
-		if (has_checked) {
-			$(".btn-set-default-items", this.frm.fields_dict.items.grid.grid_buttons).removeClass("hidden");
-		} else {
-			$(".btn-set-default-items", this.frm.fields_dict.items.grid.grid_buttons).addClass("hidden");
-		}
-	},
-	add_selected_to_default_items: function() {
-		var frm = cur_frm;
-		var item_codes = frm.fields_dict.items.grid.grid_rows
-			.filter(row => row.doc.__checked && row.doc.item_code)
-			.map(row => row.doc.item_code);
-
-		if (frm.doc.supplier && item_codes.length) {
-			return frappe.call({
-				method: "erpnext.api.add_item_codes_to_party_default_items",
-				args: {
-					party_type: "Supplier",
-					party: frm.doc.supplier,
-					item_codes: item_codes
-				}
-			});
-		}
-	},
-	remove_selected_from_default_items: function() {
-		var frm = cur_frm;
-		var item_codes = frm.fields_dict.items.grid.grid_rows
-			.filter(row => row.doc.__checked && row.doc.item_code)
-			.map(row => row.doc.item_code);
-
-		if (frm.doc.supplier && item_codes.length) {
-			return frappe.call({
-				method: "erpnext.api.remove_item_codes_from_party_default_items",
-				args: {
-					party_type: "Supplier",
-					party: frm.doc.supplier,
-					item_codes: item_codes
-				}
-			});
-		}
 	},
 
 	get_items_from_open_material_requests: function() {

@@ -2173,7 +2173,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			delete args['items'];
 
 			return frappe.call({
-				method: "erpnext.api.get_party_default_items",
+				method: "erpnext.accounts.party.get_party_default_items",
 				args: {
 					args: args,
 					existing_item_codes: existing_item_codes,
@@ -2205,6 +2205,47 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 							refresh_field('items');
 						});
 					}
+				}
+			});
+		}
+	},
+
+	show_hide_add_remove_default_items: function() {
+		var has_checked = this.frm.fields_dict.items.grid.grid_rows.some(row => row.doc.__checked);
+		if (has_checked) {
+			$(".btn-set-default-items", this.frm.fields_dict.items.grid.grid_buttons).removeClass("hidden");
+		} else {
+			$(".btn-set-default-items", this.frm.fields_dict.items.grid.grid_buttons).addClass("hidden");
+		}
+	},
+	add_selected_to_default_items: function(party_type, party_field) {
+		var item_codes = this.frm.fields_dict.items.grid.grid_rows
+			.filter(row => row.doc.__checked && row.doc.item_code)
+			.map(row => row.doc.item_code);
+
+		if (this.frm.doc[party_field] && item_codes.length) {
+			return frappe.call({
+				method: "erpnext.accounts.party.add_item_codes_to_party_default_items",
+				args: {
+					party_type: party_type,
+					party: this.frm.doc[party_field],
+					item_codes: item_codes
+				}
+			});
+		}
+	},
+	remove_selected_from_default_items: function(party_type, party_field) {
+		var item_codes = this.frm.fields_dict.items.grid.grid_rows
+			.filter(row => row.doc.__checked && row.doc.item_code)
+			.map(row => row.doc.item_code);
+
+		if (this.frm.doc[party_field] && item_codes.length) {
+			return frappe.call({
+				method: "erpnext.accounts.party.remove_item_codes_from_party_default_items",
+				args: {
+					party_type: party_type,
+					party: this.frm.doc[party_field],
+					item_codes: item_codes
 				}
 			});
 		}

@@ -15,6 +15,7 @@ from frappe.contacts.doctype.contact.contact import get_contact_details, get_def
 from erpnext.exceptions import PartyFrozen, PartyDisabled, InvalidAccountCurrency
 from erpnext.accounts.utils import get_fiscal_year
 from erpnext import get_company_currency
+import json
 
 from six import iteritems, string_types
 
@@ -631,3 +632,92 @@ def get_partywise_advanced_payment_amount(party_type, posting_date = None, futur
 
 	if data:
 		return frappe._dict(data)
+
+
+@frappe.whitelist()
+def get_party_default_items(args, existing_item_codes=None):
+	from erpnext.stock.get_item_details import get_item_details
+	from collections import OrderedDict
+
+	if not existing_item_codes:
+		existing_item_codes = []
+	if isinstance(args, string_types):
+		args = json.loads(args)
+	if isinstance(existing_item_codes, string_types):
+		existing_item_codes = json.loads(existing_item_codes)
+
+	if not args.get('customer') and not args.get('supplier'):
+		return []
+
+	if args.get('customer'):
+		party_type = 'Customer'
+		party = args.get('customer')
+	else:
+		party_type = 'Supplier'
+		party = args.get('supplier')
+
+	default_items = frappe.get_all("Customer Default Item", fields=['item_code'],
+		filters={"parenttype": party_type, "parent": party})
+	item_codes = [d.item_code for d in default_items
+		if d.item_code not in existing_item_codes and not cint(frappe.get_cached_value("Item", d.item_code, "disabled"))]
+
+	item_group_wise_data = OrderedDict()
+	for item_code in item_codes:
+		item_args = args.copy()
+		item_args['item_code'] = item_code
+
+		item_details = get_item_details(item_args)
+		item_group_wise_data.setdefault(item_details.get('item_group'), []).append(item_details)
+
+	out = []
+	stock_settings = frappe.get_single("Stock Settings")
+
+	for item_group in stock_settings.price_list_order or []:
+		if item_group.item_group in item_group_wise_data:
+			out += sorted(item_group_wise_data[item_group.item_group], key=lambda d: d.item_code)
+			del item_group_wise_data[item_group.item_group]
+
+	for items in item_group_wise_data.values():
+		out += sorted(items, key=lambda d: d.item_code)
+
+	return reversed(out)
+
+
+@frappe.whitelist()
+def add_item_codes_to_party_default_items(party_type, party, item_codes):
+	if isinstance(item_codes, string_types):
+		item_codes = json.loads(item_codes)
+
+	doc = frappe.get_doc(party_type, party)
+
+	existing_item_codes = list(map(lambda d: d.item_code, doc.default_items_tbl))
+	item_codes = list(filter(lambda item_code: item_code not in existing_item_codes, item_codes))
+
+	if not item_codes:
+		frappe.msgprint(_("Selected items already exists in {0} Default Items").format(party_type))
+		return
+
+	for item_code in item_codes:
+		doc.append("default_items_tbl", {
+			"item_code": item_code,
+			"item_name": frappe.get_cached_value("Item", item_code, "item_name")
+		})
+
+	doc.save()
+
+	frappe.msgprint(_("Selected items added to {0} Default Items").format(party_type))
+
+
+@frappe.whitelist()
+def remove_item_codes_from_party_default_items(party_type, party, item_codes):
+	if isinstance(item_codes, string_types):
+		item_codes = json.loads(item_codes)
+
+	doc = frappe.get_doc(party_type, party)
+	doc.default_items_tbl = list(filter(lambda d: d.item_code not in item_codes, doc.default_items_tbl))
+	for i, d in enumerate(doc.default_items_tbl):
+		d.idx = i + 1
+
+	doc.save()
+
+	frappe.msgprint(_("Selected items removed from {0} Default Items").format(party_type))
