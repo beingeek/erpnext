@@ -386,7 +386,7 @@ class AccountsController(TransactionBase):
 							if fieldname in force_item_price_fields:
 								item.set(fieldname, value)
 
-		self.calculate_taxes_and_totals()
+			self.calculate_taxes_and_totals()
 
 	def set_taxes(self):
 		if not self.meta.get_field("taxes"):
