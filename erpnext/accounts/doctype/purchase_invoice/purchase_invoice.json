@@ -1425,6 +1425,7 @@
    "fieldname": "total_revenue",
    "fieldtype": "Currency",
    "label": "Total Revenue",
+   "options": "Company:company:default_currency",
    "permlevel": 3,
    "read_only": 1
   },
@@ -1437,6 +1438,7 @@
    "fieldname": "total_cogs",
    "fieldtype": "Currency",
    "label": "Total COGS",
+   "options": "Company:company:default_currency",
    "permlevel": 3,
    "read_only": 1
   },
@@ -1449,6 +1451,7 @@
    "fieldname": "total_gross_profit",
    "fieldtype": "Currency",
    "label": "Total Gross Profit",
+   "options": "Company:company:default_currency",
    "permlevel": 3,
    "read_only": 1
   },
@@ -1779,7 +1782,7 @@
  "icon": "fa fa-file-text",
  "idx": 204,
  "is_submittable": 1,
- "modified": "2020-08-20 03:27:36.416771",
+ "modified": "2020-08-21 05:18:36.610530",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",
