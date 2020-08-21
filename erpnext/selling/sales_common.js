@@ -26,10 +26,6 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 			me.set_price_override_authorization();
 		});
 
-		if (this.frm.doc.docstatus === 0) {
-			this.apply_price_list()
-		}
-
 		$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
 			if(grid_row.doc && grid_row.doc.doctype === me.frm.doc.doctype + " Item") {
 				$(grid_row.wrapper).off('focus', 'input').on('focus', 'input', function() {
@@ -65,6 +61,10 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 
 	show_edit_pricing_rule_dialog: function(item) {
 		var me = this;
+
+		if (!me.frm.doc.__onload || !me.frm.doc.__onload.force_set_selling_item_prices) {
+			return;
+		}
 
 		if (!item || !item.item_code || !me.frm.doc.customer || !me.frm.doc.selling_price_list || me.frm.doc.ignore_pricing_rule || item.override_price_list_rate) {
 			return;

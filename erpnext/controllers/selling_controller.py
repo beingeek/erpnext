@@ -31,9 +31,17 @@ class SellingController(StockController):
 
 	def onload(self):
 		super(SellingController, self).onload()
+
 		if self.doctype in ("Sales Order", "Delivery Note", "Sales Invoice"):
 			for item in self.get("items"):
 				item.update(get_bin_details(item.item_code, item.warehouse))
+
+		if self.doctype in ("Quotation", "Sales Order", "Delivery Note", "Sales Invoice"):
+			force_set_selling_item_prices = cint(frappe.get_cached_value("Stock Settings", None, "force_set_selling_item_prices"))
+			self.set_onload('force_set_selling_item_prices', force_set_selling_item_prices)
+
+			if force_set_selling_item_prices and self.docstatus == 0:
+				self.force_set_item_prices()
 
 	def validate(self):
 		super(SellingController, self).validate()

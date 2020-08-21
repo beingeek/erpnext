@@ -24,6 +24,7 @@
   "section_break_7",
   "auto_insert_price_list_rate_if_missing",
   "update_buying_prices_on_submission_of_purchase_order",
+  "force_set_selling_item_prices",
   "column_break_10",
   "get_prices_based_on_date",
   "stale_price_days",
@@ -270,12 +271,18 @@
    "fieldname": "stale_price_days",
    "fieldtype": "Int",
    "label": "Warn If Buying Prices are Older Than Days"
+  },
+  {
+   "default": "0",
+   "fieldname": "force_set_selling_item_prices",
+   "fieldtype": "Check",
+   "label": "Force Set Selling Item Prices"
   }
  ],
  "icon": "icon-cog",
  "idx": 1,
  "issingle": 1,
- "modified": "2020-08-17 05:59:56.852927",
+ "modified": "2020-08-21 03:55:16.119127",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Settings",

@@ -236,7 +236,7 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 	"""
 
 	if not item:
-		item = frappe.get_doc("Item", args.get("item_code"))
+		item = frappe.get_cached_doc("Item", args.get("item_code"))
 
 	if item.variant_of:
 		item.update_template_tables()
@@ -660,8 +660,7 @@ def get_item_price(args, item_code, ignore_party=False):
 
 	args['item_code'] = item_code
 
-	conditions = """where item_code=%(item_code)s
-		and price_list=%(price_list)s"""
+	conditions = """where item_code=%(item_code)s and price_list=%(price_list)s """
 	order_by = "order by ifnull(valid_from, '2000-01-01') desc, uom desc"
 
 	if not ignore_party:
@@ -670,7 +669,7 @@ def get_item_price(args, item_code, ignore_party=False):
 		elif args.get("supplier"):
 			conditions += " and supplier=%(supplier)s"
 		else:
-			conditions += "and (customer is null or customer = '') and (supplier is null or supplier = '')"
+			conditions += " and (customer is null or customer = '') and (supplier is null or supplier = '')"
 
 	if args.get('transaction_date'):
 		if args.get('period') == 'future':
@@ -1048,7 +1047,7 @@ def apply_price_list(args, as_doc=False):
 
 def apply_price_list_on_item(args):
 	item_details = frappe._dict()
-	item_doc = frappe.get_doc("Item", args.item_code)
+	item_doc = frappe.get_cached_doc("Item", args.item_code)
 	get_price_list_rate(args, item_doc, item_details)
 
 	item_details.update(get_pricing_rule_for_item(args, item_details.price_list_rate))

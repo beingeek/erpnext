@@ -22,7 +22,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import g
 from erpnext.stock.get_item_details import get_item_warehouse
 
 force_item_fields = ("item_group", "brand", "stock_uom", "is_fixed_asset", "has_batch_no", "item_tax_rate", "alt_uom", "stock_alt_uom_size_std", "alt_uom_size_std", "pricing_rules")
-
+force_item_price_fields = ['price_list_rate', 'rate', 'discount_percentage', 'margin_type', 'margin_rate_or_amount']
 
 class AccountsController(TransactionBase):
 	def __init__(self, *args, **kwargs):
@@ -256,46 +256,58 @@ class AccountsController(TransactionBase):
 				self.conversion_rate = get_exchange_rate(self.currency,
 														 self.company_currency, transaction_date, args)
 
+	def get_item_details_parent_args(self):
+		parent_dict = frappe._dict()
+		for fieldname in self.meta.get_valid_columns():
+			parent_dict[fieldname] = self.get(fieldname)
+
+		if self.doctype in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"]:
+			document_type = "{} Item".format(self.doctype)
+			parent_dict.update({"document_type": document_type})
+
+		# party_name field used for customer in quotation
+		if self.doctype == "Quotation" and self.quotation_to == "Customer" and parent_dict.get("party_name"):
+			parent_dict.update({"customer": parent_dict.get("party_name")})
+
+		return parent_dict
+
+	def get_item_details_item_args(self, parent_dict, item):
+		args = parent_dict.copy()
+		item_dict = item.as_dict()
+
+		if 'delivery_date' in item_dict:
+			del item_dict['delivery_date']
+		if 'transaction_date' in item_dict:
+			del item_dict['transaction_date']
+
+		args.update(item_dict)
+
+		args["doctype"] = self.doctype
+		args["name"] = self.name
+		args["child_docname"] = item.name
+
+		if not args.get("transaction_date"):
+			args["transaction_date"] = args.get("posting_date")
+
+		if self.get("is_subcontracted"):
+			args["is_subcontracted"] = self.is_subcontracted
+
+		return args
+
 	def set_missing_item_details(self, for_validate=False):
 		"""set missing item values"""
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 		if hasattr(self, "items"):
-			parent_dict = {}
-			for fieldname in self.meta.get_valid_columns():
-				parent_dict[fieldname] = self.get(fieldname)
-
-			if self.doctype in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"]:
-				document_type = "{} Item".format(self.doctype)
-				parent_dict.update({"document_type": document_type})
-
-			# party_name field used for customer in quotation
-			if self.doctype == "Quotation" and self.quotation_to == "Customer" and parent_dict.get("party_name"):
-				parent_dict.update({"customer": parent_dict.get("party_name")})
+			parent_dict = self.get_item_details_parent_args()
 
 			for item in self.get("items"):
 				if item.get("item_code"):
-					args = parent_dict.copy()
-					item_dict = item.as_dict()
-					
-					if 'delivery_date' in item_dict:
-						del item_dict['delivery_date']
-					if 'transaction_date' in item_dict:
-						del item_dict['transaction_date']
-
-					args.update(item_dict)
-
-					args["doctype"] = self.doctype
-					args["name"] = self.name
-					args["child_docname"] = item.name
-
-					if not args.get("transaction_date"):
-						args["transaction_date"] = args.get("posting_date")
-
-					if self.get("is_subcontracted"):
-						args["is_subcontracted"] = self.is_subcontracted
+					args = self.get_item_details_item_args(parent_dict, item)
 
 					ret = get_item_details(args, self, for_validate=True, overwrite_warehouse=False)
+
+					force_set_selling_item_prices = frappe.get_cached_value("Stock Settings", None, "force_set_selling_item_prices")
 
 					for fieldname, value in ret.items():
 						if item.meta.get_field(fieldname) and value is not None:
@@ -305,7 +317,7 @@ class AccountsController(TransactionBase):
 							elif fieldname in ['cost_center', 'conversion_factor'] and not item.get(fieldname):
 								item.set(fieldname, value)
 
-							elif fieldname in ['price_list_rate', 'rate', 'discount_percentage', 'margin_type', 'margin_rate_or_amount']\
+							elif force_set_selling_item_prices and fieldname in force_item_price_fields\
 									and not cint(self.get('ignore_pricing_rule')) and not cint(item.get('override_price_list_rate'))\
 									and self.doctype in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"]:
 								item.set(fieldname, value)
@@ -356,6 +368,25 @@ class AccountsController(TransactionBase):
 
 						frappe.msgprint(_("Row {0}: user has not applied the rule {1} on the item {2}")
 							.format(item.idx, frappe.bold(title), frappe.bold(item.item_code)))
+
+	def force_set_item_prices(self):
+		from erpnext.stock.get_item_details import apply_price_list_on_item, process_args
+
+		if hasattr(self, "items"):
+			parent_dict = self.get_item_details_parent_args()
+
+			for item in self.get("items"):
+				if item.get("item_code"):
+					args = self.get_item_details_item_args(parent_dict, item)
+					args = process_args(args)
+
+					if not args.ignore_pricing_rule and not args.override_price_list_rate:
+						pricing_details = apply_price_list_on_item(args)
+						for fieldname, value in pricing_details.items():
+							if fieldname in force_item_price_fields:
+								item.set(fieldname, value)
+
+		self.calculate_taxes_and_totals()
 
 	def set_taxes(self):
 		if not self.meta.get_field("taxes"):
