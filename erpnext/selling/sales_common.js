@@ -180,19 +180,6 @@ Customer Request`}
 		return allowed_doctype && this.frm.doc.docstatus < 2 && !this.frm.doc.is_return && has_permission && has_permission != 'None';
 	},
 
-	update_gross_profit_fields: function () {
-		var me = this;
-
-		if (me.can_get_gross_profit()) {
-			if (me.frm.doc.docstatus == 1) {
-				me.calculate_gross_profit();
-				me.frm.refresh_fields();
-			} else {
-				me.calculate_taxes_and_totals();
-			}
-		}
-	},
-
 	update_selected_item_fields: function() {
 		this.update_selected_item_select_batch_button();
 		this.update_selected_item_gross_profit();
@@ -223,7 +210,9 @@ Customer Request`}
 			$("a", me.frm.fields_dict['selected_' + f].$input_wrapper).attr("href", link);
 		});
 
-		me.frm.layout.refresh_fields(all_fields.map(d => "selected_" + d));
+		$.each(all_fields.map(d => "selected_" + d), function (i, fieldname) {
+			me.frm.refresh_field(fieldname);
+		});
 	},
 
 	update_selected_item_select_batch_button() {
@@ -772,7 +761,7 @@ Customer Request`}
 				freeze: 1,
 				callback: function (r) {
 					if (!r.exc) {
-						me.update_gross_profit_fields();
+						me.calculate_gross_profit();
 					}
 				}
 			});

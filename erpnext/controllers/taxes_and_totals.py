@@ -44,6 +44,7 @@ class calculate_taxes_and_totals(object):
 		self.manipulate_grand_total_for_inclusive_tax()
 		self.calculate_totals()
 		self.calculate_delivery_charges()
+		self.calculate_gross_profit()
 		self._cleanup()
 		self.calculate_total_gross_weight()
 
@@ -567,6 +568,24 @@ class calculate_taxes_and_totals(object):
 			empty_pallets_weight = flt(self.doc.get('empty_pallet_weight')) * flt(self.doc.get('actual_pallets'))
 			self.doc.gross_weight_with_pallets = self.doc.total_gross_weight + empty_pallets_weight
 			self.doc.gross_weight_with_pallets_kg = self.doc.total_gross_weight_kg + empty_pallets_weight * 0.45359237
+
+	def calculate_gross_profit(self):
+		if self.doc.get('is_return'):
+			return
+
+		if self.doc.doctype in ('Sales Order', 'Sales Invoice'):
+			self.doc.total_cogs = 0
+
+			for item in self.doc.items:
+				item.cogs = flt(item.valuation_rate) * flt(item.stock_qty)
+				item.gross_profit = item.base_net_amount - item.cogs
+				item.per_gross_profit = item.gross_profit / item.base_net_amount * 100 if item.base_net_amount else 0
+				item.gross_profit_per_unit = item.gross_profit / flt(item.stock_qty) if flt(item.stock_qty) else 0
+
+				self.doc.total_cogs += item.cogs
+
+			self.doc.total_gross_profit = self.doc.base_net_total - self.doc.total_cogs
+			self.doc.per_gross_profit = self.doc.total_gross_profit / self.doc.base_net_total * 100 if self.doc.base_net_total else 0
 
 	def set_rounded_total(self):
 		if self.doc.meta.get_field("rounded_total"):

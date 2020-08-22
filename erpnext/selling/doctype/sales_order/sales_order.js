@@ -130,6 +130,7 @@ frappe.ui.form.on("Sales Order", {
 	refresh: function(frm) {
 		frm.cscript.get_item_custom_projected_qty();
 		frm.cscript.customer_outstanding_amount();
+		frm.cscript.calculate_gross_profit();
 	},
 	transaction_date: function(frm) {
 		frm.cscript.set_po_qty_labels();
@@ -507,8 +508,6 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		}
 
 		this.order_type(doc);
-
-		this.update_gross_profit_fields();
 	},
 
 	create_pick_list() {

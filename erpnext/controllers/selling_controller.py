@@ -70,6 +70,19 @@ class SellingController(StockController):
 		self.set_missing_lead_customer_details()
 		self.set_price_list_and_item_details(for_validate=for_validate)
 
+	def can_get_gross_profit(self):
+		df = self.meta.get_field('total_gross_profit')
+		allowed_doctype = self.doctype in ['Sales Order', 'Sales Invoice']
+		return allowed_doctype and self.docstatus < 2 and not self.get('is_return') and df and \
+			(not cint(df.permlevel) or self.has_permlevel_access_to('total_gross_profit', permission_type='read'))
+
+	def update_item_valuation_rates(self):
+		if self.can_get_gross_profit():
+			from erpnext.stock.report.batch_profitability.batch_profitability import update_item_batch_incoming_rate
+			update_item_batch_incoming_rate(self.items, from_date=self.get('po_cost_from_date'))
+
+			self.calculate_taxes_and_totals()
+
 	def set_price_override_authorization(self):
 		from erpnext.stock.get_item_details import validate_price_change
 
