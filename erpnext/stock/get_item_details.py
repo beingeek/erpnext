@@ -68,7 +68,8 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 
 	get_party_item_code(args, item, out)
 
-	set_valuation_rate(out, args)
+	if not for_validate and args.transaction_type == 'selling':
+		set_valuation_rate(out, args)
 
 	update_party_blanket_order(args, out)
 
@@ -101,7 +102,9 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	if args.get("is_subcontracted") == "Yes":
 		out.bom = args.get('bom') or get_default_bom(args.item_code)
 
-	get_gross_profit(out)
+	if not for_validate and args.transaction_type == 'selling':
+		get_gross_profit(out)
+
 	if args.doctype == 'Material Request':
 		out.rate = args.rate or out.price_list_rate
 		out.amount = flt(args.qty * out.rate)
@@ -139,16 +142,17 @@ def set_valuation_rate(out, args):
 		bundled_items = frappe.get_doc("Product Bundle", args.item_code)
 
 		for bundle_item in bundled_items.items:
-			valuation_rate += \
-				flt(get_valuation_rate(bundle_item.item_code, args.company, out.get("warehouse")).get("valuation_rate") \
-					* bundle_item.qty)
+			valuation_rate += flt(get_valuation_rate(bundle_item.item_code, batch_no=args.get('batch_no'),
+				company=args.company, warehouse=out.get("warehouse"))\
+					.get("valuation_rate") * bundle_item.qty)
 
 		out.update({
 			"valuation_rate": valuation_rate
 		})
 
 	else:
-		out.update(get_valuation_rate(args.item_code, args.company, out.get("warehouse")))
+		out.update(get_valuation_rate(args.item_code, batch_no=args.get('batch_no'),
+			company=args.company, warehouse=out.get("warehouse")))
 
 
 def process_args(args):
@@ -1092,27 +1096,28 @@ def get_default_bom(item_code=None):
 		if bom:
 			return bom
 
-def get_valuation_rate(item_code, company, warehouse=None):
-	item = get_item_defaults(item_code, company)
-	item_group = get_item_group_defaults(item_code, company)
-	brand = get_brand_defaults(item_code, company)
-	# item = frappe.get_doc("Item", item_code)
-	if item.get("is_stock_item"):
-		if not warehouse:
-			warehouse = item.get("default_warehouse") or item_group.get("default_warehouse") or brand.get("default_warehouse")
+@frappe.whitelist()
+def get_valuation_rate(item_code, company=None, warehouse=None, from_date=None, to_date=None, batch_no=None):
+	empty = {"valuation_rate": 0.0}
 
-		return frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse},
-			["valuation_rate"], as_dict=True) or {"valuation_rate": 0}
+	from erpnext.stock.report.batch_profitability.batch_profitability import get_sales_item_batch_incoming_rate
+	item = frappe.get_cached_doc("Item", item_code)
+
+	if item.get("is_stock_item"):
+		args = [{'item_code': item_code, 'batch_no': batch_no}]
+		incoming_rate_data = get_sales_item_batch_incoming_rate(args, from_date=from_date, to_date=to_date)
+		batch_or_item = 'batch_incoming_rate' if batch_no else 'item_incoming_rate'
+		return {"valuation_rate": flt(incoming_rate_data[batch_or_item].get(batch_no or item_code))}
 
 	elif not item.get("is_stock_item"):
-		valuation_rate =frappe.db.sql("""select sum(base_net_amount) / sum(qty*conversion_factor)
+		valuation_rate = frappe.db.sql("""select sum(base_net_amount) / sum(stock_qty)
 			from `tabPurchase Invoice Item`
 			where item_code = %s and docstatus=1""", item_code)
 
 		if valuation_rate:
 			return {"valuation_rate": valuation_rate[0][0] or 0.0}
 	else:
-		return {"valuation_rate": 0.0}
+		return empty
 
 def get_gross_profit(out):
 	if out.valuation_rate:

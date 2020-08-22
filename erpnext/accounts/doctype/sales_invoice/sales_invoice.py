@@ -292,6 +292,7 @@ class SalesInvoice(SellingController):
 	def auto_select_batches(self):
 		if self.update_stock and not self.is_return:
 			auto_select_and_split_batches(self, 'warehouse')
+			self.update_item_valuation_rates()
 
 	def validate_pos_return(self):
 

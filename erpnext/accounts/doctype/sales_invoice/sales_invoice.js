@@ -149,7 +149,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 			});
 		}
 
-		this.get_sales_item_batch_incoming_rate();
+		this.update_gross_profit_fields();
 	},
 
 	make_maintenance_schedule: function() {

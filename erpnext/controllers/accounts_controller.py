@@ -388,6 +388,21 @@ class AccountsController(TransactionBase):
 
 			self.calculate_taxes_and_totals()
 
+	def can_get_gross_profit(self):
+		df = self.meta.get_field('total_gross_profit')
+		return self.docstatus < 2 and not self.get('is_return') and df and \
+			(not cint(df.permlevel) or self.has_permlevel_access_to('total_gross_profit', permission_type='read'))
+
+	def update_item_valuation_rates(self):
+		if self.can_get_gross_profit():
+			from erpnext.stock.report.batch_profitability.batch_profitability import get_sales_item_batch_incoming_rate
+			incoming_rate_data = get_sales_item_batch_incoming_rate(self.items)
+
+			for d in self.items:
+				if d.get('item_code') or d.get('batch_no'):
+					batch_or_item = 'batch_incoming_rate' if d.get('batch_no') else 'item_incoming_rate'
+					d.valuation_rate = flt(incoming_rate_data[batch_or_item].get(d.get('batch_no') or d.get('item_code')))
+
 	def set_taxes(self):
 		if not self.meta.get_field("taxes"):
 			return

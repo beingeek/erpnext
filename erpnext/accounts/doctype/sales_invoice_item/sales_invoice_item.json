@@ -118,6 +118,7 @@
   "serial_no",
   "item_group",
   "brand",
+  "valuation_rate",
   "item_tax_rate",
   "actual_batch_qty",
   "actual_qty",
@@ -1096,11 +1097,19 @@
    "hidden": 1,
    "label": "Has Batch No",
    "read_only": 1
+  },
+  {
+   "fieldname": "valuation_rate",
+   "fieldtype": "Currency",
+   "label": "Valuation Rate",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-19 12:13:05.015783",
+ "modified": "2020-08-22 13:56:29.318095",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",

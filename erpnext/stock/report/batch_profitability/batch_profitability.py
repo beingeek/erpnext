@@ -340,24 +340,69 @@ def get_purchase_batch_cost_and_revenue(batch_nos, exclude_pinv=None):
 	return out
 
 
-@frappe.whitelist()
-def get_sales_item_batch_incoming_rate(items):
+def get_sales_item_batch_incoming_rate(items, from_date=None, to_date=None):
 	if isinstance(items, string_types):
 		items = json.loads(items)
 
 	item_codes = list(set([d.get('item_code') for d in items if d.get('item_code') and not d.get('batch_no')]))
 	batch_nos = list(set([d.get('batch_no') for d in items if d.get('batch_no')]))
 
-	if item_codes:
-		frappe.msgprint(_("Gross Profit for Non Batch items not yet implemented"))
-
-	return {
+	return frappe._dict({
 		"batch_incoming_rate": get_batch_incoming_rate(batch_nos),
-		"item_incoming_rate": {}
-	}
+		"item_incoming_rate": get_item_valuation_rate(item_codes, from_date, to_date)
+	})
 
+
+def get_item_valuation_rate(item_codes, from_date=None, to_date=None):
+	if not item_codes:
+		return {}
+
+	item_values = {item_code: frappe._dict({'cost': 0, 'qty': 0}) for item_code in item_codes}
+
+	bin_data = frappe.db.sql("""
+		select bin.item_code, sum(bin.actual_qty) as qty, sum(bin.stock_value) as cost
+		from tabBin bin
+		where bin.item_code in %s
+		group by bin.item_code
+	""", [item_codes], as_dict=1)
+
+	for d in bin_data:
+		item_values[d.item_code].cost += d.cost
+		item_values[d.item_code].qty += d.qty
+
+	po_conditions = []
+	po_values = {'item_codes': item_codes}
+	if from_date:
+		po_conditions.append("po.schedule_date >= %(from_date)s")
+		po_values['from_date'] = from_date
+	if to_date:
+		po_conditions.append("po.schedule_date <= %(to_date)s")
+		po_values['to_date'] = to_date
+
+	po_conditions = "and {0}".format(" and ".join(po_conditions)) if po_conditions else ""
+
+	po_data = frappe.db.sql("""
+		select
+			item.item_code,
+			sum(if(item.qty - item.received_qty < 0, 0, item.qty - item.received_qty) * item.conversion_factor) as qty,
+			sum(if(item.qty - item.received_qty < 0, 0, item.qty - item.received_qty) * item.conversion_factor * item.landed_rate) as cost
+		from `tabPurchase Order Item` item
+		inner join `tabPurchase Order` po on po.name = item.parent
+		where item.docstatus < 2 and po.status != 'Closed' and item.item_code in %(item_codes)s {0}
+		group by item.item_code
+	""".format(po_conditions), po_values, as_dict=1)
+
+	for d in po_data:
+		item_values[d.item_code].cost += d.cost
+		item_values[d.item_code].qty += d.qty
+
+	out = {item_code: item_value.cost / item_value.qty if item_value.qty else 0 for (item_code, item_value) in item_values.items()}
+	return out
 
 def get_batch_incoming_rate(batch_nos):
+	if not batch_nos:
+		return {}
+
 	# get repack entries that have batch_nos as target
 	repack_entry_data = frappe.db.sql("""
 		select ste.name, item.batch_no, item.s_warehouse, item.t_warehouse, item.amount, item.transfer_qty as qty,

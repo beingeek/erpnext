@@ -43,6 +43,9 @@ class SellingController(StockController):
 			if force_set_selling_item_prices and self.docstatus == 0:
 				self.force_set_item_prices()
 
+		if self.doctype in ("Sales Order", "Sales Invoice"):
+			self.update_item_valuation_rates()
+
 	def validate(self):
 		super(SellingController, self).validate()
 		self.validate_items()

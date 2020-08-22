@@ -10,7 +10,7 @@ cur_frm.email_field = "contact_email";
 
 frappe.provide("erpnext.selling");
 erpnext.selling.SellingController = erpnext.TransactionController.extend({
-	item_cost_and_revenue_fields: ["valuation_rate", "cogs", "gross_profit", "gross_profit_per_unit", "per_gross_profit"],
+	item_sales_gross_profit_fields: ["valuation_rate", "cogs", "gross_profit", "gross_profit_per_unit", "per_gross_profit"],
 
 	setup: function() {
 		this._super();
@@ -174,44 +174,20 @@ Customer Request`}
 		this.set_item_warning_color(frappe.get_doc(cdt, cdn));
 	},
 
-	get_sales_item_batch_incoming_rate: function () {
+	can_get_gross_profit: function () {
+		var has_permission = this.frm.fields_dict.total_gross_profit && this.frm.fields_dict.total_gross_profit.disp_status;
+		return this.frm.doc.docstatus < 2 && !this.frm.doc.is_return && has_permission && has_permission != 'None';
+	},
+
+	update_gross_profit_fields: function () {
 		var me = this;
 
-		var has_permission = me.frm.fields_dict.total_gross_profit.disp_status;
-		has_permission = has_permission && has_permission != 'None';
-
-		if (me.frm.doc.docstatus < 2 && !me.frm.doc.is_return && has_permission) {
-			var items = (me.frm.doc.items || []).filter(d => d.item_code || d.batch_no).map(d => {
-				return {'item_code': d.item_code, 'batch_no': d.batch_no}
-			});
-
-			if (items.length) {
-				return this.frm.call({
-					method: "erpnext.stock.report.batch_profitability.batch_profitability.get_sales_item_batch_incoming_rate",
-					args: {
-						items: items,
-					},
-					freeze: true,
-					freeze_message: __("Loading Gross Profit..."),
-					callback: function(r) {
-						if(!r.exc) {
-							$.each(me.frm.doc.items || [], function (i, item) {
-								if (item.batch_no) {
-									me.set_item_batch_cost(item, r.message.batch_incoming_rate[item.batch_no]);
-								} else if (item.item_code) {
-									me.set_item_batch_cost(item, r.message.item_incoming_rate[item.item_code]);
-								}
-							});
-
-							if (me.frm.doc.docstatus == 1) {
-								me.calculate_gross_profit();
-								me.frm.refresh_fields();
-							} else {
-								me.calculate_taxes_and_totals();
-							}
-						}
-					}
-				});
+		if (me.can_get_gross_profit()) {
+			if (me.frm.doc.docstatus == 1) {
+				me.calculate_gross_profit();
+				me.frm.refresh_fields();
+			} else {
+				me.calculate_taxes_and_totals();
 			}
 		}
 	},
@@ -226,7 +202,7 @@ Customer Request`}
 		var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
 
 		var all_fields = [];
-		all_fields.push(...this.item_cost_and_revenue_fields);
+		all_fields.push(...this.item_sales_gross_profit_fields);
 
 		if(grid_row && (grid_row.doc.batch_no || grid_row.doc.item_code) && !me.frm.doc.is_return) {
 			$.each(all_fields, function (i, f) {
@@ -257,10 +233,6 @@ Customer Request`}
 			&& (me.frm.doc.doctype === 'Delivery Note' || (me.frm.doc.doctype === 'Sales Invoice' && me.frm.doc.update_stock));
 
 		me.toggle_select_batch_button(show_select_batch);
-	},
-
-	set_item_batch_cost: function(item, data) {
-		item['valuation_rate'] = flt(data);
 	},
 
 	setup_queries: function() {
@@ -619,6 +591,25 @@ Customer Request`}
 	batch_no: function(doc, cdt, cdn) {
 		var me = this;
 		var item = frappe.get_doc(cdt, cdn);
+
+		if (item && me.can_get_gross_profit()) {
+			frappe.call({
+				method: "erpnext.stock.get_item_details.get_valuation_rate",
+				args: {
+					"item_code": item.item_code,
+					"batch_no": item.batch_no,
+					"company": me.frm.doc.company,
+					"warehouse": item.warehouse,
+				},
+				callback: function(r) {
+					if(r.message) {
+						item.valuation_rate = flt(r.message.valuation_rate);
+						me.calculate_taxes_and_totals();
+					}
+				}
+			});
+		}
+
 		item.serial_no = null;
 		var has_serial_no;
 		frappe.db.get_value('Item', {'item_code': item.item_code}, 'has_serial_no', (r) => {
@@ -762,8 +753,10 @@ Customer Request`}
 				doc: me.frm.doc,
 				freeze: 1,
 				callback: function (r) {
-					me.frm.refresh_fields();
-					me.frm.dirty();
+					if (!r.exc) {
+						me.calculate_taxes_and_totals();
+						me.frm.dirty();
+					}
 				}
 			});
 		}
