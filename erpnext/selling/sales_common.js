@@ -761,6 +761,7 @@ Customer Request`}
 				freeze: 1,
 				callback: function (r) {
 					if (!r.exc) {
+						me.get_item_custom_projected_qty && me.get_item_custom_projected_qty(); //workaround
 						me.calculate_gross_profit();
 					}
 				}

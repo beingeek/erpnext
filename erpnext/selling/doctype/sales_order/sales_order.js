@@ -305,11 +305,11 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 	},
 
 	set_item_custom_projected_qty: function(item, data) {
-		item['actual_qty'] = data['actual_qty'];
-		item['projected_qty'] = data['projected_qty'];
+		item['actual_qty'] = data ? data['actual_qty'] : 0;
+		item['projected_qty'] = data ? data['projected_qty'] : 0;
 		for(var i = 0; i < 5; ++i) {
-			item['po_day_' + (i + 1)] = data['po_day_' + (i + 1)];
-			item['so_day_' + (i + 1)] = data['so_day_' + (i + 1)];
+			item['po_day_' + (i + 1)] = data ? data['po_day_' + (i + 1)] : 0;
+			item['so_day_' + (i + 1)] = data ? data['so_day_' + (i + 1)] : 0;
 		}
 	},
 
@@ -334,16 +334,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 					callback: function(r) {
 						if(!r.exc) {
 							$.each(me.frm.doc.items || [], function(i, item) {
-								if(item.item_code && r.message.hasOwnProperty(item.item_code)) {
-									me.set_item_custom_projected_qty(item, r.message[item.item_code]);
-								} else {
-									item['actual_qty'] = 0;
-									item['projected_qty'] = 0;
-									for(var i = 0; i < 5; ++i) {
-										item['po_day_' + (i + 1)] = 0;
-										item['so_day_' + (i + 1)] = 0;
-									}
-								}
+								me.set_item_custom_projected_qty(item, item.item_code ? r.message[item.item_code] : null);
 							});
 
 							me.update_selected_item_custom_projected_qty();
