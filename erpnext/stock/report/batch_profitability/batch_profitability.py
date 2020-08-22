@@ -257,7 +257,7 @@ def get_repack_entry_data(batch_nos):
 
 
 @frappe.whitelist()
-def get_batch_cost_and_revenue(batch_nos, exclude_pinv=None):
+def get_purchase_batch_cost_and_revenue(batch_nos, exclude_pinv=None):
 	if isinstance(batch_nos, string_types):
 		batch_nos = json.loads(batch_nos)
 	batch_nos = list(set(batch_nos))

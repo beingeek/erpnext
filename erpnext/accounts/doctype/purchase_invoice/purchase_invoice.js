@@ -74,7 +74,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		this.set_naming_series();
 	},
 
-	get_batch_cost_and_revenue: function() {
+	get_purchase_batch_cost_and_revenue: function() {
 		var me = this;
 		var has_permission = me.frm.fields_dict.total_gross_profit.disp_status;
 		has_permission = has_permission && has_permission != 'None';
@@ -89,7 +89,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 
 			if(batch_nos.length) {
 				return this.frm.call({
-					method: "erpnext.stock.report.batch_profitability.batch_profitability.get_batch_cost_and_revenue",
+					method: "erpnext.stock.report.batch_profitability.batch_profitability.get_purchase_batch_cost_and_revenue",
 					args: {
 						batch_nos: batch_nos,
 						exclude_pinv: me.frm.doc.__islocal ? null : me.frm.doc.name
@@ -280,7 +280,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 			});
 		}
 
-		this.get_batch_cost_and_revenue();
+		this.get_purchase_batch_cost_and_revenue();
 	},
 
 	set_naming_series: function() {
