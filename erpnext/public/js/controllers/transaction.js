@@ -583,6 +583,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 							is_subcontracted: me.frm.doc.is_subcontracted,
 							transaction_date: me.frm.doc.transaction_date || me.frm.doc.posting_date,
 							delivery_date: me.frm.doc.delivery_date || me.frm.doc.shipping_date || me.frm.doc.transaction_date || me.frm.doc.posting_date,
+							po_cost_from_date: me.frm.doc.po_cost_from_date,
 							ignore_pricing_rule: cint(item.override_price_list_rate || me.frm.doc.ignore_pricing_rule),
 							doctype: me.frm.doc.doctype,
 							name: me.frm.doc.name,
@@ -1574,6 +1575,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			"company": me.frm.doc.company,
 			"transaction_date": me.frm.doc.transaction_date || me.frm.doc.posting_date,
 			"delivery_date": me.frm.doc.delivery_date || me.frm.doc.shipping_date || me.frm.doc.transaction_date || me.frm.doc.posting_date,
+			"po_cost_from_date": me.frm.doc.po_cost_from_date,
 			"campaign": me.frm.doc.campaign,
 			"sales_partner": me.frm.doc.sales_partner,
 			"ignore_pricing_rule": me.frm.doc.ignore_pricing_rule,
@@ -2201,6 +2203,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 				args: {
 					args: args,
 					existing_item_codes: existing_item_codes,
+					with_valuation_rates:  me.can_get_gross_profit && me.can_get_gross_profit() ? 1 : 0,
 				},
 				freeze: true,
 				freeze_message: "Loading default items. Please Wait...",

@@ -340,6 +340,15 @@ def get_purchase_batch_cost_and_revenue(batch_nos, exclude_pinv=None):
 	return out
 
 
+def update_item_batch_incoming_rate(items, from_date=None, to_date=None):
+	incoming_rate_data = get_sales_item_batch_incoming_rate(items, from_date=from_date, to_date=to_date)
+
+	for d in items:
+		if d.get('item_code') or d.get('batch_no'):
+			batch_or_item = 'batch_incoming_rate' if d.get('batch_no') else 'item_incoming_rate'
+			d.valuation_rate = flt(incoming_rate_data[batch_or_item].get(d.get('batch_no') or d.get('item_code')))
+
+
 def get_sales_item_batch_incoming_rate(items, from_date=None, to_date=None):
 	if isinstance(items, string_types):
 		items = json.loads(items)

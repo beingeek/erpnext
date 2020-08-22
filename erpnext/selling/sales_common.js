@@ -176,7 +176,8 @@ Customer Request`}
 
 	can_get_gross_profit: function () {
 		var has_permission = this.frm.fields_dict.total_gross_profit && this.frm.fields_dict.total_gross_profit.disp_status;
-		return this.frm.doc.docstatus < 2 && !this.frm.doc.is_return && has_permission && has_permission != 'None';
+		var allowed_doctype = ['Sales Order', 'Sales Invoice'].includes(this.frm.doc.doctype);
+		return allowed_doctype && this.frm.doc.docstatus < 2 && !this.frm.doc.is_return && has_permission && has_permission != 'None';
 	},
 
 	update_gross_profit_fields: function () {
@@ -210,7 +211,7 @@ Customer Request`}
 			});
 		} else {
 			$.each(all_fields, function (i, f) {
-				me.frm.doc['selected_' + f] = null;
+				me.frm.doc['selected_' + f] = 0;
 			});
 		}
 
@@ -222,7 +223,7 @@ Customer Request`}
 			$("a", me.frm.fields_dict['selected_' + f].$input_wrapper).attr("href", link);
 		});
 
-		me.frm.refresh_fields(all_fields.map(d => "selected_" + d));
+		me.frm.layout.refresh_fields(all_fields.map(d => "selected_" + d));
 	},
 
 	update_selected_item_select_batch_button() {
@@ -756,6 +757,22 @@ Customer Request`}
 					if (!r.exc) {
 						me.calculate_taxes_and_totals();
 						me.frm.dirty();
+					}
+				}
+			});
+		}
+	},
+
+	po_cost_from_date: function() {
+		if (this.can_get_gross_profit()) {
+			var me = this;
+			return frappe.call({
+				method: 'update_item_valuation_rates',
+				doc: me.frm.doc,
+				freeze: 1,
+				callback: function (r) {
+					if (!r.exc) {
+						me.update_gross_profit_fields();
 					}
 				}
 			});

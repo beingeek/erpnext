@@ -635,8 +635,9 @@ def get_partywise_advanced_payment_amount(party_type, posting_date = None, futur
 
 
 @frappe.whitelist()
-def get_party_default_items(args, existing_item_codes=None):
+def get_party_default_items(args, existing_item_codes=None, with_valuation_rates=False):
 	from erpnext.stock.get_item_details import get_item_details
+	from erpnext.stock.report.batch_profitability.batch_profitability import update_item_batch_incoming_rate
 	from collections import OrderedDict
 
 	if not existing_item_codes:
@@ -666,11 +667,11 @@ def get_party_default_items(args, existing_item_codes=None):
 		item_args = args.copy()
 		item_args['item_code'] = item_code
 
-		item_details = get_item_details(item_args)
+		item_details = get_item_details(item_args, skip_valuation_rates=True)
 		item_group_wise_data.setdefault(item_details.get('item_group'), []).append(item_details)
 
 	out = []
-	stock_settings = frappe.get_single("Stock Settings")
+	stock_settings = frappe.get_cached_doc("Stock Settings", None)
 
 	for item_group in stock_settings.price_list_order or []:
 		if item_group.item_group in item_group_wise_data:
@@ -679,6 +680,9 @@ def get_party_default_items(args, existing_item_codes=None):
 
 	for items in item_group_wise_data.values():
 		out += sorted(items, key=lambda d: d.item_code)
+
+	if with_valuation_rates:
+		update_item_batch_incoming_rate(out, from_date=args.get('po_cost_from_date'))
 
 	return reversed(out)
 

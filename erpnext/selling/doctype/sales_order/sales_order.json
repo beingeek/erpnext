@@ -79,6 +79,24 @@
   "column_break_62",
   "po_day_5",
   "so_day_5",
+  "sec_gross_profit",
+  "total_cogs",
+  "column_break_67",
+  "total_gross_profit",
+  "column_break_69",
+  "per_gross_profit",
+  "cb_75",
+  "po_cost_from_date",
+  "section_break_71",
+  "selected_valuation_rate",
+  "cb_73",
+  "selected_cogs",
+  "column_break_73",
+  "selected_gross_profit",
+  "column_break_75",
+  "selected_gross_profit_per_unit",
+  "cb_77",
+  "selected_per_gross_profit",
   "items_section",
   "scan_barcode",
   "get_customer_default_items",
@@ -1638,14 +1656,123 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval:doc.docstatus == 0",
    "fieldname": "sec_custom_projected_qty",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Projected Qty"
+  },
+  {
+   "fieldname": "total_cogs",
+   "fieldtype": "Currency",
+   "label": "Total Cost",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_67",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_gross_profit",
+   "fieldtype": "Currency",
+   "label": "Total Gross Profit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_69",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "per_gross_profit",
+   "fieldtype": "Percent",
+   "label": "% Total Gross Profit",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_71",
+   "fieldtype": "Section Break",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "selected_cogs",
+   "fieldtype": "Currency",
+   "label": "Cost",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_73",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "selected_gross_profit",
+   "fieldtype": "Currency",
+   "label": "Gross Profit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_75",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "selected_gross_profit_per_unit",
+   "fieldtype": "Currency",
+   "label": "Gross Profit / Unit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_77",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "selected_per_gross_profit",
+   "fieldtype": "Percent",
+   "label": "% Gross Profit",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "selected_valuation_rate",
+   "fieldtype": "Currency",
+   "label": "Cost / Unit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_73",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sec_gross_profit",
+   "fieldtype": "Section Break",
+   "label": "Gross Profit",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "po_cost_from_date",
+   "fieldtype": "Date",
+   "label": "PO Cost From Date",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "cb_75",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-08-22 10:32:54.764456",
+ "modified": "2020-08-22 16:45:21.073779",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

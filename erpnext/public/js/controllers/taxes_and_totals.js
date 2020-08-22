@@ -676,14 +676,14 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			this.frm.doc.per_gross_profit = this.frm.doc.total_revenue ? this.frm.doc.total_gross_profit / this.frm.doc.total_revenue * 100 : 0;
 
 			this.update_selected_item_gross_profit();
-		} else if (this.frm.doc.doctype == "Sales Invoice") {
+		} else if (["Sales Invoice", "Sales Order"].includes(this.frm.doc.doctype)) {
 			this.frm.doc.total_cogs = 0;
 
 			$.each(this.frm.doc.items || [], function (i, item) {
 				item.cogs = flt(item.valuation_rate) * flt(item.stock_qty);
 				item.gross_profit = item.base_net_amount - item.cogs;
 				item.per_gross_profit = item.base_net_amount ? item.gross_profit / item.base_net_amount * 100 : 0;
-				item.gross_profit_per_unit = item.gross_profit / flt(item.stock_qty);
+				item.gross_profit_per_unit = flt(item.stock_qty) ? item.gross_profit / flt(item.stock_qty) : 0;
 
 				me.frm.doc.total_cogs += item.cogs;
 			});

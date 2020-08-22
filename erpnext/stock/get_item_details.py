@@ -23,7 +23,7 @@ sales_doctypes = ['Quotation', 'Sales Order', 'Delivery Note', 'Sales Invoice']
 purchase_doctypes = ['Material Request', 'Supplier Quotation', 'Purchase Order', 'Purchase Receipt', 'Purchase Invoice']
 
 @frappe.whitelist()
-def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=True):
+def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=True, skip_valuation_rates=False):
 	"""
 		args = {
 			"item_code": "",
@@ -68,7 +68,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 
 	get_party_item_code(args, item, out)
 
-	if not for_validate and args.transaction_type == 'selling':
+	if not skip_valuation_rates and args.transaction_type == 'selling':
 		set_valuation_rate(out, args)
 
 	update_party_blanket_order(args, out)
@@ -102,7 +102,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	if args.get("is_subcontracted") == "Yes":
 		out.bom = args.get('bom') or get_default_bom(args.item_code)
 
-	if not for_validate and args.transaction_type == 'selling':
+	if not skip_valuation_rates and args.transaction_type == 'selling':
 		get_gross_profit(out)
 
 	if args.doctype == 'Material Request':
@@ -143,7 +143,7 @@ def set_valuation_rate(out, args):
 
 		for bundle_item in bundled_items.items:
 			valuation_rate += flt(get_valuation_rate(bundle_item.item_code, batch_no=args.get('batch_no'),
-				company=args.company, warehouse=out.get("warehouse"))\
+				company=args.company, warehouse=out.get("warehouse"), from_date=args.get('po_cost_from_date'))\
 					.get("valuation_rate") * bundle_item.qty)
 
 		out.update({
@@ -152,7 +152,7 @@ def set_valuation_rate(out, args):
 
 	else:
 		out.update(get_valuation_rate(args.item_code, batch_no=args.get('batch_no'),
-			company=args.company, warehouse=out.get("warehouse")))
+			company=args.company, warehouse=out.get("warehouse"), from_date=args.get('po_cost_from_date')))
 
 
 def process_args(args):

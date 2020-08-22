@@ -159,6 +159,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 	},
 
 	update_selected_item_fields: function() {
+		this._super();
 		this.update_selected_item_custom_projected_qty();
 	},
 
@@ -174,11 +175,11 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 				me.frm.doc["so_day_" + i] = grid_row.doc["so_day_" + i] / grid_row.doc.conversion_factor;
 			}
 		} else {
-			me.frm.doc.current_actual_qty = null;
-			me.frm.doc.current_projected_qty = null;
+			me.frm.doc.current_actual_qty = 0;
+			me.frm.doc.current_projected_qty = 0;
 			for(let i = 1; i <= 5; ++i) {
-				me.frm.doc["po_day_" + i] = null;
-				me.frm.doc["so_day_" + i] = null;
+				me.frm.doc["po_day_" + i] = 0;
+				me.frm.doc["so_day_" + i] = 0;
 			}
 		}
 
@@ -506,6 +507,8 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		}
 
 		this.order_type(doc);
+
+		this.update_gross_profit_fields();
 	},
 
 	create_pick_list() {
