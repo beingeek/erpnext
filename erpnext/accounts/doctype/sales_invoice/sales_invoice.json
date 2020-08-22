@@ -69,6 +69,22 @@
   "set_warehouse",
   "column_break_63",
   "auto_select_batches",
+  "section_break_65",
+  "total_cogs",
+  "column_break_67",
+  "total_gross_profit",
+  "column_break_69",
+  "per_gross_profit",
+  "section_break_71",
+  "selected_valuation_rate",
+  "cb_73",
+  "selected_cogs",
+  "column_break_73",
+  "selected_gross_profit",
+  "column_break_75",
+  "selected_gross_profit_per_unit",
+  "cb_77",
+  "selected_per_gross_profit",
   "items_section",
   "scan_barcode",
   "items",
@@ -1846,12 +1862,108 @@
    "fieldname": "master_so_id",
    "fieldtype": "Data",
    "label": "Master SO"
+  },
+  {
+   "fieldname": "section_break_65",
+   "fieldtype": "Section Break",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "total_cogs",
+   "fieldtype": "Currency",
+   "label": "Total Cost",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_67",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_gross_profit",
+   "fieldtype": "Currency",
+   "label": "Total Gross Profit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_69",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "per_gross_profit",
+   "fieldtype": "Percent",
+   "label": "% Total Gross Profit",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_71",
+   "fieldtype": "Section Break",
+   "permlevel": 3
+  },
+  {
+   "fieldname": "selected_cogs",
+   "fieldtype": "Currency",
+   "label": "Cost",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_73",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "selected_gross_profit",
+   "fieldtype": "Currency",
+   "label": "Gross Profit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_75",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "selected_gross_profit_per_unit",
+   "fieldtype": "Currency",
+   "label": "Gross Profit / Unit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_77",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "selected_per_gross_profit",
+   "fieldtype": "Percent",
+   "label": "% Gross Profit",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "selected_valuation_rate",
+   "fieldtype": "Currency",
+   "label": "Cost / Unit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_73",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 181,
  "is_submittable": 1,
- "modified": "2020-06-19 12:13:04.185736",
+ "modified": "2020-08-22 12:11:35.178325",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

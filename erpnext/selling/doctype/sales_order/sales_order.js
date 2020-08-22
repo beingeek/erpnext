@@ -123,16 +123,6 @@ frappe.ui.form.on("Sales Order", {
 		var me = frm.cscript;
 
 		frm.cscript.set_po_qty_labels();
-		if (me.frm.doc.docstatus == 0) {
-			$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
-				if(grid_row.doc && grid_row.doc.doctype == "Sales Order Item") {
-					$(grid_row.wrapper).off('focus', 'input').on('focus', 'input', function() {
-						me.selected_item_dn = grid_row.doc.name;
-						me.update_selected_item_fields();
-					});
-				}
-			});
-		}
 
 		$(".control-value", frm.fields_dict.customer_outstanding_amount.$input_wrapper)
 			.wrap("<a href='#' id='customer_outstanding_amount_link' target='_blank'></a>");
@@ -169,34 +159,36 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 	},
 
 	update_selected_item_fields: function() {
-		if (this.frm.doc.docstatus == 0) {
-			var me = this;
+		this.update_selected_item_custom_projected_qty();
+	},
 
-			var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
-			if(grid_row && grid_row.doc.item_code) {
-				me.frm.doc.current_actual_qty = grid_row.doc.actual_qty / grid_row.doc.conversion_factor;
-				me.frm.refresh_field("current_actual_qty");
-				me.frm.doc.current_projected_qty = grid_row.doc.projected_qty / grid_row.doc.conversion_factor;
-				me.frm.refresh_field("current_projected_qty");
-				for(var i = 1; i <= 5; ++i) {
-					me.frm.doc["po_day_" + i] = grid_row.doc["po_day_" + i] / grid_row.doc.conversion_factor;
-					me.frm.refresh_field("po_day_" + i);
-					me.frm.doc["so_day_" + i] = grid_row.doc["so_day_" + i] / grid_row.doc.conversion_factor;
-					me.frm.refresh_field("so_day_" + i);
-				}
-			} else {
-				me.frm.doc.current_actual_qty = 0;
-				me.frm.refresh_field("current_actual_qty");
-				me.frm.doc.current_projected_qty = 0;
-				me.frm.refresh_field("current_projected_qty");
-				for(var i = 1; i <= 5; ++i) {
-					me.frm.doc["po_day_" + i] = 0;
-					me.frm.refresh_field("po_day_" + i);
-					me.frm.doc["so_day_" + i] = 0;
-					me.frm.refresh_field("so_day_" + i);
-				}
+	update_selected_item_custom_projected_qty: function() {
+		var me = this;
+		var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
+
+		if(this.frm.doc.docstatus == 0 && grid_row && grid_row.doc.item_code) {
+			me.frm.doc.current_actual_qty = grid_row.doc.actual_qty / grid_row.doc.conversion_factor;
+			me.frm.doc.current_projected_qty = grid_row.doc.projected_qty / grid_row.doc.conversion_factor;
+			for(let i = 1; i <= 5; ++i) {
+				me.frm.doc["po_day_" + i] = grid_row.doc["po_day_" + i] / grid_row.doc.conversion_factor;
+				me.frm.doc["so_day_" + i] = grid_row.doc["so_day_" + i] / grid_row.doc.conversion_factor;
+			}
+		} else {
+			me.frm.doc.current_actual_qty = null;
+			me.frm.doc.current_projected_qty = null;
+			for(let i = 1; i <= 5; ++i) {
+				me.frm.doc["po_day_" + i] = null;
+				me.frm.doc["so_day_" + i] = null;
 			}
 		}
+
+		me.frm.refresh_fields("current_actual_qty");
+		me.frm.refresh_field("current_projected_qty");
+		for(let i = 1; i <= 5; ++i) {
+			me.frm.refresh_field("po_day_" + i);
+			me.frm.refresh_field("so_day_" + i);
+		}
+		me.frm.layout.refresh_sections();
 	},
 
 	show_print_item_labels_dialog: function(medium) {
@@ -298,7 +290,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 
 	conversion_factor: function(doc, cdt, cdn, dont_fetch_price_list_rate) {
 		this._super(doc, cdt, cdn, dont_fetch_price_list_rate);
-		this.update_selected_item_fields();
+		this.update_selected_item_custom_projected_qty();
 	},
 
 	set_po_qty_labels: function() {
@@ -352,7 +344,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 								}
 							});
 
-							me.update_selected_item_fields();
+							me.update_selected_item_custom_projected_qty();
 						}
 					}
 				});

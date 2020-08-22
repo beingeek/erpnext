@@ -640,15 +640,16 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 	},
 
 	calculate_gross_profit: function() {
-		if (this.frm.doc.doctype != 'Purchase Invoice') {
+		if (this.frm.doc.is_return) {
 			return;
 		}
 
-		this.frm.doc.total_revenue = 0;
-		this.frm.doc.total_cogs = 0;
-
 		var me = this;
-		if (!this.frm.doc.is_return) {
+
+		if (this.frm.doc.doctype == 'Purchase Invoice') {
+			this.frm.doc.total_revenue = 0;
+			this.frm.doc.total_cogs = 0;
+
 			$.each(this.frm.doc.items || [], function (i, item) {
 				item.source_batch_value = flt(item.source_purchase_cost) + flt(item.base_net_amount) + flt(item.source_lcv_cost);
 				item.lc_rate = item.stock_qty ? flt(item.source_batch_value) / flt(item.stock_qty) : 0;
@@ -670,12 +671,28 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 				me.frm.doc.total_revenue += item.batch_revenue;
 				me.frm.doc.total_cogs += item.batch_cogs;
 			});
+
+			this.frm.doc.total_gross_profit = this.frm.doc.total_revenue - this.frm.doc.total_cogs;
+			this.frm.doc.per_gross_profit = this.frm.doc.total_revenue ? this.frm.doc.total_gross_profit / this.frm.doc.total_revenue * 100 : 0;
+
+			this.update_selected_item_gross_profit();
+		} else if (this.frm.doc.doctype == "Sales Invoice") {
+			this.frm.doc.total_cogs = 0;
+
+			$.each(this.frm.doc.items || [], function (i, item) {
+				item.cogs = flt(item.valuation_rate) * flt(item.stock_qty);
+				item.gross_profit = item.base_net_amount - item.cogs;
+				item.per_gross_profit = item.base_net_amount ? item.gross_profit / item.base_net_amount * 100 : 0;
+				item.gross_profit_per_unit = item.gross_profit / flt(item.stock_qty);
+
+				me.frm.doc.total_cogs += item.cogs;
+			});
+
+			this.frm.doc.total_gross_profit = this.frm.doc.base_net_total - this.frm.doc.total_cogs;
+			this.frm.doc.per_gross_profit = this.frm.doc.base_net_total ? this.frm.doc.total_gross_profit / this.frm.doc.base_net_total * 100 : 0;
+
+			this.update_selected_item_gross_profit();
 		}
-
-		this.frm.doc.total_gross_profit = this.frm.doc.total_revenue - this.frm.doc.total_cogs;
-		this.frm.doc.per_gross_profit = this.frm.doc.total_revenue ? this.frm.doc.total_gross_profit / this.frm.doc.total_revenue * 100 : 0;
-
-		this.update_selected_item_fields();
 	},
 
 	set_rounded_total: function() {

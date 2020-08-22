@@ -340,6 +340,101 @@ def get_purchase_batch_cost_and_revenue(batch_nos, exclude_pinv=None):
 	return out
 
 
+@frappe.whitelist()
+def get_sales_item_batch_incoming_rate(items):
+	if isinstance(items, string_types):
+		items = json.loads(items)
+
+	item_codes = list(set([d.get('item_code') for d in items if d.get('item_code') and not d.get('batch_no')]))
+	batch_nos = list(set([d.get('batch_no') for d in items if d.get('batch_no')]))
+
+	if item_codes:
+		frappe.msgprint(_("Gross Profit for Non Batch items not yet implemented"))
+
+	return {
+		"batch_incoming_rate": get_batch_incoming_rate(batch_nos),
+		"item_incoming_rate": {}
+	}
+
+
+def get_batch_incoming_rate(batch_nos):
+	# get repack entries that have batch_nos as target
+	repack_entry_data = frappe.db.sql("""
+		select ste.name, item.batch_no, item.s_warehouse, item.t_warehouse, item.amount, item.transfer_qty as qty,
+			item.additional_cost
+		from `tabStock Entry` ste, `tabStock Entry Detail` item
+		where ste.name = item.parent and ste.purpose = 'Repack' and ste.docstatus = 1 and exists(
+			select t_item.name from `tabStock Entry Detail` t_item where t_item.parent = ste.name
+				and t_item.batch_no in %s and ifnull(t_item.t_warehouse, '') != '')
+	""", [batch_nos], as_dict=1)
+
+	# create maps for stock entry -> target repack rows and stock_entry -> source repack rows
+	stock_entry_to_target_items = {}
+	stock_entry_to_source_items = {}
+	for repack_entry_row in repack_entry_data:
+		if repack_entry_row.s_warehouse:
+			stock_entry_to_source_items.setdefault(repack_entry_row.name, []).append(repack_entry_row)
+		if repack_entry_row.t_warehouse:
+			stock_entry_to_target_items.setdefault(repack_entry_row.name, []).append(repack_entry_row)
+
+	# create map for repacked batch -> data about its source items and costs
+	target_batch_source_map = {}
+	source_batch_nos = []
+	for ste_name, target_items in stock_entry_to_target_items.items():
+		total_incoming = sum([d.amount for d in target_items])
+
+		for target_item in target_items:
+			target_batch_data = target_batch_source_map.setdefault(target_item.batch_no, {}).setdefault(ste_name, frappe._dict())
+			target_batch_data.qty = target_item.qty
+			target_batch_data.additional_cost = target_item.additional_cost
+			target_batch_data.contribution = (target_item.amount / total_incoming) * 100 if total_incoming\
+				else 100 / len(target_items)
+
+			source_rows = stock_entry_to_source_items.get(ste_name, [])
+			target_batch_data.source_batches = [(d.batch_no, d.qty) for d in source_rows if d.batch_no]
+			target_batch_data.source_non_batch_cost = sum([d.amount for d in source_rows if not d.batch_no])
+
+			source_batch_nos += list(set([d.batch_no for d in source_rows if d.batch_no]))
+
+	# get cost of batch_nos in argument and batch_nos in repack entry
+	all_batch_nos = list(set(batch_nos + source_batch_nos))
+	sle_data = frappe.db.sql("""
+		select sle.batch_no, sum(sle.stock_value_difference) as cost, sum(sle.actual_qty) as qty
+		from `tabStock Ledger Entry` sle
+		where sle.batch_no in %s and sle.actual_qty > 0 and sle.voucher_type in ('Purchase Receipt', 'Purchase Invoice')
+		group by sle.batch_no
+	""", [all_batch_nos], as_dict=1) if all_batch_nos else []
+
+	# create map for batch_no -> {'cost': ..., 'qty': ...}
+	batch_to_incoming_values = {}
+	for d in sle_data:
+		batch_to_incoming_values[d.batch_no] = d
+
+	# add repack raw material costs
+	for target_batch_no, stes in target_batch_source_map.items():
+		for ste_name, target_batch_data in stes.items():
+			target_batch_incoming_value = batch_to_incoming_values.setdefault(target_batch_no, frappe._dict({'cost': 0, 'qty': 0}))
+
+			target_batch_cost = target_batch_data.source_non_batch_cost
+			target_batch_cost += target_batch_data.additional_cost
+
+			for source_batch_no, source_batch_qty in target_batch_data.source_batches:
+				source_batch_incoming_value = batch_to_incoming_values.get(source_batch_no, frappe._dict())
+				target_batch_cost += flt(source_batch_incoming_value.cost) / flt(source_batch_incoming_value.qty) * source_batch_qty\
+					if flt(source_batch_incoming_value.qty) else 0
+
+			target_batch_cost = target_batch_cost * target_batch_data.contribution / 100
+
+			target_batch_incoming_value.qty += target_batch_data.qty
+			target_batch_incoming_value.cost += target_batch_cost
+
+	out = {}
+	for batch_no in batch_nos:
+		batch_incoming_value = batch_to_incoming_values.get(batch_no, frappe._dict())
+		out[batch_no] = batch_incoming_value.cost / batch_incoming_value.qty if batch_incoming_value else 0
+
+	return out
+
 def get_columns(filters):
 	return [
 		{

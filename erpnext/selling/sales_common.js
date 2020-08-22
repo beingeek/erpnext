@@ -10,6 +10,8 @@ cur_frm.email_field = "contact_email";
 
 frappe.provide("erpnext.selling");
 erpnext.selling.SellingController = erpnext.TransactionController.extend({
+	item_cost_and_revenue_fields: ["valuation_rate", "cogs", "gross_profit", "gross_profit_per_unit", "per_gross_profit"],
+
 	setup: function() {
 		this._super();
 		this.frm.add_fetch("sales_partner", "commission_rate", "commission_rate");
@@ -24,17 +26,6 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 		});
 		frappe.ui.form.on(this.frm.doctype + " Item", "items_remove", function(frm, cdt, cdn) {
 			me.set_price_override_authorization();
-		});
-
-		$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
-			if(grid_row.doc && grid_row.doc.doctype === me.frm.doc.doctype + " Item") {
-				$(grid_row.wrapper).off('focus', 'input').on('focus', 'input', function() {
-					me.frm.focused_item_dn = grid_row.doc.name;
-					var show_select_batch = me.frm.doc.docstatus === 0 && !me.frm.doc.is_return && grid_row.doc.has_batch_no
-						&& (me.frm.doc.doctype === 'Delivery Note' || (me.frm.doc.doctype === 'Sales Invoice' && me.frm.doc.update_stock));
-					me.toggle_select_batch_button(show_select_batch);
-				});
-			}
 		});
 	},
 
@@ -183,6 +174,95 @@ Customer Request`}
 		this.set_item_warning_color(frappe.get_doc(cdt, cdn));
 	},
 
+	get_sales_item_batch_incoming_rate: function () {
+		var me = this;
+
+		var has_permission = me.frm.fields_dict.total_gross_profit.disp_status;
+		has_permission = has_permission && has_permission != 'None';
+
+		if (me.frm.doc.docstatus < 2 && !me.frm.doc.is_return && has_permission) {
+			var items = (me.frm.doc.items || []).filter(d => d.item_code || d.batch_no).map(d => {
+				return {'item_code': d.item_code, 'batch_no': d.batch_no}
+			});
+
+			if (items.length) {
+				return this.frm.call({
+					method: "erpnext.stock.report.batch_profitability.batch_profitability.get_sales_item_batch_incoming_rate",
+					args: {
+						items: items,
+					},
+					freeze: true,
+					freeze_message: __("Loading Gross Profit..."),
+					callback: function(r) {
+						if(!r.exc) {
+							$.each(me.frm.doc.items || [], function (i, item) {
+								if (item.batch_no) {
+									me.set_item_batch_cost(item, r.message.batch_incoming_rate[item.batch_no]);
+								} else if (item.item_code) {
+									me.set_item_batch_cost(item, r.message.item_incoming_rate[item.item_code]);
+								}
+							});
+
+							if (me.frm.doc.docstatus == 1) {
+								me.calculate_gross_profit();
+								me.frm.refresh_fields();
+							} else {
+								me.calculate_taxes_and_totals();
+							}
+						}
+					}
+				});
+			}
+		}
+	},
+
+	update_selected_item_fields: function() {
+		this.update_selected_item_select_batch_button();
+		this.update_selected_item_gross_profit();
+	},
+
+	update_selected_item_gross_profit: function() {
+		var me = this;
+		var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
+
+		var all_fields = [];
+		all_fields.push(...this.item_cost_and_revenue_fields);
+
+		if(grid_row && (grid_row.doc.batch_no || grid_row.doc.item_code) && !me.frm.doc.is_return) {
+			$.each(all_fields, function (i, f) {
+				me.frm.doc['selected_' + f] = grid_row.doc[f];
+			});
+		} else {
+			$.each(all_fields, function (i, f) {
+				me.frm.doc['selected_' + f] = null;
+			});
+		}
+
+		$.each(me.gp_link_fields || [], function (i, f) {
+			var link = "desk#query-report/Batch Profitability";
+			if (grid_row) {
+				link += "?batch_no=" + grid_row.doc.batch_no;
+			}
+			$("a", me.frm.fields_dict['selected_' + f].$input_wrapper).attr("href", link);
+		});
+
+		me.frm.refresh_fields(all_fields.map(d => "selected_" + d));
+	},
+
+	update_selected_item_select_batch_button() {
+		var me = this;
+		var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
+
+		var show_select_batch = me.frm.doc.docstatus === 0 && !me.frm.doc.is_return && grid_row && grid_row.doc.has_batch_no
+			&& (me.frm.doc.doctype === 'Delivery Note' || (me.frm.doc.doctype === 'Sales Invoice' && me.frm.doc.update_stock));
+
+		me.toggle_select_batch_button(show_select_batch);
+	},
+
+	set_item_batch_cost: function(item, data) {
+		item['valuation_rate'] = flt(data);
+	},
+
 	setup_queries: function() {
 		var me = this;
 
@@ -290,8 +370,8 @@ Customer Request`}
 
 		if (me.frm.doc.docstatus == 0) {
 			this.frm.fields_dict.items.grid.add_custom_button(__("Select Batches"), function() {
-				if (me.frm.focused_item_dn) {
-					me.set_batch_number(me.frm.doc.doctype + " Item", me.frm.focused_item_dn, true);
+				if (me.selected_item_dn) {
+					me.set_batch_number(me.frm.doc.doctype + " Item", me.selected_item_dn, true);
 				}
 			});
 			this.frm.fields_dict.items.grid.custom_buttons[__("Select Batches")].addClass('hidden');
@@ -691,10 +771,13 @@ Customer Request`}
 
 	toggle_select_batch_button: function(show) {
 		var button = this.frm.fields_dict.items.grid.custom_buttons[__("Select Batches")];
-		if (show) {
-			button.removeClass('hidden');
-		} else {
-			button.addClass('hidden');
+
+		if (button) {
+			if (show) {
+				button.removeClass('hidden');
+			} else {
+				button.addClass('hidden');
+			}
 		}
 	},
 

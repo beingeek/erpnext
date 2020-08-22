@@ -61,7 +61,7 @@
   "plc_conversion_rate",
   "sec_warehouse",
   "set_warehouse",
-  "section_break_50",
+  "sec_custom_projected_qty",
   "current_actual_qty",
   "current_projected_qty",
   "column_break_54",
@@ -1311,10 +1311,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "section_break_50",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "current_actual_qty",
    "fieldtype": "Float",
    "label": "In Stock",
@@ -1640,12 +1636,16 @@
    "fieldtype": "Check",
    "label": "Is back Order",
    "read_only": 1
+  },
+  {
+   "fieldname": "sec_custom_projected_qty",
+   "fieldtype": "Section Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-06-19 12:13:13.256672",
+ "modified": "2020-08-22 10:32:54.764456",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

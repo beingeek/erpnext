@@ -228,6 +228,16 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 			});
 		}
 
+		if (me.frm.doc.docstatus == 0 && me.update_selected_item_fields) {
+			$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
+				if(grid_row.doc && grid_row.doc.doctype == me.frm.doc.doctype + " Item") {
+					$(grid_row.wrapper).off('focus', 'input').on('focus', 'input', function() {
+						me.selected_item_dn = grid_row.doc.name;
+						me.update_selected_item_fields();
+					});
+				}
+			});
+		}
 	},
 	onload: function() {
 		var me = this;
@@ -255,6 +265,18 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 					}
 				}
 			]);
+		}
+
+		if (me.frm.doc.docstatus === 1 && me.update_selected_item_fields) {
+			me.frm.fields_dict.items.grid.wrapper.on('click', '.grid-row-check', function(e) {
+				var checked = me.frm.fields_dict.items.grid.grid_rows.filter(row => row.doc.__checked);
+				if (checked.length === 1) {
+					me.selected_item_dn = checked[0].doc.name;
+				} else {
+					me.selected_item_dn = null;
+				}
+				me.update_selected_item_fields();
+			});
 		}
 	},
 
@@ -367,6 +389,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 					.appendTo($input_group);
 			}
 		}
+
+		this.update_selected_item_fields && this.update_selected_item_fields();
 	},
 
 	add_empty_rows: function() {
@@ -624,7 +648,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 								() => {
 									if (me.frm.doc.doctype == "Sales Order") {
 										me.set_item_custom_projected_qty(item, r.message);
-										me.update_selected_item_fields();
+										me.update_selected_item_custom_projected_qty();
 									}
 								},
 								() => me.frm.updating_item_details = false,

@@ -23,18 +23,6 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 				return (doc.qty<=doc.received_qty) ? "green" : "orange";
 			});
 		}
-
-		var me = this;
-		if (me.frm.doc.docstatus == 0) {
-			$(me.frm.wrapper).on("grid-row-render", function(e, grid_row) {
-				if(grid_row.doc && grid_row.doc.doctype == "Purchase Invoice Item") {
-					$(grid_row.wrapper).off('focus', 'input').on('focus', 'input', function() {
-						me.selected_item_dn = grid_row.doc.name;
-						me.update_selected_item_fields();
-					});
-				}
-			});
-		}
 	},
 	onload: function() {
 		this._super();
@@ -50,18 +38,6 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		$.each(this.gp_link_fields, function (i, f) {
 			$(".control-value", me.frm.fields_dict['selected_' + f].$input_wrapper).wrap("<a href='#' target='_blank'></a>");
 		});
-
-		if (me.frm.doc.docstatus !== 0) {
-			me.frm.fields_dict.items.grid.wrapper.on('click', '.grid-row-check', function(e) {
-				var checked = me.frm.fields_dict.items.grid.grid_rows.filter(row => row.doc.__checked);
-				if (checked.length === 1) {
-					me.selected_item_dn = checked[0].doc.name;
-				} else {
-					me.selected_item_dn = null;
-				}
-				me.update_selected_item_fields();
-			});
-		}
 	},
 
 	validate: function(doc) {
@@ -128,13 +104,17 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 	},
 
 	update_selected_item_fields: function() {
+		this.update_selected_item_gross_profit();
+	},
+
+	update_selected_item_gross_profit: function() {
 		var me = this;
+		var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
 
 		var all_fields = [];
 		all_fields.push(...this.item_cost_and_revenue_fields);
 		all_fields.push(...this.calculated_item_cost_and_revenue_fields);
 
-		var grid_row = this.selected_item_dn ? this.frm.fields_dict['items'].grid.grid_rows_by_docname[this.selected_item_dn] : null;
 		if(grid_row && grid_row.doc.batch_no && !me.frm.doc.is_return) {
 			$.each(all_fields, function (i, f) {
 				me.frm.doc['selected_' + f] = grid_row.doc[f];
@@ -145,6 +125,8 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 			});
 		}
 
+		me.frm.refresh_fields(all_fields.map(d => "selected_" + d));
+
 		$.each(me.gp_link_fields, function (i, f) {
 			var link = "desk#query-report/Batch Profitability";
 			if (grid_row) {
@@ -152,8 +134,6 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 			}
 			$("a", me.frm.fields_dict['selected_' + f].$input_wrapper).attr("href", link);
 		});
-
-		me.frm.refresh_fields(all_fields.map(d => "selected_" + d));
 	},
 
 	form_render: function(doc, cdt, cdn) {
