@@ -682,3 +682,4 @@ execute:frappe.reload_doc("HR", "doctype", "Employee Advance")
 erpnext.patches.v12_0.move_due_advance_amount_to_pending_amount
 erpnext.patches.v12_0.pricing_configuration_default_values
 erpnext.patches.v12_0.pricing_configuration_default_values_2
+erpnext.patches.v12_0.fix_repack_entry_expense_account
