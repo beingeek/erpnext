@@ -100,7 +100,8 @@ def get_data():
 				{
 					"type": "report",
 					"is_query_report": True,
-					"name": "Sundine Inactive Customers",
+					"name": "Missing Orders",
+					"route": "#query-report/Missing Orders",
 					"doctype": "Sales Order"
 				},
 			]
