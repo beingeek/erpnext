@@ -137,7 +137,7 @@
  "icon": "fa fa-sitemap",
  "idx": 1,
  "is_tree": 1,
- "modified": "2020-06-19 12:13:15.359808",
+ "modified": "2020-08-24 05:52:59.600695",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Customer Group",
@@ -145,11 +145,14 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "create": 1,
+   "delete": 1,
    "email": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales Manager"
+   "role": "Sales Manager",
+   "write": 1
   },
   {
    "email": 1,
@@ -186,7 +189,8 @@
   {
    "permlevel": 1,
    "read": 1,
-   "role": "Sales Manager"
+   "role": "Sales Manager",
+   "write": 1
   }
  ],
  "search_fields": "parent_customer_group",

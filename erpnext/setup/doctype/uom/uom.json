@@ -5,6 +5,7 @@
  "creation": "2013-01-10 16:34:24",
  "doctype": "DocType",
  "document_type": "Setup",
+ "engine": "InnoDB",
  "field_order": [
   "uom_name",
   "must_be_whole_number"
@@ -30,7 +31,7 @@
  ],
  "icon": "fa fa-compass",
  "idx": 1,
- "modified": "2020-06-04 06:56:35.063740",
+ "modified": "2020-08-24 05:52:53.511310",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "UOM",
@@ -40,8 +41,6 @@
    "create": 1,
    "delete": 1,
    "email": 1,
-   "export": 1,
-   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,
@@ -62,9 +61,14 @@
    "read": 1,
    "report": 1,
    "role": "Stock User"
+  },
+  {
+   "read": 1,
+   "role": "Purchase User"
   }
  ],
  "quick_entry": 1,
  "show_name_in_global_search": 1,
+ "sort_field": "modified",
  "sort_order": "ASC"
 }

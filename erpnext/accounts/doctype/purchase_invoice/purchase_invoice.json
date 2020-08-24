@@ -1782,7 +1782,7 @@
  "icon": "fa fa-file-text",
  "idx": 204,
  "is_submittable": 1,
- "modified": "2020-08-21 05:18:36.610530",
+ "modified": "2020-08-24 05:53:00.469095",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",
@@ -1793,7 +1793,9 @@
    "amend": 1,
    "cancel": 1,
    "create": 1,
+   "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
@@ -1803,11 +1805,19 @@
    "write": 1
   },
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Purchase User"
+   "role": "Purchase User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
   },
   {
    "amend": 1,
@@ -1835,6 +1845,58 @@
    "read": 1,
    "role": "Accounts Manager",
    "write": 1
+  },
+  {
+   "export": 1,
+   "permlevel": 2,
+   "read": 1,
+   "role": "Landed Cost Role",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User"
+  },
+  {
+   "export": 1,
+   "permlevel": 1,
+   "read": 1,
+   "role": "All"
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Purchase Manager",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "permlevel": 1,
+   "read": 1,
+   "role": "Purchase Master Manager",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "permlevel": 3,
+   "read": 1,
+   "role": "Batch Profitability Role",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "permlevel": 4,
+   "read": 1,
+   "role": "All",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "permlevel": 4,
+   "read": 1,
+   "role": "Accounts Manager"
   }
  ],
  "search_fields": "posting_date, supplier, bill_no, base_grand_total, outstanding_amount",

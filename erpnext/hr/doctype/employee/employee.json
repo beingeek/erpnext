@@ -810,7 +810,7 @@
  "icon": "fa fa-user",
  "idx": 24,
  "image_field": "image",
- "modified": "2020-06-19 12:13:09.564100",
+ "modified": "2020-08-24 06:11:11.777029",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Employee",
@@ -828,8 +828,6 @@
    "create": 1,
    "delete": 1,
    "email": 1,
-   "export": 1,
-   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,
@@ -841,8 +839,6 @@
    "create": 1,
    "delete": 1,
    "email": 1,
-   "export": 1,
-   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,
@@ -850,6 +846,10 @@
    "set_user_permissions": 1,
    "share": 1,
    "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Sales Manager"
   }
  ],
  "quick_entry": 1,

@@ -75,7 +75,7 @@
  ],
  "hide_toolbar": 1,
  "issingle": 1,
- "modified": "2019-07-25 14:57:33.187689",
+ "modified": "2020-08-24 05:52:54.804484",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Opening Invoice Creation Tool",
@@ -83,10 +83,21 @@
  "permissions": [
   {
    "create": 1,
+   "delete": 1,
    "email": 1,
    "print": 1,
    "read": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Sales Manager",
    "share": 1,
    "write": 1
   }

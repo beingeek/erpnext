@@ -491,7 +491,7 @@
  "icon": "fa fa-user",
  "idx": 363,
  "image_field": "image",
- "modified": "2020-06-19 12:13:11.842596",
+ "modified": "2020-08-24 05:52:34.222855",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
@@ -514,18 +514,19 @@
    "role": "Sales User"
   },
   {
+   "create": 1,
+   "delete": 1,
    "email": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales Manager"
+   "role": "Sales Manager",
+   "write": 1
   },
   {
    "create": 1,
    "delete": 1,
    "email": 1,
-   "export": 1,
-   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,

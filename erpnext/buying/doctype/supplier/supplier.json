@@ -427,7 +427,7 @@
  ],
  "icon": "fa fa-user",
  "image_field": "image",
- "modified": "2020-06-19 12:13:08.165990",
+ "modified": "2020-08-24 06:10:07.490020",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Supplier",
@@ -442,6 +442,8 @@
    "role": "Purchase User"
   },
   {
+   "create": 1,
+   "delete": 1,
    "email": 1,
    "print": 1,
    "read": 1,
@@ -484,6 +486,11 @@
    "read": 1,
    "report": 1,
    "role": "Accounts Manager"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "role": "Sales Manager"
   }
  ],
  "quick_entry": 1,

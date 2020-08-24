@@ -96,22 +96,22 @@
  "icon": "fa fa-tags",
  "idx": 1,
  "max_attachments": 1,
- "modified": "2020-06-19 12:13:19.296668",
+ "modified": "2020-08-24 06:22:18.079402",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Price List",
  "owner": "Administrator",
  "permissions": [
   {
+   "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales User"
+   "role": "Sales User",
+   "share": 1
   },
   {
    "create": 1,
    "delete": 1,
-   "export": 1,
-   "import": 1,
    "read": 1,
    "report": 1,
    "role": "Sales Master Manager",
@@ -126,6 +126,10 @@
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
    "report": 1,
    "role": "Purchase Master Manager",
@@ -135,6 +139,22 @@
   {
    "read": 1,
    "role": "Manufacturing User"
+  },
+  {
+   "read": 1,
+   "role": "Customer"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
   }
  ],
  "search_fields": "currency",

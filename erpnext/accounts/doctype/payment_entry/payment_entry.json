@@ -573,7 +573,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-06-19 12:13:00.850713",
+ "modified": "2020-08-24 05:59:52.755354",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",
@@ -607,6 +607,21 @@
    "read": 1,
    "report": 1,
    "role": "Accounts Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
    "share": 1,
    "submit": 1,
    "write": 1
