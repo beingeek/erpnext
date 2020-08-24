@@ -1964,7 +1964,7 @@
  "icon": "fa fa-file-text",
  "idx": 181,
  "is_submittable": 1,
- "modified": "2020-08-24 05:53:01.409250",
+ "modified": "2020-08-24 12:50:47.116476",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
@@ -2084,6 +2084,12 @@
    "role": "Sales User",
    "share": 1,
    "submit": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 3,
+   "read": 1,
+   "role": "Batch Profitability Role",
    "write": 1
   }
  ],
