@@ -7,7 +7,7 @@
  "doctype": "Report",
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2019-07-21 23:24:21.094269",
+ "modified": "2020-08-24 06:58:29.031249",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Procurement Tracker",
@@ -16,12 +16,5 @@
  "ref_doctype": "Purchase Order",
  "report_name": "Procurement Tracker",
  "report_type": "Script Report",
- "roles": [
-  {
-   "role": "Purchase Manager"
-  },
-  {
-   "role": "Purchase User"
-  }
- ]
+ "roles": []
 }

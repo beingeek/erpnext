@@ -1,58 +1,28 @@
 {
- "add_total_row": 1, 
- "creation": "2019-07-21 17:23:24.719496", 
- "disable_prepared_report": 0, 
- "disabled": 0, 
- "docstatus": 0, 
- "doctype": "Report", 
- "idx": 4, 
- "is_standard": "Yes", 
- "letter_head": "SD - AR", 
- "modified": "2019-09-07 14:41:40.130754", 
- "modified_by": "Administrator", 
- "module": "Stock", 
+ "add_total_row": 1,
+ "creation": "2019-07-21 17:23:24.719496",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "idx": 28,
+ "is_standard": "Yes",
+ "letter_head": "SD - AR",
+ "modified": "2020-08-24 06:58:29.344335",
+ "modified_by": "Administrator",
+ "module": "Stock",
  "name": "Price List",
- "owner": "Administrator", 
- "prepared_report": 0, 
- "ref_doctype": "Item Price", 
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Item Price",
  "report_name": "Price List",
- "report_type": "Script Report", 
+ "report_type": "Script Report",
  "roles": [
   {
-   "role": "Sales Master Manager"
-  }, 
+   "role": "Purchase User"
+  },
   {
-   "role": "Sales Master Manager"
-  }, 
-  {
-   "role": "Sales Master Manager"
-  }, 
-  {
-   "role": "Purchase Master Manager"
-  }, 
-  {
-   "role": "System Manager"
-  }, 
-  {
-   "role": "Purchase Master Manager"
-  }, 
-  {
-   "role": "Purchase Master Manager"
-  }, 
-  {
-   "role": "Item Manager"
-  }, 
-  {
-   "role": "System Manager"
-  }, 
-  {
-   "role": "System Manager"
-  }, 
-  {
-   "role": "Item Manager"
-  }, 
-  {
-   "role": "Item Manager"
+   "role": "Sales User"
   }
  ]
 }

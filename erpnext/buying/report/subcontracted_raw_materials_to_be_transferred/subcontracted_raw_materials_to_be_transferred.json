@@ -7,7 +7,7 @@
  "doctype": "Report",
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2019-05-03 12:04:24.203721",
+ "modified": "2020-08-24 06:58:29.434176",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Subcontracted Raw Materials To Be Transferred",
@@ -19,12 +19,6 @@
  "roles": [
   {
    "role": "Stock User"
-  },
-  {
-   "role": "Purchase Manager"
-  },
-  {
-   "role": "Purchase User"
   }
  ]
 }

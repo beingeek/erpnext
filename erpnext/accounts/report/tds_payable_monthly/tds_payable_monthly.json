@@ -7,7 +7,7 @@
  "doctype": "Report",
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2019-09-24 13:46:16.473711",
+ "modified": "2020-08-24 06:58:29.380955",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "TDS Payable Monthly",
@@ -16,18 +16,5 @@
  "ref_doctype": "Purchase Invoice",
  "report_name": "TDS Payable Monthly",
  "report_type": "Script Report",
- "roles": [
-  {
-   "role": "Purchase User"
-  },
-  {
-   "role": "Accounts Manager"
-  },
-  {
-   "role": "Accounts User"
-  },
-  {
-   "role": "Auditor"
-  }
- ]
+ "roles": []
 }
