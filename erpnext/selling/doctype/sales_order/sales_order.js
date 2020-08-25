@@ -350,6 +350,11 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		this._super();
 		let allow_delivery = false;
 
+		if (this.frm.doc.docstatus < 2) {
+			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_item_labels_dialog('box'));
+			//this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_pallet_label_dialog('pallet'));
+		}
+
 		if (doc.docstatus==1) {
 
 			if(this.frm.has_perm("submit")) {
@@ -370,11 +375,6 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 					   me.frm.cscript.update_status('Re-open', 'Draft')
 				   }, __("Status"));
 			   }
-			}
-
-			if (this.frm.doc.docstatus < 2) {
-				this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_item_labels_dialog('box'));
-				//this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_pallet_label_dialog('pallet'));
 			}
 
 			if(doc.status !== 'Closed') {
