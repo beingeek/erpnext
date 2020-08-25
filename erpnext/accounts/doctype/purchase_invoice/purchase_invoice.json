@@ -81,6 +81,16 @@
   "total_gross_profit",
   "column_break_65",
   "per_gross_profit",
+  "section_break_76",
+  "total_source_sales_qty",
+  "column_break_78",
+  "total_source_repack_qty",
+  "column_break_80",
+  "total_source_reconciled_qty",
+  "column_break_82",
+  "total_source_actual_qty",
+  "column_break_84",
+  "total_repacked_actual_qty",
   "section_break_67",
   "selected_source_sales_revenue",
   "selected_source_sales_qty",
@@ -1777,12 +1787,67 @@
    "fieldname": "from_pr",
    "fieldtype": "Check",
    "label": "From PR"
+  },
+  {
+   "fieldname": "section_break_76",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_source_sales_qty",
+   "fieldtype": "Float",
+   "label": "Total Direct Qty Sold",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_78",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_source_repack_qty",
+   "fieldtype": "Float",
+   "label": "Total Qty Used For Repack",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_80",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_source_reconciled_qty",
+   "fieldtype": "Float",
+   "label": "Total Qty Adjusted",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_82",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_source_actual_qty",
+   "fieldtype": "Float",
+   "label": "Total Stock Remaining",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_84",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_repacked_actual_qty",
+   "fieldtype": "Float",
+   "label": "Total Unsold Repacks",
+   "permlevel": 3,
+   "read_only": 1
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 204,
  "is_submittable": 1,
- "modified": "2020-08-24 05:53:00.469095",
+ "modified": "2020-08-26 00:18:58.049583",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",

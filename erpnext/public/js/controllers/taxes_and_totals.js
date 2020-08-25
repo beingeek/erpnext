@@ -649,6 +649,11 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 		if (this.frm.doc.doctype == 'Purchase Invoice') {
 			this.frm.doc.total_revenue = 0;
 			this.frm.doc.total_cogs = 0;
+			me.frm.doc.total_source_sales_qty = 0;
+			me.frm.doc.total_source_repack_qty = 0;
+			me.frm.doc.total_source_reconciled_qty = 0;
+			me.frm.doc.total_source_actual_qty = 0;
+			me.frm.doc.total_repacked_actual_qty = 0;
 
 			$.each(this.frm.doc.items || [], function (i, item) {
 				item.source_batch_value = flt(item.source_purchase_cost) + flt(item.base_net_amount) + flt(item.source_lcv_cost);
@@ -670,6 +675,12 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 				me.frm.doc.total_revenue += item.batch_revenue;
 				me.frm.doc.total_cogs += item.batch_cogs;
+
+				me.frm.doc.total_source_sales_qty += item.source_sales_qty;
+				me.frm.doc.total_source_repack_qty += item.source_repack_qty;
+				me.frm.doc.total_source_reconciled_qty += item.source_reconciled_qty;
+				me.frm.doc.total_source_actual_qty += item.source_actual_qty;
+				me.frm.doc.total_repacked_actual_qty += item.repacked_actual_qty;
 			});
 
 			this.frm.doc.total_gross_profit = this.frm.doc.total_revenue - this.frm.doc.total_cogs;

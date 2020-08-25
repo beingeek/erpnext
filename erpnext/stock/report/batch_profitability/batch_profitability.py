@@ -23,7 +23,7 @@ def execute(filters=None):
 	source_pinv_data = get_pinv_data(batch_nos)
 	source_reco_data = get_reco_data(batch_nos)
 
-	target_repack_data, target_raw_material_data, source_consumed_qty, repacked_batch_nos, target_batch_source_contribution = get_repack_entry_data(batch_nos)
+	target_repack_data, target_raw_material_data, source_consumed_qty, qty_consumed_data, repacked_batch_nos, target_batch_source_contribution = get_repack_entry_data(batch_nos)
 	apply_source_repack_contribution(target_repack_data, filters.get('batch_no'), target_batch_source_contribution)
 	apply_source_repack_contribution(target_raw_material_data, filters.get('batch_no'), target_batch_source_contribution)
 
@@ -37,14 +37,6 @@ def execute(filters=None):
 
 	out = []
 
-	out.append(get_total(source_sinv_data, "Direct Sales"))
-	out += source_sinv_data
-	out.append({})
-
-	out.append(get_total(target_sinv_data, "Repacked Sales"))
-	out += target_sinv_data
-	out.append({})
-
 	out.append(get_total(source_prec_data, "Unbilled Purchase Receipts"))
 	out += source_prec_data
 	out.append({})
@@ -53,15 +45,27 @@ def execute(filters=None):
 	out += source_pinv_data
 	out.append({})
 
+	out.append(get_total(source_sinv_data, "Direct Sales"))
+	out += source_sinv_data
+	out.append({})
+
+	out.append(get_total(target_sinv_data, "Repacked Sales"))
+	out += target_sinv_data
+	out.append({})
+
 	out.append(get_total(source_lcv_data, "Landed Costs"))
 	out += source_lcv_data
 	out.append({})
 
-	out.append(get_total(target_repack_data, "Repack Additional Costs"))
+	out.append(get_total(qty_consumed_data, "Consumed for Repack"))
+	out += qty_consumed_data
+	out.append({})
+
+	out.append(get_total(target_repack_data, "Produced by Repack"))
 	out += target_repack_data
 	out.append({})
 
-	out.append(get_total(target_raw_material_data, "Repack Material Costs"))
+	out.append(get_total(target_raw_material_data, "Repack Materials Used"))
 	out += target_raw_material_data
 	out.append({})
 
@@ -220,6 +224,7 @@ def get_repack_entry_data(batch_nos):
 				stock_entry_to_target_batch[d.name] = d.batch_no
 
 	# Consumed Qty
+	qty_consumed_data = []
 	source_consumed_qty = {}
 	for batch_no in batch_nos:
 		source_consumed_qty[batch_no] = 0
@@ -232,6 +237,7 @@ def get_repack_entry_data(batch_nos):
 
 			if d.is_sales_item:
 				if d.batch_no in source_consumed_qty:
+					qty_consumed_data.append(d)
 					source_consumed_qty[d.batch_no] += d.qty
 
 				source_batch_values = target_batch_source_values.setdefault(target_batch, {})
@@ -253,7 +259,7 @@ def get_repack_entry_data(batch_nos):
 				target_batch_source_contribution[target_batch][source_batch] = value / total_value * 100
 
 	repacked_batch_nos = list(set(repacked_batch_nos))
-	return target_repack_data, target_raw_material_data, source_consumed_qty, repacked_batch_nos, target_batch_source_contribution
+	return target_repack_data, target_raw_material_data, source_consumed_qty, qty_consumed_data, repacked_batch_nos, target_batch_source_contribution
 
 
 @frappe.whitelist()
@@ -279,7 +285,7 @@ def get_purchase_batch_cost_and_revenue(batch_nos, exclude_pinv=None):
 	source_pinv_data = get_pinv_data(batch_nos, exclude_pinv)
 	source_sinv_data = get_sinv_data(batch_nos)
 	source_lcv_data = get_lcv_data(batch_nos)
-	target_repack_data, target_raw_material_data, source_consumed_qty, repacked_batch_nos, target_batch_source_contribution = get_repack_entry_data(batch_nos)
+	target_repack_data, target_raw_material_data, source_consumed_qty, qty_consumed_data, repacked_batch_nos, target_batch_source_contribution = get_repack_entry_data(batch_nos)
 	target_sinv_data = get_sinv_data(repacked_batch_nos)
 	source_reco_data = get_reco_data(batch_nos)
 	target_reco_data = get_reco_data(repacked_batch_nos)
