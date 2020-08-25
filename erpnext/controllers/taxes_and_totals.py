@@ -580,7 +580,7 @@ class calculate_taxes_and_totals(object):
 				item.cogs = flt(item.valuation_rate) * flt(item.stock_qty)
 				item.gross_profit = item.base_net_amount - item.cogs
 				item.per_gross_profit = item.gross_profit / item.base_net_amount * 100 if item.base_net_amount else 0
-				item.gross_profit_per_unit = item.gross_profit / flt(item.stock_qty) if flt(item.stock_qty) else 0
+				item.gross_profit_per_unit = item.gross_profit / flt(item.qty) if flt(item.qty) else 0
 
 				self.doc.total_cogs += item.cogs
 

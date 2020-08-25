@@ -694,7 +694,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 				item.cogs = flt(item.valuation_rate) * flt(item.stock_qty);
 				item.gross_profit = item.base_net_amount - item.cogs;
 				item.per_gross_profit = item.base_net_amount ? item.gross_profit / item.base_net_amount * 100 : 0;
-				item.gross_profit_per_unit = flt(item.stock_qty) ? item.gross_profit / flt(item.stock_qty) : 0;
+				item.gross_profit_per_unit = flt(item.qty) ? item.gross_profit / flt(item.qty) : 0;
 
 				me.frm.doc.total_cogs += item.cogs;
 			});
