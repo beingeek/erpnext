@@ -121,7 +121,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 			});
 		} else {
 			$.each(all_fields, function (i, f) {
-				me.frm.doc['selected_' + f] = null;
+				me.frm.doc['selected_' + f] = 0;
 			});
 		}
 
