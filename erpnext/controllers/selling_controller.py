@@ -62,6 +62,8 @@ class SellingController(StockController):
 		if self.authorize == "Required" and 'Price Authorization' not in frappe.get_roles():
 			frappe.throw(_("Price Override Authorization required"))
 
+		self.set_po_cost_from_date()
+
 	def set_missing_values(self, for_validate=False):
 
 		super(SellingController, self).set_missing_values(for_validate)
@@ -79,9 +81,16 @@ class SellingController(StockController):
 	def update_item_valuation_rates(self):
 		if self.can_get_gross_profit():
 			from erpnext.stock.report.batch_profitability.batch_profitability import update_item_batch_incoming_rate
-			update_item_batch_incoming_rate(self.items, from_date=self.get('po_cost_from_date'))
 
+			if self.docstatus == 0 and self.meta.has_field('po_cost_from_date'):
+				self.po_cost_from_date = frappe.utils.today()
+
+			update_item_batch_incoming_rate(self.items, from_date=self.get('po_cost_from_date'))
 			self.calculate_taxes_and_totals()
+
+	def set_po_cost_from_date(self):
+		if self.meta.has_field('po_cost_from_date'):
+			self.po_cost_from_date = frappe.utils.today()
 
 	def set_price_override_authorization(self):
 		from erpnext.stock.get_item_details import validate_price_change
