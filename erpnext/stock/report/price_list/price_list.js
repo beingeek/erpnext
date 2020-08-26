@@ -16,6 +16,8 @@ frappe.query_reports["Price List"] = {
 			fieldname: "valid_days",
 			label: __("Valid For Days"),
 			fieldtype: "Int",
+			default: 4,
+			auto_email_report_read_only: 1,
 			on_change: function () {
 				return false;
 			}
@@ -46,6 +48,7 @@ frappe.query_reports["Price List"] = {
 			label: __("Item"),
 			fieldtype: "Link",
 			options:"Item",
+			auto_email_report_ignore: 1
 		},
 		{
 			fieldname: "item_group",
@@ -59,6 +62,7 @@ frappe.query_reports["Price List"] = {
 			label: __("Brand"),
 			fieldtype: "Link",
 			options:"Brand",
+			auto_email_report_ignore: 1,
 			hidden: !cint(frappe.defaults.get_default("restrict_amounts_in_report_to_role") && frappe.user.has_role(frappe.defaults.get_default("restrict_amounts_in_report_to_role")))
 		},
 		{
@@ -66,14 +70,33 @@ frappe.query_reports["Price List"] = {
 			label: __("For Customer"),
 			fieldtype: "Link",
 			options:"Customer",
+			auto_email_report_reqd: 1,
 			on_change: function () {
-				var customer = frappe.query_report.get_filter_value('customer');
+				if (!(cur_dialog && cur_dialog.in_auto_repeat) && !frappe.query_report) {
+					return false;
+				}
+
+				var customer;
+				if (cur_dialog && cur_dialog.in_auto_repeat) {
+					customer = cur_dialog.get_value('customer');
+				} else {
+					customer = frappe.query_report.get_filter_value('customer');
+				}
+
 				if(customer) {
 					frappe.db.get_value("Customer", customer, "default_price_list", function(value) {
-						frappe.query_report.set_filter_value('selected_price_list', value["default_price_list"]);
+						if (cur_dialog && cur_dialog.in_auto_repeat) {
+							cur_dialog.set_value('selected_price_list', value["default_price_list"]);
+						} else {
+							frappe.query_report.set_filter_value('selected_price_list', value["default_price_list"]);
+						}
 					});
 				} else {
-					frappe.query_report.set_filter_value('selected_price_list', '');
+					if (cur_dialog && cur_dialog.in_auto_repeat) {
+						cur_dialog.set_value('selected_price_list', "");
+					} else {
+						frappe.query_report.set_filter_value('selected_price_list', '');
+					}
 				}
 			}
 		},
@@ -91,14 +114,17 @@ frappe.query_reports["Price List"] = {
 		{
 			fieldname: "filter_items_without_print",
 			label: __("Show Only Items For Print"),
-			fieldtype: "Check"
+			fieldtype: "Check",
+			auto_email_report_default: 1,
+			auto_email_report_read_only: 1
 		},
 		{
 			fieldname: "filter_price_list_by",
 			label: __("Filter Price List By"),
 			fieldtype: "Select",
 			options:"Enabled\nDisabled\nAll",
-			default:"Enabled"
+			default:"Enabled",
+			auto_email_report_ignore: 1
 		},
 		{
 			fieldname: "buying_selling",
@@ -249,12 +275,9 @@ frappe.query_reports["Price List"] = {
 			}
 
 			frappe.model.with_doctype('Auto Email Report', function() {
+				var filter_meta = frappe.query_reports[frappe.query_report.report_name].filters.map(d => Object.assign({}, d));
 				var filter_values = frappe.query_report.get_filter_values();
-				var filter_meta = frappe.query_reports[frappe.query_report.report_name].filters;
-				var filter_ignore_values = filter_meta.filter(d => d.auto_email_report_ignore);
-				$.each(filter_ignore_values, function (i, d) {
-					delete filter_values[d.fieldname];
-				});
+				frappe.clean_auto_email_report_filters(filter_meta, filter_values, 1, 1);
 
 				var doc = frappe.model.get_new_doc('Auto Email Report');
 				doc = Object.assign(doc,{
