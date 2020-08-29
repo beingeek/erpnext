@@ -984,7 +984,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 				this.calculate_taxes_and_totals();
 			} else if (!this.in_apply_price_list){
 				if (!cint(this.frm.doc.calculate_tax_on_company_currency)) {
-					this.set_actual_charges_based_on_currency();
+					this.set_actual_charges_based_on_currency(flt(this.frm.doc.conversion_rate));
 				}
 				// this.apply_price_list();
 			}
@@ -2203,7 +2203,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		var me = this;
 		if (this.frm.doc.docstatus===0 && (me.frm.doc.customer || me.frm.doc.supplier)) {
 
-			var existing_item_codes = me.frm.doc.items.map(d => d.item_code).filter(d => d);
+			var existing_item_codes = (me.frm.doc.items || []).map(d => d.item_code).filter(d => d);
 			var args = this._get_args("no_items");
 			delete args['items'];
 
