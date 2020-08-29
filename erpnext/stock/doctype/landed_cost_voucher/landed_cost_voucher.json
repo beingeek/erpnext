@@ -491,14 +491,17 @@
    "report_hide": 1
   },
   {
+   "bold": 1,
    "fieldname": "schedule_date",
    "fieldtype": "Date",
-   "label": "Arrival Date"
+   "in_standard_filter": 1,
+   "label": "Arrival Date",
+   "search_index": 1
   }
  ],
  "icon": "icon-usd",
  "is_submittable": 1,
- "modified": "2020-08-29 12:32:11.716045",
+ "modified": "2020-08-29 13:01:48.070460",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Landed Cost Voucher",
