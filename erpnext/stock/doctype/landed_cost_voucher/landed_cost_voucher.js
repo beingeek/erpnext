@@ -77,7 +77,7 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 
 		this.set_dynamic_labels();
 
-		if (doc.docstatus != 2) {
+		if (doc.docstatus < 2 && !doc.__islocal) {
 			me.frm.add_custom_button(__('Print Receiving Sheets'), () => {
 				me.bulk_print_documents("Purchase Order", "purchase_order", d => {
 					return d.name.toLowerCase().includes('receiving');
