@@ -71,15 +71,25 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 	},
 
 	refresh: function(doc) {
+		var me = this;
 		//erpnext.toggle_naming_series();
 		erpnext.hide_company();
+
 		this.set_dynamic_labels();
+
+		if (doc.docstatus != 2) {
+			me.frm.add_custom_button(__('Print Receiving Sheets'), () => {
+				me.bulk_print_documents("Purchase Order", "purchase_order", d => {
+					return d.name.toLowerCase().includes('receiving');
+				});
+			});
+		}
 
 		this.show_general_ledger();
 
 		if (doc.docstatus===1 && doc.outstanding_amount != 0 && frappe.model.can_create("Payment Entry")) {
-			cur_frm.add_custom_button(__('Payment'), this.make_payment_entry, __("Create"));
-			cur_frm.page.set_inner_btn_group_as_primary(__("Create"));
+			me.frm.add_custom_button(__('Payment'), this.make_payment_entry, __("Create"));
+			me.frm.page.set_inner_btn_group_as_primary(__("Create"));
 		}
 
 		this.load_manual_distribution_data();
@@ -716,6 +726,70 @@ erpnext.stock.LandedCostVoucher = erpnext.stock.StockController.extend({
 			}
 		});
 	},
+
+	bulk_print_documents: function (doctype, doc_fieldname, print_format_filter) {
+		let me = this;
+
+		if (!doctype || !doc_fieldname || !me.frm.doc.items || !me.frm.doc.items.length) {
+			return;
+		}
+
+		let docnames = me.frm.doc.items.filter(d => d[doc_fieldname]).map(d => d[doc_fieldname]);
+		docnames = [...new Set(docnames)];
+
+		if (!docnames.length) {
+			frappe.throw(__("Nothing to print"));
+		}
+
+		frappe.model.with_doctype(doctype, () => {
+			const meta = frappe.get_meta(doctype);
+			let available_print_formats = meta.__print_formats.filter(d => !d.raw_printing);
+			if (print_format_filter) {
+				available_print_formats = available_print_formats.filter(print_format_filter);
+			}
+			available_print_formats = available_print_formats.map(d => d.name);
+
+			let default_print_format = available_print_formats.includes(meta.default_print_format) ? meta.default_print_format : "";
+			if (!default_print_format && available_print_formats.length) {
+				default_print_format = available_print_formats[0];
+			}
+
+			const dialog = new frappe.ui.Dialog({
+				title: __('Print Documents'),
+				fields: [{
+					fieldtype: 'Check',
+					label: __('With Letterhead'),
+					fieldname: 'with_letterhead',
+					default: 1
+				},
+				{
+					fieldtype: 'Select',
+					label: __('Print Format'),
+					fieldname: 'print_sel',
+					options: available_print_formats,
+					default: default_print_format,
+					reqd: 1
+				}]
+			});
+
+			dialog.set_primary_action(__('Print'), args => {
+				if (!args) return;
+				const with_letterhead = args.with_letterhead ? 1 : 0;
+				const json_string = JSON.stringify(docnames);
+
+				const w = window.open('/api/method/frappe.utils.print_format.download_multi_pdf?' +
+					'doctype=' + encodeURIComponent(doctype) +
+					'&name=' + encodeURIComponent(json_string) +
+					'&format=' + encodeURIComponent(args.print_sel) +
+					'&no_letterhead=' + (with_letterhead ? '0' : '1'));
+				if (!w) {
+					frappe.msgprint(__('Please enable pop-ups'));
+				}
+			});
+
+			dialog.show();
+		});
+	}
 });
 
 cur_frm.script_manager.make(erpnext.stock.LandedCostVoucher);
