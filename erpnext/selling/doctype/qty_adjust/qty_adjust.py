@@ -133,7 +133,7 @@ def qty_adjust_so_item(sales_order_name, so_detail, adjusted_qty, backorder_qty=
 
 	sales_order.qty_adjust = 1
 	so_item.qty = flt(adjusted_qty)
-	so_item.stock_qty = flt(so_item.qty * so_item.conversion_factor, so_item.precision('stock_qty'))
+	so_item.stock_qty = flt(so_item.qty * so_item.conversion_factor)
 	so_item.boxes = flt(so_item.stock_qty, so_item.precision('boxes'))
 
 	sales_order.save()
