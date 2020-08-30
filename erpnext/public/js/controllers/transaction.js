@@ -269,14 +269,14 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 		if (me.frm.doc.docstatus === 1 && me.update_selected_item_fields) {
 			me.frm.fields_dict.items.grid.wrapper.on('click', '.grid-row-check', function(e) {
-				var $check = $(this);
-				var docname = $check.parents('.grid-row:first').attr('data-name');
-				me.frm.fields_dict.items.grid.grid_rows.forEach(row => {
-					if (row.doc.name != docname) {
-						row.doc.__checked = 0;
-						row.refresh_check();
-					}
-				});
+				// var $check = $(this);
+				// var docname = $check.parents('.grid-row:first').attr('data-name');
+				// me.frm.fields_dict.items.grid.grid_rows.forEach(row => {
+				// 	if (row.doc.name != docname) {
+				// 		row.doc.__checked = 0;
+				// 		row.refresh_check();
+				// 	}
+				// });
 
 				var checked = me.frm.fields_dict.items.grid.grid_rows.filter(row => row.doc.__checked);
 				if (checked.length === 1) {
