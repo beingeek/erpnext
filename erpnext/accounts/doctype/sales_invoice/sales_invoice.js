@@ -65,7 +65,7 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 
 		if(doc.update_stock) this.show_stock_ledger();
 
-		if (this.frm.doc.docstatus < 2 && !this.frm.doc.is_return) {
+		if (this.frm.doc.docstatus < 2 && !this.frm.doc.__islocal && !this.frm.doc.is_return) {
 			this.frm.add_custom_button(__('Print Box Labels'), () => this.show_print_item_labels_dialog('box'));
 			this.frm.add_custom_button(__('Print Pallet Labels'), () => this.show_print_pallet_label_dialog('pallet'));
 		}

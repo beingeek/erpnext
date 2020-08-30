@@ -140,7 +140,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			}
 		}
 
-		if (this.frm.doc.docstatus === 1) {
+		if (this.frm.doc.docstatus < 2 && !this.frm.doc.__islocal) {
 			this.frm.add_custom_button(__('Print Barcode Labels'), () => this.show_print_barcode_label_dialog());
 		}
 
