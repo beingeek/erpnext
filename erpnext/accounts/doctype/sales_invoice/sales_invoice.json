@@ -78,6 +78,8 @@
   "section_break_71",
   "selected_valuation_rate",
   "cb_73",
+  "selected_cogs_per_unit",
+  "cb_75",
   "selected_cogs",
   "column_break_73",
   "selected_gross_profit",
@@ -1945,7 +1947,7 @@
   {
    "fieldname": "selected_valuation_rate",
    "fieldtype": "Currency",
-   "label": "Cost / Unit",
+   "label": "Valuation Rate",
    "options": "Company:company:default_currency",
    "permlevel": 3,
    "read_only": 1
@@ -1959,12 +1961,24 @@
    "fieldtype": "Section Break",
    "label": "Gross Profit",
    "permlevel": 3
+  },
+  {
+   "fieldname": "selected_cogs_per_unit",
+   "fieldtype": "Currency",
+   "label": "Cost / Unit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_75",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 181,
  "is_submittable": 1,
- "modified": "2020-08-24 12:50:47.116476",
+ "modified": "2020-08-30 13:44:04.293032",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

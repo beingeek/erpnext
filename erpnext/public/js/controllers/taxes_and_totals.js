@@ -691,11 +691,12 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 			this.frm.doc.total_cogs = 0;
 
 			$.each(this.frm.doc.items || [], function (i, item) {
-				item.cogs = flt(item.valuation_rate) * flt(item.stock_qty);
+				item.cogs_per_unit = flt(item.valuation_rate) * flt(item.conversion_factor);
 				if (flt(item.alt_uom_size_std)) {
-					item.cogs *= flt(item.alt_uom_size) / flt(item.alt_uom_size_std);
+					item.cogs_per_unit *= flt(item.alt_uom_size) / flt(item.alt_uom_size_std);
 				}
 
+				item.cogs = item.cogs_per_unit * flt(item.qty);
 				item.gross_profit = item.base_net_amount - item.cogs;
 				item.per_gross_profit = item.base_net_amount ? item.gross_profit / item.base_net_amount * 100 : 0;
 				item.gross_profit_per_unit = flt(item.qty) ? item.gross_profit / flt(item.qty) : 0;
