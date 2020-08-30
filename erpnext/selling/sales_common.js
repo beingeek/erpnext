@@ -753,6 +753,14 @@ Customer Request`}
 	},
 
 	po_cost_from_date: function() {
+		this.update_item_valuation_rates();
+	},
+
+	po_cost_to_date: function() {
+		this.update_item_valuation_rates();
+	},
+
+	update_item_valuation_rates: function() {
 		if (this.can_get_gross_profit()) {
 			var me = this;
 			return frappe.call({

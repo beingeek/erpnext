@@ -87,6 +87,8 @@
   "per_gross_profit",
   "cb_75",
   "po_cost_from_date",
+  "cb_81",
+  "po_cost_to_date",
   "section_break_71",
   "selected_valuation_rate",
   "cb_73",
@@ -1769,12 +1771,22 @@
   {
    "fieldname": "cb_75",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cb_81",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "po_cost_to_date",
+   "fieldtype": "Date",
+   "label": "PO Cost To Date",
+   "permlevel": 3
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-08-29 06:58:52.568206",
+ "modified": "2020-08-30 12:46:03.745883",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

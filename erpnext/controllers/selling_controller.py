@@ -82,14 +82,14 @@ class SellingController(StockController):
 		if self.can_get_gross_profit():
 			from erpnext.stock.report.batch_profitability.batch_profitability import update_item_batch_incoming_rate
 
-			if self.docstatus == 0 and self.meta.has_field('po_cost_from_date'):
-				self.po_cost_from_date = frappe.utils.today()
+			if self.docstatus == 0:
+				self.set_po_cost_from_date()
 
-			update_item_batch_incoming_rate(self.items, from_date=self.get('po_cost_from_date'))
+			update_item_batch_incoming_rate(self.items, from_date=self.get('po_cost_from_date'), to_date=self.get('po_cost_to_date'))
 			self.calculate_taxes_and_totals()
 
-	def set_po_cost_from_date(self):
-		if self.meta.has_field('po_cost_from_date'):
+	def set_po_cost_from_date(self, force=0):
+		if self.meta.has_field('po_cost_from_date') and (force or not self.po_cost_from_date):
 			self.po_cost_from_date = frappe.utils.today()
 
 	def set_price_override_authorization(self):

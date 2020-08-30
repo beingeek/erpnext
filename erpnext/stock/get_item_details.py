@@ -143,7 +143,8 @@ def set_valuation_rate(out, args):
 
 		for bundle_item in bundled_items.items:
 			valuation_rate += flt(get_valuation_rate(bundle_item.item_code, batch_no=args.get('batch_no'),
-				company=args.company, warehouse=out.get("warehouse"), from_date=args.get('po_cost_from_date'))\
+				company=args.company, warehouse=out.get("warehouse"),
+				from_date=args.get('po_cost_from_date'), to_date=args.get('po_cost_to_date'))\
 					.get("valuation_rate") * bundle_item.qty)
 
 		out.update({
@@ -152,7 +153,8 @@ def set_valuation_rate(out, args):
 
 	else:
 		out.update(get_valuation_rate(args.item_code, batch_no=args.get('batch_no'),
-			company=args.company, warehouse=out.get("warehouse"), from_date=args.get('po_cost_from_date')))
+			company=args.company, warehouse=out.get("warehouse"),
+			from_date=args.get('po_cost_from_date'), to_date=args.get('po_cost_to_date')))
 
 
 def process_args(args):
