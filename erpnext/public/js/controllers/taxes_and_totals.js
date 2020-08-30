@@ -692,8 +692,8 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 
 			$.each(this.frm.doc.items || [], function (i, item) {
 				item.cogs = flt(item.valuation_rate) * flt(item.stock_qty);
-				if (flt(item.alt_uom_qty_std)) {
-					item.cogs *= flt(item.alt_uom_qty) / flt(item.alt_uom_qty_std);
+				if (flt(item.alt_uom_size_std)) {
+					item.cogs *= flt(item.alt_uom_size) / flt(item.alt_uom_size_std);
 				}
 
 				item.gross_profit = item.base_net_amount - item.cogs;
