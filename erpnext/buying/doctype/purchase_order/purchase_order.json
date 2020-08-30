@@ -1458,8 +1458,7 @@
    "fieldname": "b3_transaction_no",
    "fieldtype": "Barcode",
    "label": "B3 Transaction Number",
-   "options": "{\"format\": \"CODE128B\", \"height\": 40, \"width\": 1, \"displayValue\": false, \"margin\": 0}",
-   "set_only_once": 1
+   "options": "{\"format\": \"CODE128B\", \"height\": 40, \"width\": 1, \"displayValue\": false, \"margin\": 0}"
   },
   {
    "fieldname": "get_b3_transaction_number",
@@ -1475,7 +1474,7 @@
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-08-30 13:06:58.019410",
+ "modified": "2020-08-24 05:52:36.543800",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",
