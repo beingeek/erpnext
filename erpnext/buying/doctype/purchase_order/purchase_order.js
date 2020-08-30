@@ -141,7 +141,11 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 		}
 
 		if (this.frm.doc.docstatus < 2 && !this.frm.doc.__islocal) {
-			this.frm.add_custom_button(__('Print Barcode Labels'), () => this.show_print_barcode_label_dialog());
+			this.frm.add_custom_button(__('Print Barcode Labels'), () => this.show_print_barcode_label_dialog(() => {
+				if (!this.frm.doc.b3_transaction_no) {
+					frappe.throw(__("B3 Transaction No is not set"));
+				}
+			}));
 		}
 
 		this.frm.set_df_property("drop_ship", "hidden", !is_drop_ship);
@@ -307,7 +311,11 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 		}
 	},
 
-	show_print_barcode_label_dialog: function() {
+	show_print_barcode_label_dialog: function(validation) {
+		if (validation) {
+			validation(this.frm);
+		}
+
 		let me = this;
 		let available_print_formats = me.frm.meta.__print_formats.filter(d => d.name.toLowerCase().includes('barcode')).map(d => d.name);
 		let default_print_format = available_print_formats ? available_print_formats[0] : "";
