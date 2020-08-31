@@ -37,6 +37,7 @@
   "amended_from",
   "b3_information_section",
   "b3_transaction_no",
+  "b3_transaction_no_barcode",
   "get_b3_transaction_number",
   "column_break_38",
   "carrier_code",
@@ -1456,11 +1457,13 @@
   },
   {
    "fieldname": "b3_transaction_no",
-   "fieldtype": "Barcode",
+   "fieldtype": "Data",
    "label": "B3 Transaction Number",
-   "options": "{\"format\": \"CODE128B\", \"height\": 40, \"width\": 1, \"displayValue\": false, \"margin\": 0}"
+   "no_copy": 1,
+   "read_only": 1
   },
   {
+   "depends_on": "eval:!doc.b3_transaction_no",
    "fieldname": "get_b3_transaction_number",
    "fieldtype": "Button",
    "label": "Get B3 Transaction Number"
@@ -1469,12 +1472,21 @@
    "fieldname": "b3_warehouse_no",
    "fieldtype": "Data",
    "label": "Warehouse No"
+  },
+  {
+   "fieldname": "b3_transaction_no_barcode",
+   "fieldtype": "Barcode",
+   "label": "B3 Transaction Barcode",
+   "no_copy": 1,
+   "options": "{\"format\": \"CODE128B\", \"height\": 40, \"width\": 1, \"displayValue\": false, \"margin\": 0}",
+   "read_only": 1,
+   "report_hide": 1
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-08-24 05:52:36.543800",
+ "modified": "2020-08-31 09:12:18.888549",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",

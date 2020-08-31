@@ -684,3 +684,4 @@ erpnext.patches.v12_0.pricing_configuration_default_values
 erpnext.patches.v12_0.pricing_configuration_default_values_2
 erpnext.patches.v12_0.fix_repack_entry_expense_account
 erpnext.patches.v12_0.reset_ledger_entry_index
+erpnext.patches.v12_0.rename_b3_transaction_no

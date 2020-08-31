@@ -781,3 +781,7 @@ frappe.ui.form.on("Purchase Order", "get_b3_transaction_number", function (frm) 
 		}
 	});
 });
+
+frappe.ui.form.on("Purchase Order", "b3_transaction_no", function (frm) {
+	frm.set_value("b3_transaction_no_barcode", frm.fields_dict.b3_transaction_no_barcode.parse(frm.doc.b3_transaction_no));
+});

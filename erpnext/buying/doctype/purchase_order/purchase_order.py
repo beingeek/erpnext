@@ -81,22 +81,12 @@ class PurchaseOrder(BuyingController):
 				frappe.throw(_("Airway Bill No must be in the format ####-####"))
 
 		if self.b3_transaction_no:
-			b3_transaction_no = self.get_b3_transaction_no()
-			if len(b3_transaction_no) != 14 or not b3_transaction_no.isdecimal():
+			if len(self.b3_transaction_no) != 14 or not self.b3_transaction_no.isdecimal():
 				frappe.throw(_("B3 Transaction Number must be 14 digits long"))
 
-			check_digit = cstr(calculate_b3_transaction_no_check_digit(b3_transaction_no[:13]))
-			if check_digit != b3_transaction_no[13]:
+			check_digit = cstr(calculate_b3_transaction_no_check_digit(self.b3_transaction_no[:13]))
+			if check_digit != self.b3_transaction_no[13]:
 				frappe.throw(_("Invalid B3 Transaction Number Check Digit"))
-
-	def get_b3_transaction_no(self):
-		import re
-		if not self.b3_transaction_no:
-			return ""
-		else:
-			b3_transaction_no = re.search('data-barcode-value="(.*?)"', self.b3_transaction_no)
-			b3_transaction_no = b3_transaction_no.group(1)
-			return b3_transaction_no
 	
 	def update_lcv_values(self):
 		lcvs_to_update = frappe.db.sql_list("""
@@ -111,18 +101,14 @@ class PurchaseOrder(BuyingController):
 			doc.calculate_taxes_and_totals()
 			doc.save()
 
-
-
 	def before_print(self):
 		super(PurchaseOrder, self).before_print()
 
 		self.items_by_hs_code = {}
 		self.items_without_hs_code = [d for d in self.items if not frappe.get_cached_value('Item', d.item_code, 'customs_tariff_number')]
 
-		self.b3_transaction_no_value = self.get_b3_transaction_no()
-
-		if self.b3_transaction_no_value:
-			self.b3_transaction_no_formatted = self.b3_transaction_no_value[0:5] + "-" + self.b3_transaction_no_value[5:] + " / " + self.company
+		if self.b3_transaction_no:
+			self.b3_transaction_no_formatted = "{0}-{1} / {2}".format(self.b3_transaction_no[0:5], self.b3_transaction_no[5:], self.company)
 		else:
 			self.b3_transaction_no_formatted = ""
 
@@ -136,7 +122,7 @@ class PurchaseOrder(BuyingController):
 			if d.item_code:
 				item_doc = frappe.get_cached_doc("Item", d.item_code)
 				country_code = frappe.get_cached_value("Country", item_doc.country_of_origin, "code").upper() if item_doc.country_of_origin else ""
- 
+
 				current_row = self.items_by_hs_code.setdefault((item_doc.customs_tariff_number, country_code), empty_dict.copy())
 				for fn in add_fields:
 					current_row[fn] += flt(d.get(fn))
