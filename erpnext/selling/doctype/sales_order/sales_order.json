@@ -91,6 +91,8 @@
   "po_cost_to_date",
   "section_break_71",
   "selected_valuation_rate",
+  "column_break_85",
+  "selected_cogs_per_unit",
   "cb_73",
   "selected_cogs",
   "column_break_73",
@@ -1747,7 +1749,7 @@
   {
    "fieldname": "selected_valuation_rate",
    "fieldtype": "Currency",
-   "label": "Cost / Unit",
+   "label": "Valuation Rate",
    "options": "Company:company:default_currency",
    "permlevel": 3,
    "read_only": 1
@@ -1781,12 +1783,24 @@
    "fieldtype": "Date",
    "label": "PO Cost To Date",
    "permlevel": 3
+  },
+  {
+   "fieldname": "column_break_85",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "selected_cogs_per_unit",
+   "fieldtype": "Currency",
+   "label": "Cost / Unit",
+   "options": "Company:company:default_currency",
+   "permlevel": 3,
+   "read_only": 1
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-08-30 12:46:03.745883",
+ "modified": "2020-08-31 04:39:02.516185",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
