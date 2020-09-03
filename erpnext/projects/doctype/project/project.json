@@ -444,7 +444,7 @@
  "icon": "fa fa-puzzle-piece",
  "idx": 29,
  "max_attachments": 4,
- "modified": "2020-04-09 14:17:15.524529",
+ "modified": "2020-09-02 16:34:58.535462",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
@@ -478,6 +478,10 @@
    "role": "Projects Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Sales User"
   }
  ],
  "quick_entry": 1,
