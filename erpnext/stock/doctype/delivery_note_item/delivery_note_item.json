@@ -861,7 +861,7 @@
    "fieldname": "dn_detail",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "Against Sales Order Item",
+   "label": "Against Delivery Note Item",
    "read_only": 1
   },
   {
@@ -945,7 +945,7 @@
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-06-19 12:13:17.104280",
+ "modified": "2020-09-09 06:10:52.591942",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note Item",

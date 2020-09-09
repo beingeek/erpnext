@@ -125,6 +125,9 @@
   "edit_references",
   "sales_order",
   "so_detail",
+  "si_detail",
+  "returned_qty",
+  "base_returned_amount",
   "column_break_74",
   "delivery_note",
   "dn_detail",
@@ -1105,11 +1108,38 @@
    "options": "Company:company:default_currency",
    "permlevel": 3,
    "read_only": 1
+  },
+  {
+   "fieldname": "si_detail",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Against Sales Invoice Item",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "returned_qty",
+   "fieldtype": "Float",
+   "label": "Returned Qty",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_returned_amount",
+   "fieldtype": "Currency",
+   "label": "Returned Amount (Company Currency)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
- "modified": "2020-08-22 13:56:29.318095",
+ "modified": "2020-09-09 06:49:33.704674",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",
