@@ -686,3 +686,4 @@ erpnext.patches.v12_0.fix_repack_entry_expense_account
 erpnext.patches.v12_0.reset_ledger_entry_index
 erpnext.patches.v12_0.rename_b3_transaction_no
 erpnext.patches.v12_0.update_pricing_rule_table
+erpnext.patches.v12_0.update_sales_invoice_return_si_detail
