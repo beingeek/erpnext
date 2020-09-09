@@ -1897,6 +1897,7 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval:!doc.is_return",
    "fieldname": "section_break_71",
    "fieldtype": "Section Break",
    "permlevel": 3
@@ -1957,6 +1958,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "depends_on": "eval:!doc.is_return",
    "fieldname": "sec_gross_profit",
    "fieldtype": "Section Break",
    "label": "Gross Profit",
@@ -1978,7 +1980,7 @@
  "icon": "fa fa-file-text",
  "idx": 181,
  "is_submittable": 1,
- "modified": "2020-08-30 13:44:04.293032",
+ "modified": "2020-09-02 09:06:34.758083",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
