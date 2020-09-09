@@ -582,8 +582,8 @@ class calculate_taxes_and_totals(object):
 				if flt(item.get('alt_uom_size_std')):
 					item.cogs_per_unit *= flt(item.alt_uom_size) / flt(item.alt_uom_size_std)
 
-				item.revenue = item.base_net_amount - flt(item.base_returned_amount)
-				item.cogs_qty = flt(item.qty) - flt(item.returned_qty)
+				item.revenue = item.base_net_amount - flt(item.get('base_returned_amount'))
+				item.cogs_qty = flt(item.qty) - flt(item.get('returned_qty'))
 				item.cogs = item.cogs_per_unit * item.cogs_qty
 				item.gross_profit = item.revenue - item.cogs
 				item.per_gross_profit = item.gross_profit / item.revenue * 100 if item.revenue else 0
