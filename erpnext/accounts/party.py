@@ -637,7 +637,7 @@ def get_partywise_advanced_payment_amount(party_type, posting_date = None, futur
 @frappe.whitelist()
 def get_party_default_items(args, existing_item_codes=None, with_valuation_rates=False):
 	from erpnext.stock.get_item_details import get_item_details
-	from erpnext.stock.report.batch_profitability.batch_profitability import update_item_batch_incoming_rate
+	from erpnext.accounts.report.gross_profit.gross_profit import update_item_batch_incoming_rate
 	from collections import OrderedDict
 
 	if not existing_item_codes:

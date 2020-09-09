@@ -80,7 +80,7 @@ class SellingController(StockController):
 
 	def update_item_valuation_rates(self):
 		if self.can_get_gross_profit():
-			from erpnext.stock.report.batch_profitability.batch_profitability import update_item_batch_incoming_rate
+			from erpnext.accounts.report.gross_profit.gross_profit import update_item_batch_incoming_rate
 
 			if self.docstatus == 0:
 				self.set_po_cost_from_date()
