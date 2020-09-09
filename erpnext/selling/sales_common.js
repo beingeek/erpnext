@@ -10,7 +10,7 @@ cur_frm.email_field = "contact_email";
 
 frappe.provide("erpnext.selling");
 erpnext.selling.SellingController = erpnext.TransactionController.extend({
-	item_sales_gross_profit_fields: ["valuation_rate", "cogs_per_unit", "cogs", "gross_profit", "gross_profit_per_unit", "per_gross_profit"],
+	item_sales_gross_profit_fields: ["base_returned_amount", "cogs_per_unit", "cogs", "gross_profit", "gross_profit_per_unit", "per_gross_profit"],
 
 	setup: function() {
 		this._super();

@@ -574,6 +574,7 @@ class calculate_taxes_and_totals(object):
 			return
 
 		if self.doc.doctype in ('Sales Order', 'Sales Invoice'):
+			self.doc.total_revenue = 0
 			self.doc.total_cogs = 0
 
 			for item in self.doc.items:
@@ -581,15 +582,18 @@ class calculate_taxes_and_totals(object):
 				if flt(item.get('alt_uom_size_std')):
 					item.cogs_per_unit *= flt(item.alt_uom_size) / flt(item.alt_uom_size_std)
 
-				item.cogs = item.cogs_per_unit * flt(item.qty)
-				item.gross_profit = item.base_net_amount - item.cogs
-				item.per_gross_profit = item.gross_profit / item.base_net_amount * 100 if item.base_net_amount else 0
-				item.gross_profit_per_unit = item.gross_profit / flt(item.qty) if flt(item.qty) else 0
+				item.revenue = item.base_net_amount - flt(item.base_returned_amount)
+				item.cogs_qty = flt(item.qty) - flt(item.returned_qty)
+				item.cogs = item.cogs_per_unit * item.cogs_qty
+				item.gross_profit = item.revenue - item.cogs
+				item.per_gross_profit = item.gross_profit / item.revenue * 100 if item.revenue else 0
+				item.gross_profit_per_unit = item.gross_profit / item.cogs_qty if item.cogs_qty else 0
 
+				self.doc.total_revenue += item.revenue
 				self.doc.total_cogs += item.cogs
 
-			self.doc.total_gross_profit = self.doc.base_net_total - self.doc.total_cogs
-			self.doc.per_gross_profit = self.doc.total_gross_profit / self.doc.base_net_total * 100 if self.doc.base_net_total else 0
+			self.doc.total_gross_profit = self.doc.total_revenue - self.doc.total_cogs
+			self.doc.per_gross_profit = self.doc.total_gross_profit / self.doc.total_revenue * 100 if self.doc.total_revenue else 0
 
 	def set_rounded_total(self):
 		if self.doc.meta.get_field("rounded_total"):
