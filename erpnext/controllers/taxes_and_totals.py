@@ -589,8 +589,9 @@ class calculate_taxes_and_totals(object):
 				item.per_gross_profit = item.gross_profit / item.revenue * 100 if item.revenue else 0
 				item.gross_profit_per_unit = item.gross_profit / item.cogs_qty if item.cogs_qty else 0
 
-				self.doc.total_revenue += item.revenue
-				self.doc.total_cogs += item.cogs
+				if item.cogs:
+					self.doc.total_revenue += item.revenue
+					self.doc.total_cogs += item.cogs
 
 			self.doc.total_gross_profit = self.doc.total_revenue - self.doc.total_cogs
 			self.doc.per_gross_profit = self.doc.total_gross_profit / self.doc.total_revenue * 100 if self.doc.total_revenue else 0
