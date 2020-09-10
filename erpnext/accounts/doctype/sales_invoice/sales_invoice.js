@@ -12,6 +12,25 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 	setup: function(doc) {
 		this.setup_posting_date_time_check();
 		this._super(doc);
+
+		var me = this;
+		me.frm.set_indicator_formatter('item_code', function(doc) {
+			if (me.frm.doc.docstatus == 0 && me.frm.doc.update_stock && !me.frm.doc.is_return) {
+				if (!doc.actual_qty) {
+					return "red";
+				} else if (doc.stock_qty > doc.actual_qty) {
+					return "orange";
+				} else {
+					return "green";
+				}
+			} else {
+				if (doc.returned_qty) {
+					return "yellow";
+				} else if (doc.base_returned_amount) {
+					return "darkgrey";
+				}
+			}
+		});
 	},
 	onload: function() {
 		var me = this;
