@@ -11,7 +11,7 @@ def execute():
 
 	for dt, detail_field in [('Sales Invoice', 'si_detail')]:
 		si_rows_to_update = {}
-		returns = frappe.get_all(dt, filters={"is_return": 1}, fields=['name', 'return_against', 'update_stock'])
+		returns = frappe.get_all(dt, filters={"is_return": 1}, fields=['name', 'return_against', 'update_stock', 'docstatus'])
 
 		for return_doc in returns:
 			source_details = frappe.db.sql("""
@@ -45,10 +45,11 @@ def execute():
 						frappe.db.sql("update `tab{0} Item` set {1} = %s where name = %s".format(dt, detail_field),
 							[valid_source.name, return_row.name])
 
-						update_dict = si_rows_to_update.setdefault(valid_source.name, frappe._dict({"returned_qty": 0, "base_returned_amount": 0}))
-						update_dict.base_returned_amount -= return_row.base_net_amount
-						if return_doc.update_stock:
-							update_dict.returned_qty -= return_row.qty
+						if return_doc.docstatus == 1:
+							update_dict = si_rows_to_update.setdefault(valid_source.name, frappe._dict({"returned_qty": 0, "base_returned_amount": 0}))
+							update_dict.base_returned_amount -= return_row.base_net_amount
+							if return_doc.update_stock:
+								update_dict.returned_qty -= return_row.qty
 					else:
 						print("Valid Source not found for Item {0} in {1} return against {2}".format(return_row.item_code, return_doc.name, return_doc.return_against))
 
