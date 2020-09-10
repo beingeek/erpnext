@@ -8,16 +8,29 @@
   "dt",
   "dn",
   "customer",
-  "new_item_code",
+  "item_code",
+  "batch_no",
   "column_break_6",
   "qty",
   "allocated_qty",
   "back_order_qty",
   "difference",
   "conversion_factor",
+  "alt_uom_size",
+  "alt_uom_size_std",
   "back_order_date",
+  "section_break_15",
+  "valuation_rate",
+  "cogs_per_unit",
+  "cogs",
+  "column_break_21",
+  "base_net_amount",
+  "gross_profit",
+  "gross_profit_per_unit",
+  "per_gross_profit",
+  "section_break_26",
   "so_detail",
-  "docstatus"
+  "doc_status"
  ],
  "fields": [
   {
@@ -52,14 +65,6 @@
    "label": "Customer",
    "options": "Customer",
    "read_only": 1
-  },
-  {
-   "columns": 1,
-   "fieldname": "new_item_code",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "New Item",
-   "options": "Item"
   },
   {
    "fieldname": "column_break_6",
@@ -116,15 +121,100 @@
    "label": "SO Detail"
   },
   {
-   "fieldname": "docstatus",
+   "fieldname": "batch_no",
+   "fieldtype": "Link",
+   "label": "Batch No",
+   "options": "Batch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "doc_status",
    "fieldtype": "Int",
    "hidden": 1,
    "label": "Docstatus",
    "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "per_gross_profit",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Profit %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_15",
+   "fieldtype": "Section Break",
+   "label": "Gross Profit"
+  },
+  {
+   "fieldname": "valuation_rate",
+   "fieldtype": "Currency",
+   "label": "Valuation Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "alt_uom_size",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Per Unit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "alt_uom_size_std",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Per Unit (Standard)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cogs_per_unit",
+   "fieldtype": "Currency",
+   "label": "Cost / Unit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cogs",
+   "fieldtype": "Currency",
+   "label": "Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_21",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "base_net_amount",
+   "fieldtype": "Currency",
+   "label": "Revenue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gross_profit",
+   "fieldtype": "Currency",
+   "label": "Gross Profit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gross_profit_per_unit",
+   "fieldtype": "Currency",
+   "label": "Gross Profit / Unit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_26",
+   "fieldtype": "Section Break"
   }
  ],
  "istable": 1,
- "modified": "2020-06-04 06:53:38.948884",
+ "modified": "2020-09-10 05:16:47.518131",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Qty Adjust Detail",

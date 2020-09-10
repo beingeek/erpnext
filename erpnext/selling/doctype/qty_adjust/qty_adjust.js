@@ -49,33 +49,12 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 		$(".grid-footer", me.frm.fields_dict.sales_orders.$wrapper).hide().addClass("hidden");
 
 		me.frm.fields_dict.sales_orders.grid.wrapper.on('click', '.grid-row-check', function(e) {
-			var checked = me.frm.fields_dict.sales_orders.grid.grid_rows.filter(row => row.doc.__checked);
-			var checked_new_item = me.frm.fields_dict.sales_orders.grid.grid_rows.filter(row => row.doc.__checked && row.doc.new_item_code);
-			var unchecked = me.frm.fields_dict.sales_orders.grid.grid_rows.filter(row => !row.doc.__checked);
-
-			if (checked_new_item && checked_new_item.length) {
-				var new_item_code = checked_new_item[0].doc.new_item_code;
-				$.each(checked || [], function(i, row) {
-					if (me.is_row_editable(row.doc)) {
-						row.doc.new_item_code = new_item_code;
-						row.refresh_field("new_item_code");
-					}
-				});
-			}
-
-			$.each(unchecked || [], function(i, row) {
-				if (me.is_row_editable(row.doc)) {
-					row.doc.new_item_code = "";
-					row.refresh_field("new_item_code");
-				}
-			});
-
 			me.calculate_totals();
 		});
 	},
 
 	is_row_editable: function(row) {
-		return Boolean(row.docstatus === 0 && row.dt === "Sales Order");
+		return Boolean(row.doc_status === 0 && row.dt === "Sales Order");
 	},
 
 	set_row_editable: function(grid_row, e) {
@@ -167,8 +146,8 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 	set_po_qty_labels: function() {
 		var from_date = this.frm.doc.from_date || frappe.datetime.now_date();
 		for (var i = 0; i < 5; ++i) {
-			var from_date = new frappe.datetime.datetime(frappe.datetime.add_days(from_date, i));
-			var day = from_date.format("ddd");
+			var date = new frappe.datetime.datetime(frappe.datetime.add_days(from_date, i));
+			var day = date.format("ddd");
 			this.frm.fields_dict["po_day_"+(i+1)].set_label("PO " + day);
 			// this.frm.fields_dict["so_day_"+(i+1)].set_label("SO " + day);
 		}
@@ -274,6 +253,9 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 			return me.frm.call({
 				method: "qty_adjust_sales_orders",
 				doc: me.frm.doc,
+				args: {
+					checked_rows: me.frm.fields_dict.sales_orders.grid.grid_rows.filter(row => row.doc.__checked).map(row => row.doc.name)
+				},
 				freeze: true,
 				callback: function(r) {
 					if(!r.exc) {

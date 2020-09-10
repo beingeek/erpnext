@@ -13,10 +13,18 @@ import json
 
 
 class QtyAdjust(Document):
-	def qty_adjust_sales_orders(self):
-		sales_orders = list(filter(lambda d: d.docstatus == 0 and d.dt == "Sales Order", self.sales_orders))
+	def qty_adjust_sales_orders(self, checked_rows=None):
+		sales_orders = list(filter(lambda d: d.doc_status == 0 and d.dt == "Sales Order", self.sales_orders))
+
+		if isinstance(checked_rows, string_types):
+			checked_rows = json.loads(checked_rows)
 
 		# Validate
+		if self.new_item_code and self.item_code == self.new_item_code:
+			frappe.throw(_("New Item Code is the same as the selected Item Code"))
+		if self.new_item_code and not checked_rows:
+			frappe.throw(_("New Item Code is set but no rows are check marked. Please check rows to change Item Code for or remove 'Change Item Code'"))
+
 		for d in sales_orders:
 			if flt(d.back_order_qty) and not d.back_order_date:
 				frappe.throw(_("Row #{0}: Please select Back Order Date for {1}").format(d.idx, d.dn))
@@ -25,9 +33,10 @@ class QtyAdjust(Document):
 					.format(d.idx, d.get_formatted("back_order_date"), d.get_formatted("date"), d.dn))
 
 		# Change Item Code
-		for d in sales_orders:
-			if d.new_item_code and d.new_item_code != self.item_code:
-				change_item_code(d.dn, d.so_detail, d.new_item_code, self.item_code)
+		if self.new_item_code and checked_rows:
+			for d in sales_orders:
+				if d.name in checked_rows:
+					change_item_code(d.dn, d.so_detail, self.new_item_code, self.item_code)
 
 		# Adjust
 		for d in sales_orders:
@@ -91,8 +100,9 @@ def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
 	date_condition_si = date_condition.replace("so.", "sinv.")
 
 	so_data = frappe.db.sql("""
-		select 'Sales Order' as dt, so.name as dn, so.docstatus, so.customer, so.delivery_date as date, i.name as so_detail,
-			(i.qty - ifnull(i.delivered_qty, 0)) * i.conversion_factor as qty, i.conversion_factor
+		select 'Sales Order' as dt, so.name as dn, so.docstatus as doc_status, so.customer, so.delivery_date as date,
+			i.name as so_detail, (i.qty - ifnull(i.delivered_qty, 0)) * i.conversion_factor as qty, i.conversion_factor,
+			i.item_code, '' as batch_no, i.alt_uom_size, i.alt_uom_size_std, i.base_net_amount, i.qty as actual_qty
 		from `tabSales Order Item` i
 		inner join `tabSales Order` so on so.name = i.parent
 		where so.docstatus < 2 and ifnull(i.delivered_qty, 0) < ifnull(i.qty, 0) and so.status != 'Closed'
@@ -100,8 +110,9 @@ def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
 		
 		union all
 		
-		select 'Sales Invoice' as dt, sinv.name as dn, sinv.docstatus, sinv.customer, sinv.delivery_date as date, i.name as so_detail,
-			i.stock_qty as qty, i.conversion_factor
+		select 'Sales Invoice' as dt, sinv.name as dn, sinv.docstatus as doc_status, sinv.customer, sinv.delivery_date as date,
+			i.name as so_detail, i.stock_qty as qty, i.conversion_factor,
+			i.item_code, i.batch_no, i.alt_uom_size, i.alt_uom_size_std, i.base_net_amount, i.qty as actual_qty
 		from `tabSales Invoice Item` i
 		inner join `tabSales Invoice` sinv on sinv.name = i.parent
 		where sinv.docstatus = 0 and ifnull(i.sales_order, '') = ''
@@ -110,8 +121,26 @@ def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
 		order by date, dt, dn
 	""".format(date_condition, date_condition_si), {"from_date": from_date, "to_date": to_date, "item_code": item_code}, as_dict=1)
 
+	update_gross_profit_on_sales_orders(so_data, from_date, to_date)
+
 	return so_data
 
+
+def update_gross_profit_on_sales_orders(so_data, from_date, to_date):
+	from erpnext.accounts.report.gross_profit.gross_profit import update_item_batch_incoming_rate
+	update_item_batch_incoming_rate(so_data, from_date, to_date)
+
+	for d in so_data:
+		d.cogs_per_unit = flt(d.valuation_rate) * flt(d.conversion_factor)
+		if flt(d.get('alt_uom_size_std')):
+			d.cogs_per_unit *= flt(d.alt_uom_size) / flt(d.alt_uom_size_std)
+
+		d.revenue = d.base_net_amount
+		d.cogs_qty = flt(d.actual_qty)
+		d.cogs = d.cogs_per_unit * d.cogs_qty
+		d.gross_profit = d.revenue - d.cogs
+		d.per_gross_profit = d.gross_profit / d.revenue * 100 if d.revenue else 0
+		d.gross_profit_per_unit = d.gross_profit / d.cogs_qty if d.cogs_qty else 0
 
 @frappe.whitelist()
 def qty_adjust_so_item(sales_order_name, so_detail, adjusted_qty, backorder_qty=0, backorder_date=None):
