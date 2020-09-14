@@ -40,7 +40,7 @@ class GrossProfitGenerator(object):
 
 		self.data = frappe.db.sql("""
 			select
-				si.name as parent, si_item.name,
+				si.name as parent, si_item.name, si_item.idx,
 				si.posting_date, si.posting_time,
 				si.customer, c.customer_group, c.territory,
 				si_item.item_code, si_item.item_name, si_item.batch_no, si_item.uom,
@@ -104,7 +104,12 @@ class GrossProfitGenerator(object):
 		if len(self.group_by) <= 1:
 			return data
 
-		return group_report_data(data, self.group_by, calculate_totals=self.calculate_group_totals)
+		def sort_group(group_object, group_by_map):
+			group_object.per_gross_profit = group_object.totals.per_gross_profit
+			group_object.rows = sorted(group_object.rows, key=lambda d: -flt(d.per_gross_profit))
+
+		return group_report_data(data, self.group_by, calculate_totals=self.calculate_group_totals,
+			postprocess_group=sort_group)
 
 	def calculate_group_totals(self, data, group_field, group_value, grouped_by):
 		total_fields = [
