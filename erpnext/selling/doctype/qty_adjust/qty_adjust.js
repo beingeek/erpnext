@@ -92,6 +92,10 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 		this.get_sales_orders_for_qty_adjust();
 	},
 
+	sort_by: function () {
+		this.get_sales_orders_for_qty_adjust();
+	},
+
 	allocated_qty: function() {
 		this.calculate_totals();
 	},
@@ -200,7 +204,8 @@ erpnext.selling.QtyAdjustController = frappe.ui.form.Controller.extend({
 				args: {
 					from_date: me.frm.doc.from_date,
 					to_date: me.frm.doc.to_date,
-					item_code: me.frm.doc.item_code
+					item_code: me.frm.doc.item_code,
+					sort_by: me.frm.doc.sort_by
 				},
 				callback: function(r) {
 					if(!r.exc) {

@@ -93,7 +93,7 @@ def change_item_code(sales_order, so_detail, new_item_code, old_item_code):
 
 
 @frappe.whitelist()
-def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
+def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None, sort_by="Date"):
 	date_condition = "and so.delivery_date >= %(from_date)s"
 	if to_date:
 		date_condition += "and so.delivery_date <= %(to_date)s"
@@ -117,12 +117,21 @@ def get_sales_orders_for_qty_adjust(item_code, from_date, to_date=None):
 		inner join `tabSales Invoice` sinv on sinv.name = i.parent
 		where sinv.docstatus = 0 and ifnull(i.sales_order, '') = ''
 			and i.item_code = %(item_code)s {1}
-
-		order by date, dt, dn
 	""".format(date_condition, date_condition_si), {"from_date": from_date, "to_date": to_date, "item_code": item_code}, as_dict=1)
 
 	update_gross_profit_on_sales_orders(so_data, from_date, to_date)
 
+	def sort_key(d):
+		if sort_by == "Profit Margin (Ascending)":
+			return d.per_gross_profit, d.dt, d.dn
+		elif sort_by == "Customer (Ascending)":
+			return d.customer, d.date, d.dt, d.dn
+		elif sort_by == "Qty (Descending)":
+			return -d.qty, d.dt, d.dn
+		else:
+			return d.date, d.dt, d.dn
+
+	so_data = sorted(so_data, key=sort_key)
 	return so_data
 
 
