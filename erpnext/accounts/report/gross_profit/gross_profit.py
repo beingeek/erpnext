@@ -54,7 +54,7 @@ class GrossProfitGenerator(object):
 			left join `tabItem` i on i.name = si_item.item_code
 			where
 				si.docstatus = 1 and si.is_return = 0 and si.is_opening != 'Yes' {conditions}
-			order by si.posting_date desc, si.posting_time desc, si.name desc
+			order by si.posting_date desc, si.posting_time desc, si.name desc, si_item.idx asc
 		""".format(conditions=conditions), self.filters, as_dict=1)
 
 	def prepare_data(self):
@@ -78,6 +78,7 @@ class GrossProfitGenerator(object):
 			item.cogs = item.cogs_per_unit * item.cogs_qty
 
 			self.postprocess_row(item)
+			item.gross_profit_per_unit = item.gross_profit / item.cogs_qty if item.cogs_qty else 0
 
 	def get_grouped_data(self):
 		data = self.data
@@ -107,7 +108,7 @@ class GrossProfitGenerator(object):
 
 	def calculate_group_totals(self, data, group_field, group_value, grouped_by):
 		total_fields = [
-			'qty', 'stock_qty', 'returned_qty', 'cogs_qty', 'cogs',
+			'qty', 'stock_qty', 'returned_qty', 'cogs',
 			'base_net_amount', 'base_returned_amount'
 		]
 
@@ -160,7 +161,6 @@ class GrossProfitGenerator(object):
 		item.revenue = item.base_net_amount - flt(item.get('base_returned_amount'))
 		item.gross_profit = item.revenue - item.cogs
 		item.per_gross_profit = item.gross_profit / item.revenue * 100 if item.revenue else 0
-		item.gross_profit_per_unit = item.gross_profit / item.cogs_qty if item.cogs_qty else 0
 
 	def get_conditions(self):
 		conditions = []
@@ -184,6 +184,11 @@ class GrossProfitGenerator(object):
 			conditions.append("""c.customer_group in (select name from `tabCustomer Group`
 					where lft>=%s and rgt<=%s)""" % (lft, rgt))
 
+		if self.filters.get("territory"):
+			lft, rgt = frappe.db.get_value("Territory", self.filters.customer_group, ["lft", "rgt"])
+			conditions.append("""c.territory in (select name from `tabTerritory`
+					where lft>=%s and rgt<=%s)""" % (lft, rgt))
+
 		if self.filters.get("item_code"):
 			conditions.append("si_item.item_code = %(item_code)s")
 
@@ -192,6 +197,11 @@ class GrossProfitGenerator(object):
 			conditions.append("""i.item_group in (select name from `tabItem Group` 
 					where lft>=%s and rgt<=%s)""" % (lft, rgt))
 
+		if self.filters.get("brand"):
+			conditions.append("i.brand = %(brand)s")
+
+		if self.filters.get("warehouse"):
+			conditions.append("si_item.warehouse = %(brand)s")
 		return "and {}".format(" and ".join(conditions)) if conditions else ""
 
 	def get_columns(self):
@@ -214,6 +224,15 @@ class GrossProfitGenerator(object):
 				},
 			]
 
+			columns += [
+				{
+					"label": _("Date"),
+					"fieldtype": "Date",
+					"fieldname": "posting_date",
+					"width": 80
+				},
+			]
+
 			group_list = [self.filters.group_by_1, self.filters.group_by_2, self.filters.group_by_3]
 			if "Group by Customer" not in group_list:
 				columns.append({
@@ -224,14 +243,14 @@ class GrossProfitGenerator(object):
 					"width": 180
 				})
 
-			columns += [
-				{
-					"label": _("Date"),
-					"fieldtype": "Date",
-					"fieldname": "posting_date",
-					"width": 80
-				},
-			]
+			if "Group by Invoice" not in group_list:
+				columns.append({
+					"label": _("Sales Invoice"),
+					"fieldtype": "Link",
+					"fieldname": "parent",
+					"options": "Sales Invoice",
+					"width": 100
+				})
 		else:
 			columns += [
 				{

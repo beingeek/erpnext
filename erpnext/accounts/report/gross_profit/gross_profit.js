@@ -3,7 +3,7 @@
 
 const group_by_options_gp = [
 	"Ungrouped", "Group by Invoice", "Group by Customer", "Group by Customer Group",
-	"Group by Item", "Group by Item Group", "Group by Brand",
+	"Group by Item", "Group by Item Group", "Group by Brand", "Group by Warehouse",
 	"Group by Territory", "Group by Sales Person"
 ]
 
@@ -55,6 +55,12 @@ frappe.query_reports["Gross Profit"] = {
 			"options": "Customer Group"
 		},
 		{
+			"fieldname":"territory",
+			"label": __("Territory"),
+			"fieldtype": "Link",
+			"options": "Territory"
+		},
+		{
 			"fieldname":"item_code",
 			"label": __("Item"),
 			"fieldtype": "Link",
@@ -65,6 +71,18 @@ frappe.query_reports["Gross Profit"] = {
 			"label": __("Item Group"),
 			"fieldtype": "Link",
 			"options": "Item Group"
+		},
+		{
+			"fieldname":"brand",
+			"label": __("Brand"),
+			"fieldtype": "Link",
+			"options": "Brand"
+		},
+		{
+			"fieldname":"warehouse",
+			"label": __("Warehouse"),
+			"fieldtype": "Link",
+			"options": "Warehouse"
 		},
 		{
 			fieldname: "group_by_1",
