@@ -1800,7 +1800,7 @@
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "modified": "2020-09-03 08:05:59.966140",
+ "modified": "2020-09-14 16:05:33.407924",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
@@ -1946,7 +1946,7 @@
   {
    "permlevel": 3,
    "read": 1,
-   "role": "Batch Profitability Role",
+   "role": "Sales Analytics Role",
    "write": 1
   }
  ],

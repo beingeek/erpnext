@@ -8,7 +8,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": "SD - AR",
- "modified": "2020-08-24 06:58:29.536438",
+ "modified": "2020-09-14 16:02:33.607843",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Batch Profitability",
@@ -19,7 +19,7 @@
  "report_type": "Script Report",
  "roles": [
   {
-   "role": "Batch Profitability Role"
+   "role": "Purchase Analytics Role"
   },
   {
    "role": "Analytics Role"

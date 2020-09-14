@@ -1847,7 +1847,7 @@
  "icon": "fa fa-file-text",
  "idx": 204,
  "is_submittable": 1,
- "modified": "2020-08-26 00:18:58.049583",
+ "modified": "2020-09-14 16:02:45.486657",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",
@@ -1947,7 +1947,7 @@
    "export": 1,
    "permlevel": 3,
    "read": 1,
-   "role": "Batch Profitability Role",
+   "role": "Purchase Analytics Role",
    "write": 1
   },
   {
