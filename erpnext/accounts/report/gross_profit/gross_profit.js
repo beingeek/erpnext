@@ -1,6 +1,12 @@
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
 
+const group_by_options_gp = [
+	"Ungrouped", "Group by Invoice", "Group by Customer", "Group by Customer Group",
+	"Group by Item", "Group by Item Group", "Group by Brand",
+	"Group by Territory", "Group by Sales Person"
+]
+
 frappe.query_reports["Gross Profit"] = {
 	"filters": [
 		{
@@ -15,26 +21,72 @@ frappe.query_reports["Gross Profit"] = {
 			"fieldname":"from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
-			"default": frappe.defaults.get_user_default("year_start_date")
+			"default": frappe.datetime.add_months(frappe.datetime.get_today(), -1),
+			"reqd": 1
 		},
 		{
 			"fieldname":"to_date",
 			"label": __("To Date"),
 			"fieldtype": "Date",
-			"default": frappe.defaults.get_user_default("year_end_date")
+			"default": frappe.datetime.get_today(),
+			"reqd": 1
 		},
 		{
 			"fieldname":"sales_invoice",
 			"label": __("Sales Invoice"),
 			"fieldtype": "Link",
-			"options": "Sales Invoice"
+			"options": "Sales Invoice",
+			"filters": {
+				"docstatus": 1,
+				"is_return": 0,
+				"is_opening": ["!=", "Yes"]
+			}
 		},
 		{
-			"fieldname":"group_by",
-			"label": __("Group By"),
-			"fieldtype": "Select",
-			"options": "Invoice\nItem Code\nItem Group\nBrand\nWarehouse\nCustomer\nCustomer Group\nTerritory\nSales Person\nProject",
-			"default": "Invoice"
+			"fieldname":"customer",
+			"label": __("Customer"),
+			"fieldtype": "Link",
+			"options": "Customer"
 		},
-	]
+		{
+			"fieldname":"customer_group",
+			"label": __("Customer Group"),
+			"fieldtype": "Link",
+			"options": "Customer Group"
+		},
+		{
+			"fieldname":"item_code",
+			"label": __("Item"),
+			"fieldtype": "Link",
+			"options": "Item"
+		},
+		{
+			"fieldname":"item_group",
+			"label": __("Item Group"),
+			"fieldtype": "Link",
+			"options": "Item Group"
+		},
+		{
+			fieldname: "group_by_1",
+			label: __("Group By Level 1"),
+			fieldtype: "Select",
+			options: group_by_options_gp,
+			default: "Ungrouped"
+		},
+		{
+			fieldname: "group_by_2",
+			label: __("Group By Level 2"),
+			fieldtype: "Select",
+			options: group_by_options_gp,
+			default: "Ungrouped"
+		},
+		{
+			fieldname: "group_by_3",
+			label: __("Group By Level 3"),
+			fieldtype: "Select",
+			options: group_by_options_gp,
+			default: "Group by Invoice"
+		},
+	],
+	"initial_depth": 1
 }
