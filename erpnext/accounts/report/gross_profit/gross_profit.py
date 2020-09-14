@@ -47,13 +47,17 @@ class GrossProfitGenerator(object):
 				si_item.warehouse, i.item_group, i.brand,
 				si.update_stock, si_item.dn_detail, si_item.delivery_note,
 				si_item.qty, si_item.stock_qty, si_item.conversion_factor, si_item.alt_uom_size, si_item.alt_uom_size_std,
-				si_item.base_net_amount, si_item.returned_qty, si_item.base_returned_amount
+				si_item.base_net_amount, si_item.returned_qty, si_item.base_returned_amount,
+				GROUP_CONCAT(DISTINCT sp.sales_person SEPARATOR ', ') as sales_person,
+				sum(ifnull(sp.allocated_percentage, 100)) as allocated_percentage
 			from `tabSales Invoice` si
 			inner join `tabSales Invoice Item` si_item on si_item.parent = si.name
 			left join `tabCustomer` c on c.name = si.customer
 			left join `tabItem` i on i.name = si_item.item_code
+			left join `tabSales Team` sp on sp.parent = si.name and sp.parenttype = 'Sales Invoice'
 			where
 				si.docstatus = 1 and si.is_return = 0 and si.is_opening != 'Yes' {conditions}
+			group by si.name, si_item.name
 			order by si.posting_date desc, si.posting_time desc, si.name desc, si_item.idx asc
 		""".format(conditions=conditions), self.filters, as_dict=1)
 
@@ -137,6 +141,7 @@ class GrossProfitGenerator(object):
 			if 'parent' in grouped_by:
 				totals['posting_date'] = data[0].get('posting_date')
 				totals['customer'] = data[0].get('customer')
+				totals['sales_person'] = data[0].get('sales_person')
 
 			if 'item_code' in grouped_by:
 				totals['item_group'] = data[0].get('item_group')
@@ -212,6 +217,12 @@ class GrossProfitGenerator(object):
 
 		if self.filters.get("batch_no"):
 			conditions.append("si_item.batch_no = %(batch_no)s")
+
+		if self.filters.get("sales_person"):
+			lft, rgt = frappe.db.get_value("Sales Person", self.filters.sales_person, ["lft", "rgt"])
+			conditions.append("""sp.sales_person in (select name from `tabSales Person`
+				where lft>=%s and rgt<=%s)""" % (lft, rgt))
+
 		return "and {}".format(" and ".join(conditions)) if conditions else ""
 
 	def get_columns(self):
@@ -387,7 +398,20 @@ class GrossProfitGenerator(object):
 				"fieldname": "per_gross_profit",
 				"width": 110
 			},
+			{
+				"label": _("Sales Person"),
+				"fieldtype": "Data",
+				"fieldname": "sales_person",
+				"width": 150
+			},
 		]
+		if self.filters.sales_person:
+			columns.append({
+				"label": _("% Contribution"),
+				"fieldtype": "Percent",
+				"fieldname": "allocated_percentage",
+				"width": 60
+			})
 
 		return columns
 
