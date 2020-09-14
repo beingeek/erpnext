@@ -201,7 +201,12 @@ class GrossProfitGenerator(object):
 			conditions.append("i.brand = %(brand)s")
 
 		if self.filters.get("warehouse"):
-			conditions.append("si_item.warehouse = %(brand)s")
+			lft, rgt = frappe.db.get_value("Warehouse", self.filters.sales_person, ["lft", "rgt"])
+			conditions.append("""si_item.warehouse in (select name from `tabWarehouse`
+				where lft>=%s and rgt<=%s)""" % (lft, rgt))
+
+		if self.filters.get("batch_no"):
+			conditions.append("si_item.batch_no = %(batch_no)s")
 		return "and {}".format(" and ".join(conditions)) if conditions else ""
 
 	def get_columns(self):

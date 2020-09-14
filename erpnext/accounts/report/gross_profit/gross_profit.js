@@ -85,6 +85,12 @@ frappe.query_reports["Gross Profit"] = {
 			"options": "Warehouse"
 		},
 		{
+			"fieldname":"batch_no",
+			"label": __("Batch"),
+			"fieldtype": "Link",
+			"options": "Batch"
+		},
+		{
 			fieldname: "group_by_1",
 			label: __("Group By Level 1"),
 			fieldtype: "Select",
