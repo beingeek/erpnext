@@ -29,9 +29,12 @@ def execute(filters=None):
 	if filters.get('party'):
 		filters.party = frappe.parse_json(filters.get("party"))
 
+	
 	validate_filters(filters, account_details)
 
 	validate_party(filters)
+
+	get_customer_linked_suppliers(filters)
 
 	filters = set_account_currency(filters)
 
@@ -41,6 +44,29 @@ def execute(filters=None):
 
 	return columns, res
 
+def get_customer_linked_suppliers(filters):
+	if not filters.party or not filters.party_type:
+		return
+
+	party_list = []
+	
+	if filters.get("party_type") == "Customer":
+		linked_suppliers = frappe.db.sql("select 'Supplier', linked_supplier from `tabCustomer` where name in %s and ifnull(linked_supplier, '') != ''",
+			[filters.party])
+		
+		party_list += linked_suppliers
+
+	if filters.get("party_type") == "Supplier":
+		linked_customers = frappe.db.sql("select 'Customer', name from `tabCustomer` where linked_supplier in %s",
+			[filters.party])
+
+		party_list += linked_customers
+	
+	if party_list:
+		for party in filters.party:
+			party_list.append((filters.party_type, party))
+
+		filters["party_list"] = party_list
 
 def validate_filters(filters, account_details):
 	if not filters.get('company'):
@@ -149,7 +175,6 @@ def get_gl_entries(filters):
 	else:
 		return gl_entries
 
-
 def get_conditions(filters):
 	conditions = []
 	if filters.get("account"):
@@ -167,11 +192,14 @@ def get_conditions(filters):
 	if filters.get("group_by") == "Group by Party" and not filters.get("party_type"):
 		conditions.append("party_type in ('Customer', 'Supplier')")
 
-	if filters.get("party_type"):
+	if filters.get("party_type") and not filters.get("party_list"):
 		conditions.append("party_type=%(party_type)s")
 
-	if filters.get("party"):
+	if filters.get("party") and not filters.get("party_list"):
 		conditions.append("party in %(party)s")
+
+	if filters.get("party_list"):
+		conditions.append("(party_type, party) in %(party_list)s")
 
 	if not (filters.get("account") or filters.get("party") or
 		filters.get("group_by") in ["Group by Account", "Group by Party"]):
