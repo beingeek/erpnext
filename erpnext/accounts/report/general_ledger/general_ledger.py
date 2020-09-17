@@ -45,28 +45,20 @@ def execute(filters=None):
 	return columns, res
 
 def get_customer_linked_suppliers(filters):
-	if not filters.party or not filters.party_type:
+	if not filters.party_list:
 		return
-
-	party_list = []
 	
 	if filters.get("party_type") == "Customer":
 		linked_suppliers = frappe.db.sql("select 'Supplier', linked_supplier from `tabCustomer` where name in %s and ifnull(linked_supplier, '') != ''",
 			[filters.party])
 		
-		party_list += linked_suppliers
+		filters.party_list += linked_suppliers
 
 	if filters.get("party_type") == "Supplier":
 		linked_customers = frappe.db.sql("select 'Customer', name from `tabCustomer` where linked_supplier in %s",
 			[filters.party])
 
-		party_list += linked_customers
-	
-	if party_list:
-		for party in filters.party:
-			party_list.append((filters.party_type, party))
-
-		filters["party_list"] = party_list
+		filters.party_list += linked_customers
 
 def validate_filters(filters, account_details):
 	if not filters.get('company'):
@@ -100,7 +92,11 @@ def validate_party(filters):
 		if not party_type:
 			frappe.throw(_("To filter based on Party, select Party Type first"))
 		else:
+			filters['party_list'] = []
+			
 			for d in party:
+				filters['party_list'].append((party_type, d))
+
 				if not frappe.db.exists(party_type, d):
 					frappe.throw(_("Invalid {0}: {1}").format(party_type, d))
 
@@ -194,9 +190,6 @@ def get_conditions(filters):
 
 	if filters.get("party_type") and not filters.get("party_list"):
 		conditions.append("party_type=%(party_type)s")
-
-	if filters.get("party") and not filters.get("party_list"):
-		conditions.append("party in %(party)s")
 
 	if filters.get("party_list"):
 		conditions.append("(party_type, party) in %(party_list)s")
