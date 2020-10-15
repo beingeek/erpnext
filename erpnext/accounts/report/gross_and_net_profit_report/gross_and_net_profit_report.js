@@ -21,6 +21,13 @@ frappe.require("assets/erpnext/js/financial_statements.js", function() {
 			}
 		},
 		{
+			"fieldname": "group_by",
+			"label": __("Group By"),
+			"fieldtype": "Select",
+			"default": "Ungrouped",
+			"options": ['Ungrouped', 'Sales Person']
+		},
+		{
 			"fieldname": "accumulated_values",
 			"label": __("Accumulated Values"),
 			"fieldtype": "Check"

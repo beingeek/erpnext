@@ -20,7 +20,7 @@ from six import itervalues
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions, get_dimension_with_children
 
 def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_values=False,
-	company=None, reset_period_on_fy_change=True):
+	company=None, reset_period_on_fy_change=True, with_sales_person=False):
 	"""Get a list of dict {"from_date": from_date, "to_date": to_date, "key": key, "label": label}
 		Periodicity can be (Yearly, Quarterly, Monthly)"""
 
@@ -86,9 +86,25 @@ def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_v
 		opts.update({
 			"key": key.replace(" ", "_").replace("-", "_"),
 			"label": label,
+			"period_label": label,
 			"year_start_date": year_start_date,
 			"year_end_date": year_end_date
 		})
+
+	if with_sales_person:
+		new_period_list = []
+		sales_persons = [frappe._dict({"name": None})]
+		sales_persons += frappe.get_all("Sales Person", fields=['name', 'lft', 'rgt'], filters={"is_group": 0})
+
+		for sp in sales_persons:
+			for period in period_list:
+				new_period = period.copy()
+				new_period.sales_person_details = sp
+				new_period.label = "{0} {1}".format(sp.name or "No Sales Person", period.label)
+				new_period.key = period.key + "_" + sp.name if sp.name else period.key
+				new_period_list.append(new_period)
+
+		period_list = new_period_list
 
 	return period_list
 
@@ -127,7 +143,7 @@ def get_label(periodicity, from_date, to_date):
 def get_data(
 		company, root_type, balance_must_be, period_list, filters=None,
 		accumulated_values=1, only_current_fiscal_year=True, ignore_closing_entries=False,
-		ignore_accumulated_values_for_fy=False , total = True):
+		ignore_accumulated_values_for_fy=False , total = True, with_sales_person=False):
 
 	accounts = get_accounts(company, root_type)
 	if not accounts:
@@ -146,11 +162,13 @@ def get_data(
 			period_list[0]["year_start_date"] if only_current_fiscal_year else None,
 			period_list[-1]["to_date"],
 			root.lft, root.rgt, filters,
-			gl_entries_by_account, ignore_closing_entries=ignore_closing_entries
+			gl_entries_by_account, ignore_closing_entries=ignore_closing_entries,
+			with_sales_person=with_sales_person
 		)
 
 	calculate_values(
-		accounts_by_name, gl_entries_by_account, period_list, accumulated_values, ignore_accumulated_values_for_fy)
+		accounts_by_name, gl_entries_by_account, period_list, accumulated_values, ignore_accumulated_values_for_fy,
+		with_sales_person=with_sales_person)
 	accumulate_values_into_parents(accounts, accounts_by_name, period_list, accumulated_values)
 	out = prepare_data(accounts, balance_must_be, period_list, company_currency)
 	out = filter_out_zero_value_rows(out, parent_children_map)
@@ -169,7 +187,8 @@ def get_appropriate_currency(company, filters=None):
 
 
 def calculate_values(
-		accounts_by_name, gl_entries_by_account, period_list, accumulated_values, ignore_accumulated_values_for_fy):
+		accounts_by_name, gl_entries_by_account, period_list, accumulated_values, ignore_accumulated_values_for_fy,
+		with_sales_person=False):
 	for entries in itervalues(gl_entries_by_account):
 		for entry in entries:
 			d = accounts_by_name.get(entry.account)
@@ -184,8 +203,10 @@ def calculate_values(
 				if entry.posting_date <= period.to_date:
 					if (accumulated_values or entry.posting_date >= period.from_date) and \
 						(not ignore_accumulated_values_for_fy or
-							entry.fiscal_year == period.to_date_fiscal_year):
+							entry.fiscal_year == period.to_date_fiscal_year) and \
+						(not with_sales_person or cstr(entry.sales_person) == cstr(period.sales_person_details.name)):
 						d[period.key] = d.get(period.key, 0.0) + flt(entry.debit) - flt(entry.credit)
+						period.has_entry = True
 
 			if entry.posting_date < period_list[0].year_start_date:
 				d["opening_balance"] = d.get("opening_balance", 0.0) + flt(entry.debit) - flt(entry.credit)
@@ -342,10 +363,14 @@ def sort_accounts(accounts, is_root=False, key="name"):
 	accounts.sort(key = functools.cmp_to_key(compare_accounts))
 
 def set_gl_entries_by_account(
-		company, from_date, to_date, root_lft, root_rgt, filters, gl_entries_by_account, ignore_closing_entries=False):
+		company, from_date, to_date, root_lft, root_rgt, filters, gl_entries_by_account, ignore_closing_entries=False,
+		with_sales_person=False):
 	"""Returns a dict like { "account": [gl entries], ... }"""
 
 	additional_conditions = get_additional_conditions(from_date, ignore_closing_entries, filters)
+	join_condition = ""
+	additional_columns = ""
+	value_columns = "debit, credit, debit_in_account_currency, credit_in_account_currency"
 
 	accounts = frappe.db.sql_list("""select name from `tabAccount`
 		where lft >= %s and rgt <= %s and company = %s""", (root_lft, root_rgt, company))
@@ -365,17 +390,32 @@ def set_gl_entries_by_account(
 			gl_filters["company_fb"] = frappe.db.get_value("Company",
 				company, 'default_finance_book')
 
+		if with_sales_person or filters.sales_person:
+			join_condition = "left join `tabSales Team` sp on sp.parenttype = gl.voucher_type and sp.parent = gl.voucher_no"
+			additional_columns = ", sp.sales_person, ifnull(sp.allocated_percentage, 100) as allocated_percentage"
+
 		for key, value in filters.items():
 			if value:
 				gl_filters.update({
 					key: value
 				})
 
-		gl_entries = frappe.db.sql("""select posting_date, account, debit, credit, is_opening, fiscal_year, debit_in_account_currency, credit_in_account_currency, account_currency from `tabGL Entry`
+		gl_entries = frappe.db.sql("""
+			select posting_date, account, is_opening, fiscal_year, account_currency, {value_columns} {additional_columns}
+			from `tabGL Entry` gl
+			{join_condition}
 			where company=%(company)s
 			{additional_conditions}
 			and posting_date <= %(to_date)s
-			order by account, posting_date""".format(additional_conditions=additional_conditions), gl_filters, as_dict=True) #nosec
+			order by account, posting_date""".format(
+				additional_conditions=additional_conditions,
+				additional_columns=additional_columns,
+				join_condition=join_condition,
+				value_columns=value_columns
+		), gl_filters, as_dict=True) #nosec
+
+		if with_sales_person or filters.sales_person:
+			apply_allocated_percentage(gl_entries)
 
 		if filters and filters.get('presentation_currency'):
 			convert_to_presentation_currency(gl_entries, get_currency(filters))
@@ -384,6 +424,12 @@ def set_gl_entries_by_account(
 			gl_entries_by_account.setdefault(entry.account, []).append(entry)
 
 		return gl_entries_by_account
+
+
+def apply_allocated_percentage(gl_entries):
+	for d in gl_entries:
+		for f in ['debit', 'credit', 'debit_in_account_currency', 'credit_in_account_currency']:
+			d[f] *= d.allocated_percentage / 100
 
 
 def get_additional_conditions(from_date, ignore_closing_entries, filters):
@@ -413,6 +459,11 @@ def get_additional_conditions(from_date, ignore_closing_entries, filters):
 		else:
 			additional_conditions.append("(finance_book in (%(finance_book)s, '') OR finance_book IS NULL)")
 
+		if filters.get("sales_person"):
+			filters.sales_persons = frappe.get_all("Sales Person", filters={"name": ["subtree of", filters.get("sales_person")]})
+			filters.sales_persons = [d.name for d in filters.sales_persons]
+			additional_conditions.append("sp.sales_person in %(sales_persons)s")
+
 	if accounting_dimensions:
 		for dimension in accounting_dimensions:
 			if filters.get(dimension.fieldname):
@@ -440,7 +491,15 @@ def get_cost_centers_with_children(cost_centers):
 
 	return list(set(all_cost_centers))
 
-def get_columns(periodicity, period_list, accumulated_values=1, company=None):
+def get_columns(periodicity, period_list, accumulated_values=1, company=None, with_sales_person=False):
+	sales_persons_with_entries = []
+	if with_sales_person:
+		for period in period_list:
+			if period.has_entry:
+				sales_persons_with_entries.append(period.sales_person_details.name)
+
+		sales_persons_with_entries = set(sales_persons_with_entries)
+
 	columns = [{
 		"fieldname": "account",
 		"label": _("Account"),
@@ -457,13 +516,16 @@ def get_columns(periodicity, period_list, accumulated_values=1, company=None):
 			"hidden": 1
 		})
 	for period in period_list:
-		columns.append({
-			"fieldname": period.key,
-			"label": period.label,
-			"fieldtype": "Currency",
-			"options": "currency",
-			"width": 150
-		})
+		if not with_sales_person or period.sales_person_details.name in sales_persons_with_entries:
+			columns.append({
+				"fieldname": period.key,
+				"label": period.label,
+				"period_label": period.period_label,
+				"sales_person": cstr(period.sales_person_details.name if period.sales_person_details else ""),
+				"fieldtype": "Currency",
+				"options": "currency",
+				"width": 150
+			})
 	if periodicity!="Yearly":
 		if not accumulated_values:
 			columns.append({

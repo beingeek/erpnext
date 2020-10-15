@@ -9,20 +9,22 @@ from erpnext.accounts.report.financial_statements import (get_period_list, get_c
 import copy
 
 def execute(filters=None):
+	with_sales_person = filters.group_by == "Sales Person"
+
 	period_list = get_period_list(filters.from_fiscal_year, filters.to_fiscal_year,
-		filters.periodicity, filters.accumulated_values, filters.company)
+		filters.periodicity, filters.accumulated_values, filters.company, with_sales_person=with_sales_person)
 
 	columns, data = [], []
 
 	income = get_data(filters.company, "Income", "Credit", period_list, filters = filters,
 		accumulated_values=filters.accumulated_values,
-		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, total= False)
+		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, total= False, with_sales_person=with_sales_person)
 
 	expense = get_data(filters.company, "Expense", "Debit", period_list, filters=filters,
 		accumulated_values=filters.accumulated_values,
-		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, total= False)
+		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, total= False, with_sales_person=with_sales_person)
 
-	columns = get_columns(filters.periodicity, period_list, filters.accumulated_values, filters.company)
+	columns = get_columns(filters.periodicity, period_list, filters.accumulated_values, filters.company, with_sales_person=with_sales_person)
 
 
 	gross_income = get_revenue(income, period_list)

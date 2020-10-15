@@ -5,18 +5,32 @@
 	if (report_columns.length > 8) {
 		frappe.throw(__("Too many columns. Export the report and print it using a spreadsheet application."));
 	}
+
+	var sales_person_columns = {};
+	for (let i=1, l=report_columns.length; i<l; i++) {
+		var column = report_columns[i];
+		var sales_person = column.sales_person;
+		if (!sales_person_columns[sales_person]) {
+			sales_person_columns[sales_person] = [];
+		}
+		sales_person_columns[sales_person].push(column);
+	}
 %}
 
 <style>
 	.financial-statements-important td {
 		font-weight: bold;
 	}
-
 	.financial-statements-blank-row td {
 		height: 37px;
 	}
+	.borderless, .borderless table, .borderless tr, .borderless td, .borderless th {
+		border: 0 !important;
+	}
+	.print-format th {
+    	background-color: transparent !important;
+	}
 </style>
-
 <h2 class="text-center">{%= __(report.report_name) %}</h2>
 <h3 class="text-center">{%= filters.company %}</h3>
 
@@ -34,16 +48,35 @@
 	</h5>
 {% } %}
 <hr>
-<table class="table table-bordered">
+<table class="table borderless">
 	<thead>
+		{% if (filters.group_by == "Sales Person") { %}
+		<tr>
+			<th></th>
+			{% for (sales_person in sales_person_columns) { %}
+				{% var sp_cols = sales_person_columns[sales_person]; %}
+				<th class="text-center" colspan="{%= sp_cols.length %}">{%= sales_person || "No Sales Person" %}</th>
+			{% } %}
+		</tr>
+		{% } %}
 		<tr>
 			<th style="width: {%= 100 - (report_columns.length - 1) * 13 %}%"></th>
-			{% for (let i=1, l=report_columns.length; i<l; i++) { %}
-				<th class="text-right">{%= report_columns[i].label %}</th>
+
+			{% if (filters.group_by == "Sales Person") { %}
+				{% for (sales_person in sales_person_columns) { %}
+					{% var sp_cols = sales_person_columns[sales_person]; %}
+					{% for (let i=0; i < sp_cols.length; i++) { %}
+						<th class="text-center">{%= sp_cols[i].period_label %}</th>
+					{% } %}
+				{% } %}
+			{% } else { %}
+				{% for (let i=1, l=report_columns.length; i<l; i++) { %}
+					<th class="text-right">{%= report_columns[i].label %}</th>
+				{% } %}
 			{% } %}
 		</tr>
 	</thead>
-	<tbody>
+	<tbody class="">
 		{% for(let j=0, k=data.length-1; j<k; j++) { %}
 			{%
 				var row = data[j];
