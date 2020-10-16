@@ -28,6 +28,20 @@ frappe.require("assets/erpnext/js/financial_statements.js", function() {
 			"options": ['Ungrouped', 'Sales Person']
 		},
 		{
+			"fieldname": "start_month",
+			"label": __("Start Month"),
+			"fieldtype": "Select",
+			"default": "January",
+			"options": ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+		},
+		{
+			"fieldname": "end_month",
+			"label": __("End Month"),
+			"fieldtype": "Select",
+			"default": "December",
+			"options": ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+		},
+		{
 			"fieldname": "accumulated_values",
 			"label": __("Accumulated Values"),
 			"fieldtype": "Check"
