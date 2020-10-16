@@ -19,10 +19,32 @@ from frappe.utils import (flt, getdate, get_first_day, add_months, add_days, for
 from six import itervalues
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions, get_dimension_with_children
 
+month_to_number = {
+	'January' : 1,
+	'February' : 2,
+	'March' : 3,
+	'April' : 4,
+	'May' : 5,
+	'June' : 6,
+	'July' : 7,
+	'August' : 8,
+	'September' : 9,
+	'October' : 10,
+	'November' : 11,
+	'December' : 12
+}
+
 def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_values=False,
-	company=None, reset_period_on_fy_change=True, with_sales_person=False):
+	company=None, reset_period_on_fy_change=True, with_sales_person=False, start_month=None, end_month=None):
 	"""Get a list of dict {"from_date": from_date, "to_date": to_date, "key": key, "label": label}
 		Periodicity can be (Yearly, Quarterly, Monthly)"""
+	if not start_month:
+		start_month = "January"
+	if not end_month:
+		end_month = "December"
+
+	start_month_no = month_to_number[start_month]
+	end_month_no = month_to_number[end_month]
 
 	fiscal_year = get_fiscal_year_data(from_fiscal_year, to_fiscal_year)
 	validate_fiscal_year(fiscal_year, from_fiscal_year, to_fiscal_year)
@@ -60,6 +82,11 @@ def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_v
 		else:
 			# if a fiscal year ends before a 12 month period
 			period.to_date = year_end_date
+
+		if start_month_no > period.to_date.month or end_month_no < period.from_date.month:
+			continue
+
+		
 
 		period.to_date_fiscal_year = get_fiscal_year(period.to_date, company=company)[0]
 		period.from_date_fiscal_year_start_date = get_fiscal_year(period.from_date, company=company)[1]
@@ -463,6 +490,13 @@ def get_additional_conditions(from_date, ignore_closing_entries, filters):
 			filters.sales_persons = frappe.get_all("Sales Person", filters={"name": ["subtree of", filters.get("sales_person")]})
 			filters.sales_persons = [d.name for d in filters.sales_persons]
 			additional_conditions.append("sp.sales_person in %(sales_persons)s")
+
+		if filters.get("start_month"):
+			filters.start_month_no = month_to_number[filters.start_month]
+			additional_conditions.append("MONTH(posting_date) >= %(start_month_no)s")
+		if filters.get("end_month"):
+			filters.end_month_no = month_to_number[filters.end_month]
+			additional_conditions.append("MONTH(posting_date) <= %(end_month_no)s")
 
 	if accounting_dimensions:
 		for dimension in accounting_dimensions:

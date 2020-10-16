@@ -11,7 +11,8 @@ def execute(filters=None):
 	with_sales_person = filters.group_by == "Sales Person"
 
 	period_list = get_period_list(filters.from_fiscal_year, filters.to_fiscal_year,
-		filters.periodicity, filters.accumulated_values, filters.company, with_sales_person=with_sales_person)
+		filters.periodicity, filters.accumulated_values, filters.company,
+		with_sales_person=with_sales_person, start_month=filters.start_month, end_month=filters.end_month)
 
 	income = get_data(filters.company, "Income", "Credit", period_list, filters = filters,
 		accumulated_values=filters.accumulated_values,
