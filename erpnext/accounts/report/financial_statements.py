@@ -46,6 +46,9 @@ def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_v
 	start_month_no = month_to_number[start_month]
 	end_month_no = month_to_number[end_month]
 
+	if start_month_no > end_month_no:
+		frappe.throw(_("End month must be greater then start month"))
+
 	fiscal_year = get_fiscal_year_data(from_fiscal_year, to_fiscal_year)
 	validate_fiscal_year(fiscal_year, from_fiscal_year, to_fiscal_year)
 
@@ -83,10 +86,23 @@ def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_v
 			# if a fiscal year ends before a 12 month period
 			period.to_date = year_end_date
 
-		if start_month_no > period.to_date.month or end_month_no < period.from_date.month:
+		filter_month_range = range(start_month_no, end_month_no+1)
+		period_month_range = range(period.from_date.month, period.to_date.month+1)
+
+		if periodicity != "Yearly" and not set(filter_month_range).intersection(period_month_range):
 			continue
 
-		
+		for m in period_month_range:
+			if m not in filter_month_range:
+				period.from_date = add_months(period.from_date, 1)
+			else:
+				break
+
+		for m in range(period.to_date.month, period.from_date.month-1, -1):
+			if m not in filter_month_range:
+				period.to_date = add_months(period.to_date, -1)
+			else:
+				break
 
 		period.to_date_fiscal_year = get_fiscal_year(period.to_date, company=company)[0]
 		period.from_date_fiscal_year_start_date = get_fiscal_year(period.from_date, company=company)[1]
