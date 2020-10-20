@@ -2,10 +2,6 @@
 	var report_columns = report.get_columns_for_print();
 	report_columns = report_columns.filter(col => !col.hidden);
 
-	if (report_columns.length > 8) {
-		frappe.throw(__("Too many columns. Export the report and print it using a spreadsheet application."));
-	}
-
 	var sales_person_columns = {};
 	for (let i=1, l=report_columns.length; i<l; i++) {
 		var column = report_columns[i];
@@ -77,7 +73,7 @@
 		</tr>
 	</thead>
 	<tbody class="">
-		{% for(let j=0, k=data.length-1; j<k; j++) { %}
+		{% for(let j=0, k=data.length; j<k; j++) { %}
 			{%
 				var row = data[j];
 				var row_class = data[j].parent_account ? "" : "financial-statements-important";
