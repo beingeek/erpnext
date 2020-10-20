@@ -14,7 +14,7 @@ import frappe, erpnext
 from erpnext.accounts.report.utils import get_currency, convert_to_presentation_currency
 from erpnext.accounts.utils import get_fiscal_year
 from frappe import _
-from frappe.utils import (flt, getdate, get_first_day, add_months, add_days, formatdate, cstr, cint)
+from frappe.utils import (flt, getdate, get_first_day, add_months, add_days, formatdate, cstr, cint, month_diff)
 
 from six import itervalues
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions, get_dimension_with_children
@@ -33,6 +33,17 @@ month_to_number = {
 	'November' : 11,
 	'December' : 12
 }
+
+def get_months_from_period(period):
+	months = []
+
+	no_of_months = month_diff(period.to_date, period.from_date)
+	date = period.from_date
+	for i in range(no_of_months):
+		months.append(date.month)
+		date = add_months(date, 1)
+
+	return months
 
 def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_values=False,
 	company=None, reset_period_on_fy_change=True, with_sales_person=False, start_month=None, end_month=None):
@@ -86,10 +97,10 @@ def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_v
 			# if a fiscal year ends before a 12 month period
 			period.to_date = year_end_date
 
-		filter_month_range = range(start_month_no, end_month_no+1)
-		period_month_range = range(period.from_date.month, period.to_date.month+1)
+		filter_month_range = range(start_month_no, end_month_no + 1)
+		period_month_range = get_months_from_period(period)
 
-		if periodicity != "Yearly" and not set(filter_month_range).intersection(period_month_range):
+		if not set(filter_month_range).intersection(period_month_range):
 			continue
 
 		for m in period_month_range:
@@ -98,7 +109,7 @@ def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_v
 			else:
 				break
 
-		for m in range(period.to_date.month, period.from_date.month-1, -1):
+		for m in reversed(period_month_range):
 			if m not in filter_month_range:
 				period.to_date = add_months(period.to_date, -1)
 			else:
@@ -172,7 +183,7 @@ def get_months(start_date, end_date):
 
 
 def get_label(periodicity, from_date, to_date):
-	if periodicity == "Yearly":
+	if periodicity == "Yearly" and month_diff(to_date, from_date) == 12:
 		if formatdate(from_date, "YYYY") == formatdate(to_date, "YYYY"):
 			label = formatdate(from_date, "YYYY")
 		else:
