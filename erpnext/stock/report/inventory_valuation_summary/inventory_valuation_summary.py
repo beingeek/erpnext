@@ -92,24 +92,101 @@ def execute(filters=None):
 
 	add_additional_uom_columns(columns, data, include_uom, conversion_factors)
 
-	return columns, data
+	item_group_map = get_item_group_map(data)
+
+	top_level_item_groups = [d for d in item_group_map.values() if not d.parent_item_group]
+
+	tree_data = []
+	for d in top_level_item_groups:
+		build_tree_data(tree_data, d, 0)
+
+	accumulate_item_values_in_parent(data, item_group_map, columns)
+
+	return columns, tree_data
+
+def get_item_group_map(item_rows):
+	# dictionary that maps item group to it's parent item group
+	item_group_list = frappe.get_all("Item Group", fields=['name', 'parent_item_group'])
+	item_group_map = {}
+
+	for d in item_group_list:
+		d.children_names = []
+		d.children = []
+		d.items = []
+		item_group_map[d.name] = d
+
+	# create a flat dictionary first... heirarchy later
+	for d in item_group_map.values():
+		if item_group_map.get(d.parent_item_group):
+			item_group_map[d.parent_item_group].children_names.append(d.name)
+
+	# now create the hierarchy
+	for d in item_group_map.values():
+		for child_name in d.children_names:
+			d.children.append(item_group_map[child_name])
+
+	for row in item_rows:
+		item_group_map[row['item_group']]['items'].append(row)
+
+	return item_group_map
+
+def build_tree_data(tree_data, d, indent=0):
+	item_group_row = {"item_code": "'Group: {0}'".format(d.name), "item_group": d.name, "indent": indent, "_bold": 1}
+	d['report_row'] = item_group_row
+	tree_data.append(item_group_row)
+	for i in d['items']:
+		i['indent'] = indent + 1
+		tree_data.append(i)
+	for ch in d.children:
+		build_tree_data(tree_data, ch, indent + 1)
+
+def accumulate_item_values_in_parent(item_rows, item_group_map, columns):
+	sum_fieldnames = [d['fieldname'] for d in columns if d.get('convertible') in ('qty', 'currency')]
+	avg_fieldnames = ['val_rate']
+
+	def accumulate(source, target):
+		for fn in sum_fieldnames:
+			target[fn] += source[fn]
+
+	for item_group_row in item_group_map.values():
+		for fn in sum_fieldnames + avg_fieldnames:
+			item_group_row.report_row[fn] = 0
+
+	for row in item_rows:
+		item_group_row = item_group_map[row['item_group']]
+		accumulate(row, item_group_row.report_row)
+
+	leaf_item_groups = [d for d in item_group_map.values() if not d['children']]
+	for leaf_item_group_dict in leaf_item_groups:
+		current_item_group_dict = leaf_item_group_dict
+		parent_item_group_dict = item_group_map.get(current_item_group_dict.parent_item_group)
+		while parent_item_group_dict:
+			accumulate(current_item_group_dict.report_row, parent_item_group_dict.report_row)
+			current_item_group_dict = parent_item_group_dict
+			parent_item_group_dict = item_group_map.get(current_item_group_dict.parent_item_group)
+
+def accumulate_group_values_in_parent(item_group_dict, item_group_map):
+	pass
+
+def calculate_item_group_totals(row, item_group_dict, fieldnames):
+	pass
+
 
 def get_columns(filters):
 	"""return columns"""
 	columns = [
-		{"label": _("Item"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 100},
-		{"label": _("Item Name"), "fieldname": "item_name", "width": 150},
+		{"label": _("Item"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 250},
 		{"label": _("Item Group"), "fieldname": "item_group", "fieldtype": "Link", "options": "Item Group", "width": 100},
 		{"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 100},
 		{"label": _("Stock UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 90},
 		{"label": _("Balance Qty"), "fieldname": "bal_qty", "fieldtype": "Float", "width": 100, "convertible": "qty"},
-		{"label": _("Balance Value"), "fieldname": "bal_val", "fieldtype": "Currency", "width": 100, "options": "currency"},
+		{"label": _("Balance Value"), "fieldname": "bal_val", "fieldtype": "Currency", "width": 100, "options": "currency", "convertible": "currency"},
 		{"label": _("Opening Qty"), "fieldname": "opening_qty", "fieldtype": "Float", "width": 100, "convertible": "qty"},
-		{"label": _("Opening Value"), "fieldname": "opening_val", "fieldtype": "Currency", "width": 110, "options": "currency"},
+		{"label": _("Opening Value"), "fieldname": "opening_val", "fieldtype": "Currency", "width": 110, "options": "currency", "convertible": "currency"},
 		{"label": _("In Qty"), "fieldname": "in_qty", "fieldtype": "Float", "width": 80, "convertible": "qty"},
-		{"label": _("In Value"), "fieldname": "in_val", "fieldtype": "Float", "width": 80},
+		{"label": _("In Value"), "fieldname": "in_val", "fieldtype": "Currency", "options": "currency", "width": 80, "convertible": "currency"},
 		{"label": _("Out Qty"), "fieldname": "out_qty", "fieldtype": "Float", "width": 80, "convertible": "qty"},
-		{"label": _("Out Value"), "fieldname": "out_val", "fieldtype": "Float", "width": 80},
+		{"label": _("Out Value"), "fieldname": "out_val", "fieldtype": "Currency", "options": "currency", "width": 80, "convertible": "currency"},
 		{"label": _("Valuation Rate"), "fieldname": "val_rate", "fieldtype": "Currency", "width": 90, "convertible": "rate", "options": "currency"},
 		{"label": _("Reorder Level"), "fieldname": "reorder_level", "fieldtype": "Float", "width": 80, "convertible": "qty"},
 		{"label": _("Reorder Qty"), "fieldname": "reorder_qty", "fieldtype": "Float", "width": 80, "convertible": "qty"},

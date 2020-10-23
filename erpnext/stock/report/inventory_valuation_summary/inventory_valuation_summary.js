@@ -98,6 +98,13 @@ frappe.query_reports["Inventory Valuation Summary"] = {
 			value = "<span style='color:green'>" + value + "</span>";
 		}
 
+		if (data._bold) {
+			value = $(`<span>${value}</span>`);
+
+			var $value = $(value).css("font-weight", "bold");
+			value = $value.wrap("<p></p>").parent().html();
+		}
+
 		return value;
 	}
 };
