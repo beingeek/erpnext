@@ -101,6 +101,7 @@ def execute(filters=None):
 		build_tree_data(tree_data, d, 0)
 
 	accumulate_item_values_in_parent(data, item_group_map, columns)
+	tree_data = remove_empty_groups(tree_data, item_group_map)
 
 	return columns, tree_data
 
@@ -139,6 +140,20 @@ def build_tree_data(tree_data, d, indent=0):
 		tree_data.append(i)
 	for ch in d.children:
 		build_tree_data(tree_data, ch, indent + 1)
+
+def remove_empty_groups(tree_data, item_group_map):
+	item_groups = [key for key,val in item_group_map.items() if val['items']]
+
+	def intersection(lst1, lst2):
+		return list(set(lst1) & set(lst2))
+
+	for key, val in item_group_map.items():
+		if intersection(val['children_names'],item_groups):
+			item_groups.append(key)
+
+	new_tree_data = [i for i in tree_data if i['item_group'] in item_groups]
+
+	return new_tree_data
 
 def accumulate_item_values_in_parent(item_rows, item_group_map, columns):
 	sum_fieldnames = [d['fieldname'] for d in columns if d.get('convertible') in ('qty', 'currency')]
