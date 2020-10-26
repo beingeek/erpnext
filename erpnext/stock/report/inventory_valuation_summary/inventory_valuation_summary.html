@@ -1,0 +1,56 @@
+<style>
+	.borderless, .borderless table, .borderless tr, .borderless td, .borderless th {
+		border: 0 !important;
+	}
+	.print-format th {
+    	background-color: transparent !important;
+	}
+	.group-heading td {
+		font-weight: bold;
+	}
+	.group-total .total-border {
+		border-top: 2px solid #000000 !important;
+	}
+</style>
+{%
+	function remove_wrapping_quotes(str) {
+		str = cstr(str);
+		if (str.length && str.substr(0, 1) === "'" && str.substr(str.length - 1, 1) === "'") {
+			str = str.substr(1, str.length-2);
+		}
+		return str;
+	}
+%}
+
+<h2 class="text-center">{%= __("Inventory Valuation Summary") %}</h2>
+<h5 class="text-center">
+	{%= frappe.datetime.str_to_user(filters.from_date) %}
+	{%= __("to") %}
+	{%= frappe.datetime.str_to_user(filters.to_date) %}
+</h5>
+<hr>
+<table class="table borderless">
+	<thead>
+		<tr>
+			<th style="width: 70%">{%= __("Inventory") %}</th>
+			<th class="text-center" style="width: 10%">{%= __("On Hand") %}</th>
+			<th class="text-center" style="width: 10%">{%= __("Avg. Cost") %}</th>
+			<th class="text-center" style="width: 10%">{%= __("Asset Value") %}</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for(var i=0, l=data.length; i<l; i++) { %}
+			<tr class="{% if (data[i].is_group_total) { %} group-total {% } %}{% if (data[i].is_group_heading) { %} group-heading {% } %}">
+				<td>
+					<span style="padding-left: {%= cint(data[i].indent) %}em">
+						{%= remove_wrapping_quotes(data[i].item_code) %}
+					</span>
+				</td>
+				<td class="text-right total-border">{%= frappe.format(data[i].bal_qty, {fieldtype: "Float" }) %}</td>
+				<td class="text-right">{%= frappe.format(data[i].val_rate, {fieldtype: "Currency", options: 'currency'}) %}</td>
+				<td class="text-right total-border">{%= frappe.format(data[i].bal_val, {fieldtype: "Currency", options: 'currency'}) %}</td>
+			</tr>
+		{% } %}
+	</tbody>
+</table>
+<p class="text-right text-muted">Printed On {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>

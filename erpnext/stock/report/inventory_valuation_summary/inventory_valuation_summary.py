@@ -91,7 +91,6 @@ def execute(filters=None):
 			data.append(report_data)
 
 	add_additional_uom_columns(columns, data, include_uom, conversion_factors)
-
 	item_group_map = get_item_group_map(data)
 
 	top_level_item_groups = [d for d in item_group_map.values() if not d.parent_item_group]
@@ -102,7 +101,6 @@ def execute(filters=None):
 
 	accumulate_item_values_in_parent(data, item_group_map, columns)
 	tree_data = remove_empty_groups(tree_data, item_group_map)
-
 	return columns, tree_data
 
 def get_item_group_map(item_rows):
@@ -132,14 +130,21 @@ def get_item_group_map(item_rows):
 	return item_group_map
 
 def build_tree_data(tree_data, d, indent=0):
-	item_group_row = {"item_code": "'Group: {0}'".format(d.name), "item_group": d.name, "indent": indent, "_bold": 1}
-	d['report_row'] = item_group_row
-	tree_data.append(item_group_row)
+	item_group_heading = {"item_group": d.name, "indent": indent, "_bold": 1}
+	item_group_total = item_group_heading.copy()
+
+	item_group_heading.update({"item_code": "'Group: {0}'".format(d.name), "is_group_heading": 1})
+	item_group_total.update({"item_code": "'Total: {0}'".format(d.name), "is_group_total": 1})
+
+	d['report_row'] = item_group_total
+	tree_data.append(item_group_heading)
 	for i in d['items']:
 		i['indent'] = indent + 1
 		tree_data.append(i)
 	for ch in d.children:
 		build_tree_data(tree_data, ch, indent + 1)
+
+	tree_data.append(item_group_total)
 
 def remove_empty_groups(tree_data, item_group_map):
 	item_groups = [key for key,val in item_group_map.items() if val['items']]
@@ -164,7 +169,7 @@ def accumulate_item_values_in_parent(item_rows, item_group_map, columns):
 			target[fn] += source[fn]
 
 	for item_group_row in item_group_map.values():
-		for fn in sum_fieldnames + avg_fieldnames:
+		for fn in sum_fieldnames:
 			item_group_row.report_row[fn] = 0
 
 	for row in item_rows:
@@ -179,12 +184,6 @@ def accumulate_item_values_in_parent(item_rows, item_group_map, columns):
 			accumulate(current_item_group_dict.report_row, parent_item_group_dict.report_row)
 			current_item_group_dict = parent_item_group_dict
 			parent_item_group_dict = item_group_map.get(current_item_group_dict.parent_item_group)
-
-def accumulate_group_values_in_parent(item_group_dict, item_group_map):
-	pass
-
-def calculate_item_group_totals(row, item_group_dict, fieldnames):
-	pass
 
 
 def get_columns(filters):
