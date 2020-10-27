@@ -47,19 +47,18 @@ def execute(filters=None):
 
 	_func = lambda x: x[1]
 
-	for (company, item, warehouse) in sorted(iwb_map):
+	for (company, item) in sorted(iwb_map):
 		if item_map.get(item):
-			qty_dict = iwb_map[(company, item, warehouse)]
+			qty_dict = iwb_map[(company, item)]
 			item_reorder_level = 0
 			item_reorder_qty = 0
-			if item + warehouse in item_reorder_detail_map:
-				item_reorder_level = item_reorder_detail_map[item + warehouse]["warehouse_reorder_level"]
-				item_reorder_qty = item_reorder_detail_map[item + warehouse]["warehouse_reorder_qty"]
+			if item in item_reorder_detail_map:
+				item_reorder_level = item_reorder_detail_map[item]["warehouse_reorder_level"]
+				item_reorder_qty = item_reorder_detail_map[item]["warehouse_reorder_qty"]
 
 			report_data = {
 				'currency': company_currency,
 				'item_code': item,
-				'warehouse': warehouse,
 				'company': company,
 				'reorder_level': item_reorder_level,
 				'reorder_qty': item_reorder_qty,
@@ -71,7 +70,7 @@ def execute(filters=None):
 				conversion_factors.setdefault(item, item_map[item].conversion_factor)
 
 			if filters.get('show_stock_ageing_data'):
-				fifo_queue = item_wise_fifo_queue[(item, warehouse)].get('fifo_queue')
+				fifo_queue = item_wise_fifo_queue[(item)].get('fifo_queue')
 
 				stock_ageing_data = {
 					'average_age': 0,
@@ -191,7 +190,6 @@ def get_columns(filters):
 	columns = [
 		{"label": _("Item"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 250},
 		{"label": _("Item Group"), "fieldname": "item_group", "fieldtype": "Link", "options": "Item Group", "width": 100},
-		{"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 100},
 		{"label": _("Stock UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 90},
 		{"label": _("Balance Qty"), "fieldname": "bal_qty", "fieldtype": "Float", "width": 100, "convertible": "qty"},
 		{"label": _("Balance Value"), "fieldname": "bal_val", "fieldtype": "Currency", "width": 100, "options": "currency", "convertible": "currency"},
@@ -254,7 +252,7 @@ def get_stock_ledger_entries(filters, items):
 
 	return frappe.db.sql("""
 		select
-			sle.item_code, warehouse, sle.posting_date, sle.actual_qty, sle.valuation_rate,
+			sle.item_code, sle.posting_date, sle.actual_qty, sle.valuation_rate,
 			sle.company, sle.voucher_type, sle.qty_after_transaction, sle.stock_value_difference,
 			sle.item_code as name, sle.voucher_no
 		from
@@ -271,7 +269,7 @@ def get_item_warehouse_map(filters, sle):
 	float_precision = cint(frappe.db.get_default("float_precision")) or 3
 
 	for d in sle:
-		key = (d.company, d.item_code, d.warehouse)
+		key = (d.company, d.item_code)
 		if key not in iwb_map:
 			iwb_map[key] = frappe._dict({
 				"opening_qty": 0.0, "opening_val": 0.0,
@@ -281,7 +279,7 @@ def get_item_warehouse_map(filters, sle):
 				"val_rate": 0.0
 			})
 
-		qty_dict = iwb_map[(d.company, d.item_code, d.warehouse)]
+		qty_dict = iwb_map[(d.company, d.item_code)]
 
 		if d.voucher_type == "Stock Reconciliation":
 			qty_diff = flt(d.qty_after_transaction) - flt(qty_dict.bal_qty)
@@ -311,8 +309,8 @@ def get_item_warehouse_map(filters, sle):
 	return iwb_map
 
 def filter_items_with_no_transactions(iwb_map, float_precision):
-	for (company, item, warehouse) in sorted(iwb_map):
-		qty_dict = iwb_map[(company, item, warehouse)]
+	for (company, item) in sorted(iwb_map):
+		qty_dict = iwb_map[(company, item)]
 
 		no_transactions = True
 		for key, val in iteritems(qty_dict):
@@ -322,7 +320,7 @@ def filter_items_with_no_transactions(iwb_map, float_precision):
 				no_transactions = False
 
 		if no_transactions:
-			iwb_map.pop((company, item, warehouse))
+			iwb_map.pop((company, item))
 
 	return iwb_map
 
