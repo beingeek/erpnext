@@ -5,7 +5,7 @@
 	var sales_person_columns = {};
 	for (let i=1, l=report_columns.length; i<l; i++) {
 		var column = report_columns[i];
-		var sales_person = column.sales_person;
+		var sales_person = column.is_total ? "" : column.sales_person || "No Sales Person";
 		if (!sales_person_columns[sales_person]) {
 			sales_person_columns[sales_person] = [];
 		}
@@ -60,7 +60,7 @@
 			<th></th>
 			{% for (sales_person in sales_person_columns) { %}
 				{% var sp_cols = sales_person_columns[sales_person]; %}
-				<th class="text-center" colspan="{%= sp_cols.length %}">{%= sales_person || "No Sales Person" %}</th>
+				<th class="text-center" colspan="{%= sp_cols.length %}">{%= sales_person %}</th>
 			{% } %}
 		</tr>
 		{% } %}
@@ -71,7 +71,7 @@
 				{% for (sales_person in sales_person_columns) { %}
 					{% var sp_cols = sales_person_columns[sales_person]; %}
 					{% for (let i=0; i < sp_cols.length; i++) { %}
-						<th class="text-center">{%= sp_cols[i].period_label %}</th>
+						<th class="text-right">{%= sp_cols[i].period_label %}</th>
 					{% } %}
 				{% } %}
 			{% } else { %}
@@ -107,3 +107,4 @@
 <p class="text-right text-muted">
 	Printed On {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}
 </p>
+</div>

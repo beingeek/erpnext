@@ -148,7 +148,7 @@ def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_v
 	if with_sales_person:
 		new_period_list = []
 		sales_persons = [frappe._dict({"name": None})]
-		sales_persons += frappe.get_all("Sales Person", fields=['name', 'lft', 'rgt'], filters={"is_group": 0})
+		sales_persons += frappe.get_all("Sales Person", fields=['name', 'lft', 'rgt'])
 
 		for sp in sales_persons:
 			for period in period_list:
@@ -514,8 +514,9 @@ def get_additional_conditions(from_date, ignore_closing_entries, filters):
 			additional_conditions.append("(finance_book in (%(finance_book)s, '') OR finance_book IS NULL)")
 
 		if filters.get("sales_person"):
-			filters.sales_persons = frappe.get_all("Sales Person", filters={"name": ["subtree of", filters.get("sales_person")]})
-			filters.sales_persons = [d.name for d in filters.sales_persons]
+			sales_person = filters.get("sales_person")
+			filters.sales_persons = frappe.get_all("Sales Person", filters={"name": ["descendants of", filters.get("sales_person")]})
+			filters.sales_persons = [sales_person] + [d.name for d in filters.sales_persons]
 			additional_conditions.append("sp.sales_person in %(sales_persons)s")
 
 		if filters.get("start_month"):
@@ -592,6 +593,8 @@ def get_columns(periodicity, period_list, accumulated_values=1, company=None, wi
 			columns.append({
 				"fieldname": "total",
 				"label": _("Total"),
+				"period_label": _("Total"),
+				"is_total": 1,
 				"fieldtype": "Currency",
 				"width": 150
 			})
