@@ -26,6 +26,15 @@
 	.print-format th {
     	background-color: transparent !important;
 	}
+	.print-format {
+		{% if (report_columns.length > 9 && report_columns.length <= 14) { %}
+		font-size: 7.0pt;
+		{% } else if (report_columns.length > 14 && report_columns.length <= 19) { %}
+		font-size: 6.0pt;
+		{% } else if (report_columns.length > 19 ) { %}
+		font-size: 5.0pt;
+		{% } %}
+	}
 </style>
 <h2 class="text-center">{%= __(report.report_name) %}</h2>
 <h3 class="text-center">{%= filters.company %}</h3>
