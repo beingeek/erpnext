@@ -96,7 +96,7 @@ def execute(filters=None):
 
 	tree_data = []
 	for d in top_level_item_groups:
-		build_tree_data(tree_data, d, 0)
+		build_tree_data(tree_data, d, company_currency, 0)
 
 	accumulate_item_values_in_parent(data, item_group_map, columns)
 	tree_data = remove_empty_groups(tree_data, item_group_map)
@@ -128,8 +128,8 @@ def get_item_group_map(item_rows):
 
 	return item_group_map
 
-def build_tree_data(tree_data, d, indent=0):
-	item_group_heading = {"item_group": d.name, "indent": indent, "_bold": 1}
+def build_tree_data(tree_data, d, company_currency, indent=0):
+	item_group_heading = {"item_group": d.name, "indent": indent, "_bold": 1, "currency": company_currency}
 	item_group_total = item_group_heading.copy()
 
 	item_group_heading.update({"item_code": "'Group: {0}'".format(d.name), "is_group_heading": 1})
@@ -141,7 +141,7 @@ def build_tree_data(tree_data, d, indent=0):
 		i['indent'] = indent + 1
 		tree_data.append(i)
 	for ch in d.children:
-		build_tree_data(tree_data, ch, indent + 1)
+		build_tree_data(tree_data, ch, company_currency, indent + 1)
 
 	tree_data.append(item_group_total)
 
