@@ -532,12 +532,10 @@ class ReceivablePayableReport(object):
 		self.get_ageing_data(entry_date, row)
 
 		# ageing buckets should not have amounts if due date is not reached
-		if getdate(entry_date) > getdate(self.filters.report_date):
-			row.range1 = row.range2 = row.range3 = row.range4 = row.range5 = 0.0
 
 	def get_ageing_data(self, entry_date, row):
 		# [0-30, 30-60, 60-90, 90-120, 120-above]
-		row.range1 = row.range2 = row.range3 = row.range4 = row.range5 = 0.0
+		row.range0 = row.range1 = row.range2 = row.range3 = row.range4 = row.range5 = 0.0
 
 		if not (self.age_as_on and entry_date):
 			return
@@ -548,13 +546,13 @@ class ReceivablePayableReport(object):
 		if not (self.filters.range1 and self.filters.range2 and self.filters.range3 and self.filters.range4):
 			self.filters.range1, self.filters.range2, self.filters.range3, self.filters.range4 = 30, 60, 90, 120
 
-		for i, days in enumerate([self.filters.range1, self.filters.range2, self.filters.range3, self.filters.range4]):
+		for i, days in enumerate([0, self.filters.range1, self.filters.range2, self.filters.range3, self.filters.range4]):
 			if row.age <= days:
 				index = i
 				break
 
 		if index is None: index = 4
-		row['range' + str(index+1)] = row.outstanding
+		row['range' + str(index)] = row.outstanding
 
 	def get_gl_entries(self):
 		# get all the GL entries filtered by the given filters
@@ -798,6 +796,7 @@ class ReceivablePayableReport(object):
 		# for charts
 		self.ageing_column_labels = []
 		self.add_column(label=_('Age (Days)'), fieldname='age', fieldtype='Int', width=80)
+		self.add_column(label=_('Current'), fieldname='range0')
 
 		for i, label in enumerate(["0-{range1}".format(range1=self.filters["range1"]),
 			"{range1}-{range2}".format(range1=cint(self.filters["range1"])+ 1, range2=self.filters["range2"]),

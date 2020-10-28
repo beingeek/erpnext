@@ -77,6 +77,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			"paid": 0.0,
 			"credit_note": 0.0,
 			"outstanding": 0.0,
+			"range0": 0.0,
 			"range1": 0.0,
 			"range2": 0.0,
 			"range3": 0.0,
@@ -112,6 +113,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		self.add_column(_(credit_debit_label), fieldname='credit_note')
 		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
 
+		self.add_column(label=_('Current'), fieldname='range0')
 		self.setup_ageing_columns()
 
 		if self.party_type == "Customer":
