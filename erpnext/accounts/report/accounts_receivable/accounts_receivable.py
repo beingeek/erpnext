@@ -554,6 +554,8 @@ class ReceivablePayableReport(object):
 		if index is None: index = 4
 		row['range' + str(index)] = row.outstanding
 
+		row.is_range_col = 1
+
 	def get_gl_entries(self):
 		# get all the GL entries filtered by the given filters
 
@@ -779,7 +781,7 @@ class ReceivablePayableReport(object):
 
 		self.add_column(label=_('Remarks'), fieldname='remarks', fieldtype='Text', width=200)
 
-	def add_column(self, label, fieldname=None, fieldtype='Currency', options=None, width=120):
+	def add_column(self, label, fieldname=None, fieldtype='Currency', options=None, is_range_col=None, width=120):
 		if not fieldname: fieldname = scrub(label)
 		if fieldtype=='Currency': options='currency'
 		if fieldtype=='Date': width = 90
@@ -789,6 +791,7 @@ class ReceivablePayableReport(object):
 			fieldname=fieldname,
 			fieldtype=fieldtype,
 			options=options,
+			is_range_col=is_range_col,
 			width=width
 		))
 
@@ -796,14 +799,14 @@ class ReceivablePayableReport(object):
 		# for charts
 		self.ageing_column_labels = []
 		self.add_column(label=_('Age (Days)'), fieldname='age', fieldtype='Int', width=80)
-		self.add_column(label=_('Current'), fieldname='range0')
+		self.add_column(label=_('Current'), fieldname='range0', is_range_col='1')
 
 		for i, label in enumerate(["1-{range1}".format(range1=self.filters["range1"]),
 			"{range1}-{range2}".format(range1=cint(self.filters["range1"])+ 1, range2=self.filters["range2"]),
 			"{range2}-{range3}".format(range2=cint(self.filters["range2"])+ 1, range3=self.filters["range3"]),
 			"{range3}-{range4}".format(range3=cint(self.filters["range3"])+ 1, range4=self.filters["range4"]),
 			"{range4}-{above}".format(range4=cint(self.filters["range4"])+ 1, above=_("Above"))]):
-				self.add_column(label=label, fieldname='range' + str(i+1))
+				self.add_column(label=label, fieldname='range' + str(i+1), is_range_col='1')
 				self.ageing_column_labels.append(label)
 
 	def get_chart_data(self):

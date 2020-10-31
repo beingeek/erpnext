@@ -6,6 +6,18 @@
 	.print-format td {
 		vertical-align:middle !important;
 	}
+	.print-format th {
+    	background-color: transparent !important;
+	}
+	.borderless, .borderless table, .borderless tr, .borderless td, .borderless th {
+		border: 0 !important;
+	}
+	.group-heading td {
+		font-weight: bold;
+	}
+	.group-heading > td:not(:first-child){
+		border-bottom: 2px solid #000000 !important;
+	}
 	</style>
 
 	<h2 class="text-center" style="margin-top:0">{%= __(report.report_name) %}</h2>
@@ -109,7 +121,7 @@
 		</table>
 		{% } %}
 	{% } %}
-	<table class="table table-bordered">
+	<table class="table borderless">
 		<thead>
 			<tr>
 				{% if(report.report_name === "Accounts Receivable" || report.report_name === "Accounts Payable") { %}
@@ -140,17 +152,19 @@
 						<th style="width: 10%">{%= __("Remaining Balance") %}</th>
 					{% } %}
 				{% } else { %}
-					<th style="width: 40%">{%= (filters.customer || filters.supplier) ? __("Remarks"): __("Party") %}</th>
-					<th style="width: 15%">{%= __("Total Invoiced Amount") %}</th>
-					<th style="width: 15%">{%= __("Total Paid Amount") %}</th>
-					<th style="width: 15%">{%= report.report_name === "Accounts Receivable Summary" ? __('Credit Note Amount') : __('Debit Note Amount') %}</th>
-					<th style="width: 15%">{%= __("Total Outstanding Amount") %}</th>
+						<th style="width: 30%"></th>
+						{% for(var i=0, l=report.columns.length; i<l; i++ ) { %}
+							{% if(report.columns[i]["is_range_col"]) { %}
+								<th style="width: 10%" class="text-center" >{%= report.columns[i]["label"] %}</th>
+							{% } %}
+						{% } %}
+						<th style="width: 10%" class="text-center" >Total</th>
 				{% } %}
 			</tr>
 		</thead>
 		<tbody>
 			{% for(var i=0, l=data.length; i<l; i++) { %}
-				<tr>
+				<tr class="{% if (!data[i]['party']) { %} group-heading {% } %}">
 				{% if(report.report_name === "Accounts Receivable" || report.report_name === "Accounts Payable") { %}
 					{% if(data[i]["party"]) { %}
 						<td>{%= frappe.datetime.str_to_user(data[i]["posting_date"]) %}</td>
@@ -185,7 +199,6 @@
 							</div>
 						</td>
 						{% } %}
-
 						<td style="text-align: right">
 							{%= format_currency(data[i]["invoiced"], data[i]["currency"]) %}</td>
 
@@ -240,7 +253,7 @@
 					{% } %}
 				{% } else { %}
 					{% if(data[i]["party"]|| "&nbsp;") { %}
-						{% if((data[i]["party"]) != __("'Total'")) { %}
+						{% if(data[i]["party"]) { %}
 							<td>
 								{% if(!(filters.customer || filters.supplier)) { %}
 									{%= data[i]["party"] %}
@@ -250,15 +263,16 @@
 										<br> {%= data[i]["supplier_name"] %}
 									{% } %}
 								{% } %}
-								<br>{%= __("Remarks") %}:
-								{%= data[i]["remarks"] %}
 							</td>
 						{% } else { %}
-							<td><b>{%= __("Total") %}</b></td>
+							<td>{%= __("Total") %}</td>
 						{% } %}
-						<td style="text-align: right">{%= format_currency(data[i]["invoiced"], data[0]["currency"]) %}</td>
-						<td style="text-align: right">{%= format_currency(data[i]["paid"], data[0]["currency"]) %}</td>
-						<td style="text-align: right">{%= format_currency(data[i]["credit_note"], data[0]["currency"]) %}</td>
+						<td style="text-align: right">{%= format_currency(data[i]["range0"], data[0]["currency"]) %}</td>
+						<td style="text-align: right">{%= format_currency(data[i]["range1"], data[0]["currency"]) %}</td>
+						<td style="text-align: right">{%= format_currency(data[i]["range2"], data[0]["currency"]) %}</td>
+						<td style="text-align: right">{%= format_currency(data[i]["range3"], data[0]["currency"]) %}</td>
+						<td style="text-align: right">{%= format_currency(data[i]["range4"], data[0]["currency"]) %}</td>
+						<td style="text-align: right">{%= format_currency(data[i]["range5"], data[0]["currency"]) %}</td>
 						<td style="text-align: right">{%= format_currency(data[i]["outstanding"], data[0]["currency"]) %}</td>
 					{% } %}
 				{% } %}

@@ -88,6 +88,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 	def set_party_details(self, row):
 		self.party_total[row.party].currency = row.currency
+		self.party_total[row.party].is_range_col = row.is_range_col
 
 		for key in ('territory', 'customer_group', 'supplier_group'):
 			if row.get(key):
@@ -113,7 +114,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		self.add_column(_(credit_debit_label), fieldname='credit_note')
 		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
 
-		self.add_column(label=_('Current'), fieldname='range0')
+		self.add_column(label=_('Current'), fieldname='range0', is_range_col='1')
 		self.setup_ageing_columns()
 
 		if self.party_type == "Customer":
@@ -136,4 +137,4 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			"{range2}-{range3}".format(range2=cint(self.filters["range2"])+ 1, range3=self.filters["range3"]),
 			"{range3}-{range4}".format(range3=cint(self.filters["range3"])+ 1, range4=self.filters["range4"]),
 			"{range4}-{above}".format(range4=cint(self.filters["range4"])+ 1, above=_("Above"))]):
-				self.add_column(label=label, fieldname='range' + str(i+1))
+				self.add_column(label=label, fieldname='range' + str(i+1), is_range_col='1')
