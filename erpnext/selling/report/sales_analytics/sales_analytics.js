@@ -8,27 +8,30 @@ frappe.query_reports["Sales Analytics"] = {
 			fieldname: "tree_type",
 			label: __("Tree Type"),
 			fieldtype: "Select",
-			options: ["Customer Group","Customer","Item Group","Item","Territory","Order Type"],
+			options: ["Customer Group","Customer","Item Group","Item","Brand","Territory","Sales Person"],
 			default: "Customer",
 			reqd: 1
 		},
 		{
-			fieldname: "doc_type",
-			label: __("based_on"),
+			fieldname: "doctype",
+			label: __("Based On"),
 			fieldtype: "Select",
 			options: ["Sales Order","Delivery Note","Sales Invoice"],
 			default: "Sales Invoice",
 			reqd: 1
 		},
 		{
-			fieldname: "value_quantity",
-			label: __("Value Or Qty"),
+			fieldname: "order_type",
+			label: __("Order Type"),
 			fieldtype: "Select",
-			options: [
-				{ "value": "Value", "label": __("Value") },
-				{ "value": "Quantity", "label": __("Quantity") },
-			],
-			default: "Value",
+			options: "\nSales\nMaintenance\nShopping Cart"
+		},
+		{
+			fieldname: "value_field",
+			label: __("Amount Or Qty"),
+			fieldtype: "Select",
+			options: ["Net Amount", "Amount", "Stock Qty", "Transaction Qty"],
+			default: "Net Amount",
 			reqd: 1
 		},
 		{
@@ -65,45 +68,120 @@ frappe.query_reports["Sales Analytics"] = {
 			],
 			default: "Monthly",
 			reqd: 1
+		},
+		{
+			fieldname: "customer",
+			label: __("Customer"),
+			fieldtype: "Link",
+			options: "Customer"
+		},
+		{
+			fieldname: "customer_group",
+			label: __("Customer Group"),
+			fieldtype: "Link",
+			options: "Customer Group"
+		},
+		{
+			fieldname: "item_code",
+			label: __("Item"),
+			fieldtype: "Link",
+			options: "Item"
+		},
+		{
+			fieldname: "item_group",
+			label: __("Item Group"),
+			fieldtype: "Link",
+			options: "Item Group"
+		},
+		{
+			fieldname: "brand",
+			label: __("Brand"),
+			fieldtype: "Link",
+			options: "Brand"
+		},
+		{
+			fieldname: "territory",
+			label: __("Territory"),
+			fieldtype: "Link",
+			options: "Territory"
+		},
+		{
+			fieldname: "sales_person",
+			label: __("Sales Person"),
+			fieldtype: "Link",
+			options: "Sales Person"
+		},
+		{
+			"fieldname":"cost_center",
+			"label": __("Cost Center"),
+			"fieldtype": "MultiSelectList",
+			get_data: function(txt) {
+				return frappe.db.get_link_options('Cost Center', txt, {
+					company: frappe.query_report.get_filter_value("company")
+				});
+			}
+		},
+		{
+			"fieldname":"project",
+			"label": __("Project"),
+			"fieldtype": "MultiSelectList",
+			get_data: function(txt) {
+				return frappe.db.get_link_options('Project', txt, {
+					company: frappe.query_report.get_filter_value("company")
+				});
+			}
+		},
+		{
+			"fieldname": "group_by",
+			"label": __("Group By"),
+			"fieldtype": "Select",
+			"default": "Ungrouped",
+			"options": ['Ungrouped', 'Sales Person']
+		},
+		{
+			"fieldname": "start_month",
+			"label": __("Start Month"),
+			"fieldtype": "Select",
+			"default": "January",
+			"options": ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+		},
+		{
+			"fieldname": "end_month",
+			"label": __("End Month"),
+			"fieldtype": "Select",
+			"default": "December",
+			"options": ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 		}
 	],
 	after_datatable_render: function(datatable_obj) {
-		$(datatable_obj.wrapper).find(".dt-row-0").find('input[type=checkbox]').click();
+		const checkbox = $(datatable_obj.wrapper).find(".dt-row-0").find('input[type=checkbox]');
+		if(!checkbox.prop("checked")) {
+			checkbox.click();
+		}
 	},
 	get_datatable_options(options) {
 		return Object.assign(options, {
 			checkboxColumn: true,
 			events: {
 				onCheckRow: function(data) {
-					row_name = data[2].content;
-					length = data.length;
+					let row_name = data[2].content;
+					let period_columns = [];
+					$.each(frappe.query_report.columns || [], function(i, column) {
+						if (column.period_column) {
+							period_columns.push(i+2);
+						}
+					});
 
-					var tree_type = frappe.query_report.filters[0].value;
-
-					if(tree_type == "Customer") {
-						row_values = data.slice(4,length-1).map(function (column) {
-							return column.content;
-						})
-					} else if (tree_type == "Item") {
-						row_values = data.slice(5,length-1).map(function (column) {
-							return column.content;
-						})
-					}
-					else {
-						row_values = data.slice(3,length-1).map(function (column) {
-							return column.content;
-						})
-					}
-
-					entry = {
+					let row_values = period_columns.map(i => data[i].content);
+					let entry = {
 						'name':row_name,
 						'values':row_values
-					}
+					};
 
 					let raw_data = frappe.query_report.chart.data;
 					let new_datasets = raw_data.datasets;
 
-					var found = false;
+					let found = false;
 
 					for(var i=0; i < new_datasets.length;i++){
 						if(new_datasets[i].name == row_name){
@@ -120,16 +198,16 @@ frappe.query_reports["Sales Analytics"] = {
 					let new_data = {
 						labels: raw_data.labels,
 						datasets: new_datasets
-					}
+					};
 
 					setTimeout(() => {
 						frappe.query_report.chart.update(new_data)
-					}, 500)
+					}, 500);
 
 
 					setTimeout(() => {
 						frappe.query_report.chart.draw(true);
-					}, 1000)
+					}, 1000);
 
 					frappe.query_report.raw_chart_data = new_data;
 				},
