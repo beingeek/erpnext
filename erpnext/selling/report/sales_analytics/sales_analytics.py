@@ -22,8 +22,8 @@ class Analytics(object):
 		self.entity_names = {}
 
 	def run(self):
-		self.get_columns()
 		self.get_data()
+		self.get_columns()
 		self.get_chart_data()
 		return self.columns, self.data, None, self.chart
 
@@ -60,16 +60,22 @@ class Analytics(object):
 			"fieldtype": "Float",
 			"width": 120
 		})
+		for sales_person in self.sales_persons:
+			for end_date in self.periodic_daterange:
+				period = self.get_period(end_date)
+				label, key = self.get_period_label_key(period, sales_person.name)
+				self.columns.append({
+					"label": _(label),
+					"fieldname": key,
+					"fieldtype": "Float",
+					"period_column": True,
+					"width": 120
+				})
 
-		for end_date in self.periodic_daterange:
-			period = self.get_period(end_date)
-			self.columns.append({
-				"label": _(period),
-				"fieldname": scrub(period),
-				"fieldtype": "Float",
-				"period_column": True,
-				"width": 120
-			})
+	def get_period_label_key(self, period, sales_person):
+		label = "{0} {1}".format(sales_person or "No Sales Person", period) if self.filters.with_sales_person else period
+		key = scrub(label)
+		return label, key
 
 	def get_data(self):
 		self.company_currency = frappe.get_cached_value('Company', self.filters.get("company"), "default_currency")
@@ -106,8 +112,10 @@ class Analytics(object):
 			self.get_rows_by_group()
 
 	def get_entries(self, entity_field, entity_name_field=None):
-		include_sales_person = self.filters.tree_type == "Sales Person" or self.filters.sales_person
+		include_sales_person = self.filters.tree_type == "Sales Person" or self.filters.sales_person or self.filters.with_sales_person
 		sales_team_join = "left join `tabSales Team` sp on sp.parent = s.name and sp.parenttype = %(doctype)s" \
+			if include_sales_person else ""
+		additional_columns = ", sp.sales_person, ifnull(sp.allocated_percentage, 100) as allocated_percentage" \
 			if include_sales_person else ""
 
 		include_supplier = self.filters.tree_type == "Supplier Group" or self.filters.supplier_group
@@ -129,6 +137,7 @@ class Analytics(object):
 				{entity_name_field}
 				{value_field} as value_field,
 				s.{date_field}
+				{additional_columns}
 			from 
 				`tab{doctype} Item` i, `tab{doctype}` s {supplier_table} {sales_team_join}
 			where i.parent = s.name and s.docstatus = 1 {supplier_condition}
@@ -137,6 +146,7 @@ class Analytics(object):
 		""".format(
 			entity_field=entity_field,
 			entity_name_field=entity_name_field,
+			additional_columns=additional_columns,
 			value_field=value_field,
 			date_field=self.date_field,
 			doctype=self.filters.doctype,
@@ -243,13 +253,16 @@ class Analytics(object):
 			total = 0
 			for end_date in self.periodic_daterange:
 				period = self.get_period(end_date)
-				amount = flt(period_data.get(period, 0.0))
-				row[scrub(period)] = amount
-				total += amount
+				sales_person_data = period_data.get(period, frappe._dict())
+				for sales_person, amount in sales_person_data.items():
+					label, key = self.get_period_label_key(period, sales_person)
+					row[key] = amount
+					total += amount
 
-				total_row.setdefault(scrub(period), 0.0)
-				total_row[scrub(period)] += amount
-				total_row["total"] += amount
+					total_row.setdefault(key, 0.0)
+					total_row[key] += amount
+
+					total_row["total"] += amount
 
 			row["total"] = total
 
@@ -285,8 +298,9 @@ class Analytics(object):
 
 		for d in self.entries:
 			period = self.get_period(d.get(self.date_field))
-			self.entity_periodic_data.setdefault(d.entity, frappe._dict()).setdefault(period, 0.0)
-			self.entity_periodic_data[d.entity][period] += flt(d.value_field)
+			sales_person = cstr(d.sales_person)
+			self.entity_periodic_data.setdefault(d.entity, frappe._dict()).setdefault(period, frappe._dict()).setdefault(sales_person, 0.0)
+			self.entity_periodic_data[d.entity][period][sales_person] += flt(d.value_field)
 
 			if self.filters.tree_type == "Item":
 				self.entity_periodic_data[d.entity]['stock_uom'] = d.stock_uom
@@ -336,6 +350,14 @@ class Analytics(object):
 			from_date = add_days(period_end_date, 1)
 			if period_end_date == to_date:
 				break
+
+		self.filters.with_sales_person = self.filters.get('group_by') == 'Sales Person'
+		if self.filters.with_sales_person:
+			sales_persons = [frappe._dict({"name": None})]
+			sales_persons += frappe.get_all("Sales Person", fields=['name'])
+			self.sales_persons = sales_persons
+		else:
+			self.sales_persons = [frappe._dict({"name": None})]
 
 	def get_groups(self):
 		if self.filters.tree_type == "Territory":
