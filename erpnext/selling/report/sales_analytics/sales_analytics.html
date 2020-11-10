@@ -1,0 +1,113 @@
+{%
+	var report_columns = report.get_columns_for_print();
+	report_columns = report_columns.filter(col => !col.hidden);
+
+	var sales_person_columns = {};
+	for (let i=1, l=report_columns.length; i<l; i++) {
+		var column = report_columns[i];
+		var sales_person = column.is_total ? "" : column.sales_person || "No Sales Person";
+		if (!sales_person_columns[sales_person]) {
+			sales_person_columns[sales_person] = [];
+		}
+		sales_person_columns[sales_person].push(column);
+	}
+%}
+
+<style>
+	.financial-statements-important td {
+		font-weight: bold;
+	}
+	.financial-statements-blank-row td {
+		height: 37px;
+	}
+	.borderless, .borderless table, .borderless tr, .borderless td, .borderless th {
+		border: 0 !important;
+	}
+	.print-format th {
+    	background-color: transparent !important;
+	}
+	.print-format {
+		{% if (report_columns.length > 9 && report_columns.length <= 14) { %}
+		font-size: 7.0pt;
+		{% } else if (report_columns.length > 14 && report_columns.length <= 19) { %}
+		font-size: 6.0pt;
+		{% } else if (report_columns.length > 19 ) { %}
+		font-size: 5.0pt;
+		{% } %}
+	}
+	.last_row td {
+		font-weight: bold;
+	}
+	.last_row > td:not(:first-child){
+		border-bottom: 2px solid #000000 !important;
+	}
+	.sales-person-label th:nth-child(2n+3) {
+		border-bottom: 2px solid #000000 !important;
+	}
+</style>
+<h2 class="text-center">{%= filters.company %}</h2>
+<h3 class="text-center">{%= __(report.report_name) %}</h3>
+
+{% if 'cost_center' in filters %}
+	<h3 class="text-center">{%= filters.cost_center %}</h3>
+{% endif %}
+
+<h3 class="text-center">{%= filters.fiscal_year %}</h3>
+<h5 class="text-center">
+	{%=  __("Currency") %} : {%= filters.presentation_currency || erpnext.get_currency(filters.company) %}
+</h5>
+{% if (filters.from_date) { %}
+	<h5 class="text-center">
+		{%= frappe.datetime.str_to_user(filters.from_date) %} - {%= frappe.datetime.str_to_user(filters.to_date) %}
+	</h5>
+{% } %}
+<hr>
+<table class="table borderless">
+	<thead>
+		{% if (filters.group_by == "Sales Person") { %}
+		<tr class="sales-person-label">
+			<th></th>
+			{% for (sales_person in sales_person_columns) { %}
+				{% var sp_cols = sales_person_columns[sales_person]; %}
+				<th   class="text-center" colspan="{%= sp_cols.length %}">{%= sales_person %}</th>
+			{% } %}
+		</tr>
+		{% } %}
+
+        <tr>
+			{% for (let i=0, l=report_columns.length; i<l; i++) { %}
+            <th class="text-right">{%= report_columns[i].period_label %}</th>
+            {% } %}
+		</tr>
+
+	</thead>
+	<tbody class="">
+    {% for(let j=1, k=data.length; j<k; j++) { %}
+	{%
+		var row = data[j];
+	%}
+        <tr>
+			<td>{%= row["entity"] %}</td>
+            {% for(let i=1, l=report_columns.length; i<l; i++) { %}
+                <td class="text-right">
+                    {% const fieldname = report_columns[i].fieldname; %}
+					{%= format_currency( row[fieldname] ) %}
+                </td>
+            {% } %}
+        </tr>
+    {% } %}
+		<tr class="last_row">
+			{% var total_row =  data[0] %}
+			<td>Total</td>
+			{% for(let i=1, l=report_columns.length; i<l; i++) { %}
+                <td class="text-right">
+                    {% const fieldname = report_columns[i].fieldname; %}
+					{%= format_currency( total_row[fieldname] ) %}
+                </td>
+            {% } %}
+		</tr>
+	</tbody>
+</table>
+<p class="text-right text-muted">
+	Printed On {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}
+</p>

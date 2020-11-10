@@ -9,6 +9,22 @@ from six import iteritems
 from erpnext.accounts.report.financial_statements import get_cost_centers_with_children
 from erpnext.accounts.utils import get_fiscal_year
 
+
+month_to_number = {
+	'January' : 1,
+	'February' : 2,
+	'March' : 3,
+	'April' : 4,
+	'May' : 5,
+	'June' : 6,
+	'July' : 7,
+	'August' : 8,
+	'September' : 9,
+	'October' : 10,
+	'November' : 11,
+	'December' : 12
+}
+
 def execute(filters=None):
 	return Analytics(filters).run()
 
@@ -30,6 +46,7 @@ class Analytics(object):
 	def get_columns(self):
 		self.columns = [{
 			"label": _(self.filters.tree_type),
+			"period_label":_(self.filters.tree_type),
 			"options": self.filters.tree_type,
 			"fieldname": "entity",
 			"fieldtype": "Link",
@@ -49,6 +66,7 @@ class Analytics(object):
 		if show_name:
 			self.columns.append({
 				"label": _(self.filters.tree_type + " Name"),
+				"period_label": _(self.filters.tree_type + " Name"),
 				"fieldname": "entity_name",
 				"fieldtype": "Data",
 				"width": 140
@@ -56,22 +74,43 @@ class Analytics(object):
 
 		self.columns.append({
 			"label": _("Total"),
+			"period_label": _("Total"),
 			"fieldname": "total",
 			"fieldtype": "Float",
+			"is_total":1,
 			"width": 120
 		})
-		for sales_person in self.sales_persons:
-			for end_date in self.periodic_daterange:
-				period = self.get_period(end_date)
-				label, key = self.get_period_label_key(period, sales_person.name)
-				self.columns.append({
-					"label": _(label),
-					"fieldname": key,
-					"fieldtype": "Float",
-					"period_column": True,
-					"width": 120
-				})
 
+		if not self.filters.start_month:
+			self.filters.start_month = "January"
+		if not self.filters.end_month:
+			self.filters.end_month = "December"
+
+		start_month_no = month_to_number[self.filters.start_month]
+		end_month_no = month_to_number[self.filters.end_month]
+
+		if start_month_no > end_month_no:
+			frappe.throw(_("End month must be greater then start month"))
+
+		self.month_range = list(range(start_month_no, end_month_no + 1))
+
+		for sales_person in self.sales_persons:
+			if sales_person.get('has_entry') or not self.filters.with_sales_person:
+				for end_date in self.periodic_daterange:
+					# if end_date in self.month_range:
+					period = self.get_period(end_date)
+					label, key = self.get_period_label_key(period, sales_person.name)
+					end_date_month = end_date.month
+					if end_date_month in self.month_range:
+						self.columns.append({
+							"label": _(label),
+							"period_label": period,
+							"fieldname": key,
+							"fieldtype": "Float",
+							"period_column": True,
+							"sales_person": cstr( sales_person.name if sales_person.name else ""),
+							"width": 120
+						})
 	def get_period_label_key(self, period, sales_person):
 		label = "{0} {1}".format(sales_person or "No Sales Person", period) if self.filters.with_sales_person else period
 		key = scrub(label)
@@ -155,7 +194,7 @@ class Analytics(object):
 			supplier_condition=supplier_condition,
 			is_opening_condition=is_opening_condition,
 			filter_conditions=self.get_conditions()
-		), self.filters, as_dict=1, debug=True)
+		), self.filters, as_dict=1)
 
 		if entity_name_field:
 			for d in self.entries:
@@ -235,6 +274,14 @@ class Analytics(object):
 				"i.project in %(project)s" if frappe.get_meta(self.filters.doctype + " Item").has_field("project")
 				else "s.project in %(project)s")
 
+		if self.filters.get("start_month"):
+			self.filters.start_month_no = month_to_number[self.filters.start_month]
+			conditions.append("MONTH(posting_date) >= %(start_month_no)s")
+
+		if self.filters.get("end_month"):
+			self.filters.end_month_no = month_to_number[self.filters.end_month]
+			conditions.append("MONTH(posting_date) <= %(end_month_no)s")
+
 		return "and {}".format(" and ".join(conditions)) if conditions else ""
 
 	def get_rows(self):
@@ -248,7 +295,8 @@ class Analytics(object):
 			row = {
 				"entity": entity,
 				"entity_name": self.entity_names.get(entity),
-				"indent": 1
+				"indent": 1,
+				"total": 0.00
 			}
 			total = 0
 			for end_date in self.periodic_daterange:
@@ -283,12 +331,12 @@ class Analytics(object):
 			total = 0
 			for end_date in self.periodic_daterange:
 				period = self.get_period(end_date)
-				amount = flt(self.entity_periodic_data.get(d.name, {}).get(period, 0.0))
-				row[scrub(period)] = amount
-				if d.parent and (self.filters.tree_type != "Order Type" or d.parent == "Order Types"):
-					self.entity_periodic_data.setdefault(d.parent, frappe._dict()).setdefault(period, 0.0)
-					self.entity_periodic_data[d.parent][period] += amount
-				total += amount
+				sales_person_data = self.entity_periodic_data.get(d.name, {}).get(period, {})
+				if sales_person_data:
+					for sales_person, amount in sales_person_data.items():
+						label, key = self.get_period_label_key(period, sales_person)
+						row[key] = amount
+						total += amount
 			row["total"] = total
 			out = [row] + out
 		self.data = out
@@ -299,6 +347,9 @@ class Analytics(object):
 		for d in self.entries:
 			period = self.get_period(d.get(self.date_field))
 			sales_person = cstr(d.sales_person)
+			for sp in self.sales_persons:
+				if cstr(sp.name) == cstr(sales_person): sp.update({'has_entry': True})
+
 			self.entity_periodic_data.setdefault(d.entity, frappe._dict()).setdefault(period, frappe._dict()).setdefault(sales_person, 0.0)
 			self.entity_periodic_data[d.entity][period][sales_person] += flt(d.value_field)
 
@@ -306,6 +357,8 @@ class Analytics(object):
 				self.entity_periodic_data[d.entity]['stock_uom'] = d.stock_uom
 
 	def get_period(self, posting_date):
+		start_month_no = month_to_number[self.filters.start_month]
+		end_month_no = month_to_number[self.filters.end_month]
 		if self.filters.range == 'Weekly':
 			period = "Week " + str(posting_date.isocalendar()[1]) + " " + str(posting_date.year)
 		elif self.filters.range == 'Monthly':
@@ -315,6 +368,9 @@ class Analytics(object):
 		else:
 			year = get_fiscal_year(posting_date, company=self.filters.company)
 			period = str(year[0])
+
+		if self.filters.start_month and self.filters.end_month:
+			period = period + " " + str(self.months[start_month_no-1]) + " to " + str(self.months[end_month_no-1])
 		return period
 
 	def get_period_date_ranges(self):
@@ -358,6 +414,8 @@ class Analytics(object):
 			self.sales_persons = sales_persons
 		else:
 			self.sales_persons = [frappe._dict({"name": None})]
+
+		self.sales_persons = [sp.update({'has_entry': False}) for sp in self.sales_persons]
 
 	def get_groups(self):
 		if self.filters.tree_type == "Territory":
