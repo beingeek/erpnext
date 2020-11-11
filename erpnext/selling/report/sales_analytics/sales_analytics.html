@@ -44,6 +44,10 @@
 	.sales-person-label th:nth-child(2n+3) {
 		border-bottom: 2px solid #000000 !important;
 	}
+
+	.col-labels th:not(first-child) {
+		text-align: right;
+	}
 </style>
 <h2 class="text-center">{%= filters.company %}</h2>
 <h3 class="text-center">{%= __(report.report_name) %}</h3>
@@ -74,9 +78,9 @@
 		</tr>
 		{% } %}
 
-        <tr>
+        <tr class="col-labels">
 			{% for (let i=0, l=report_columns.length; i<l; i++) { %}
-            <th class="text-right">{%= report_columns[i].period_label %}</th>
+            <th>{%= report_columns[i].period_label %}</th>
             {% } %}
 		</tr>
 
