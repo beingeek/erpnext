@@ -88,7 +88,6 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 	def set_party_details(self, row):
 		self.party_total[row.party].currency = row.currency
-		self.party_total[row.party].is_range_col = row.is_range_col
 
 		for key in ('territory', 'customer_group', 'supplier_group'):
 			if row.get(key):
