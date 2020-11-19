@@ -11,25 +11,30 @@ import copy
 def execute(filters=None):
 	with_sales_person = filters.group_by == "Sales Person"
 
-	period_list = get_period_list(filters.from_fiscal_year, filters.to_fiscal_year, filters.period_start_date,
-		filters.period_end_date, filters.filter_based_on, filters.periodicity, filters.accumulated_values, filters.company,
+	period_list = get_period_list(filters.from_fiscal_year, filters.to_fiscal_year,
+		filters.periodicity, filters.accumulated_values, filters.company,
 		with_sales_person=with_sales_person, start_month=filters.start_month, end_month=filters.end_month)
 
 	columns, data = [], []
 
-	income = get_data(filters.company, "Income", "Credit", period_list, filters = filters,
-		accumulated_values=filters.accumulated_values,
-		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, total= False, with_sales_person=with_sales_person)
+	gross_income = get_data(filters.company, "Income", "Credit", period_list, filters = filters, accumulated_values=filters.accumulated_values,
+		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, total= False, with_sales_person=with_sales_person, include_in_gross=True)
 
-	expense = get_data(filters.company, "Expense", "Debit", period_list, filters=filters,
+	gross_expense = get_data(filters.company, "Expense", "Debit", period_list, filters=filters,
 		accumulated_values=filters.accumulated_values,
-		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, total= False, with_sales_person=with_sales_person)
+		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, total= False, with_sales_person=with_sales_person, include_in_gross=True)
+
+	non_gross_income = get_data(filters.company, "Income", "Credit", period_list, filters=filters,
+					  accumulated_values=filters.accumulated_values,
+					  ignore_closing_entries=True, ignore_accumulated_values_for_fy=True, total=False,
+					  with_sales_person=with_sales_person, include_in_gross=False)
+
+	non_gross_expense = get_data(filters.company, "Expense", "Debit", period_list, filters=filters,
+					   accumulated_values=filters.accumulated_values,
+					   ignore_closing_entries=True, ignore_accumulated_values_for_fy=True, total=False,
+					   with_sales_person=with_sales_person, include_in_gross=False)
 
 	columns = get_columns(filters.periodicity, period_list, filters.accumulated_values, filters.company, with_sales_person=with_sales_person)
-
-
-	gross_income = get_revenue(income, period_list)
-	gross_expense = get_revenue(expense, period_list)
 
 	if(len(gross_income)==0 and len(gross_expense)== 0):
 		data.append({
@@ -60,11 +65,9 @@ def execute(filters=None):
 	gross_profit = get_profit(gross_income, gross_expense, period_list, filters.company, 'Gross Profit',filters.presentation_currency)
 	data.append(gross_profit)
 
-	non_gross_income = get_revenue(income, period_list, 0)
 	data.append({})
 	data.extend(non_gross_income or [])
 
-	non_gross_expense = get_revenue(expense, period_list, 0)
 	data.append({})
 	data.extend(non_gross_expense or [])
 
@@ -74,6 +77,7 @@ def execute(filters=None):
 
 	return columns, data
 
+
 def get_revenue(data, period_list, include_in_gross=1):
 	revenue = [item for item in data if item['include_in_gross']==include_in_gross or item['is_group']==1]
 
@@ -82,6 +86,7 @@ def get_revenue(data, period_list, include_in_gross=1):
 		revenue, data_to_be_removed = remove_parent_with_no_child(revenue, period_list)
 	revenue = adjust_account(revenue, period_list)
 	return copy.deepcopy(revenue)
+
 
 def remove_parent_with_no_child(data, period_list):
 	data_to_be_removed = False
@@ -99,6 +104,7 @@ def remove_parent_with_no_child(data, period_list):
 
 	return data, data_to_be_removed
 
+
 def adjust_account(data, period_list, consolidated= False):
 	leaf_nodes = [item for item in data if item['is_group'] == 0]
 	totals = {}
@@ -110,6 +116,7 @@ def adjust_account(data, period_list, consolidated= False):
 			d[key] = totals[d["account"]]
 			d['total'] = totals[d["account"]]
 	return data
+
 
 def set_total(node, value, complete_list, totals):
 	if not totals.get(node['account']):
@@ -142,6 +149,7 @@ def get_profit(gross_income, gross_expense, period_list, company, profit_type, c
 
 	if has_value:
 		return profit_loss
+
 
 def get_net_profit(non_gross_income, gross_income, gross_expense, non_gross_expense, period_list, company, currency=None, consolidated=False):
 	profit_loss = {

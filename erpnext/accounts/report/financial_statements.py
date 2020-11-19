@@ -197,7 +197,7 @@ def get_label(periodicity, from_date, to_date):
 def get_data(
 		company, root_type, balance_must_be, period_list, filters=None,
 		accumulated_values=1, only_current_fiscal_year=True, ignore_closing_entries=False,
-		ignore_accumulated_values_for_fy=False , total = True, with_sales_person=False):
+		ignore_accumulated_values_for_fy=False , total = True, with_sales_person=False, include_in_gross=None):
 
 	accounts = get_accounts(company, root_type)
 	if not accounts:
@@ -217,7 +217,8 @@ def get_data(
 			period_list[-1]["to_date"],
 			root.lft, root.rgt, filters,
 			gl_entries_by_account, ignore_closing_entries=ignore_closing_entries,
-			with_sales_person=with_sales_person
+			with_sales_person=with_sales_person,
+			include_in_gross=include_in_gross
 		)
 
 	calculate_values(
@@ -418,7 +419,7 @@ def sort_accounts(accounts, is_root=False, key="name"):
 
 def set_gl_entries_by_account(
 		company, from_date, to_date, root_lft, root_rgt, filters, gl_entries_by_account, ignore_closing_entries=False,
-		with_sales_person=False):
+		with_sales_person=False, include_in_gross=None):
 	"""Returns a dict like { "account": [gl entries], ... }"""
 
 	additional_conditions = get_additional_conditions(from_date, ignore_closing_entries, filters)
@@ -428,6 +429,9 @@ def set_gl_entries_by_account(
 
 	accounts = frappe.db.sql_list("""select name from `tabAccount`
 		where lft >= %s and rgt <= %s and company = %s""", (root_lft, root_rgt, company))
+
+	if include_in_gross is not None:
+		join_condition += " inner join `tabAccount` ac on ac.name = gl.account and ac.include_in_gross = {}".format(cint(include_in_gross))
 
 	if accounts:
 		additional_conditions += " and account in ({})"\
@@ -445,8 +449,8 @@ def set_gl_entries_by_account(
 				company, 'default_finance_book')
 
 		if with_sales_person or filters.sales_person:
-			join_condition = "left join `tabSales Team` sp on sp.parenttype = gl.voucher_type and sp.parent = gl.voucher_no"
-			additional_columns = ", sp.sales_person, ifnull(sp.allocated_percentage, 100) as allocated_percentage"
+			join_condition += " left join `tabSales Team` sp on sp.parenttype = gl.voucher_type and sp.parent = gl.voucher_no"
+			additional_columns += ", sp.sales_person, ifnull(sp.allocated_percentage, 100) as allocated_percentage"
 
 		for key, value in filters.items():
 			if value:
@@ -455,10 +459,10 @@ def set_gl_entries_by_account(
 				})
 
 		gl_entries = frappe.db.sql("""
-			select posting_date, account, is_opening, fiscal_year, account_currency, {value_columns} {additional_columns}
+			select posting_date, account, is_opening, fiscal_year, gl.account_currency, {value_columns} {additional_columns}
 			from `tabGL Entry` gl
 			{join_condition}
-			where company=%(company)s
+			where gl.company=%(company)s
 			{additional_conditions}
 			and posting_date <= %(to_date)s
 			order by account, posting_date""".format(
