@@ -592,7 +592,7 @@ def get_columns(periodicity, period_list, accumulated_values=1, company=None, wi
 				"options": "currency",
 				"width": 150
 			})
-	if periodicity!="Yearly":
+	if periodicity!="Yearly" or with_sales_person:
 		if not accumulated_values:
 			columns.append({
 				"fieldname": "total",
