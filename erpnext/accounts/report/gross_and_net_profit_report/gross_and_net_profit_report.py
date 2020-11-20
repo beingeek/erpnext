@@ -147,6 +147,11 @@ def get_profit(gross_income, gross_expense, period_list, company, profit_type, c
 		if profit_loss[key]:
 			has_value=True
 
+	gross_income_total = flt(gross_income[0].get('total', 0)) if gross_income else 0
+	gross_expense_total = flt(gross_expense[0].get('total', 0)) if gross_expense else 0
+
+	profit_loss['total'] = gross_income_total - gross_expense_total
+
 	if has_value:
 		return profit_loss
 
@@ -176,5 +181,12 @@ def get_net_profit(non_gross_income, gross_income, gross_expense, non_gross_expe
 		if profit_loss[key]:
 			has_value=True
 
+	gross_income_total = flt(gross_income[0].get('total', 0)) if gross_income else 0
+	gross_expense_total = flt(gross_expense[0].get('total', 0)) if gross_expense else 0
+	gross_profit = gross_income_total - gross_expense_total
+	non_gross_income_total = flt(non_gross_income[0].get('total', 0)) if non_gross_income else 0
+	non_gross_expense_total = flt(non_gross_expense[0].get('total', 0)) if non_gross_expense else 0
+
+	profit_loss['total'] = gross_profit + non_gross_income_total - non_gross_expense_total
 	if has_value:
 		return profit_loss
