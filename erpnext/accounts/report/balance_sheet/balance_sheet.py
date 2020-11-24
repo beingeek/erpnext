@@ -56,7 +56,7 @@ def execute(filters=None):
 	if total_credit:
 		data.append(total_credit)
 
-	columns = get_columns(filters.periodicity, period_list, filters.accumulated_values, company=filters.company)
+	columns = get_columns(filters.periodicity, period_list, filters.accumulated_values, company=filters.company, target_date=target_date)
 
 	chart = get_chart_data(filters, columns, asset, liability, equity)
 
