@@ -259,7 +259,7 @@ def calculate_values(
 			for period in period_list:
 				# check if posting date is within the period
 
-				if entry.posting_date <= period.to_date or target_date:
+				if entry.posting_date <= period.to_date:
 					if (accumulated_values or entry.posting_date >= period.from_date) and \
 						(not ignore_accumulated_values_for_fy or
 							entry.fiscal_year == period.to_date_fiscal_year) and \
