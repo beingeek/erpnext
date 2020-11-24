@@ -7,6 +7,12 @@ frappe.require("assets/erpnext/js/financial_statements.js", function() {
 	erpnext.utils.add_dimensions('Balance Sheet', 10);
 
 	frappe.query_reports["Balance Sheet"]["filters"].push({
+		"fieldname": "target_date",
+		"label": __("Target Date"),
+		"fieldtype": "Date"
+	});
+
+	frappe.query_reports["Balance Sheet"]["filters"].push({
 		"fieldname": "accumulated_values",
 		"label": __("Accumulated Values"),
 		"fieldtype": "Check",

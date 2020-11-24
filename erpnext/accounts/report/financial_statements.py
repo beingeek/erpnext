@@ -197,7 +197,8 @@ def get_label(periodicity, from_date, to_date):
 def get_data(
 		company, root_type, balance_must_be, period_list, filters=None,
 		accumulated_values=1, only_current_fiscal_year=True, ignore_closing_entries=False,
-		ignore_accumulated_values_for_fy=False , total = True, with_sales_person=False, include_in_gross=None):
+		ignore_accumulated_values_for_fy=False, total=True, with_sales_person=False,
+		include_in_gross=None, target_date=None):
 
 	accounts = get_accounts(company, root_type)
 	if not accounts:
@@ -211,19 +212,22 @@ def get_data(
 	for root in frappe.db.sql("""select lft, rgt from tabAccount
 			where root_type=%s and ifnull(parent_account, '') = ''""", root_type, as_dict=1):
 
+		from_date = period_list[0]["year_start_date"] if only_current_fiscal_year else None
+		to_date = period_list[-1]["to_date"]
+
 		set_gl_entries_by_account(
 			company,
-			period_list[0]["year_start_date"] if only_current_fiscal_year else None,
-			period_list[-1]["to_date"],
+			from_date,
+			to_date,
 			root.lft, root.rgt, filters,
 			gl_entries_by_account, ignore_closing_entries=ignore_closing_entries,
 			with_sales_person=with_sales_person,
-			include_in_gross=include_in_gross
-		)
+			include_in_gross=include_in_gross,
+			target_date=target_date)
 
 	calculate_values(
 		accounts_by_name, gl_entries_by_account, period_list, accumulated_values, ignore_accumulated_values_for_fy,
-		with_sales_person=with_sales_person)
+		with_sales_person=with_sales_person, target_date=target_date)
 	accumulate_values_into_parents(accounts, accounts_by_name, period_list, accumulated_values)
 	out = prepare_data(accounts, balance_must_be, period_list, company_currency)
 	out = filter_out_zero_value_rows(out, parent_children_map)
@@ -243,7 +247,7 @@ def get_appropriate_currency(company, filters=None):
 
 def calculate_values(
 		accounts_by_name, gl_entries_by_account, period_list, accumulated_values, ignore_accumulated_values_for_fy,
-		with_sales_person=False):
+		with_sales_person=False, target_date=None):
 	for entries in itervalues(gl_entries_by_account):
 		for entry in entries:
 			d = accounts_by_name.get(entry.account)
@@ -255,7 +259,7 @@ def calculate_values(
 			for period in period_list:
 				# check if posting date is within the period
 
-				if entry.posting_date <= period.to_date:
+				if entry.posting_date <= period.to_date or target_date:
 					if (accumulated_values or entry.posting_date >= period.from_date) and \
 						(not ignore_accumulated_values_for_fy or
 							entry.fiscal_year == period.to_date_fiscal_year) and \
@@ -419,7 +423,7 @@ def sort_accounts(accounts, is_root=False, key="name"):
 
 def set_gl_entries_by_account(
 		company, from_date, to_date, root_lft, root_rgt, filters, gl_entries_by_account, ignore_closing_entries=False,
-		with_sales_person=False, include_in_gross=None):
+		with_sales_person=False, include_in_gross=None, target_date=None):
 	"""Returns a dict like { "account": [gl entries], ... }"""
 
 	additional_conditions = get_additional_conditions(from_date, ignore_closing_entries, filters)
@@ -444,6 +448,9 @@ def set_gl_entries_by_account(
 			"finance_book": cstr(filters.get("finance_book"))
 		}
 
+		if target_date:
+			gl_filters["target_date"] = target_date
+
 		if filters.get("include_default_book_entries"):
 			gl_filters["company_fb"] = frappe.db.get_value("Company",
 				company, 'default_finance_book')
@@ -458,13 +465,18 @@ def set_gl_entries_by_account(
 					key: value
 				})
 
+		if target_date:
+			additional_conditions += " and posting_date = %(target_date)s"
+
+		else:
+			additional_conditions += " and posting_date <= %(to_date)s"
+
 		gl_entries = frappe.db.sql("""
 			select posting_date, account, is_opening, fiscal_year, gl.account_currency, {value_columns} {additional_columns}
 			from `tabGL Entry` gl
 			{join_condition}
 			where gl.company=%(company)s
 			{additional_conditions}
-			and posting_date <= %(to_date)s
 			order by account, posting_date""".format(
 				additional_conditions=additional_conditions,
 				additional_columns=additional_columns,
