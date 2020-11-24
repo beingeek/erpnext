@@ -598,16 +598,10 @@ def get_columns(periodicity, period_list, accumulated_values=1, company=None, wi
 
 	for period in period_list:
 		if not with_sales_person or period.sales_person_details.name in sales_persons_with_entries:
-			target_date_m_y = None
+			target_period = None
 			if target_date and target_date >= period.from_date and target_date <= period.to_date:
-				if periodicity == "Monthly":
-					target_date_m_y = formatdate(target_date, "MMM YYYY")
-				elif periodicity == "Yearly":
-					target_date_m_y = formatdate(period.from_date, "YYYY") + "-" + formatdate(target_date, "YYYY")
-				else:
-					target_date_m_y = formatdate(period.from_date, "MMM YY") + "-" + formatdate(target_date, "MMM YY")
+				target_period = target_date
 
-			target_period = target_date if target_date_m_y == period.label else None
 			columns.append({
 				"fieldname": period.key,
 				"label": target_period if target_period else period.label,
