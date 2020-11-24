@@ -593,10 +593,13 @@ def get_columns(periodicity, period_list, accumulated_values=1, company=None, wi
 			"options": "Currency",
 			"hidden": 1
 		})
+	if target_date:
+		target_date = getdate(target_date)
+
 	for period in period_list:
 		if not with_sales_person or period.sales_person_details.name in sales_persons_with_entries:
 			target_date_m_y = None
-			if target_date:
+			if target_date and target_date >= period.from_date and target_date <= period.to_date:
 				if periodicity == "Monthly":
 					target_date_m_y = formatdate(target_date, "MMM YYYY")
 				elif periodicity == "Yearly":
