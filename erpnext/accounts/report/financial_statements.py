@@ -45,8 +45,8 @@ def get_months_from_period(period):
 
 	return months
 
-def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_values=False,
-	company=None, reset_period_on_fy_change=True, with_sales_person=False, start_month=None, end_month=None):
+def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_values=False, company=None,
+	reset_period_on_fy_change=True, with_sales_person=False, start_month=None, end_month=None, target_date=None):
 	"""Get a list of dict {"from_date": from_date, "to_date": to_date, "key": key, "label": label}
 		Periodicity can be (Yearly, Quarterly, Monthly)"""
 	if not start_month:
@@ -117,6 +117,11 @@ def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_v
 
 		period.to_date_fiscal_year = get_fiscal_year(period.to_date, company=company)[0]
 		period.from_date_fiscal_year_start_date = get_fiscal_year(period.from_date, company=company)[1]
+
+		if target_date:
+			target_date = getdate(target_date)
+			if target_date < period.to_date:
+				break
 
 		period_list.append(period)
 
@@ -600,11 +605,11 @@ def get_columns(periodicity, period_list, accumulated_values=1, company=None, wi
 		if not with_sales_person or period.sales_person_details.name in sales_persons_with_entries:
 			target_period = None
 			if target_date and target_date >= period.from_date and target_date <= period.to_date:
-				target_period = target_date
+				target_period = frappe.utils.formatdate(target_date)
 
 			columns.append({
 				"fieldname": period.key,
-				"label": target_period if target_period else period.label,
+				"label": target_period or period.label,
 				"period_label": period.period_label,
 				"sales_person": cstr(period.sales_person_details.name if period.sales_person_details else ""),
 				"fieldtype": "Currency",

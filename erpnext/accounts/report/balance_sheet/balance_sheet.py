@@ -8,12 +8,12 @@ from frappe.utils import flt, cint
 from erpnext.accounts.report.financial_statements import (get_period_list, get_columns, get_data)
 
 def execute(filters=None):
+	target_date = filters.target_date if filters.target_date else None
+
 	period_list = get_period_list(filters.from_fiscal_year, filters.to_fiscal_year,
-		filters.periodicity, company=filters.company)
+		filters.periodicity, company=filters.company, target_date=target_date)
 
 	currency = filters.presentation_currency or frappe.get_cached_value('Company',  filters.company,  "default_currency")
-
-	target_date = filters.target_date if filters.target_date else None
 
 	asset = get_data(filters.company, "Asset", "Debit", period_list,
 		only_current_fiscal_year=False, filters=filters,
