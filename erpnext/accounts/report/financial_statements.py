@@ -120,7 +120,7 @@ def get_period_list(from_fiscal_year, to_fiscal_year, periodicity, accumulated_v
 
 		if target_date:
 			target_date = getdate(target_date)
-			if target_date < period.to_date:
+			if period.from_date > target_date:
 				break
 
 		period_list.append(period)
