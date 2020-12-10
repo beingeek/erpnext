@@ -369,8 +369,8 @@ class Analytics(object):
 			year = get_fiscal_year(posting_date, company=self.filters.company)
 			period = str(year[0])
 
-		if self.filters.start_month and self.filters.end_month:
-			period = period + " " + str(self.months[start_month_no-1]) + " to " + str(self.months[end_month_no-1])
+		# if self.filters.start_month and self.filters.end_month and self.filters.range in ['Yearly', 'Quarterly']:
+		# 	period = period + " " + str(self.months[start_month_no-1]) + " to " + str(self.months[end_month_no-1])
 		return period
 
 	def get_period_date_ranges(self):
