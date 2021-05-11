@@ -27,7 +27,7 @@ address_fields = ['address_line1', 'address_line2', 'city', 'state']
 
 force_fields = [
 	'customer_name', 'financer_name', 'lessee_name', 'customer_category',
-	'item_name', 'item_group', 'brand',
+	'item_name', 'item_group', 'brand', 'variant_of', 'variant_of_name',
 	'customer_address',
 	'address_display', 'contact_display', 'financer_contact_display', 'contact_email', 'contact_mobile', 'contact_phone',
 	'father_name', 'husband_name',
@@ -58,6 +58,7 @@ class VehicleBookingOrder(AccountsController):
 		self.validate_vehicle_item()
 		self.validate_vehicle()
 		self.validate_allocation()
+		self.validate_color()
 		self.validate_delivery_date()
 
 		self.set_title()
@@ -72,28 +73,34 @@ class VehicleBookingOrder(AccountsController):
 		self.update_payment_status()
 		self.update_delivery_status()
 		self.update_invoice_status()
+		self.update_transfer_customer()
 		self.set_status()
 
 	def before_submit(self):
-		self.validate_allocation_required()
+		self.validate_delivery_period_mandatory()
 		self.validate_color_mandatory()
 
 	def on_submit(self):
 		self.update_allocation_status()
 		self.update_vehicle_status()
-		self.set_status()
 
 	def on_cancel(self):
 		self.update_allocation_status()
 		self.update_vehicle_status()
-		self.set_status()
+		self.db_set('status', 'Cancelled')
 
 	def onload(self):
+		super(VehicleBookingOrder, self).onload()
+
 		if self.docstatus == 0:
 			self.set_missing_values(for_validate=True)
 			self.calculate_taxes_and_totals()
 		elif self.docstatus == 1:
 			self.set_vehicle_details()
+
+		if self.docstatus == 1:
+			from erpnext.vehicles.doctype.vehicle_booking_order.change_booking import set_can_change_onload
+			set_can_change_onload(self)
 
 	def before_print(self):
 		super(VehicleBookingOrder, self).before_print()
@@ -113,38 +120,15 @@ class VehicleBookingOrder(AccountsController):
 			return
 
 		payment_entries = get_booking_payments(self.name, include_draft=cint(self.docstatus == 0))
-		customer_payments_by_row_id = {}
-
-		for d in payment_entries:
-			if d.payment_type == "Receive":
-				self.customer_payments.append(d)
-				customer_payments_by_row_id[d.row_id] = d
-
-			if d.payment_type == "Pay":
-				self.supplier_payments.append(d)
-
-		for d in self.supplier_payments:
-			if d.vehicle_booking_payment_row:
-				customer_payment_row = customer_payments_by_row_id.get(d.vehicle_booking_payment_row)
-				if customer_payment_row:
-					customer_payment_row.deposit_slip_no = d.deposit_slip_no
-					customer_payment_row.deposit_type = d.deposit_type
-					customer_payment_row.deposit_date = d.posting_date
+		self.customer_payments, self.supplier_payments = separate_customer_and_supplier_payments(payment_entries)
 
 		self.is_full_payment = False
 		self.is_partial_payment = False
 
 		if self.customer_payments:
-			first_receipt_document = self.customer_payments[0].name
+			initial_payments, balance_payments = separate_advance_and_balance_payments(self.customer_payments, self.supplier_payments)
 
-			if self.supplier_payments:
-				first_deposit_posting_date = self.supplier_payments[0].posting_date
-				initial_payments = [d.amount for d in self.customer_payments\
-					if d.name == first_receipt_document or d.posting_date <= first_deposit_posting_date]
-			else:
-				initial_payments = [d.amount for d in self.customer_payments]
-
-			initial_payments_amount = flt(sum(initial_payments), self.precision('invoice_total'))
+			initial_payments_amount = flt(sum([d.amount for d in initial_payments]), self.precision('invoice_total'))
 			self.is_full_payment = initial_payments_amount >= self.invoice_total
 			self.is_partial_payment = not self.is_full_payment
 
@@ -171,6 +155,11 @@ class VehicleBookingOrder(AccountsController):
 		if self.docstatus == 0 or (self.docstatus == 1 and self.previous_item_code == self.item_code):
 			self.previous_item_code = None
 			self.previous_item_name = None
+
+	def validate_color(self):
+		# remove previous color if Draft or if current color and previous color are the same
+		if self.docstatus == 0 or (self.docstatus == 1 and self.previous_color == self.color_1):
+			self.previous_color = None
 
 	def validate_vehicle(self):
 		if self.vehicle:
@@ -261,10 +250,9 @@ class VehicleBookingOrder(AccountsController):
 				frappe.throw(_("Delivery Due Date must be within Delivery Period {0} if Delivery Period is selected")
 					.format(self.delivery_period))
 
-	def validate_allocation_required(self):
-		required = frappe.get_cached_value("Item", self.item_code, "vehicle_allocation_required")
-		if required and not self.delivery_period:
-			frappe.throw(_("Delivery Period is required for allocation of {0} before submission").format(self.item_name or self.item_code))
+	def validate_delivery_period_mandatory(self):
+		if not self.delivery_period:
+			frappe.throw(_("Delivery Period is mandatory before submission"))
 
 	def validate_color_mandatory(self):
 		if not self.color_1:
@@ -356,8 +344,8 @@ class VehicleBookingOrder(AccountsController):
 
 	def validate_payment_schedule(self):
 		self.validate_payment_schedule_dates()
-		self.set_due_date()
 		self.set_payment_schedule()
+		self.set_due_date()
 		self.validate_payment_schedule_amount()
 		self.validate_due_date()
 
@@ -440,12 +428,7 @@ class VehicleBookingOrder(AccountsController):
 			frappe.throw(_("Supplier Delivery Note is mandatory for Vehicle Receipt against Vehicle Booking Order"))
 
 		if vehicle_delivery:
-			if flt(self.customer_outstanding):
-				frappe.throw(_("Cannot deliver vehicle because there is a Customer Outstanding of {0}")
-					.format(self.get_formatted("customer_outstanding")))
-			if flt(self.supplier_outstanding):
-				frappe.throw(_("Cannot deliver vehicle because there is a Supplier Outstanding of {0}")
-					.format(self.get_formatted("supplier_outstanding")))
+			self.check_outstanding_payment_for_delivery()
 
 		# open stock
 		if vehicle_receipt and not vehicle_receipt.vehicle_booking_order:
@@ -472,6 +455,37 @@ class VehicleBookingOrder(AccountsController):
 				"supplier_delivery_note": self.supplier_delivery_note,
 				"delivery_status": self.delivery_status
 			})
+
+	def check_outstanding_payment_for_delivery(self):
+		if flt(self.customer_outstanding):
+			frappe.throw(_("Cannot deliver vehicle because there is a Customer Outstanding of {0}")
+				.format(self.get_formatted("customer_outstanding")))
+		if flt(self.supplier_outstanding):
+			frappe.throw(_("Cannot deliver vehicle because there is a Supplier Outstanding of {0}")
+				.format(self.get_formatted("supplier_outstanding")))
+
+	def get_notification_count(self, notification_type, notification_medium):
+		row = self.get('notification_count',
+			{"notification_type": notification_type, "notification_medium": notification_medium})
+
+		row = row[0] if row else {}
+		return cint(row.get('notification_count'))
+
+	def add_notification_count(self, notification_type, notification_medium, count=1, update=False):
+		filters = {"notification_type": notification_type, "notification_medium": notification_medium}
+
+		row = self.get('notification_count', filters)
+		if row:
+			row = row[0]
+		else:
+			row = self.append('notification_count', filters)
+			row.notification_count = 0
+
+		count = cint(count) or 1
+		row.notification_count += count
+
+		if update:
+			row.db_update()
 
 	def get_vehicle_receipts(self):
 		fields = ['name', 'posting_date', 'supplier_delivery_note', 'supplier', 'vehicle_booking_order']
@@ -534,6 +548,24 @@ class VehicleBookingOrder(AccountsController):
 				"invoice_status": self.invoice_status
 			})
 
+	def update_transfer_customer(self, update=False):
+		vehicle_transfer_letter = None
+
+		if self.docstatus != 0:
+			vehicle_transfer_letter = frappe.db.get_all("Vehicle Transfer Letter", {"vehicle_booking_order": self.name, "docstatus": 1},
+				['customer', 'customer_name'], order_by="posting_date desc, creation desc", limit=1)
+
+		vehicle_transfer_letter = vehicle_transfer_letter[0] if vehicle_transfer_letter else frappe._dict()
+
+		self.transfer_customer = vehicle_transfer_letter.customer
+		self.transfer_customer_name = vehicle_transfer_letter.customer_name
+
+		if update:
+			self.db_set({
+				"transfer_customer": self.transfer_customer,
+				"transfer_customer_name": self.transfer_customer_name
+			})
+
 	def set_status(self, update=False, status=None, update_modified=True):
 		if self.is_new():
 			if self.get('amended_from'):
@@ -553,7 +585,13 @@ class VehicleBookingOrder(AccountsController):
 					else:
 						self.status = "To Deposit Payment"
 				else:
-					self.status = "To Receive Payment"
+					if getdate(self.due_date) < getdate(today()):
+						self.status = "Payment Overdue"
+					else:
+						self.status = "To Receive Payment"
+
+			elif getdate(self.delivery_date) < getdate(today()) and self.delivery_status != "Delivered":
+				self.status = "Delivery Overdue"
 
 			elif self.vehicle_allocation_required and not self.vehicle_allocation:
 				self.status = "To Assign Allocation"
@@ -634,6 +672,10 @@ def get_customer_details(args, get_withholding_tax=True):
 	if get_withholding_tax and args.item_code:
 		out.exempt_from_vehicle_withholding_tax = cint(frappe.get_cached_value("Item", args.item_code, "exempt_from_vehicle_withholding_tax"))
 		out.withholding_tax_amount = get_withholding_tax_amount(args.transaction_date, args.item_code, out.tax_status, args.company)
+
+	default_payment_terms = frappe.get_cached_value("Vehicles Settings", None, "default_payment_terms")
+	if default_payment_terms:
+		out.payment_terms_template = default_payment_terms
 
 	return out
 
@@ -747,7 +789,7 @@ def get_item_details(args):
 	if not args.company:
 		frappe.throw(_("Company is mandatory"))
 	if not args.item_code:
-		frappe.throw(_("Vehicle Item Code is mandatory"))
+		frappe.throw(_("Variant Item Code is mandatory"))
 
 	out = frappe._dict()
 
@@ -757,6 +799,9 @@ def get_item_details(args):
 	out.item_name = item.item_name
 	out.item_group = item.item_group
 	out.brand = item.brand
+
+	out.variant_of = item.variant_of
+	out.variant_of_name = frappe.get_cached_value("Item", item.variant_of, "item_name") if item.variant_of else None
 
 	item_defaults = get_item_defaults(item.name, args.company)
 	item_group_defaults = get_item_group_defaults(item.name, args.company)
@@ -798,7 +843,7 @@ def get_vehicle_default_supplier(item_code, company):
 	if not company:
 		frappe.throw(_("Company is mandatory"))
 	if not item_code:
-		frappe.throw(_("Vehicle Item Code is mandatory"))
+		frappe.throw(_("Variant Item Code is mandatory"))
 
 	item = frappe.get_cached_doc("Item", item_code)
 
@@ -813,9 +858,10 @@ def get_vehicle_default_supplier(item_code, company):
 	return default_supplier
 
 
+@frappe.whitelist()
 def get_vehicle_price(item_code, vehicle_price_list, fni_price_list, transaction_date, tax_status, company):
 	if not item_code:
-		frappe.throw(_("Vehicle Item Code is mandatory"))
+		frappe.throw(_("Variant Item Code is mandatory"))
 	if not vehicle_price_list:
 		frappe.throw(_("Vehicle Price List is mandatory for Vehicle Price"))
 
@@ -890,6 +936,8 @@ def get_next_document(vehicle_booking_order, doctype):
 		return get_vehicle_invoice_receipt(doc)
 	elif doctype == "Vehicle Invoice Delivery":
 		return get_vehicle_invoice_delivery(doc)
+	elif doctype == "Vehicle Transfer Letter":
+		return get_vehicle_transfer_letter(doc)
 	else:
 		frappe.throw(_("Invalid DocType"))
 
@@ -904,9 +952,22 @@ def get_vehicle_receipt(source):
 
 
 def get_vehicle_delivery(source):
+	source.check_outstanding_payment_for_delivery()
 	check_if_doc_exists("Vehicle Delivery", source.name)
 
 	target = frappe.new_doc("Vehicle Delivery")
+	set_next_document_values(source, target)
+	target.run_method("set_missing_values")
+	return target
+
+
+def get_vehicle_transfer_letter(source):
+	check_if_doc_exists("Vehicle Transfer Letter", source.name)
+
+	if not has_previous_doc("Vehicle Delivery", source):
+		frappe.throw(_("Cannot make Vehicle Transfer Letter against Vehicle Booking Order before making Vehicle Delivery"))
+
+	target = frappe.new_doc("Vehicle Transfer Letter")
 	set_next_document_values(source, target)
 	target.run_method("set_missing_values")
 	return target
@@ -924,8 +985,7 @@ def get_vehicle_invoice_receipt(source):
 def get_vehicle_invoice_delivery(source):
 	check_if_doc_exists("Vehicle Invoice Delivery", source.name)
 
-	prev_doc = get_previous_doc("Vehicle Invoice Receipt", source)
-	if not prev_doc:
+	if not has_previous_doc("Vehicle Invoice Receipt", source):
 		frappe.throw(_("Cannot make Vehicle Invoice Delivery against Vehicle Booking Order before making Vehicle Invoice Receipt"))
 
 	target = frappe.new_doc("Vehicle Invoice Delivery")
@@ -940,13 +1000,9 @@ def check_if_doc_exists(doctype, vehicle_booking_order):
 		frappe.throw(_("{0} already exists").format(frappe.get_desk_link(doctype, existing)))
 
 
-def get_previous_doc(doctype, source):
+def has_previous_doc(doctype, source):
 	prev_docname = frappe.db.get_value(doctype, {"vehicle_booking_order": source.name, "docstatus": 1})
-	if not prev_docname:
-		return None
-
-	prev_doc = frappe.get_doc(doctype, prev_docname)
-	return prev_doc
+	return prev_docname
 
 
 def set_next_document_values(source, target):
@@ -958,280 +1014,28 @@ def set_next_document_values(source, target):
 	target.vehicle_booking_order = source.name
 	target.company = source.company
 
+	if target.doctype != "Vehicle Transfer Letter":
+		if target.meta.has_field('customer'):
+			target.customer = source.customer
+			target.customer_name = source.customer_name
+
+		if target.meta.has_field('customer_address'):
+			target.customer_address = source.customer_address
+
+		if target.meta.has_field('contact_person'):
+			target.contact_person = source.contact_person
+
 	if target.meta.has_field('supplier'):
 		target.supplier = source.supplier
 
-	if target.meta.has_field('customer'):
-		target.customer = source.customer
-		target.customer_name = source.customer_name
-
-	if target.meta.has_field('customer_address'):
-		target.customer_address = source.customer_address
-
-	if target.meta.has_field('contact_person'):
-		target.contact_person = source.contact_person
+	if target.meta.has_field('warehouse'):
+		target.warehouse = source.warehouse
 
 	target.item_code = source.item_code
-	target.warehouse = source.warehouse
 	target.vehicle = source.vehicle
 
 
-@frappe.whitelist()
-def update_vehicle_in_booking(vehicle_booking_order, vehicle):
-	if not vehicle:
-		frappe.throw(_("Vehicle not provided"))
-
-	vbo_doc = get_vehicle_booking_for_update(vehicle_booking_order)
-	validate_delivery_status_for_update(vbo_doc)
-
-	if vehicle == vbo_doc.vehicle:
-		frappe.throw(_("Vehicle {0} is already selected in {1}").format(vehicle, vehicle_booking_order))
-
-	previous_vehicle = vbo_doc.vehicle
-
-	vbo_doc.vehicle = vehicle
-	vbo_doc.validate_vehicle_item()
-	vbo_doc.validate_vehicle()
-	vbo_doc.set_vehicle_details()
-
-	vbo_doc.update_delivery_status()
-
-	save_vehicle_booking_for_update(vbo_doc)
-
-	update_vehicle_booked(vehicle, 1)
-	if previous_vehicle:
-		update_vehicle_booked(previous_vehicle, 0)
-
-	frappe.msgprint(_("Vehicle Changed Successfully"), indicator='green', alert=True)
-
-
-@frappe.whitelist()
-def update_allocation_in_booking(vehicle_booking_order, vehicle_allocation):
-	if not vehicle_allocation:
-		frappe.throw(_("Vehicle Allocation not provided"))
-
-	vbo_doc = get_vehicle_booking_for_update(vehicle_booking_order)
-	validate_delivery_status_for_update(vbo_doc)
-	validate_supplier_payment_for_update(vbo_doc)
-
-	if not vbo_doc.vehicle_allocation_required:
-		frappe.throw(_("Vehicle Allocation is not required in {0}").format(vehicle_booking_order))
-
-	if vehicle_allocation == vbo_doc.vehicle_allocation:
-		frappe.throw(_("Vehicle Allocation {0} is already selected in {1}").format(vehicle_allocation, vehicle_booking_order))
-
-	previous_allocation = vbo_doc.vehicle_allocation
-
-	vbo_doc.vehicle_allocation = vehicle_allocation
-	vbo_doc.validate_allocation()
-
-	if vbo_doc.delivery_period != vbo_doc._doc_before_save.delivery_period:
-		handle_delivery_period_changed(vbo_doc)
-
-	save_vehicle_booking_for_update(vbo_doc)
-
-	update_allocation_booked(vehicle_allocation, 1)
-	if previous_allocation:
-		update_allocation_booked(previous_allocation, 0)
-
-	frappe.msgprint(_("Allocation Changed Successfully"), indicator='green', alert=True)
-
-
-@frappe.whitelist()
-def update_delivery_period_in_booking(vehicle_booking_order, delivery_period):
-	if not delivery_period:
-		frappe.throw(_("Delivery Period not provided"))
-
-	vbo_doc = get_vehicle_booking_for_update(vehicle_booking_order)
-	validate_delivery_status_for_update(vbo_doc)
-	validate_supplier_payment_for_update(vbo_doc)
-
-	if delivery_period == vbo_doc.delivery_period:
-		frappe.throw(_("Delivery Period {0} is already selected in {1}").format(delivery_period, vehicle_booking_order))
-
-	if vbo_doc.vehicle_allocation:
-		frappe.throw(_("Cannot change Delivery Period because Vehicle Allocation is already set in {0}. Please change Vehicle Allocation instead")
-			.format(frappe.bold(vehicle_booking_order)))
-
-	vbo_doc.delivery_period = delivery_period
-	handle_delivery_period_changed(vbo_doc)
-
-	save_vehicle_booking_for_update(vbo_doc)
-
-	frappe.msgprint(_("Delivery Period Changed Successfully"), indicator='green', alert=True)
-
-
-@frappe.whitelist()
-def update_color_in_booking(vehicle_booking_order, color_1, color_2, color_3):
-	if not color_1:
-		frappe.throw(_("Color (1st Priority) not provided"))
-
-	vbo_doc = get_vehicle_booking_for_update(vehicle_booking_order)
-	validate_delivery_status_for_update(vbo_doc)
-
-	if cstr(color_1) == cstr(vbo_doc.color_1) and cstr(color_2) == cstr(vbo_doc.color_2) and cstr(color_3) == cstr(vbo_doc.color_3):
-		frappe.throw(_("Color is the same in Vehicle Allocation {0}").format(vehicle_booking_order))
-
-	vbo_doc.color_1 = color_1
-	vbo_doc.color_2 = color_2
-	vbo_doc.color_3 = color_3
-	vbo_doc.validate_color_mandatory()
-
-	save_vehicle_booking_for_update(vbo_doc)
-
-	frappe.msgprint(_("Color Changed Successfully"), indicator='green', alert=True)
-
-
-@frappe.whitelist()
-def update_customer_details_in_booking(vehicle_booking_order):
-	vbo_doc = get_vehicle_booking_for_update(vehicle_booking_order)
-	validate_delivery_status_for_update(vbo_doc)
-	validate_supplier_payment_for_update(vbo_doc)
-
-	customer_details = get_customer_details(vbo_doc.as_dict(), get_withholding_tax=True)
-	for k, v in customer_details.items():
-		if not vbo_doc.get(k) or k in force_fields:
-			vbo_doc.set(k, v)
-
-	vbo_doc.validate_customer()
-	vbo_doc.calculate_taxes_and_totals()
-	vbo_doc.validate_payment_schedule()
-	vbo_doc.update_payment_status()
-	vbo_doc.validate_amounts()
-
-	save_vehicle_booking_for_update(vbo_doc)
-
-	frappe.msgprint(_("Customer Details Updated Successfully"), indicator='green', alert=True)
-
-
-@frappe.whitelist()
-def update_item_in_booking(vehicle_booking_order, item_code):
-	if not item_code:
-		frappe.throw(_("Vehicle Item Code (Variant) not provided"))
-
-	vbo_doc = get_vehicle_booking_for_update(vehicle_booking_order)
-	validate_delivery_status_for_update(vbo_doc)
-
-	if item_code == vbo_doc.item_code:
-		frappe.throw(_("Vehicle Item Code (Variant) {0} is already selected in {1}").format(frappe.bold(item_code), vehicle_booking_order))
-
-	previous_item_code = vbo_doc.item_code
-	previous_item = frappe.get_cached_doc("Item", previous_item_code)
-	template_item_name = frappe.get_cached_value("Item", previous_item.variant_of, "item_name") if previous_item.variant_of else None
-	item = frappe.get_cached_doc("Item", item_code)
-
-	if previous_item.variant_of and item.variant_of != previous_item.variant_of:
-		frappe.throw(_("New Vehicle Item (Variant) must be a variant of {0}").format(frappe.bold(template_item_name or previous_item.variant_of)))
-
-	if not vbo_doc.previous_item_code:
-		vbo_doc.previous_item_code = vbo_doc.item_code
-
-	vbo_doc.item_code = item_code
-
-	if vbo_doc.vehicle_allocation and not flt(vbo_doc.supplier_advance):
-		update_allocation_booked(vbo_doc.vehicle_allocation, 0)
-		vbo_doc.vehicle_allocation = None
-
-	if vbo_doc.vehicle:
-		update_vehicle_booked(vbo_doc.vehicle, 0)
-		vbo_doc.vehicle = None
-
-	item_detail_args = vbo_doc.as_dict()
-	item_detail_args['tc_name'] = None
-	item_details = get_item_details(item_detail_args)
-	vbo_doc.update(item_details)
-
-	vbo_doc.validate_vehicle_item()
-	vbo_doc.validate_allocation()
-	vbo_doc.validate_vehicle()
-
-	vbo_doc.calculate_taxes_and_totals()
-	vbo_doc.validate_payment_schedule()
-	vbo_doc.update_payment_status()
-	vbo_doc.validate_amounts()
-
-	vbo_doc.get_terms_and_conditions()
-
-	save_vehicle_booking_for_update(vbo_doc)
-
-	frappe.msgprint(_("Vehicle Item Code (Variant) Updated Successfully"), indicator='green')
-
-
-@frappe.whitelist()
-def update_payment_adjustment_in_booking(vehicle_booking_order, payment_adjustment):
-	vbo_doc = get_vehicle_booking_for_update(vehicle_booking_order)
-	validate_delivery_status_for_update(vbo_doc)
-
-	vbo_doc.payment_adjustment = flt(payment_adjustment)
-
-	vbo_doc.calculate_outstanding_amount()
-	vbo_doc.update_payment_status()
-	vbo_doc.validate_amounts()
-
-	save_vehicle_booking_for_update(vbo_doc)
-
-	frappe.msgprint(_("Payment Adjustment Updated Successfully"), indicator='green', alert=True)
-
-
-def handle_delivery_period_changed(vbo_doc):
-	to_date = frappe.get_cached_value("Vehicle Allocation Period", vbo_doc.delivery_period, 'to_date')
-
-	vbo_doc.delivery_date = to_date
-	vbo_doc.validate_delivery_date()
-
-	vbo_doc.due_date = to_date
-	if len(vbo_doc.payment_schedule) == 1:
-		vbo_doc.payment_schedule[0].due_date = to_date
-
-	vbo_doc.validate_payment_schedule()
-
-	frappe.msgprint(_("Delivery Period has been changed from {0} to {1}")
-		.format(frappe.bold(vbo_doc._doc_before_save.delivery_period or 'None'), frappe.bold(vbo_doc.delivery_period)))
-
-
-def get_vehicle_booking_for_update(vehicle_booking_order):
-	vbo_doc = frappe.get_doc("Vehicle Booking Order", vehicle_booking_order)
-	vbo_doc._doc_before_save = frappe.get_doc(vbo_doc.as_dict())
-
-	if vbo_doc.docstatus != 1:
-		frappe.throw(_("Vehicle Booking Order {0} is not submitted").format(vehicle_booking_order))
-
-	return vbo_doc
-
-
-def save_vehicle_booking_for_update(vbo_doc, update_child_tables=True):
-	vbo_doc.set_status()
-
-	vbo_doc.set_user_and_timestamp()
-	vbo_doc.db_update()
-
-	if update_child_tables:
-		for d in vbo_doc.sales_team:
-			d.db_update()
-		for d in vbo_doc.payment_schedule:
-			d.db_update()
-
-	vbo_doc.notify_update()
-	vbo_doc.save_version()
-
-
-def validate_delivery_status_for_update(vbo_doc):
-	if vbo_doc.delivery_status != 'To Receive':
-		frappe.throw(_("Cannot modify Vehicle Booking Order {0} because Vehicle is already received")
-			.format(frappe.bold(vbo_doc.name)))
-
-
-def validate_supplier_payment_for_update(vbo_doc):
-	role_allowed = frappe.get_cached_value("Vehicles Settings", None, "role_change_booking_after_payment")
-	if role_allowed and role_allowed in frappe.get_roles():
-		return
-	
-	if flt(vbo_doc.supplier_advance):
-		frappe.throw(_("Cannot modify Vehicle Booking Order {0} because Supplier Payment has already been made")
-			.format(frappe.bold(vbo_doc.name)))
-
-
-def get_booking_payments(vehicle_booking_order, include_draft=False):
+def get_booking_payments(vehicle_booking_order, include_draft=False, payment_type=None):
 	if not vehicle_booking_order:
 		return []
 
@@ -1242,21 +1046,139 @@ def get_booking_payments(vehicle_booking_order, include_draft=False):
 	if include_draft:
 		docstatus_cond = "p.docstatus < 2"
 
+	payment_type_cond = ""
+	if payment_type:
+		payment_type_cond = "and p.payment_type = {0}".format(frappe.db.escape(payment_type))
+
 	payment_entries = frappe.db.sql("""
-		select p.name, p.posting_date,
+		select p.name, p.posting_date, p.creation,
 			p.vehicle_booking_order, p.party_type, p.party,
 			p.payment_type, i.amount,
 			i.instrument_type, i.instrument_title,
-			i.instrument_no, i.instrument_date,
+			i.instrument_no, i.instrument_date, i.bank,
 			p.deposit_slip_no, p.deposit_type,
 			i.name as row_id, i.vehicle_booking_payment_row
 		from `tabVehicle Booking Payment Detail` i
 		inner join `tabVehicle Booking Payment` p on p.name = i.parent
-		where {0} and p.vehicle_booking_order in %s
+		where {0} and p.vehicle_booking_order in %s {1}
 		order by i.instrument_date, p.posting_date, p.creation
-	""".format(docstatus_cond), [vehicle_booking_order], as_dict=1)
+	""".format(docstatus_cond, payment_type_cond), [vehicle_booking_order], as_dict=1)
 
 	return payment_entries
+
+
+def separate_customer_and_supplier_payments(payment_entries):
+	customer_payments = []
+	supplier_payments = []
+
+	if payment_entries:
+		customer_payments_by_row_id = {}
+
+		for d in payment_entries:
+			if d.payment_type == "Receive":
+				customer_payments.append(d)
+				customer_payments_by_row_id[d.row_id] = d
+
+			if d.payment_type == "Pay":
+				supplier_payments.append(d)
+				d.deposit_doc_name = d.name
+				d.deposit_date = d.posting_date
+
+		for d in supplier_payments:
+			if d.vehicle_booking_payment_row:
+				customer_payment_row = customer_payments_by_row_id.get(d.vehicle_booking_payment_row)
+				if customer_payment_row:
+					customer_payment_row.deposit_slip_no = d.deposit_slip_no
+					customer_payment_row.deposit_type = d.deposit_type
+					customer_payment_row.deposit_doc_name = d.name
+					customer_payment_row.deposit_date = d.posting_date
+
+	customer_payments = sorted(customer_payments, key=lambda d: (d.instrument_date, d.posting_date, d.creation))
+	supplier_payments = sorted(supplier_payments, key=lambda d: (d.posting_date, d.creation, d.idx))
+
+	return customer_payments, supplier_payments
+
+
+def separate_advance_and_balance_payments(customer_payments, supplier_payments):
+	advance_payments = []
+	balance_payments = []
+
+	if customer_payments:
+		if supplier_payments:
+			first_deposit_date = getdate(supplier_payments[0].posting_date)
+
+			for d in customer_payments:
+				if d.deposit_date and getdate(d.deposit_date) <= first_deposit_date:
+					advance_payments.append(d)
+				else:
+					balance_payments.append(d)
+		else:
+			advance_payments = customer_payments
+
+	return advance_payments, balance_payments
+
+
+@frappe.whitelist()
+def send_sms(receiver_list, msg, success_msg=True, type=None,
+		reference_doctype=None, reference_name=None, party_doctype=None, party_name=None):
+	from frappe.core.doctype.sms_settings.sms_settings import send_sms
+
+	if not type:
+		frappe.throw(_("SMS Type is mandatory"))
+
+	if reference_doctype != 'Vehicle Booking Order':
+		frappe.throw(_("Reference DocType must be Vehicle Booking Order"))
+
+	vbo_doc = frappe.get_doc("Vehicle Booking Order", reference_name)
+
+	if type == "Booking Confirmation" and vbo_doc.delivery_status != "To Receive":
+		frappe.throw(_("Cannot send Booking Confirmation SMS after receiving Vehicle"))
+	if type == "Balance Payment Request" and not vbo_doc.customer_outstanding:
+		frappe.throw(_("Cannot send Balance Payment Request SMS because Customer Outstanding amount is zero"))
+	if type == "Ready For Delivery" and vbo_doc.delivery_status != 'To Deliver':
+		frappe.throw(_("Cannot send Ready For Delivery SMS because delivery status is not 'To Deliver'"))
+	if type == "Congratulations" and vbo_doc.invoice_status != 'Delivered':
+		frappe.throw(_("Cannot send Congratulations SMS because Invoice has not been delivered yet"))
+
+	vbo_doc.add_notification_count(type, "SMS", update=1)
+	vbo_doc.notify_update()
+
+	send_sms(receiver_list, msg, success_msg, type, reference_doctype, reference_name, party_doctype, party_name)
+
+
+def update_overdue_status():
+	if 'Vehicles' not in frappe.get_active_domains():
+		return
+
+	frappe.db.sql("""
+		update `tabVehicle Booking Order`
+		set customer_payment_status = 'Overdue'
+		where docstatus = 1 and due_date < CURDATE() and customer_outstanding > 0
+	""")
+	frappe.db.sql("""
+		update `tabVehicle Booking Order`
+		set supplier_payment_status = 'Overdue'
+		where docstatus = 1 and due_date < CURDATE() and supplier_outstanding > 0
+	""")
+
+	frappe.db.sql("""
+		update `tabVehicle Booking Order`
+		set status = 'Payment Overdue'
+		where docstatus = 1
+			and status = 'To Receive Payment'
+			and due_date < CURDATE()
+			and customer_outstanding > 0
+	""")
+
+	frappe.db.sql("""
+		update `tabVehicle Booking Order`
+		set status = 'Delivery Overdue'
+		where docstatus = 1
+			and delivery_status != 'Delivered'
+			and delivery_date < CURDATE()
+			and customer_outstanding <= 0
+			and supplier_outstanding <= 0
+	""")
 
 
 def update_vehicle_booked(vehicle, is_booked):

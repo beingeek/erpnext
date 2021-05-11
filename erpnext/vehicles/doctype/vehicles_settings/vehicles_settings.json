@@ -7,13 +7,19 @@
  "field_order": [
   "vehicle_price_list",
   "fni_price_list",
-  "column_break_3",
   "company_contact",
+  "column_break_3",
   "default_booking_terms",
+  "default_payment_terms",
   "section_break_11",
   "vehicle_allocation_periodicity",
+  "column_break_8",
+  "dealership_code",
   "section_break_14",
   "role_change_booking_after_payment",
+  "role_change_booking_after_vehicle_receipt",
+  "role_change_booking_after_vehicle_delivery",
+  "column_break_14",
   "maximum_payment_adjustment"
  ],
  "fields": [
@@ -70,11 +76,42 @@
    "fieldname": "maximum_payment_adjustment",
    "fieldtype": "Currency",
    "label": "Maximum Payment Adjustment"
+  },
+  {
+   "fieldname": "column_break_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "dealership_code",
+   "fieldtype": "Data",
+   "label": "Dealership Code"
+  },
+  {
+   "fieldname": "role_change_booking_after_vehicle_receipt",
+   "fieldtype": "Link",
+   "label": "Role Allowed to Change Booking Details after Vehicle Receipt",
+   "options": "Role"
+  },
+  {
+   "fieldname": "role_change_booking_after_vehicle_delivery",
+   "fieldtype": "Link",
+   "label": "Role Allowed to Change Booking Details after Vehicle Delivery",
+   "options": "Role"
+  },
+  {
+   "fieldname": "column_break_14",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_payment_terms",
+   "fieldtype": "Link",
+   "label": "Default Payment Terms Template",
+   "options": "Payment Terms Template"
   }
  ],
  "icon": "fa fa-cog",
  "issingle": 1,
- "modified": "2021-03-25 13:21:54.392170",
+ "modified": "2021-04-17 17:20:40.276040",
  "modified_by": "Administrator",
  "module": "Vehicles",
  "name": "Vehicles Settings",

@@ -28,6 +28,9 @@ from collections import OrderedDict
 force_item_fields = ("item_group", "brand", "stock_uom", "alt_uom", "alt_uom_size", "is_fixed_asset", "item_tax_rate", "pricing_rules",
 	"allow_zero_valuation_rate", "has_batch_no", "has_serial_no", "is_vehicle")
 
+force_party_fields = ("customer_name", "customer_group", "supplier", "supplier_group",
+	"contact_display", "contact_mobile", "contact_phone", "contact_email")
+
 merge_items_sum_fields = ['qty', 'stock_qty', 'alt_uom_qty', 'total_weight',
 	'amount', 'taxable_amount', 'net_amount', 'total_discount', 'amount_before_discount',
 	'item_taxes_and_charges', 'tax_inclusive_amount',
@@ -85,6 +88,9 @@ class AccountsController(TransactionBase):
 				self.set_payment_schedule()
 
 		self.set_onload("enable_dynamic_bundling", self.dynamic_bundling_enabled())
+
+		if self.docstatus == 0:
+			self.set_missing_values()
 
 	def dynamic_bundling_enabled(self):
 		return self.doctype in ['Quotation', 'Sales Order', 'Delivery Note', 'Sales Invoice'] and\
@@ -245,14 +251,8 @@ class AccountsController(TransactionBase):
 
 		if self.doctype in ['Journal Entry', 'Payment Entry']:
 			self.get_gl_entries_for_print()
-
-			self.party_to_party_name = {}
-			if self.doctype == "Payment Entry":
-				self.party_to_party_name[(self.party_type, self.party)] = self.party_name
-			if self.doctype == "Journal Entry":
-				for d in self.accounts:
-					if d.party_type and d.party and d.party_name:
-						self.party_to_party_name[(d.party_type, d.party)] = d.party_name
+			self.get_party_to_party_name_dict()
+			self.get_vehicle_details_map()
 
 		self.company_address_doc = erpnext.get_company_address(self)
 
@@ -1303,14 +1303,51 @@ class AccountsController(TransactionBase):
 		self.total_debit = sum([d.debit for d in self.gl_entries])
 		self.total_credit = sum([d.credit for d in self.gl_entries])
 
+	def get_party_to_party_name_dict(self):
+		self.party_to_party_name = {}
+		if self.doctype == "Payment Entry":
+			self.party_to_party_name[(self.party_type, self.party)] = self.party_name
+		if self.doctype == "Journal Entry":
+			for d in self.accounts:
+				if d.party_type and d.party and d.party_name:
+					self.party_to_party_name[(d.party_type, d.party)] = d.party_name
+
+	def get_vehicle_details_map(self):
+		self.vehicle_details_map = {}
+
+		if 'Vehicles' not in frappe.get_active_domains():
+			return
+
+		def add_to_vehicle_details(doc):
+			if doc.get('applies_to_vehicle'):
+				vehicle_details = frappe._dict()
+
+				if doc.get('applies_to_item_name'):
+					vehicle_details.item_name = doc.get('applies_to_item_name')
+				if doc.get('vehicle_chassis_no'):
+					vehicle_details.chassis_no = doc.get('vehicle_chassis_no')
+				if doc.get('vehicle_engine_no'):
+					vehicle_details.engine_no = doc.get('vehicle_engine_no')
+				if doc.get('vehicle_license_plate'):
+					vehicle_details.license_plate = doc.get('vehicle_license_plate')
+
+				self.vehicle_details_map[doc.applies_to_vehicle] = vehicle_details
+
+		if self.doctype == "Journal Entry":
+			for d in self.accounts:
+				add_to_vehicle_details(d)
+
+		add_to_vehicle_details(self)
+
+
 	def set_payment_schedule(self):
 		if self.doctype == 'Sales Invoice' and self.is_pos:
 			self.payment_terms_template = ''
 			return
 
-		posting_date = self.get("bill_date") or self.get("posting_date") or self.get("transaction_date")
-		date = self.get("due_date")
-		due_date = date or posting_date
+		posting_date = self.get("posting_date") or self.get("transaction_date")
+		bill_date = self.get("bill_date") if self.doctype != 'Vehicle Booking Order' else None
+		due_date = self.get("due_date") or posting_date
 		grand_total = flt(self.get("rounded_total") or self.get('grand_total') or self.get('invoice_total'))
 		if self.doctype in ("Sales Invoice", "Purchase Invoice"):
 			grand_total = grand_total - flt(self.write_off_amount)
@@ -1322,7 +1359,8 @@ class AccountsController(TransactionBase):
 
 		if not self.get("payment_schedule"):
 			if self.get("payment_terms_template"):
-				data = get_payment_terms(self.payment_terms_template, posting_date, grand_total, delivery_date=self.get('delivery_date'))
+				data = get_payment_terms(self.payment_terms_template, posting_date, grand_total,
+					delivery_date=self.get('delivery_date'), bill_date=bill_date)
 				for item in data:
 					self.append("payment_schedule", item)
 			else:

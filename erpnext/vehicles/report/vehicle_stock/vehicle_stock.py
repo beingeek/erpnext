@@ -17,6 +17,22 @@ class VehicleStockReport(object):
 		if getdate(self.filters.from_date) > self.filters.to_date:
 			frappe.throw(_("From Date cannot be after To Date"))
 
+		# Status filter
+		self.filters.exclude_in_stock = 0
+		self.filters.exclude_delivered = 0
+		self.filters.exclude_dispatched = 0
+		if self.filters.status == "In Stock Vehicles":
+			self.filters.exclude_delivered = 1
+			self.filters.exclude_dispatched = 1
+		elif self.filters.status == "Dispatched Vehicles":
+			self.filters.exclude_in_stock = 1
+			self.filters.exclude_delivered = 1
+		elif self.filters.status == "In Stock and Dispatched Vehicles":
+			self.filters.exclude_delivered = 1
+		elif self.filters.status == "Delivered Vehicles":
+			self.filters.exclude_in_stock = 1
+			self.filters.exclude_dispatched = 1
+
 	def run(self):
 		self.get_item_data()
 		self.get_stock_ledger_entries()
@@ -96,17 +112,28 @@ class VehicleStockReport(object):
 
 		self.data = []
 
-		for vehicle_dict in vehicles_delivered:
-			if not vehicle_dict.delivery_date or not self.filters.from_date\
-					or getdate(vehicle_dict.delivery_date) >= getdate(self.filters.from_date):
-				self.data.append(vehicle_dict)
+		if not self.filters.get('exclude_delivered'):
+			for vehicle_dict in vehicles_delivered:
+				if not vehicle_dict.delivery_date or not self.filters.from_date\
+						or getdate(vehicle_dict.delivery_date) >= getdate(self.filters.from_date):
+					self.data.append(vehicle_dict)
 
-		for vehicle_dict in vehicles_in_stock.values():
-			self.data.append(vehicle_dict)
+		if not self.filters.get('exclude_in_stock'):
+			for vehicle_dict in vehicles_in_stock.values():
+				self.data.append(vehicle_dict)
 
 	def prepare_data(self):
 		for d in self.data:
-			d.item_name = self.item_data.get(d.item_code, {}).get('item_name')
+			variant_data = self.item_data.get(d.item_code, frappe._dict())
+			model_data = self.item_data.get(variant_data.variant_of, frappe._dict())
+
+			d.item_name = variant_data.item_name
+			d.item_group = variant_data.item_group
+			d.brand = variant_data.brand
+
+			d.variant_of = variant_data.variant_of
+			d.variant_of_name = model_data.item_name
+
 			d.disable_item_formatter = 1
 
 			vehicle_data = self.vehicle_data.get(d.vehicle, frappe._dict())
@@ -114,6 +141,7 @@ class VehicleStockReport(object):
 			d.engine_no = vehicle_data.engine_no
 			d.license_plate = vehicle_data.license_plate
 			d.unregistered = vehicle_data.unregistered
+			d.color = vehicle_data.color
 			d.customer = vehicle_data.customer
 			d.customer_name = vehicle_data.customer_name
 
@@ -152,9 +180,14 @@ class VehicleStockReport(object):
 			if d.vehicle_booking_order and not d.dispatch_date:
 				d.dispatch_date = vehicle_data.get('dispatch_date')
 
-			# Booking Customer Name
+			# Booking Data
 			if d.vehicle_booking_order and d.vehicle_booking_order in self.booking_by_booking_data:
-				d.customer_name = self.booking_by_booking_data[d.vehicle_booking_order].get('customer_name')
+				booking_data = self.booking_by_booking_data[d.vehicle_booking_order]
+				d.customer_name = booking_data.get('customer_name')
+				d.contact_number = booking_data.get('contact_mobile') or booking_data.get('contact_phone')
+
+				d.bill_no = booking_data.get('bill_no')
+				d.invoice_status = booking_data.get('invoice_status')
 
 			# Status
 			if d.qty > 0:
@@ -195,8 +228,10 @@ class VehicleStockReport(object):
 
 			if not group_label or group_label == "Ungrouped":
 				continue
-			elif group_label == "Item":
+			elif group_label == "Variant":
 				group_field = "item_code"
+			elif group_label == "Model":
+				group_field = "variant_of"
 			else:
 				group_field = scrub(group_label)
 
@@ -205,7 +240,8 @@ class VehicleStockReport(object):
 		if not self.group_by:
 			return data
 
-		return group_report_data(data, self.group_by, calculate_totals=self.calculate_group_totals)
+		return group_report_data(data, self.group_by,
+			calculate_totals=self.calculate_group_totals, postprocess_group=self.postprocess_group)
 
 	def calculate_group_totals(self, data, group_field, group_value, grouped_by):
 		totals = frappe._dict()
@@ -215,7 +251,8 @@ class VehicleStockReport(object):
 			totals[f] = g
 
 		group_reference_doctypes = {
-			"item_code": "Item"
+			"item_code": "Item",
+			"variant_of": "Item",
 		}
 
 		reference_field = group_field[0] if isinstance(group_field, (list, tuple)) else group_field
@@ -227,22 +264,53 @@ class VehicleStockReport(object):
 			totals['item_name'] = data[0].item_name
 			totals['disable_item_formatter'] = data[0].disable_item_formatter
 
-		count = len(data)
-		totals['code'] = "{0}".format(count)
+		if 'variant_of' in grouped_by:
+			totals['variant_of_name'] = data[0].variant_of_name
+			totals['disable_item_formatter'] = data[0].disable_item_formatter
+
+		status_counts = {}
+		for d in data:
+			status_counts.setdefault(d.status, 0)
+			status_counts[d.status] += 1
+
+		status_counts_text = ", ".join(["{0}: {1}".format(status, frappe.format(count))\
+			for status, count in status_counts.items()])
+
+		total_text = ""
+		if len(status_counts) > 1:
+			total_count = len(data)
+			total_text = "Total: {0}".format(frappe.format(total_count))
+
+		totals['status'] = "{0}{1}{2}".format(total_text, ", " if total_text and status_counts_text else "", status_counts_text)
 
 		return totals
+
+	def postprocess_group(self, group_object, grouped_by):
+		group_object.item_name = group_object.totals.item_name
+		group_object.variant_of_name = group_object.totals.variant_of_name
 
 	def get_item_data(self):
 		self.item_data = {}
 
 		item_conditions = self.get_item_conditions()
-		data = frappe.db.sql("""
-			select name, item_name
+		variant_data = frappe.db.sql("""
+			select name, item_name, variant_of, item_group, brand
 			from `tabItem` item
 			where is_vehicle = 1 {0}
 		""".format(item_conditions), self.filters, as_dict=1)
 
-		for d in data:
+		model_item_codes = list(set([d.variant_of for d in variant_data if d.variant_of]))
+		if model_item_codes:
+			model_data = frappe.db.sql("""
+				select name, item_name, variant_of, item_group, brand
+				from `tabItem` item
+				where name in %s
+			""", [model_item_codes], as_dict=1)
+
+			for d in model_data:
+				self.item_data[d.name] = d
+
+		for d in variant_data:
 			self.item_data[d.name] = d
 
 		return self.item_data
@@ -255,7 +323,7 @@ class VehicleStockReport(object):
 			return self.vehicle_data
 
 		data = frappe.db.sql("""
-			select name, item_code, chassis_no, engine_no, license_plate, unregistered, dispatch_date
+			select name, item_code, chassis_no, engine_no, license_plate, color, unregistered, dispatch_date
 			from `tabVehicle`
 			where name in %s
 		""", [vehicle_names], as_dict=1)
@@ -266,23 +334,29 @@ class VehicleStockReport(object):
 		return self.vehicle_data
 
 	def get_dispatched_vehicles(self):
+		if self.filters.get('exclude_dispatched'):
+			return
+
 		vehicle_names = list(set([d.vehicle for d in self.data]))
+
+		args = self.filters.copy()
+		item_conditions = self.get_item_conditions()
 
 		exclude_condition = ""
 		if vehicle_names:
-			exclude_condition = " and name not in %(vehicle_names)s"
+			exclude_condition = " and v.name not in %(vehicle_names)s"
+			args['vehicle_names'] = vehicle_names
 
 		date_condition = ""
 		if self.filters.to_date:
-			date_condition += " and dispatch_date <= %(to_date)s"
+			date_condition += " and v.dispatch_date <= %(to_date)s"
 
 		self.dispatched_vehicles = frappe.db.sql("""
-			select name as vehicle, item_code, 0 as qty, dispatch_date
-			from `tabVehicle`
-			where ifnull(dispatch_date, '') != '' and ifnull(purchase_document_no, '') = '' {0} {1}
-		""".format(exclude_condition, date_condition),
-			{'vehicle_names': vehicle_names, 'from_date': self.filters.from_date, 'to_date': self.filters.to_date},
-			as_dict=1)
+			select v.name as vehicle, v.item_code, 0 as qty, v.dispatch_date
+			from `tabVehicle` v
+			inner join `tabItem` item on v.item_code = item.name
+			where ifnull(v.dispatch_date, '') != '' and ifnull(v.purchase_document_no, '') = '' {0} {1} {2}
+		""".format(item_conditions, exclude_condition, date_condition), args, as_dict=1)
 
 		for d in self.dispatched_vehicles:
 			self.data.append(d)
@@ -324,7 +398,10 @@ class VehicleStockReport(object):
 			return {}
 
 		data = frappe.db.sql("""
-			select name, vehicle, vehicle_receipt, customer, customer_name
+			select name, vehicle, vehicle_receipt,
+				customer, customer_name,
+				contact_mobile, contact_phone,
+				bill_no, invoice_status
 			from `tabVehicle Booking Order`
 			where docstatus = 1 and vehicle in %s
 		""", [vehicle_names], as_dict=1)
@@ -337,15 +414,18 @@ class VehicleStockReport(object):
 		conditions = []
 
 		if self.filters.item_code:
-			conditions.append("item_code = %(item_code)s")
+			conditions.append("item.item_code = %(item_code)s")
+
+		if self.filters.variant_of:
+			conditions.append("item.variant_of = %(variant_of)s")
 
 		if self.filters.brand:
-			conditions.append("brand = %(brand)s")
+			conditions.append("item.brand = %(brand)s")
 
 		if self.filters.item_group:
 			conditions.append(get_item_group_condition(self.filters.item_group))
 
-		return "and {}".format(" and ".join(conditions)) if conditions else ""
+		return "and {0}".format(" and ".join(conditions)) if conditions else ""
 
 	def get_sle_conditions(self):
 		conditions = []
@@ -369,11 +449,15 @@ class VehicleStockReport(object):
 			{"label": _("Variant Name"), "fieldname": "item_name", "fieldtype": "Data", "width": 150},
 			{"label": _("Chassis No"), "fieldname": "chassis_no", "fieldtype": "Data", "width": 150},
 			{"label": _("Engine No"), "fieldname": "engine_no", "fieldtype": "Data", "width": 115},
-			{"label": _("License Plate"), "fieldname": "license_plate", "fieldtype": "Data", "width": 100},
+			{"label": _("Color"), "fieldname": "color", "fieldtype": "Link", "options": "Vehicle Color", "width": 120},
+			{"label": _("License Plate"), "fieldname": "license_plate", "fieldtype": "Data", "width": 60},
 			{"label": _("Status"), "fieldname": "status", "fieldtype": "Data", "width": 130},
 			{"label": _("Customer Name"), "fieldname": "customer_name", "fieldtype": "Data", "width": 150},
-			{"label": _("Booking #"), "fieldname": "vehicle_booking_order", "fieldtype": "Link", "options": "Vehicle Booking Order", "width": 100},
+			{"label": _("Contact"), "fieldname": "contact_number", "fieldtype": "Data", "width": 110},
+			{"label": _("Booking #"), "fieldname": "vehicle_booking_order", "fieldtype": "Link", "options": "Vehicle Booking Order", "width": 105},
 			{"label": _("Project"), "fieldname": "project", "fieldtype": "Link", "options": "Project", "width": 100},
+			{"label": _("Invoice"), "fieldname": "bill_no", "fieldtype": "Data", "width": 80},
+			{"label": _("Inv Status"), "fieldname": "invoice_status", "fieldtype": "Data", "width": 80},
 			{"label": _("Dispatched"), "fieldname": "dispatch_date", "fieldtype": "Date", "width": 85},
 			{"label": _("Received"), "fieldname": "received_date", "fieldtype": "Date", "width": 80},
 			{"label": _("Delivered"), "fieldname": "delivery_date", "fieldtype": "Date", "width": 80},

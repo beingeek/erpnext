@@ -13,12 +13,22 @@ def get_data():
 				'label': ['Vehicle Transaction'],
 				'items': ['Vehicle Receipt', 'Vehicle Delivery']
 			},
+			{
+				'label': ['Transfer'],
+				'items': ['Vehicle Transfer Letter']
+			},
+			{
+				'label': ['Accounting Entries'],
+				'items': ['Journal Entry', 'Payment Entry']
+			},
 		]
 
 	return {
 		'fieldname': 'vehicle',
 		'non_standard_fieldnames': {
 			'Project': 'applies_to_vehicle',
+			'Journal Entry': 'applies_to_vehicle',
+			'Payment Entry': 'applies_to_vehicle',
 		},
 		'transactions': vehicle_domain_sections + [
 			{

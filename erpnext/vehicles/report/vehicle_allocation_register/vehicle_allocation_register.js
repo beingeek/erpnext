@@ -49,16 +49,39 @@ frappe.query_reports["Vehicle Allocation Register"] = {
 			options: "Vehicle Allocation Period"
 		},
 		{
-			fieldname: "item_code",
-			label: __("Vehicle Item Code (Variant)"),
+			fieldname: "variant_of",
+			label: __("Model Item Code"),
 			fieldtype: "Link",
 			options: "Item",
 			get_query: function() {
 				return {
 					query: "erpnext.controllers.queries.item_query",
-					filters: {"is_vehicle": 1, "include_in_vehicle_booking": 1}
+					filters: {"is_vehicle": 1, "include_in_vehicle_booking": 1, "include_disabled": 1, "has_variants": 1}
 				};
 			}
+		},
+		{
+			fieldname: "item_code",
+			label: __("Variant Item Code"),
+			fieldtype: "Link",
+			options: "Item",
+			get_query: function() {
+				var variant_of = frappe.query_report.get_filter_value('variant_of');
+				var filters = {"is_vehicle": 1, "include_in_vehicle_booking": 1, "include_disabled": 1};
+				if (variant_of) {
+					filters['variant_of'] = variant_of;
+				}
+				return {
+					query: "erpnext.controllers.queries.item_query",
+					filters: filters
+				};
+			}
+		},
+		{
+			fieldname: "vehicle_color",
+			label: __("Vehicle Color"),
+			fieldtype: "Link",
+			options: "Vehicle Color"
 		},
 		{
 			fieldname: "item_group",
@@ -91,38 +114,82 @@ frappe.query_reports["Vehicle Allocation Register"] = {
 			options: "Supplier"
 		},
 		{
+			fieldname: "sales_person",
+			label: __("Sales Person"),
+			fieldtype: "Link",
+			options: "Sales Person"
+		},
+		{
 			fieldname: "group_by_1",
 			label: __("Group By Level 1"),
 			fieldtype: "Select",
-			options: ["Ungrouped", "Group by Allocation Period", "Group by Delivery Period",
-				"Group by Item", "Group by Item Group", "Group by Brand"],
-			default: "Ungrouped"
+			options: ["Ungrouped", "Group by Allocation Period", "Group by Delivery Period", "Group by Variant", "Group by Model",
+				"Group by Vehicle Color", "Group by Item Group", "Group by Brand", "Group by Sales Person", "Group by Status"],
+			default: "Group by Allocation Period"
 		},
 		{
 			fieldname: "group_by_2",
 			label: __("Group By Level 2"),
 			fieldtype: "Select",
-			options: ["Ungrouped", "Group by Allocation Period", "Group by Delivery Period",
-				"Group by Item", "Group by Item Group", "Group by Brand"],
-			default: "Group by Allocation Period"
+			options: ["Ungrouped", "Group by Allocation Period", "Group by Delivery Period", "Group by Variant", "Group by Model",
+				"Group by Vehicle Color", "Group by Item Group", "Group by Brand", "Group by Sales Person", "Group by Status"],
+			default: "Group by Model"
 		},
 		{
 			fieldname: "group_by_3",
 			label: __("Group By Level 3"),
 			fieldtype: "Select",
-			options: ["Ungrouped", "Group by Allocation Period", "Group by Delivery Period",
-				"Group by Item", "Group by Item Group", "Group by Brand"],
-			default: "Group by Item"
+			options: ["Ungrouped", "Group by Allocation Period", "Group by Delivery Period", "Group by Variant", "Group by Model",
+				"Group by Vehicle Color", "Group by Item Group", "Group by Brand", "Group by Sales Person", "Group by Status"],
+			default: "Group by Variant"
+		},
+		{
+			fieldname: "priority",
+			label: __("High Priority Only"),
+			fieldtype: "Check",
 		},
 	],
 	formatter: function(value, row, column, data, default_formatter) {
 		var style = {};
 
-		if (data.original_item_code !== data.item_code) {
-			if (['item_code', 'code'].includes(column.fieldname)) {
+		if (data.original_item_code !== data.item_code && data.item_code !== data.variant_of) {
+			if (['item_code', 'code', 'previous_item_code'].includes(column.fieldname)) {
 				style['font-weight'] = 'bold';
+				style['background-color'] = '#ffe2a7';
 			}
-			style['background-color'] = '#ffe2a7';
+		}
+
+		if (data.previous_color && data.previous_color !== data.vehicle_color) {
+			if (['vehicle_color', 'previous_color'].includes(column.fieldname)) {
+				style['font-weight'] = 'bold';
+				style['background-color'] = '#ffe2a7';
+			}
+		}
+		if (data.booking_color && data.booking_color !== data.vehicle_color) {
+			if (['vehicle_color', 'booking_color'].includes(column.fieldname)) {
+				style['font-weight'] = 'bold';
+				style['background-color'] = '#ffe2a7';
+			}
+		}
+
+		if (data.priority) {
+			if (['priority', 'delivery_period'].includes(column.fieldname)) {
+				style['background-color'] = '#ffb7b7';
+			}
+		}
+
+		$.each(['customer_outstanding', 'supplier_outstanding', 'undeposited_amount'], function (i, f) {
+			if (column.fieldname === f) {
+				style['color'] = flt(data[f]) ? 'orange' : 'green';
+			}
+		});
+		if (column.fieldname == 'payment_adjustment' && flt(data.payment_adjustment)) {
+			style['color'] = 'red';
+		}
+
+		if (column.fieldname == 'qty_delivered' && !data._isGroupTotal) {
+			style['font-weight'] = 'bold';
+			style['color'] = flt(data.qty_delivered) ? 'green' : 'orange';
 		}
 
 		return default_formatter(value, row, column, data, {css: style});
