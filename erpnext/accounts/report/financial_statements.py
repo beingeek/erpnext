@@ -336,10 +336,6 @@ def prepare_data(accounts, balance_must_be, period_list, company_currency, filte
 				total_key = filters.start_month[:3] + "-" + filters.end_month[:3] + " " + year
 				total = 0
 				for period in period_list:
-					if d.get(period.key) and balance_must_be == "Credit":
-						# change sign based on Debit or Credit, since calculation is done using (debit - credit)
-						d[period.key] *= -1
-
 					row[period.key] = flt(d.get(period.key, 0.0), 3)
 
 					if abs(row[period.key]) >= 0.005:

@@ -65,11 +65,6 @@ def get_net_profit_loss(income, expense, period_list, company, currency=None, co
 
 				net_profit_loss[fiscal_year] = total_income_fy - total_expense_fy
 
-				if net_profit_loss[fiscal_year]:
-					has_value = True
-
-				total += flt(net_profit_loss[fiscal_year])
-
 		net_profit_loss[key] = total_income - total_expense
 
 		if net_profit_loss[key]:
