@@ -6,6 +6,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 from erpnext.accounts.report.financial_statements import (get_period_list, get_columns, get_data)
+from erpnext.accounts.report.financial_statements import fiscal_years_periods
 
 def execute(filters=None):
 	with_sales_person = filters.group_by == "Sales Person"
@@ -15,14 +16,14 @@ def execute(filters=None):
 		with_sales_person=with_sales_person, start_month=filters.start_month, end_month=filters.end_month)
 
 	income = get_data(filters.company, "Income", "Credit", period_list, filters = filters,
-		accumulated_values=filters.accumulated_values,
-		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, with_sales_person=with_sales_person)
+		accumulated_values=filters.accumulated_values, ignore_closing_entries=True,
+		ignore_accumulated_values_for_fy= True, with_sales_person=with_sales_person, is_profit_and_loss=True)
 
 	expense = get_data(filters.company, "Expense", "Debit", period_list, filters=filters,
-		accumulated_values=filters.accumulated_values,
-		ignore_closing_entries=True, ignore_accumulated_values_for_fy= True, with_sales_person=with_sales_person)
+		accumulated_values=filters.accumulated_values, ignore_closing_entries=True,
+		ignore_accumulated_values_for_fy= True, with_sales_person=with_sales_person, is_profit_and_loss=True)
 
-	net_profit_loss = get_net_profit_loss(income, expense, period_list, filters.company, filters.presentation_currency)
+	net_profit_loss = get_net_profit_loss(income, expense, period_list, filters.company, filters.presentation_currency, start_month=filters.start_month, end_month=filters.end_month, is_profit_and_loss=True)
 
 	data = []
 	data.extend(income or [])
@@ -30,13 +31,17 @@ def execute(filters=None):
 	if net_profit_loss:
 		data.append(net_profit_loss)
 
-	columns = get_columns(filters.periodicity, period_list, filters.accumulated_values, filters.company, with_sales_person=with_sales_person)
+	columns = get_columns(filters.periodicity, period_list, filters.accumulated_values, filters.company,
+						  with_sales_person=with_sales_person,
+						  start_month=filters.start_month, end_month=filters.end_month, is_profit_and_loss=True)
 
 	chart = get_chart_data(filters, columns, income, expense, net_profit_loss)
 
 	return columns, data, None, chart
 
-def get_net_profit_loss(income, expense, period_list, company, currency=None, consolidated=False):
+
+def get_net_profit_loss(income, expense, period_list, company, currency=None, consolidated=False,
+						start_month=None, end_month=None, is_profit_and_loss=True):
 	total = 0
 	net_profit_loss = {
 		"account_name": "'" + _("Profit for the year") + "'",
@@ -52,6 +57,19 @@ def get_net_profit_loss(income, expense, period_list, company, currency=None, co
 		total_income = flt(income[-2][key], 3) if income else 0
 		total_expense = flt(expense[-2][key], 3) if expense else 0
 
+		if start_month and end_month and is_profit_and_loss:
+			fiscal_years_keys = fiscal_years_periods(period_list, start_month, end_month)
+			for fiscal_year in fiscal_years_keys:
+				total_income_fy = flt(income[-2][fiscal_year], 3) if income else 0
+				total_expense_fy = flt(expense[-2][fiscal_year], 3) if expense else 0
+
+				net_profit_loss[fiscal_year] = total_income_fy - total_expense_fy
+
+				if net_profit_loss[fiscal_year]:
+					has_value = True
+
+				total += flt(net_profit_loss[fiscal_year])
+
 		net_profit_loss[key] = total_income - total_expense
 
 		if net_profit_loss[key]:
@@ -62,6 +80,7 @@ def get_net_profit_loss(income, expense, period_list, company, currency=None, co
 
 	if has_value:
 		return net_profit_loss
+
 
 def get_chart_data(filters, columns, income, expense, net_profit_loss):
 	labels = [d.get("label") for d in columns[2:]]

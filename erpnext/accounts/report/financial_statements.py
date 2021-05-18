@@ -203,7 +203,7 @@ def get_data(
 		company, root_type, balance_must_be, period_list, filters=None,
 		accumulated_values=1, only_current_fiscal_year=True, ignore_closing_entries=False,
 		ignore_accumulated_values_for_fy=False, total=True, with_sales_person=False,
-		include_in_gross=None, target_date=None):
+		include_in_gross=None, target_date=None, is_profit_and_loss=False):
 
 	accounts = get_accounts(company, root_type)
 	if not accounts:
@@ -234,11 +234,11 @@ def get_data(
 		accounts_by_name, gl_entries_by_account, period_list, accumulated_values, ignore_accumulated_values_for_fy,
 		with_sales_person=with_sales_person, target_date=target_date)
 	accumulate_values_into_parents(accounts, accounts_by_name, period_list, accumulated_values)
-	out = prepare_data(accounts, balance_must_be, period_list, company_currency)
+	out = prepare_data(accounts, balance_must_be, period_list, company_currency, filters, is_profit_and_loss)
 	out = filter_out_zero_value_rows(out, parent_children_map)
 
 	if out and total:
-		add_total_row(out, root_type, balance_must_be, period_list, company_currency)
+		add_total_row(out, root_type, balance_must_be, period_list, company_currency, filters.start_month, filters.end_month, is_profit_and_loss)
 
 	return out
 
@@ -288,7 +288,7 @@ def accumulate_values_into_parents(accounts, accounts_by_name, period_list, accu
 				accounts_by_name[d.parent_account].get("opening_balance", 0.0) + d.get("opening_balance", 0.0)
 
 
-def prepare_data(accounts, balance_must_be, period_list, company_currency):
+def prepare_data(accounts, balance_must_be, period_list, company_currency, filters=None, is_profit_and_loss=False):
 	data = []
 	year_start_date = period_list[0]["year_start_date"].strftime("%Y-%m-%d")
 	year_end_date = period_list[-1]["year_end_date"].strftime("%Y-%m-%d")
@@ -325,6 +325,31 @@ def prepare_data(accounts, balance_must_be, period_list, company_currency):
 
 		row["has_value"] = has_value
 		row["total"] = total
+
+		if is_profit_and_loss and filters and filters.periodicity != 'Yearly':
+			period_dict = {}
+			for period in period_list:
+				period_dict[period.to_date_fiscal_year] = period_dict.get(period.to_date_fiscal_year, [])
+				period_dict[period.to_date_fiscal_year].append(period)
+
+			for year, period_list in period_dict.items():
+				total_key = filters.start_month[:3] + "-" + filters.end_month[:3] + " " + year
+				total = 0
+				for period in period_list:
+					if d.get(period.key) and balance_must_be == "Credit":
+						# change sign based on Debit or Credit, since calculation is done using (debit - credit)
+						d[period.key] *= -1
+
+					row[period.key] = flt(d.get(period.key, 0.0), 3)
+
+					if abs(row[period.key]) >= 0.005:
+						# ignore zero values
+						# has_value = True
+						total += flt(row[period.key])
+
+				# row["has_value"] = has_value
+				row[total_key] = total
+
 		data.append(row)
 
 	return data
@@ -347,12 +372,15 @@ def filter_out_zero_value_rows(data, parent_children_map, show_zero_values=False
 	return data_with_value
 
 
-def add_total_row(out, root_type, balance_must_be, period_list, company_currency):
+def add_total_row(out, root_type, balance_must_be, period_list, company_currency, start_month=None, end_month=None, is_profit_and_loss=None):
 	total_row = {
 		"account_name": _("Total {0} ({1})").format(_(root_type), _(balance_must_be)),
 		"account": _("Total {0} ({1})").format(_(root_type), _(balance_must_be)),
 		"currency": company_currency
 	}
+	total_keys=[]
+	if is_profit_and_loss and start_month and end_month:
+		total_keys = fiscal_years_periods(period_list, start_month, end_month)
 
 	for row in out:
 		if not row.get("parent_account"):
@@ -365,11 +393,26 @@ def add_total_row(out, root_type, balance_must_be, period_list, company_currency
 			total_row["total"] += flt(row["total"])
 			row["total"] = ""
 
+			if total_keys:
+				for total in total_keys:
+					total_row[total] = row.get(total)
+
 	if "total" in total_row:
 		out.append(total_row)
 
 		# blank row after Total
 		out.append({})
+
+
+def fiscal_years_periods(period_list, start_month, end_month):
+	periods = []
+	for period in period_list:
+		period_fy = period.to_date_fiscal_year
+		if period_fy not in periods:
+			periods.append(period_fy)
+
+	total_keys = [start_month[:3] + "-" + end_month[:3] + " " + period for period in periods]
+	return total_keys
 
 
 def get_accounts(company, root_type):
@@ -425,6 +468,7 @@ def sort_accounts(accounts, is_root=False, key="name"):
 		return 1
 
 	accounts.sort(key = functools.cmp_to_key(compare_accounts))
+
 
 def set_gl_entries_by_account(
 		company, from_date, to_date, root_lft, root_rgt, filters, gl_entries_by_account, ignore_closing_entries=False,
@@ -559,6 +603,7 @@ def get_additional_conditions(from_date, ignore_closing_entries, filters):
 
 	return " and {}".format(" and ".join(additional_conditions)) if additional_conditions else ""
 
+
 def get_cost_centers_with_children(cost_centers):
 	if not isinstance(cost_centers, list):
 		cost_centers = [d.strip() for d in cost_centers.strip().split(',') if d]
@@ -574,7 +619,9 @@ def get_cost_centers_with_children(cost_centers):
 
 	return list(set(all_cost_centers))
 
-def get_columns(periodicity, period_list, accumulated_values=1, company=None, with_sales_person=False, target_date=None):
+
+def get_columns(periodicity, period_list, accumulated_values=1, company=None, with_sales_person=False,
+				target_date=None, start_month=None, end_month=None, is_profit_and_loss=True):
 	sales_persons_with_entries = []
 	if with_sales_person:
 		for period in period_list:
@@ -619,7 +666,22 @@ def get_columns(periodicity, period_list, accumulated_values=1, company=None, wi
 				"options": "currency",
 				"width": 150
 			})
-	if periodicity!="Yearly" or with_sales_person:
+
+	if start_month and end_month and is_profit_and_loss:
+		total_keys = fiscal_years_periods(period_list, start_month, end_month)
+		if periodicity != "Yearly" and len(total_keys) > 1:
+
+			for key in total_keys:
+				columns.append({
+					"fieldname": key,
+					"label": _(key),
+					"period_label": _(key),
+					# "is_total": 1,
+					"fieldtype": "Currency",
+					"width": 150
+				})
+
+	if (periodicity!="Yearly" or with_sales_person) and not is_profit_and_loss:
 		if not accumulated_values:
 			columns.append({
 				"fieldname": "total",
