@@ -617,7 +617,7 @@ def get_cost_centers_with_children(cost_centers):
 
 
 def get_columns(periodicity, period_list, accumulated_values=1, company=None, with_sales_person=False,
-				target_date=None, start_month=None, end_month=None, is_profit_and_loss=True):
+				target_date=None, start_month=None, end_month=None, is_profit_and_loss=False):
 	sales_persons_with_entries = []
 	if with_sales_person:
 		for period in period_list:
@@ -662,22 +662,22 @@ def get_columns(periodicity, period_list, accumulated_values=1, company=None, wi
 				"options": "currency",
 				"width": 150
 			})
-
+	total_keys = []
 	if start_month and end_month and is_profit_and_loss:
 		total_keys = fiscal_years_periods(period_list, start_month, end_month)
-		if periodicity != "Yearly" and len(total_keys) > 1:
 
-			for key in total_keys:
-				columns.append({
-					"fieldname": key,
-					"label": _(key),
-					"period_label": _(key),
-					# "is_total": 1,
-					"fieldtype": "Currency",
-					"width": 150
-				})
+	if periodicity != "Yearly" and len(total_keys) > 1:
+		for key in total_keys:
+			columns.append({
+				"fieldname": key,
+				"label": _(key),
+				"period_label": _(key),
+				# "is_total": 1,
+				"fieldtype": "Currency",
+				"width": 150
+			})
 
-	if (periodicity!="Yearly" or with_sales_person) and not is_profit_and_loss:
+	if (periodicity!="Yearly" or with_sales_person) and (not total_keys or len(total_keys) == 1):
 		if not accumulated_values:
 			columns.append({
 				"fieldname": "total",
